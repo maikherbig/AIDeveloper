@@ -1,5 +1,5 @@
 
-![alt text](https://github.com/maikherbig/AIDeveloper/blob/master/main_icon_simple_04_text.png "Logo Title Text 1")  
+![alt text](https://github.com/maikherbig/AIDeveloper/blob/master/main_icon_simple_04_text2.png "Logo Title Text 1")  
 
 AIDeveloper is a software tool that allows you to train, evaluate and apply deep neural nets 
 for image classification within a graphical user-interface (GUI).  
