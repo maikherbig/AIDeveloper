@@ -18,18 +18,18 @@ There is a tutorial video (ca. 13min. short) which you can download:
 * Find the green button on the top right ("Clone or download"), click it and then click "Download ZIP"
 * Unzip the folder and find the file "Tutorial_01_Basics.mp4"  
 
-In this video only the very basic functionality of AID is presented. Furthermore, AIDeveloper contains many tooltips, which hopefully help you. 
+In this video only the very basic functionality of AID is presented. Furthermore, AIDeveloper contains many tooltips, which should help you to proceed. 
 
 ## Prerequisites
 
-Currently, the standalone executable for AIDeveloper is only available for Windows 7 and Windows 10.  
+Currently, the standalone executable for AIDeveloper is only compatible with Windows 7 and Windows 10.  
 The script based version was tested using Python 3.5 and Windows 7. See below to find installation instructions.
 
 ## Installation instructions to run AIDeveloper from script
 
-* AIDeveloper was developed using Anaconda3 5.3.1 64bit, which you can download here:
+* Get a python distribution. AIDeveloper was developed using Anaconda3 5.3.1 64bit, which you can download here:
 https://www.anaconda.com/distribution/
-* Download this entire Github repository: find the green button on the top right ("Clone or download"), click it and then click "Download ZIP"
+* Download the entire Github repository of AIDeveloper: find the green button on the top right ("Clone or download"), click it and then click "Download ZIP"
 * Unzip the folder for example to C:\Users\MyPC\Downloads\AIDeveloper_0.0.4
 * open Anaconda Prompt
 * navigate to the folder where you put AIDeveloper `cd C:\Users\MyPC\Downloads\AIDeveloper_0.0.4`
