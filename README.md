@@ -1,5 +1,5 @@
 
-![alt text](https://github.com/maikherbig/AIDeveloper/blob/master/main_icon_simple_04_text2.png "Logo Title Text 1")  
+![alt text](https://github.com/maikherbig/AIDeveloper/blob/master/art/main_icon_simple_04_text2.png "AIDeveloper Logo with Text")  
 
 AIDeveloper is a software tool that allows you to train, evaluate and apply deep neural nets 
 for image classification within a graphical user-interface (GUI).  
@@ -14,7 +14,11 @@ After the following 4 steps you are good to go:
 
 ## Getting Started
 
-There is a tutorial video (ca. 13min. short) which you can download:  
+There is a tutorial video (ca. 13min. short) which you either watch on YouTube:  
+[![Alternate Text](https://github.com/maikherbig/AIDeveloper/blob/master/art/Youtube_Link_03.png)]({https://youtu.be/dvFiSRnwoto} "AIDeveloper Tutorial 1")
+
+
+or you can download from this GitHub page:   
 * Find the green button on the top right ("Clone or download"), click it and then click "Download ZIP"
 * Unzip the folder and find the file "Tutorial_01_Basics.mp4"  
 
