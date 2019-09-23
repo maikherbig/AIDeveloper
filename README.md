@@ -37,7 +37,6 @@ https://www.anaconda.com/distribution/
 * Unzip the folder for example to C:\Users\MyPC\Downloads\AIDeveloper_0.0.4
 * open Anaconda Prompt
 * navigate to the folder where you put AIDeveloper `cd C:\Users\MyPC\Downloads\AIDeveloper_0.0.4`
-
 * Generate an environment using the provided .yml file (AID_myenv_Win7.yml): `conda env create -f AID_myenv_Win7.yml`
 * This will create a new environment called "myenv"
 * Activate it: `conda activate myenv`
