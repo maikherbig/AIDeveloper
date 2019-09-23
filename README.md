@@ -15,7 +15,7 @@ After the following 4 steps you are good to go:
 ## Getting Started
 
 There is a tutorial video (ca. 13min. short) which you either watch on YouTube:  
-[![Alternate Text](https://github.com/maikherbig/AIDeveloper/blob/master/art/Youtube_Link_03.png)]({https://youtu.be/dvFiSRnwoto} "AIDeveloper Tutorial 1")
+[![Alternate Text](https://github.com/maikherbig/AIDeveloper/blob/master/art/Youtube_Link_03.png)](https://youtu.be/dvFiSRnwoto "AIDeveloper Tutorial 1")
 
 
 or you can download from this GitHub page:   
