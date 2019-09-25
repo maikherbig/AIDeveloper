@@ -1,0 +1,19 @@
+----001_CIFAR10_Grayscale----
+Original path to models:
+\\BIOTEC-FILES\guck_rtdc\Analysis\Maik\Own ideas\53 AI4Every1_Paper\004 CIFAR10\Models\022_Grayscale_Nitta_6layer
+
+----002_CIFAR10_RGB----
+Original path to models:
+\\BIOTEC-FILES\guck_rtdc\Analysis\Maik\Own ideas\53 AI4Every1_Paper\004 CIFAR10\Models\024_RGB_Nitta6layer
+
+----003_Adipocytes---
+Original path to models:
+\\BIOTEC-FILES\guck_rtdc\Analysis\Maik\Own ideas\53 AI4Every1_Paper\006 ThomasFatCells\005_MhNet2_Pretrained
+
+----004_RTDC_WholeBlood_Count----
+Original path to models:
+\\BIOTEC-FILES\guck_rtdc\Analysis\Maik\Own ideas\53 AI4Every1_Paper\002 Classify Gelas Blood\Models\011_Train_AISet+Gela_ValidGela_LeNet5_MeanNorm
+
+----005_RTDC_B_vs_T_Lymphocytes----
+Original path to models:
+\\BIOTEC-FILES\guck_rtdc\Analysis\Maik\Own ideas\53 AI4Every1_Paper\001 Experiments\BvsT_new_Model\Models\02_TransfereNitta6_cifar10gray_toNewBvsT
