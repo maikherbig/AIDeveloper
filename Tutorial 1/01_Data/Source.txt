@@ -1,0 +1,2 @@
+CIFAR10 in form of png images is available here:
+https://pjreddie.com/projects/cifar-10-dataset-mirror/
