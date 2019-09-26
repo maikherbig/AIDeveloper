@@ -1,0 +1,2 @@
+To download the csv files please follow this link
+https://www.kaggle.com/zalando-research/fashionmnist/download
