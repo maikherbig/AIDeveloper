@@ -22,7 +22,10 @@ or you can download from this GitHub page:
 * Find the green button on the top right ("Clone or download"), click it and then click "Download ZIP"
 * Unzip the folder and find the file "Tutorial_01_Basics.mp4"  
 
-In this video only the very basic functionality of AID is presented. Furthermore, AIDeveloper contains many tooltips, which should help you to proceed. 
+In this video only the very basic functionality of AID is presented. Furthermore, AIDeveloper contains many tooltips, which should help you to proceed.  
+  
+In a second tutorial, the 'Expert' options of AID are explioted to perform transfer learning:  
+[![Alternate Text](art/Youtube_Link_Tutorial_2.png)](https://youtu.be/NWhv4PF0C4g "AIDeveloper Tutorial 2")
 
 ## Prerequisites
 
