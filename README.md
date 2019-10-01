@@ -36,7 +36,7 @@ The script based version was tested using Python 3.5 and Windows 7. See below to
 
 * Get a python distribution. AIDeveloper was developed using Anaconda3 5.3.1 64bit, which you can download here:
 https://www.anaconda.com/distribution/
-* Download the entire Github repository of AIDeveloper: find the green button on the top right ("Clone or download"), click it and then click "Download ZIP"
+* Download the entire GitHub repository of AIDeveloper: find the green button on the top right ("Clone or download"), click it and then click "Download ZIP"
 * Unzip the folder for example to C:\Users\MyPC\Downloads\AIDeveloper_0.0.4
 * open Anaconda Prompt
 * navigate to the folder where you put AIDeveloper `cd C:\Users\MyPC\Downloads\AIDeveloper_0.0.4`
