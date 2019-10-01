@@ -14,11 +14,11 @@ After the following 4 steps you are good to go:
 
 ## Getting Started
 
-There is a tutorial video (ca. 13min. short) which you either watch on YouTube:  
+There is a tutorial video (ca. 13min. short) which you can either watch on YouTube:  
 [![Alternate Text](/art/Youtube_Link_Tutorial1_v04.png)](https://youtu.be/dvFiSRnwoto "AIDeveloper Tutorial 1")
 
 
-or you can download from this GitHub page:   
+or you can download it from this GitHub page:   
 * Find the green button on the top right ("Clone or download"), click it and then click "Download ZIP"
 * Unzip the folder and find the file "Tutorial_01_Basics.mp4"  
 
@@ -26,6 +26,9 @@ In this video only the very basic functionality of AID is presented. Furthermore
   
 In a second tutorial (28min), the 'Expert' options of AID are exploited to perform transfer learning:  
 [![Alternate Text](art/Youtube_Link_Tutorial2_v04.png)](https://youtu.be/NWhv4PF0C4g "AIDeveloper Tutorial 2")
+
+ 
+First, an existing CNN is loaded into AID. This CNN was trained previously on CIFAR10 (grayscale) until a validation accuracy of 83%. Next, the Fashion-MNIST dataset is loaded into AID and training of the model is continued on this dataset. At the beginning, only the last layer of the CNN is trained, but later more and more layers are included into training. Also the dropout rates are optimized during the training process until a possibly record breaking testing accuracy of above 92% is reached.
 
 ## Prerequisites
 
