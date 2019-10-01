@@ -15,7 +15,7 @@ After the following 4 steps you are good to go:
 ## Getting Started
 
 There is a tutorial video (ca. 13min. short) which you either watch on YouTube:  
-[![Alternate Text](https://github.com/maikherbig/AIDeveloper/blob/master/art/Youtube_Link_03.png)](https://youtu.be/dvFiSRnwoto "AIDeveloper Tutorial 1")
+[![Alternate Text](/art/Youtube_Link_Tutorial1_v04.png)](https://youtu.be/dvFiSRnwoto "AIDeveloper Tutorial 1")
 
 
 or you can download from this GitHub page:   
@@ -25,7 +25,7 @@ or you can download from this GitHub page:
 In this video only the very basic functionality of AID is presented. Furthermore, AIDeveloper contains many tooltips, which should help you to proceed.  
   
 In a second tutorial, the 'Expert' options of AID are explioted to perform transfer learning:  
-[![Alternate Text](art/Youtube_Link_Tutorial_2.png)](https://youtu.be/NWhv4PF0C4g "AIDeveloper Tutorial 2")
+[![Alternate Text](art/Youtube_Link_Tutorial2_v04.png)](https://youtu.be/NWhv4PF0C4g "AIDeveloper Tutorial 2")
 
 ## Prerequisites
 
