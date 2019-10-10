@@ -5,21 +5,21 @@ AIDeveloper is a software tool that allows you to train, evaluate and apply deep
 for image classification within a graphical user-interface (GUI).  
 
 ## Installation 
-There is a tutorial video (ca. 1min. short) which you can watch on YouTube:  
+There is a tutorial video (ca. 1min. short) on YouTube:  
 [![Alternate Text](/art/Youtube_Link_Tutorial0_v01.png)](https://youtu.be/uqygHsVlCCM "AIDeveloper Tutorial 0")  
 In this video, I show you how to get AIDeveloper running on your Windows 7 or Windows 10 PC.  
-If you dont want to watch the video:  
-Please find **_standalone executables_** of AIDeveloper here:  
-https://github.com/maikherbig/AIDeveloper/releases  
-After the following 4 steps you are good to go:  
-* Download the zip-file   
+  
+**_If you dont want to watch the video:_**   
+Go through the following 5 steps and you are good to go:    
+* Go to https://github.com/maikherbig/AIDeveloper/releases
+* Download a zip-file (contains a **_standalone executable_**)   
 * Unzip it  
 * Go into the folder created folder and scroll down until you find an executable (full name is for example "AIDeveloper_0.0.4.exe")  
 * ---(Attention: if you are already using Keras: the file "home/.keras/keras.json" will be overwritten!!!)---  
 * DoubleClick this .exe to run it (no installation is required) 
 
 ## Basic usage
-There is a tutorial video (ca. 13min. short) which you can either watch on YouTube:  
+There is a tutorial video (ca. 13min. short) on YouTube:  
 [![Alternate Text](/art/Youtube_Link_Tutorial1_v04.png)](https://youtu.be/dvFiSRnwoto "AIDeveloper Tutorial 1")
 
 In this video only the very basic functionality of AID is presented. Furthermore, AIDeveloper contains many tooltips, which should help you to proceed.  
