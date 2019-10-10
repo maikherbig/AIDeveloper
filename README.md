@@ -10,11 +10,11 @@ There is a tutorial video (ca. 1min. short) on YouTube:
 In this video, I show you how to get AIDeveloper running on your Windows 7 or Windows 10 PC.  
   
 **_If you dont want to watch the video:_**   
-Go through the following 5 steps and you are good to go:    
+Go through the following 6 steps and you are good to go:    
 * Go to https://github.com/maikherbig/AIDeveloper/releases
 * Download a zip-file (contains a **_standalone executable_**)   
 * Unzip it  
-* Go into the folder created folder and scroll down until you find an executable (full name is for example "AIDeveloper_0.0.4.exe")  
+* Go into the unzipped folder and scroll down until you find an executable (full name is for example "AIDeveloper_0.0.4.exe")  
 * ---(Attention: if you are already using Keras: the file "home/.keras/keras.json" will be overwritten!!!)---  
 * DoubleClick this .exe to run it (no installation is required) 
 
