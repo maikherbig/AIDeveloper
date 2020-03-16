@@ -4,10 +4,20 @@ AIDeveloper
 ---------
 @author: maikherbig
 """
+import os,sys
+if not sys.platform.startswith("win"):
+    from multiprocessing import freeze_support
+    freeze_support()
+#Make sure to get the right icon file on win,linux and mac
+if sys.platform=="darwin":
+    icon_suff = ".icns"
+else:
+    icon_suff = ".ico"
 
 import pyqtgraph as pg
 from pyqtgraph.Qt import QtCore, QtWidgets, QtGui
-import os,sys
+from pyqtgraph import Qt
+
 import aid_start
 dir_root = os.path.dirname(aid_start.__file__)#ask the module for its origin
 dir_settings = os.path.join(dir_root,"AIDeveloper_Settings.json")#dir to settings
@@ -17,9 +27,9 @@ try:
     splashapp = QtWidgets.QApplication(sys.argv)
     #splashapp.setWindowIcon(QtGui.QIcon("."+os.sep+"art"+os.sep+Default_dict["Icon theme"]+os.sep+"main_icon_simple_04_256.ico"))
     # Create and display the splash screen
-    splash_pix = os.path.join(dir_root,"art",Default_dict["Icon theme"],"main_icon_simple_04_256.ico")
+    splash_pix = os.path.join(dir_root,"art",Default_dict["Icon theme"],"main_icon_simple_04_256"+icon_suff)
     splash_pix = QtGui.QPixmap(splash_pix)
-    #splash_pix = QtGui.QPixmap("."+os.sep+"art"+os.sep+Default_dict["Icon theme"]+os.sep+"main_icon_simple_04_256.ico")
+    #splash_pix = QtGui.QPixmap("."+os.sep+"art"+os.sep+Default_dict["Icon theme"]+os.sep+"main_icon_simple_04_256"+icon_suff)
     splash = QtWidgets.QSplashScreen(splash_pix, QtCore.Qt.WindowStaysOnTopHint)
     splash.setMask(splash_pix.mask())
     splash.show()
@@ -85,7 +95,7 @@ import aid_img, aid_dl, aid_bin
 import frontend
 from partial_trainability import partial_trainability
 
-VERSION = "0.0.5_dev4" #Python 3.5.6 Version
+VERSION = "0.0.6" #Python 3.5.6 Version
 model_zoo_version = model_zoo.__version__()
 print("AIDeveloper Version: "+VERSION)
 print("model_zoo.py Version: "+model_zoo.__version__())
@@ -3163,6 +3173,9 @@ class MainWindow(QtWidgets.QMainWindow):
         #where are folders?
         ind_true = np.where(np.array(isfolder)==True)[0]
         foldernames = list(np.array(l)[ind_true]) #select the indices that are valid
+        #On mac, there is a trailing / in case of folders; remove them
+        foldernames = [os.path.normpath(url) for url in foldernames]
+
         basename = [os.path.basename(f) for f in foldernames]
         #Look quickly inside the folders and ask the user if he wants to convert
         #to .rtdc (might take a while!)
@@ -9664,7 +9677,7 @@ class MainWindow(QtWidgets.QMainWindow):
 
 
     def actionDocumentation_function(self):        
-        icon = QtGui.QImage(os.path.join(dir_root,"art",Default_dict["Icon theme"],"main_icon_simple_04_256.ico"))
+        icon = QtGui.QImage(os.path.join(dir_root,"art",Default_dict["Icon theme"],"main_icon_simple_04_256"+icon_suff))
         icon = QtGui.QPixmap(icon).scaledToHeight(32, QtCore.Qt.SmoothTransformation)
         msg = QtWidgets.QMessageBox()
         msg.setIconPixmap(icon)
@@ -9679,7 +9692,7 @@ class MainWindow(QtWidgets.QMainWindow):
         f = open("conda_list.txt", "r")
         text_modules = f.read()
         f.close()
-        icon = QtGui.QImage(os.path.join(dir_root,"art",Default_dict["Icon theme"],"main_icon_simple_04_256.ico"))
+        icon = QtGui.QImage(os.path.join(dir_root,"art",Default_dict["Icon theme"],"main_icon_simple_04_256"+icon_suff))
         icon = QtGui.QPixmap(icon).scaledToHeight(32, QtCore.Qt.SmoothTransformation)
         msg = QtWidgets.QMessageBox()
         msg.setIconPixmap(icon)
@@ -9691,7 +9704,7 @@ class MainWindow(QtWidgets.QMainWindow):
         msg.exec_()
         
     def actionAbout_function(self):
-        icon = QtGui.QImage(os.path.join(dir_root,"art",Default_dict["Icon theme"],"main_icon_simple_04_256.ico"))
+        icon = QtGui.QImage(os.path.join(dir_root,"art",Default_dict["Icon theme"],"main_icon_simple_04_256"+icon_suff))
         icon = QtGui.QPixmap(icon).scaledToHeight(32, QtCore.Qt.SmoothTransformation)
         msg = QtWidgets.QMessageBox()
         msg.setIconPixmap(icon)
@@ -11725,7 +11738,7 @@ class MainWindow(QtWidgets.QMainWindow):
 def main():
     global app
     app = QtWidgets.QApplication(sys.argv)
-    app.setWindowIcon(QtGui.QIcon(os.path.join(dir_root,"art",Default_dict["Icon theme"],"main_icon_simple_04_256.ico")))
+    app.setWindowIcon(QtGui.QIcon(os.path.join(dir_root,"art",Default_dict["Icon theme"],"main_icon_simple_04_256"+icon_suff)))
 
     if Default_dict["Layout"] == "Dark":
         f = open("layout_dark.txt", "r")
