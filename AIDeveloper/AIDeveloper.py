@@ -39,6 +39,9 @@ except:
 #BEFORE importing tensorflow or anything from keras: make sure the keras.json has
 #certain properties
 keras_json_path = os.path.expanduser('~')+os.sep+'.keras'+os.sep+'keras.json'
+if not os.path.isdir(os.path.expanduser('~')+os.sep+'.keras'):
+    os.mkdir(os.path.expanduser('~')+os.sep+'.keras')
+
 aid_start.banner() #show a fancy banner in console
 aid_start.keras_json_check(keras_json_path)
 
