@@ -6416,9 +6416,13 @@ class MainWindow(QtWidgets.QMainWindow):
 
             #User can only choose a .model (FULL model with trained weights) , but for display only load the architecture
             if load_modelname.endswith(".model"):              
-                #Load the model config (this is the architecture)                  
-                model_keras = load_model(load_modelname,custom_objects=get_custom_metrics())
-                #model_config = model_keras.config()
+                #Load the full model
+                try:
+                    model_keras = load_model(load_modelname,custom_objects=get_custom_metrics())
+                except:    
+                    K.clear_session() #On linux It happened that there was an error, if another fitting was run before                  
+                    model_keras = load_model(load_modelname,custom_objects=get_custom_metrics())
+                #model_config = model_keras.config() #Load the model config (this is the architecture)
                 #load_modelname = load_modelname.split(".model")[0]
                 text1 = "Architecture: loaded from .model\nWeights: pretrained weights loaded'\n"
             else:
