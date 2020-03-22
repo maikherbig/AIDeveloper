@@ -25,14 +25,14 @@ In this video only the very basic functionality of AID is presented. Furthermore
 
   
   
-In a second tutorial (28min), the 'Expert' options of AID are exploited to perform transfer learning. 
+In a second tutorial (28min), the 'Expert' options of AID are exploited to perform transfer learning.  
 First, an existing CNN is loaded into AID. This CNN was trained previously on CIFAR-10 (grayscale) until a validation accuracy of 83%. Next, the Fashion-MNIST dataset is loaded into AID and training of the model is continued on this dataset. At the beginning, only the last layer of the CNN is trained, but later more and more layers are included into training. Also the dropout rates are optimized during the training process until a possibly record breaking testing accuracy of above 92% is reached. 
 [![Alternate Text](art/Youtube_Link_Tutorial2_v04.png)](https://youtu.be/NWhv4PF0C4g "AIDeveloper Tutorial 2")
 
 
 ## Prerequisites
 
-Since version 0.0.6, the standalone executables [executables](https://github.com/maikherbig/AIDeveloper/releases) of AIDeveloper are compatible to Windows, Mac and Linux.
+Since version 0.0.6, the standalone [executables](https://github.com/maikherbig/AIDeveloper/releases) of AIDeveloper are compatible to Windows, Mac and Linux.
 
 The script based version was tested using Python 3.5 on Windows, Mac and Linux. See below to find installation instructions.
 
