@@ -32,13 +32,13 @@ If you never used your Mac for Python programming you may first want to update P
 `eval "$(pyenv init -)"`  
 `eval "$(pyenv virtualenv-init -)"`   
   
-* Create a virtual environment with shared libraries:  
+* Create a Python environment (of version 3.5.9) with shared libraries:  
 `env PYTHON_CONFIGURE_OPTS="--enable-shared" pyenv install 3.5.9`  
+* Create a virtual environment based on this Python environment: 
+`pyenv virtualenv 3.5.9 myenv2`  
 * Activate that environment  
 `pyenv local myenv2`  
-* Install all required packages:
-`pyenv virtualenv 3.5.9 myenv2`  
-`pyenv local myenv2`  
+* Install all required packages:    
 `pip install --upgrade pip`  
 `pip install --upgrade setuptools`    
 `pip install numpy==1.15.2 scikit-learn==0.20.0`  
