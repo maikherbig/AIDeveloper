@@ -65,7 +65,6 @@ If you never used your Mac for Python programming you may first want to update P
 `pip install pyinstaller-pyup-scheduled-update-2020-03-01.zip`  
 * Option 3: install the latest development version:  
 `pip install https://github.com/pyinstaller/pyinstaller/tarball/develop`  
-  
 `pip install ffmpeg==1.4`  
 `pip install libopencv`  
 `pip install imageio==2.4.1`  
@@ -78,55 +77,8 @@ If you never used your Mac for Python programming you may first want to update P
 * Open a new Terminal at the folder containing all AIDeveloper files and the .spec file  
 * To start PyInstaller, use the following command:  
 `pyinstaller AIDeveloper_0.0.6_keep.spec`  
-* The spec file looks as following (but you can also find the file in Tutorial 3 PyInstaller on Mac/AIDeveloper_0.0.6_files.zip)  
+* (you can also find the file in Tutorial 3 PyInstaller on Mac/AIDeveloper_0.0.6_files.zip)  
  
-###########################Content of AIDeveloper_0.0.6_keep.spec#########################
-`  
--*- mode: python ; coding: utf-8 -*-
-
-block_cipher = None
-
-
-a = Analysis(['AIDeveloper_0.0.6.py'],
-             pathex=['/Users/maiksurlaub/AIDev'],
-             binaries=[],
-             datas=[],
-             hiddenimports=['h5py._proxy','ffmpeg','onnx','tf2onnx'],
-             hookspath=[],
-             runtime_hooks=[],
-             excludes=['model_zoo'],
-             win_no_prefer_redirects=False,
-             win_private_assemblies=False,
-             cipher=block_cipher,
-             noarchive=False)
-pyz = PYZ(a.pure, a.zipped_data,
-             cipher=block_cipher)
-exe = EXE(pyz,
-          a.scripts,
-          [],
-          exclude_binaries=True,
-          name='AIDeveloper_0.0.6',
-          debug=False,
-          bootloader_ignore_signals=False,
-          strip=False,
-          upx=True,
-          console=False , icon='main_icon_simple_04_256.icns')
-coll = COLLECT(exe,
-               a.binaries,
-               a.zipfiles,
-               a.datas,
-               strip=False,
-               upx=True,
-               upx_exclude=[],
-               name='AIDeveloper_0.0.6')
-
-app = BUNDLE(coll,
-             name='AIDeveloper_0.0.6.app',
-             info_plist={'NSHighResolutionCapable': 'True'},
-             icon='main_icon_simple_04_256.icns',
-             bundle_identifier=None)
-`  
-##########################################################################################
 
 When PyInstaller finished, there will be an object "AIDeveloper_0.0.6" with icon in "dist"
 Right click on the AIDeveloper_0.0.6 (the one with icon) and click "Show Package Contents"
