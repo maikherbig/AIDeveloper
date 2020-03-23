@@ -75,14 +75,12 @@ Continue installing required packages:
 `pip install tf2onnx==1.4.1`  
 `pip install pyqt5==5.9.2`  
 `pip install numpy==1.15.2`   
-
-
-* Open a new Terminal at the folder containing all AIDeveloper files and the .spec file  
-* To start PyInstaller, use the following command:  
+  
+Open a new Terminal at the folder containing all AIDeveloper files and the .spec file  
+To start PyInstaller, use the following command:  
 `pyinstaller AIDeveloper_0.0.6_keep.spec`  
-* (you can also find the file in Tutorial 3 PyInstaller on Mac/AIDeveloper_0.0.6_files.zip)  
+(you can also find the file in Tutorial 3 PyInstaller on Mac/AIDeveloper_0.0.6_files.zip)  
  
-
 When PyInstaller finished, there will be an object "AIDeveloper_0.0.6" with icon in "dist".  
 Right click on the AIDeveloper_0.0.6 (the one with icon) and click "Show Package Contents".  
 Find the folder called "MacOS" in /dist/AIDeveloper_0.0.6.app/Contents  
