@@ -9,7 +9,7 @@ set up a Python development environment that includes packages such as
 * OpenCV  
 * SciPy
 
-and how to use **PyInstaller** to freeze AIDeveloper (depends on all mentioned packes) to a standalone executable.  
+and how to use **PyInstaller** to freeze AIDeveloper (depends on all mentioned packages) to a standalone executable.  
   
 If you never used your Mac for Python programming you may first want to update Python. For that you first need Homebrew.
 * Open Terminal to install homebrew:  
