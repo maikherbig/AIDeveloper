@@ -1,7 +1,7 @@
 ![alt text](https://github.com/maikherbig/AIDeveloper/blob/master/art/Logos_div_v05.png "Keras TensorFlow OpenCV Scikit-learn Qt PyInstaller Logos")  
 
 Here, I show you how you can 
-set up a Python development environment that includess packages such as
+set up a Python development environment that includes packages such as
 * Keras  
 * Tensorflow  
 * PyQt5  
@@ -9,7 +9,7 @@ set up a Python development environment that includess packages such as
 * Open-CV  
 * SciPy
 
-* and how to use PyInstaller to freeze AIDeveloper (depends on all mentioned packes) to a standalone executable.  
+and how to use **PyInstaller** to freeze AIDeveloper (depends on all mentioned packes) to a standalone executable.  
   
 If you never used your Mac for Python programming you may first want to update Python. For that you first need Homebrew.
 * Open Terminal to install homebrew:  
