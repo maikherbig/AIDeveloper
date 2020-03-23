@@ -1,4 +1,4 @@
-![alt text](https://github.com/maikherbig/AIDeveloper/blob/master/art/Logos_div_v01.png "Keras TensorFlow OpenCV Scikit-learn Qt PyInstaller Logos")  
+![alt text](https://github.com/maikherbig/AIDeveloper/blob/master/art/Logos_div_v02.png "Keras TensorFlow OpenCV Scikit-learn Qt PyInstaller Logos")  
 
 Here, I show you how you can 
 * set up a Python development environment for AIDeveloper
