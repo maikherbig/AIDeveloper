@@ -80,17 +80,19 @@ If you never used your Mac for Python programming you may first want to update P
 * (you can also find the file in Tutorial 3 PyInstaller on Mac/AIDeveloper_0.0.6_files.zip)  
  
 
-When PyInstaller finished, there will be an object "AIDeveloper_0.0.6" with icon in "dist"
-Right click on the AIDeveloper_0.0.6 (the one with icon) and click "Show Package Contents"
-Find the folder called "MacOS" in /dist/AIDeveloper_0.0.6.app/Contents
-We need to copy some files into this "MacOS" folder:
-Copy following files: AIDeveloper_Settings.json, conda_list.txt, Empty.rtdc, #layout_dark_notooltip.txt, layout_dark.txt, layout_darkorange_notooltip.txt, #layout_darkorange.txt, main_icon_simple_04_256.icns, model_zoo.py)
-and the following folders: art, keras_metrics 
-and paste them into "MacOS"
-We need two more folders to get Onnx working: 
-- Either unzip the Onnx.zip folder, which you find in my GitHub repository: Tutorial 3 PyInstaller on Mac/Onnx.zip and copy both folders,
-- Or go into you home directoy and then to: /.pyenv/versions/3.5.9/envs/myenv2/lib/python3.5/site-packages   and find the onnx and onnx-1.6.0.dist-info folder in there. Copy them
-and paste both folder in MacOS. There will be a warning because of onnx. Select "Merge"
-
-DONE! You can now double-click the AIDeveloper_0.0.6 with icon and it will run! Alternatively you can also start it from console by right-clicking on "MacOS" and selecting "New Terminal at Folder" and then typing in the console  
+When PyInstaller finished, there will be an object "AIDeveloper_0.0.6" with icon in "dist".  
+Right click on the AIDeveloper_0.0.6 (the one with icon) and click "Show Package Contents".  
+Find the folder called "MacOS" in /dist/AIDeveloper_0.0.6.app/Contents  
+We need to copy some files into this "MacOS" folder:  
+Copy following files:  
+-AIDeveloper_Settings.json, -conda_list.txt, -Empty.rtdc, -layout_dark_notooltip.txt, -layout_dark.txt, -layout_darkorange_notooltip.txt, -layout_darkorange.txt, -main_icon_simple_04_256.icns, -model_zoo.py  
+and the following folders:  
+-\art, -\keras_metrics 
+and paste them (files as well as folders) into "MacOS".  
+We need two more folders to get Onnx working:  
+- Either unzip the Onnx.zip folder, which you find in my GitHub repository: Tutorial 3 PyInstaller on Mac/Onnx.zip and copy both folders  
+- or go into you home directoy and then to: /.pyenv/versions/3.5.9/envs/myenv2/lib/python3.5/site-packages  
+and find the onnx and onnx-1.6.0.dist-info folder in there. Copy them and paste both folders into the MacOS folder. There will be a warning because of onnx: select "Merge".  
+  
+DONE! You can now double-click the AIDeveloper_0.0.6 with icon and it will run! Alternatively you can also start it from console by right-clicking on "MacOS" and selecting "New Terminal at Folder" and then typing in the console    
 `./AIDeveloper_0.0.6` #(without .py at the end)
