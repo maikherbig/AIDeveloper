@@ -6,7 +6,7 @@ set up a Python development environment that includes packages such as
 * Tensorflow  
 * PyQt5  
 * Scikit-learn  
-* Open-CV  
+* OpenCV  
 * SciPy
 
 and how to use **PyInstaller** to freeze AIDeveloper (depends on all mentioned packes) to a standalone executable.  
