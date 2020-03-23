@@ -35,12 +35,11 @@ If you never used your Mac for Python programming you may first want to update P
 `env PYTHON_CONFIGURE_OPTS="--enable-shared" pyenv install 3.5.9`  
 * Activate that environment  
 `pyenv local myenv2`  
-* Install all required packages:  
+* Install all required packages:
 `pyenv virtualenv 3.5.9 myenv2`  
 `pyenv local myenv2`  
 `pip install --upgrade pip`  
-`pip install --upgrade setuptools`  
-
+`pip install --upgrade setuptools`    
 `pip install numpy==1.15.2 scikit-learn==0.20.0`  
 `pip install python-dateutil==2.7.5`  
 `pip install keras==2.2.2`  
@@ -50,7 +49,6 @@ If you never used your Mac for Python programming you may first want to update P
 `pip install tensorflow==1.10.0`  
 `pip install mkl==2018.0.3`  
 `pip install Pillow==5.4.1`  
-  
 `pip install protobuf==3.6.0`  
 `pip install pyqtgraph==0.10.0`  
 `pip install pyqt5==5.9.2`  
