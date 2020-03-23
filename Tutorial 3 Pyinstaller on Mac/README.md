@@ -66,7 +66,7 @@ If you never used your Mac for Python programming you may first want to update P
 * Option 3: install the latest development version:  
 `pip install https://github.com/pyinstaller/pyinstaller/tarball/develop`
 
-Continue installing required packages:  
+* Continue installing required packages:  
 `pip install ffmpeg==1.4`  
 `pip install libopencv==0.0.1`  
 `pip install imageio==2.4.1`  
@@ -76,8 +76,8 @@ Continue installing required packages:
 `pip install pyqt5==5.9.2`  
 `pip install numpy==1.15.2`   
   
-Open a new Terminal at the folder containing all AIDeveloper files and the .spec file  
-To start PyInstaller, use the following command:  
+* Open a new Terminal at the folder containing all AIDeveloper files and the .spec file  
+* To start PyInstaller, use the following command:  
 `pyinstaller AIDeveloper_0.0.6_keep.spec`  
 (you can also find the file in Tutorial 3 PyInstaller on Mac/AIDeveloper_0.0.6_files.zip)  
  
