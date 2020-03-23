@@ -33,9 +33,9 @@ If you never used your Mac for Python programming you may first want to update P
   
 * Create a Python environment (of version 3.5.9) with shared libraries:  
 `env PYTHON_CONFIGURE_OPTS="--enable-shared" pyenv install 3.5.9`  
-* Create a virtual environment based on this Python environment: 
+* Create a virtual environment based on this version of Python:  
 `pyenv virtualenv 3.5.9 myenv2`  
-* Activate that environment  
+* Activate that virtual environment  
 `pyenv local myenv2`  
 * Install all required packages:    
 `pip install --upgrade pip`  
