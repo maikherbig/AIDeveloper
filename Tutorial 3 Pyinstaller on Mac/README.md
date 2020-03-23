@@ -74,8 +74,9 @@ Continue installing required packages:
 `pip install opencv-contrib-python-headless==4.1.1.26`  
 `pip install tf2onnx==1.4.1`  
 `pip install pyqt5==5.9.2`  
-`pip install numpy==1.15.2`  
-  
+`pip install numpy==1.15.2`   
+
+
 * Open a new Terminal at the folder containing all AIDeveloper files and the .spec file  
 * To start PyInstaller, use the following command:  
 `pyinstaller AIDeveloper_0.0.6_keep.spec`  
