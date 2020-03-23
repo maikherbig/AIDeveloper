@@ -12,7 +12,7 @@ set up a Python development environment that includes packages such as
 and how to use **PyInstaller** to freeze AIDeveloper (depends on all mentioned packes) to a standalone executable.  
   
 If you never used your Mac for Python programming you may first want to update Python. For that you first need Homebrew.
-* Open Terminal to install homebrew:  
+1. Open Terminal to install homebrew:  
 `/usr/bin/ruby -e "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/master/install)"`
 * Use Homebrew to update Python:  
 `brew reinstall python`  
@@ -75,8 +75,9 @@ If you never used your Mac for Python programming you may first want to update P
 `pip install tf2onnx==1.4.1`  
 `pip install pyqt5==5.9.2`  
 `pip install numpy==1.15.2`   
-  
-* Open a new Terminal at the folder containing all AIDeveloper files and the .spec file  
+ 
+* Download the whole AIDeveloper GitHub repo: go to [https://github.com/maikherbig/AIDeveloper](https://github.com/maikherbig/AIDeveloper), click the green button to download as zip. Then unpack it and find in "\Tutorial 3 Pyinstaller on Mac" the zip file "AIDeveloper_0.0.6_files.zip". Unzip it and start a new Terminal at this folder. Note this in this folder is also a .spec fil
+* Open a new Terminal at the folder containing all AIDeveloper files (find all these files in my repo:"AIDeveloper_0.0.6_files.zip") and the .spec file  
 * To start PyInstaller, use the following command:  
 `pyinstaller AIDeveloper_0.0.6_keep.spec`  
 (you can also find the file in Tutorial 3 PyInstaller on Mac/AIDeveloper_0.0.6_files.zip)  
