@@ -3,6 +3,7 @@
 Here, I show you how you can 
 * set up a Python development environment for AIDeveloper
 * use PyInstaller to freeze AIDeveloper to a standalone executable.  
+
 The follwing instructions guide you step by step to create an environment that includes packages such as
 * Keras  
 * Tensorflow  
