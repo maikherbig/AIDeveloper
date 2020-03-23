@@ -1,11 +1,11 @@
-![alt text](https://github.com/maikherbig/AIDeveloper/blob/master/art/Logos_div_v05.png "Keras TensorFlow OpenCV Scikit-learn Qt PyInstaller Logos")  
+![alt text](https://github.com/maikherbig/AIDeveloper/blob/master/art/Logos_div_v05.png "Keras TensorFlow OpenCV scikit-learn Qt PyInstaller Logos")  
 
 Here, I show you how you can 
 set up a Python development environment that includes packages such as
 * Keras  
-* Tensorflow  
+* TensorFlow  
 * PyQt5  
-* Scikit-learn  
+* scikit-learn  
 * OpenCV  
 * SciPy
 
@@ -59,14 +59,16 @@ If you never used your Mac for Python programming you may first want to update P
 `pip install setuptools==44.0.0`  
   
 * To install PyInstaller, there are 3 options:  
-* Option 1, install a particular version from GitHub:  
+* Option 1: install a particular version from GitHub:  
 `pip install https://github.com/pyinstaller/pyinstaller/tarball/pyup/scheduled-update-2020-03-01`  
-* Option 2 (shown in video), if this directory does not exist anymore, you can download this version of PyInstaller from my GitHub   repository (AIDeveloper/Tutorial 3 PyInstaller on Mac/pyinstaller-pyup-scheduled-update-2020-03-01.zip). Install it using:  
+* Option 2 (shown in my YouTube video): if this directory does not exist anymore, you can download this version of PyInstaller from my GitHub   repository (AIDeveloper/Tutorial 3 PyInstaller on Mac/pyinstaller-pyup-scheduled-update-2020-03-01.zip). Install it using:  
 `pip install pyinstaller-pyup-scheduled-update-2020-03-01.zip`  
 * Option 3: install the latest development version:  
-`pip install https://github.com/pyinstaller/pyinstaller/tarball/develop`  
+`pip install https://github.com/pyinstaller/pyinstaller/tarball/develop`
+
+Continue installing required packages:  
 `pip install ffmpeg==1.4`  
-`pip install libopencv`  
+`pip install libopencv==0.0.1`  
 `pip install imageio==2.4.1`  
 `pip install h5py==2.8.0`  
 `pip install opencv-contrib-python-headless==4.1.1.26`  
