@@ -6,7 +6,7 @@ for image classification within a graphical user-interface (GUI).
 
 # Installation 
 There is a tutorial video (ca. 1min. short) on YouTube.  
-In this video, I show you how to get AIDeveloper running on your Windows 7 or Windows 10 PC.  
+In this video, I show you how to get AIDeveloper running on your PC.  
 [![Alternate Text](/art/Youtube_Link_Tutorial0_v01.png)](https://youtu.be/uqygHsVlCCM "AIDeveloper Tutorial 0")  
 
   
