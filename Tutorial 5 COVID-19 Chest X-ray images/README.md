@@ -1,5 +1,6 @@
 # Tutorial 5: Diagnosis of COVID-19 using chest X-ray images
-
+This tutorial is also available as video:    
+[![Alternate Text](https://github.com/maikherbig/AIDeveloper/blob/master/art/Youtube_Link_Tutorial5_v03.png)](https://www.youtube.com/watch?v=KRDJBJD7CsA "AIDeveloper Tutorial 5")
 ## Inspect the COVID-19 dataset  
 In this tutorial, I want to show you how you can build a classification algorithm that detects illnesses based on chest X-ray images.  
 On [this](https://github.com/ieee8023/covid-chestxray-dataset) website, I found chest X-ray images of COVID-19 patients.
