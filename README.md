@@ -34,7 +34,7 @@ First, an existing CNN is loaded into AID. This CNN was trained previously on CI
 In this tutorial, AID is used to tackle a biomedical question that is currently of high interest: diagnosis of COVID-19. One problem is the scarcity of COVID-19 X-ray images, which results in a need of modern regularization techniques to prevent overfitting. First, two other large datasets are used to pre-train a model. Next, this model is optimized for images of COVID-19.
 More information and step by step instructions are available [here](https://github.com/maikherbig/AIDeveloper/tree/master/Tutorial%205%20COVID-19%20Chest%20X-ray%20images).  
 Furthermore, there is a video showing the analysis procedure from beginning to end:  
-[![Alternate Text](art/Youtube_Link_Tutorial5_v03.png)](https://youtu.be/NWhv4PF0C4g "AIDeveloper Tutorial 2")
+[![Alternate Text](art/Youtube_Link_Tutorial5_v03.png)](https://www.youtube.com/watch?v=KRDJBJD7CsA "AIDeveloper Tutorial 5")
 
 
 # Prerequisites
