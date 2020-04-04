@@ -47,7 +47,7 @@ aid_start.keras_json_check(keras_json_path)
 
 import traceback,shutil,re,ast,io,platform
 import h5py,json,time,copy,urllib
-from stat import S_IREAD, S_IRGRP, S_IROTH,S_IWRITE
+from stat import S_IREAD,S_IRGRP,S_IROTH,S_IWRITE,S_IWGRP,S_IWOTH
 
 import tensorflow as tf
 from tensorflow.python.client import device_lib
@@ -95,10 +95,10 @@ from keras2onnx import convert_keras
 from onnx import save_model as save_onnx
 
 import aid_img, aid_dl, aid_bin
-import frontend
+import aid_frontend
 from partial_trainability import partial_trainability
 
-VERSION = "0.0.6" #Python 3.5.6 Version
+VERSION = "0.0.6_dev1" #Python 3.5.6 Version
 model_zoo_version = model_zoo.__version__()
 print("AIDeveloper Version: "+VERSION)
 print("model_zoo.py Version: "+model_zoo.__version__())
@@ -3155,7 +3155,7 @@ class MainWindow(QtWidgets.QMainWindow):
         self.actionOrder0.setText(_translate("MainWindow", "0 (nearest neighbor)",None))
         self.actionOrder1.setText(_translate("MainWindow", "1 (linear interp.)",None))
         self.actionOrder2.setText(_translate("MainWindow", "2 (quadratic interp.)",None))
-        self.actionOrder3.setText(_translate("MainWindow", "3 (qubic interp.)",None))
+        self.actionOrder3.setText(_translate("MainWindow", "3 (cubic interp.)",None))
         self.actionOrder4.setText(_translate("MainWindow", "4",None))
         self.actionOrder5.setText(_translate("MainWindow", "5",None))
 
@@ -3851,7 +3851,7 @@ class MainWindow(QtWidgets.QMainWindow):
     def partialtrainability_activated_pop(self,listindex):#same function like partialTrainability but on fitting popup
         print("Not implemented yet")
         print("Placeholder")
-        print("Baustelle")
+        print("Building site")
 
     def lossWeights_activated(self,on_or_off,listindex):
         if listindex==-1:
@@ -3879,7 +3879,7 @@ class MainWindow(QtWidgets.QMainWindow):
             SelectedFiles = item_ui.SelectedFiles
             
         item_ui.popup_lossW = MyPopup()
-        item_ui.popup_lossW_ui = frontend.popup_lossweights()
+        item_ui.popup_lossW_ui = aid_frontend.popup_lossweights()
         item_ui.popup_lossW_ui.setupUi(item_ui.popup_lossW) #open a popup to show the numbers of events in each class in a table
 
         indices = [SelectedFiles[i]["class"] for i in range(len(SelectedFiles))]
@@ -5698,7 +5698,7 @@ class MainWindow(QtWidgets.QMainWindow):
 
     def partialTrainability(self):
         self.popup_trainability = MyPopup()
-        self.popup_trainability_ui = frontend.popup_trainability()
+        self.popup_trainability_ui = aid_frontend.popup_trainability()
         self.popup_trainability_ui.setupUi(self.popup_trainability) #open a popup to show the layers in a table
 
         #One can only activate this function when there was a model loaded already!
@@ -7287,15 +7287,15 @@ class MainWindow(QtWidgets.QMainWindow):
                 Para_dict.to_excel(writer,sheet_name='Parameters')
                 #self.model_meta = writer
                 if os.path.isfile(new_modelname.split(".model")[0]+'_meta.xlsx'):
-                    os.chmod(new_modelname.split(".model")[0]+'_meta.xlsx', S_IWRITE)
+                    os.chmod(new_modelname.split(".model")[0]+'_meta.xlsx', S_IREAD|S_IRGRP|S_IROTH|S_IWRITE|S_IWGRP|S_IWOTH)#change to writable
                 writer.save()
-                os.chmod(new_modelname.split(".model")[0]+'_meta.xlsx', S_IREAD|S_IRGRP|S_IROTH)
+                os.chmod(new_modelname.split(".model")[0]+'_meta.xlsx', S_IREAD|S_IRGRP|S_IROTH)#change to readable, non-writable
             if collection==True:
                 for i in range(len(Writers)):
                     Para_dict.to_excel(Writers[i],sheet_name='Parameters')
                     #self.model_meta = writer
                     if os.path.isfile(model_keras_path[i].split(".model")[0]+'_meta.xlsx'):
-                        os.chmod(model_keras_path[i].split(".model")[0]+'_meta.xlsx', S_IWRITE)
+                        os.chmod(model_keras_path[i].split(".model")[0]+'_meta.xlsx', S_IREAD|S_IRGRP|S_IROTH|S_IWRITE|S_IWGRP|S_IWOTH)
                     Writers[i].save()
                     os.chmod(model_keras_path[i].split(".model")[0]+'_meta.xlsx', S_IREAD|S_IRGRP|S_IROTH)
 
@@ -7443,12 +7443,12 @@ class MainWindow(QtWidgets.QMainWindow):
                     Para_dict.to_excel(self.writer,sheet_name='Parameters',startrow=self.writer.sheets['Parameters'].max_row,header= False)
                     #self.model_meta = writer
                     if os.path.isfile(new_modelname.split(".model")[0]+'_meta.xlsx'):
-                        os.chmod(new_modelname.split(".model")[0]+'_meta.xlsx', S_IWRITE)
+                        os.chmod(new_modelname.split(".model")[0]+'_meta.xlsx', S_IREAD|S_IRGRP|S_IROTH|S_IWRITE|S_IWGRP|S_IWOTH)#change to read/write
                     try:
                         self.writer.save()
                     except:
                         pass
-                    os.chmod(new_modelname.split(".model")[0]+'_meta.xlsx', S_IREAD|S_IRGRP|S_IROTH)
+                    os.chmod(new_modelname.split(".model")[0]+'_meta.xlsx', S_IREAD|S_IRGRP|S_IROTH)#change to only readable
 
                 if collection==True:
                     for i in range(len(Writers)):
@@ -7457,12 +7457,12 @@ class MainWindow(QtWidgets.QMainWindow):
                         Para_dict.to_excel(writer,sheet_name='Parameters',startrow=writer.sheets['Parameters'].max_row,header= False)
                         #self.model_meta = writer
                         if os.path.isfile(model_keras_path[i].split(".model")[0]+'_meta.xlsx'):
-                            os.chmod(model_keras_path[i].split(".model")[0]+'_meta.xlsx', S_IWRITE)
+                            os.chmod(model_keras_path[i].split(".model")[0]+'_meta.xlsx', S_IREAD|S_IRGRP|S_IROTH|S_IWRITE|S_IWGRP|S_IWOTH) #read/write
                         try:
                             writer.save()
                         except:
                             pass
-                        os.chmod(model_keras_path[i].split(".model")[0]+'_meta.xlsx', S_IREAD|S_IRGRP|S_IROTH)
+                        os.chmod(model_keras_path[i].split(".model")[0]+'_meta.xlsx', S_IREAD|S_IRGRP|S_IROTH) #read only
 
 
 
@@ -8172,7 +8172,7 @@ class MainWindow(QtWidgets.QMainWindow):
 
                                     #If this runs the first time, create the file with header
                                     if os.path.isfile(new_modelname.split(".model")[0]+'_meta.xlsx'):
-                                        os.chmod(new_modelname.split(".model")[0]+'_meta.xlsx', S_IWRITE)
+                                        os.chmod(new_modelname.split(".model")[0]+'_meta.xlsx', S_IREAD|S_IRGRP|S_IROTH|S_IWRITE|S_IWGRP|S_IWOTH) #read/write
                                     DF1.to_excel(writer,sheet_name='History')
                                     writer.save()
                                     os.chmod(new_modelname.split(".model")[0]+'_meta.xlsx', S_IREAD|S_IRGRP|S_IROTH)
@@ -8196,7 +8196,7 @@ class MainWindow(QtWidgets.QMainWindow):
 #                                        try:
                                     #Saving
                                     if os.path.isfile(new_modelname.split(".model")[0]+'_meta.xlsx'):
-                                        os.chmod(new_modelname.split(".model")[0]+'_meta.xlsx', S_IWRITE) #make read/write
+                                        os.chmod(new_modelname.split(".model")[0]+'_meta.xlsx', S_IREAD|S_IRGRP|S_IROTH|S_IWRITE|S_IWGRP|S_IWOTH) #make read/write
                                     DF1.to_excel(writer,sheet_name='History', startrow=writer.sheets['History'].max_row,header= False)
                                     writer.save()
                                     os.chmod(new_modelname.split(".model")[0]+'_meta.xlsx', S_IREAD|S_IRGRP|S_IROTH)  #make read only
@@ -8222,7 +8222,7 @@ class MainWindow(QtWidgets.QMainWindow):
                                         SAVED[i] = []
                                         #If this runs the first time, create the file with header
                                         if os.path.isfile(model_keras_path[i].split(".model")[0]+'_meta.xlsx'):
-                                            os.chmod(model_keras_path[i].split(".model")[0]+'_meta.xlsx', S_IWRITE)
+                                            os.chmod(model_keras_path[i].split(".model")[0]+'_meta.xlsx', S_IREAD|S_IRGRP|S_IROTH|S_IWRITE|S_IWGRP|S_IWOTH) #read/write
                                         DF1.to_excel(Writers[i],sheet_name='History')
                                         Writers[i].save()
                                         os.chmod(model_keras_path[i].split(".model")[0]+'_meta.xlsx', S_IREAD|S_IRGRP|S_IROTH)
@@ -8242,7 +8242,7 @@ class MainWindow(QtWidgets.QMainWindow):
                                         SAVED[i] = []
                                         #Saving
                                         if os.path.isfile(model_keras_path[i].split(".model")[0]+'_meta.xlsx'):
-                                            os.chmod(model_keras_path[i].split(".model")[0]+'_meta.xlsx', S_IWRITE) #make read/write
+                                            os.chmod(model_keras_path[i].split(".model")[0]+'_meta.xlsx', S_IREAD|S_IRGRP|S_IROTH|S_IWRITE|S_IWGRP|S_IWOTH) #make read/write
                                         DF1.to_excel(Writers[i],sheet_name='History', startrow=Writers[i].sheets['History'].max_row,header= False)
                                         Writers[i].save()
                                         os.chmod(model_keras_path[i].split(".model")[0]+'_meta.xlsx', S_IREAD|S_IRGRP|S_IROTH)  #make read only
@@ -8270,7 +8270,7 @@ class MainWindow(QtWidgets.QMainWindow):
                     else: # else it exists so append without writing the header
                        DF1.to_excel(writer,sheet_name='History', startrow=writer.sheets['History'].max_row,header= False)
                 if os.path.isfile(new_modelname.split(".model")[0]+'_meta.xlsx'):
-                    os.chmod(new_modelname.split(".model")[0]+'_meta.xlsx', S_IWRITE) #make read/write
+                    os.chmod(new_modelname.split(".model")[0]+'_meta.xlsx', S_IREAD|S_IRGRP|S_IROTH|S_IWRITE|S_IWGRP|S_IWOTH) #make read/write
                 writer.save()
                 writer.close()
 
@@ -8291,7 +8291,7 @@ class MainWindow(QtWidgets.QMainWindow):
                         else: # else it exists so append without writing the header
                            DF1.to_excel(writer,sheet_name='History', startrow=writer.sheets['History'].max_row,header= False)
                     if os.path.isfile(model_keras_path[i].split(".model")[0]+'_meta.xlsx'):
-                        os.chmod(model_keras_path[i].split(".model")[0]+'_meta.xlsx', S_IWRITE) #make read/write
+                        os.chmod(model_keras_path[i].split(".model")[0]+'_meta.xlsx', S_IREAD|S_IRGRP|S_IROTH|S_IWRITE|S_IWGRP|S_IWOTH) #make read/write
                     Writers[i].save()
                     Writers[i].close()
                     
@@ -8403,7 +8403,7 @@ class MainWindow(QtWidgets.QMainWindow):
             
         ###################Popup Window####################################
         self.fittingpopups.append(MyPopup())
-        ui = frontend.Fitting_Ui()
+        ui = aid_frontend.Fitting_Ui()
 
         ui.setupUi(self.fittingpopups[-1]) #append the ui to the last element on the list
         self.fittingpopups_ui.append(ui)
@@ -9680,7 +9680,9 @@ class MainWindow(QtWidgets.QMainWindow):
         #it on a random image.
         #The same image is also used as input the the original .model and 
         #both results are then compared
-        print("Baustelle")
+        print("Not implemented yet")
+        print("Placeholder")
+        print("Building site")
 
 
     def actionDocumentation_function(self):        
@@ -9696,7 +9698,18 @@ class MainWindow(QtWidgets.QMainWindow):
         msg.exec_()
 
     def actionSoftware_function(self):
-        f = open("conda_list.txt", "r")
+        if sys.platform == "win32":
+            plat = "win"
+        elif sys.platform=="darwin":
+            plat = "mac"      
+        elif sys.platform=="linux":
+            plat = "linux"
+        else:
+            print("Unknown Operating system")
+            plat = "Win"
+            
+        dir_deps = os.path.join(dir_root,"aid_dependencies_"+plat+".txt")#dir to aid_dependencies
+        f = open(dir_deps, "r")
         text_modules = f.read()
         f.close()
         icon = QtGui.QImage(os.path.join(dir_root,"art",Default_dict["Icon theme"],"main_icon_simple_04_256"+icon_suff))
