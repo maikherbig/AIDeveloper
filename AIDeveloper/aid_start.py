@@ -56,6 +56,10 @@ def get_default_dict(dir_settings):
             Default_dict["MotionBlur On"] = False
             Default_dict["MotionBlur Kernel"] = "0,5"
             Default_dict["MotionBlur Angle"] = "-10,10"
+        if "Image_import_dimension" not in Default_dict.keys():
+            Default_dict["Image_import_dimension"] = 150
+            Default_dict["Image_import_interpol_method"] = "Lanczos"
+    
     return Default_dict
 
 def save_default_dict(dir_settings):
@@ -65,6 +69,8 @@ def save_default_dict(dir_settings):
     Default_dict = {"norm_methods":["None","Div. by 255","StdScaling using mean and std of each image individually","StdScaling using mean and std of all training data"],\
     "Input image size":32,"Normalization":"Div. by 255",\
     "Nr. epochs":2500,"Keras refresh after nr. epochs": 2,\
+    
+    "Image_import_dimension":150,"Image_import_interpol_method":"Lanczos",\
     
     "Horz. flip":False,"Vert. flip":True,"rotation":3,\
     "width_shift":0.001,"height_shift":0.001,"zoom":0.001,"shear":0.005,\
