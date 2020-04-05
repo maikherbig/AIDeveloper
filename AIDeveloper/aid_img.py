@@ -645,4 +645,150 @@ def imgs_2_rtdc(fname,images,pos_x,pos_y):
     hdf.close()
 
 
+def image_resize_crop_pad(images,pos_x,pos_y,final_h,final_w,channels,verbose=False):
+    """
+    Function takes a list images (list of numpy arrays) an resizes them to 
+    an equal size by center cropping and/or padding.
+    
+    images: list of images of arbitrary shape
+    final_h: integer, defines final height of the images
+    final_w: integer, defines final width of the images
+    """
+    for i in range(len(images)):
+        image = images[i]
+        #HEIGHT
+        diff_h = int(abs(final_h-image.shape[0]))
+        #Padding or Cropping?
+        if final_h > image.shape[0]: #Cropsize is larger than the image_shape
+            padding_h = True #if the requested image height is larger than the zoomed in version of the original images, I have to pad
+            diff_h = int(np.round(abs(final_h-image.shape[0])/2.0,0))
+            if verbose:
+                print("Padding height: "+str(diff_h) + " pixels each side")
+        elif final_h <= image.shape[0]:
+            padding_h = False
+            diff_h = int(np.round(abs(final_h-image.shape[0])/2.0,0))
+            if verbose:
+                print("Cropping height: "+str(diff_h) + " pixels each side")
+    
+        #WIDTH
+        diff_w = int(abs(final_w-image.shape[1]))
+        #Padding or Cropping?
+        if final_w > image.shape[1]: #Cropsize is larger than the image_shape
+            padding_w = True #if the requested image height is larger than the zoomed in version of the original images, I have to pad
+            diff_w = int(np.round(abs(final_w-image.shape[1])/2.0,0))
+            if verbose:
+                print("Padding width: "+str(diff_w) + " pixels each side")
+        elif final_w <= image.shape[1]:
+            padding_w = False
+            diff_w = int(np.round(abs(final_w-image.shape[1])/2.0,0))
+            if verbose:
+                print("Cropping width: "+str(diff_w) + " pixels each side")
+        #In case of odd image shapes:
+        #check if the resulting cropping or padding operation would return the correct size
+        odd_h,odd_w = -1,-1
+        if padding_w == True:
+            while final_w!=image.shape[1]+2*diff_w+odd_w:
+                odd_w+=1 #odd_w is increased until the resulting image is of correct size
+        elif padding_w == False:
+            while final_w!=image.shape[1]-2*diff_w+odd_w:
+                odd_w+=1 #odd_w is increased until the resulting image is of correct size
+        if padding_h == True:
+            while final_h!=image.shape[0]+2*diff_h+odd_h:
+                odd_h+=1 #odd_w is increased until the resulting image is of correct size
+        elif padding_h == False:
+            while final_h!=image.shape[0]-2*diff_h+odd_h:
+                odd_h+=1 #odd_w is increased until the resulting image is of correct size
+                
+        #Execute padding-only operation and overwrite original on list "images"
+        if padding_h==True and padding_w==True:
+            if channels==1:
+                images[i] = np.pad(image,pad_width=( (diff_h, diff_h+odd_h),(diff_w, diff_w+odd_w) ),mode='constant')
+            elif channels==3:
+                images[i] = np.pad(image,pad_width=( (diff_h, diff_h+odd_h),(diff_w, diff_w+odd_w),(0, 0) ),mode='constant')
+            else:
+                if verbose:
+                    print("Invalid image dimensions: "+str(image.shape))
+    
+        #Execute cropping-only operation and overwrite original on list "images"
+        elif padding_h==False and padding_w==False:
+            #Compute again the x,y locations of the cells (this is fast)
+            y1 = np.around(pos_y[i]-final_h/2.0)              
+            x1 = np.around(pos_x[i]-final_w/2.0) 
+            y2 = y1+final_h               
+            x2 = x1+final_w
+            #overwrite the original image
+            images[i] = image[int(y1):int(y2),int(x1):int(x2)]
+            
+        else:
+            if padding_h==True:
+                if channels==1:
+                    image = np.pad(image,pad_width=( (diff_h, diff_h+odd_h),(0, 0) ),mode='constant')
+                elif channels==3:
+                    image = np.pad(image,pad_width=( (diff_h, diff_h+odd_h),(0, 0),(0, 0) ),mode='constant')
+                else:
+                    if verbose:
+                        print("Invalid image dimensions: "+str(image.shape))
+                if verbose:
+                    print("Image size after padding heigth :"+str(image.shape))
+                
+            if padding_w==True:
+                if channels==1:
+                    image = np.pad(image,pad_width=( (0, 0),(diff_w, diff_w+odd_w) ),mode='constant')
+                elif channels==3:
+                    image = np.pad(image,pad_width=( (0, 0),(diff_w, diff_w+odd_w),(0, 0) ),mode='constant')
+                else:
+                    if verbose:
+                        print("Invalid image dimensions: "+str(image.shape))
+                if verbose:
+                    print("Image size after padding width :"+str(image.shape))
+        
+            if padding_h==False:
+                #Compute again the x,y locations of the cells (this is fast)
+                y1 = np.around(pos_y[i]-final_h/2.0)              
+                y2 = y1+final_h               
+                image = image[int(y1):int(y2),:]
+                if verbose:
+                    print("Image size after cropping height:"+str(image.shape))
+        
+            if padding_w==False:
+                #Compute again the x,y locations of the cells (this is fast)
+                x1 = np.around(pos_x[i]-final_w/2.0) 
+                x2 = x1+final_w
+                image = image[:,int(x1):int(x2)]
+                if verbose:
+                    print("Image size after cropping width:"+str(image.shape))
+            
+            images[i] = image
+    return images
 
+
+def image_resize_scale(images,pos_x,pos_y,final_h,final_w,channels,interpolation_method,verbose=False):
+    """
+    Function takes a list images (list of numpy arrays) an resizes them to 
+    an equal size by scaling (interpolation).
+    
+    images: list of images of arbitrary shape
+    final_h: integer, defines final height of the images
+    final_w: integer, defines final width of the images
+    interpolation_method: available are: (text copied from original docs: https://docs.opencv.org/2.4/modules/imgproc/doc/geometric_transformations.html#resize)
+        -cv2.INTER_NEAREST – a nearest-neighbor interpolation
+        -cv2.INTER_LINEAR – a bilinear interpolation (used by default)
+        -cv2.INTER_AREA – resampling using pixel area relation. It may be a preferred method for image decimation, as it gives moire’-free results. But when the image is zoomed, it is similar to the INTER_NEAREST method.
+        -cv2.INTER_CUBIC - a bicubic interpolation over 4x4 pixel neighborhood
+        -cv2.INTER_LANCZOS4 - a Lanczos interpolation over 8x8 pixel neighborhood
+
+    """
+    if interpolation_method == "Nearest":
+        interpolation_method = cv2.INTER_NEAREST
+    if interpolation_method == "Linear":
+        interpolation_method = cv2.INTER_LINEAR
+    if interpolation_method == "Area":
+        interpolation_method = cv2.INTER_AREA
+    if interpolation_method == "Cubic":
+        interpolation_method = cv2.INTER_CUBIC
+    if interpolation_method == "Lanczos":
+        interpolation_method = cv2.INTER_LANCZOS4
+    for i in range(len(images)):
+        #the order width,height in cv2.resize is not an error. OpenCV wants this order...
+        images[i] = cv2.resize(images[i], dsize=(final_w,final_h), interpolation=interpolation_method)
+    return images
