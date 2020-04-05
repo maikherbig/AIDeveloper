@@ -3217,8 +3217,10 @@ class MainWindow(QtWidgets.QMainWindow):
             #The other way around works. Therefore it is recommended to export RGB!
             if retval==0: 
                 color_mode = "Grayscale"
+                channels = 1
             elif retval==1:
                 color_mode = "RGB"
+                channels = 3
             else:
                 return
             self.statusbar.showMessage("Color mode' "+color_mode+"' is used",5000)
@@ -3243,34 +3245,99 @@ class MainWindow(QtWidgets.QMainWindow):
                 
                 #Thanks to andko76 for pointing that unequal image sizes cause an error:
                 #https://github.com/maikherbig/AIDeveloper/issues/1
-                #Check that all iamges have the same size
-                img_shape_errors = 0
-                text_error = "Images have unequal dimensions:"
-                img_h = [a.shape[0] for a in images]
-                img_h_uni = len(np.unique(img_h))
-                if img_h_uni!=1:
-                    text_error += "\n- found unequal heights"
-                    img_shape_errors=1
-                img_w = [a.shape[1] for a in images]
-                img_w_uni = len(np.unique(img_w))
-                if img_w_uni!=1:
-                    text_error += "\n- found unequal widths"
-                    img_shape_errors=1
-                img_c = [len(a.shape) for a in images]
-                img_c_uni = len(np.unique(img_c))
-                if img_c_uni!=1:
-                    text_error += "\n- found unequal numbers of channels"
-                    img_shape_errors=1
-                #If there were issues detected, show error message
-                if img_shape_errors==1:
-                    msg = QtWidgets.QMessageBox()
-                    msg.setIcon(QtWidgets.QMessageBox.Warning)       
-                    msg.setText(str(text_error))
-                    msg.setWindowTitle("Error: Unequal image shapes")
-                    msg.setStandardButtons(QtWidgets.QMessageBox.Ok)
-                    msg.exec_()
-                    return
+                #Check that all images have the same size
+#                img_shape_errors = 0
+#                text_error = "Images have unequal dimensions:"
+#                img_h = [a.shape[0] for a in images]
+#                img_h_uni = len(np.unique(img_h))
+#                if img_h_uni!=1:
+#                    text_error += "\n- found unequal heights"
+#                    img_shape_errors=1
+#                img_w = [a.shape[1] for a in images]
+#                img_w_uni = len(np.unique(img_w))
+#                if img_w_uni!=1:
+#                    text_error += "\n- found unequal widths"
+#                    img_shape_errors=1
+#                img_c = [len(a.shape) for a in images]
+#                img_c_uni = len(np.unique(img_c))
+#                if img_c_uni!=1:
+#                    text_error += "\n- found unequal numbers of channels"
+#                    img_shape_errors=1
+#                #If there were issues detected, show error message
+#                if img_shape_errors==1:
+#                    msg = QtWidgets.QMessageBox()
+#                    msg.setIcon(QtWidgets.QMessageBox.Warning)       
+#                    msg.setText(str(text_error))
+#                    msg.setWindowTitle("Error: Unequal image shapes")
+#                    msg.setStandardButtons(QtWidgets.QMessageBox.Ok)
+#                    msg.exec_()
+#                    return
+
+                #Get a list of occuring image dimensions (width and height)
+                img_shape = [a.shape[0] for a in images] + [a.shape[1] for a in images]
+                dims = np.unique(img_shape)
+                #Get a list of occurences of image shapes
+                img_shape = [str(a.shape[0])+" x "+str(a.shape[1]) for a in images]
+                occurences = np.unique(img_shape,return_counts=True)
+                #inform user if there is more than one img shape 
+                if len(occurences[0])>1 or len(dims)>1:
+                    text_detail = "Following image shapes are present"
+                    for i in range(len(occurences[0])):
+                        text_detail+="\n- "+str(occurences[1][i])+" times: "+str(occurences[0][i])
+                    
+                    self.popup_imgRes = QtGui.QDialog()
+                    self.popup_imgRes_ui = aid_frontend.popup_imageLoadResize()
+                    self.popup_imgRes_ui.setupUi(self.popup_imgRes) #open a popup to show options for image resizing (make image equally sized)
+                    #self.popup_imgRes.setWindowModality(QtCore.Qt.WindowModal)
+                    self.popup_imgRes.setWindowModality(QtCore.Qt.ApplicationModal)
+                    #Insert information into textBrowser
+                    self.popup_imgRes_ui.textBrowser_imgResize_occurences.setText(text_detail)
+                    Image_import_dimension = Default_dict["Image_import_dimension"]
+                    self.popup_imgRes_ui.spinBox_ingResize_h_1.setValue(Image_import_dimension)
+                    self.popup_imgRes_ui.spinBox_ingResize_h_2.setValue(Image_import_dimension)
+                    self.popup_imgRes_ui.spinBox_ingResize_w_1.setValue(Image_import_dimension)
+                    self.popup_imgRes_ui.spinBox_ingResize_w_2.setValue(Image_import_dimension)
+                    Image_import_interpol_method = Default_dict["Image_import_interpol_method"]
+                    index = self.popup_imgRes_ui.comboBox_resizeMethod.findText(Image_import_interpol_method, QtCore.Qt.MatchFixedString)
+                    if index >= 0:
+                         self.popup_imgRes_ui.comboBox_resizeMethod.setCurrentIndex(index)
+                    #Define function for the OK button:
+                    def popup_imgRes_ok(images,channels,pos_x,pos_y):
+                        print("Start resizing operation")
+                        #Get info from GUI
+                        final_h = int(self.popup_imgRes_ui.spinBox_ingResize_h_1.value())
+                        print("Height:"+str(final_h))
+                        final_w = int(self.popup_imgRes_ui.spinBox_ingResize_w_1.value())
+                        print("Width:"+str(final_w))
+                        Default_dict["Image_import_dimension"] = final_h
+
+                        if self.popup_imgRes_ui.radioButton_imgResize_cropPad.isChecked():#cropping and padding method
+                            images = aid_img.image_resize_crop_pad(images,pos_x,pos_y,final_h,final_w,channels,verbose=False)
+                        elif self.popup_imgRes_ui.radioButton_imgResize_interpolate.isChecked():
+                            interpolation_method = str(self.popup_imgRes_ui.comboBox_resizeMethod.currentText())
+                            Default_dict["Image_import_interpol_method"] = interpolation_method
+                            images = aid_img.image_resize_scale(images,pos_x,pos_y,final_h,final_w,channels,interpolation_method,verbose=False)
+                        else:
+                            print("Invalid image resize method!")
+                        #Save the Default_dict
+                        aid_bin.save_aid_settings(Default_dict) 
+                        self.popup_imgRes.accept()
+                        return images
+                    
+                    #Define function for the Cancel button:                    
+                    def popup_imgRes_cancel():
+                        self.popup_imgRes.close()
+                        return
+
+                    self.popup_imgRes_ui.pushButton_imgResize_ok.clicked.connect(lambda: popup_imgRes_ok(images,channels,pos_x,pos_y))
+                    self.popup_imgRes_ui.pushButton_imgResize_cancel.clicked.connect(popup_imgRes_cancel)
+                    
+                    retval = self.popup_imgRes.exec_()
+                    #retval is 0 if the user clicked cancel or just closed the window; in this case just exist the function
+                    if retval==0:
+                        return
                 
+                #Now, all images are of indeitical shape and can be converted to a numpy array
                 images = np.array((images), dtype="uint8")
                 pos_x = np.array((pos_x), dtype="uint8")
                 pos_y = np.array((pos_y), dtype="uint8")
@@ -3308,7 +3375,7 @@ class MainWindow(QtWidgets.QMainWindow):
                     aid_img.imgs_2_rtdc(fname,images,pos_x,pos_y)
                     url_converted.append(fname)
 
-            print("Finished converting!")
+            print("Finished converting! Final dimension of image tensor is:"+str(images.shape))
             #Now load the created files directly to drag/drop-region!
             self.dataDropped(url_converted)
 
