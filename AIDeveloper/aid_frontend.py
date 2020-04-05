@@ -1589,6 +1589,159 @@ class popup_lossweights(QtWidgets.QWidget):
 
 
 
+class popup_imageLoadResize(QtWidgets.QWidget):
+    def setupUi(self, Form_imageResize):
+        Form_imageResize.setObjectName("Form_imageResize")
+        Form_imageResize.resize(468, 270)
+        self.gridLayout_3 = QtWidgets.QGridLayout(Form_imageResize)
+        self.gridLayout_3.setObjectName("gridLayout_3")
+        self.scrollArea_imgResize_occurences = QtWidgets.QScrollArea(Form_imageResize)
+        self.scrollArea_imgResize_occurences.setWidgetResizable(True)
+        self.scrollArea_imgResize_occurences.setObjectName("scrollArea_imgResize_occurences")
+        self.scrollAreaWidgetContents_imgResize = QtWidgets.QWidget()
+        self.scrollAreaWidgetContents_imgResize.setGeometry(QtCore.QRect(0, 0, 423, 109))
+        self.scrollAreaWidgetContents_imgResize.setObjectName("scrollAreaWidgetContents_imgResize")
+        self.gridLayout = QtWidgets.QGridLayout(self.scrollAreaWidgetContents_imgResize)
+        self.gridLayout.setObjectName("gridLayout")
+        self.textBrowser_imgResize_occurences = QtWidgets.QTextBrowser(self.scrollAreaWidgetContents_imgResize)
+        self.textBrowser_imgResize_occurences.setObjectName("textBrowser_imgResize_occurences")
+        self.gridLayout.addWidget(self.textBrowser_imgResize_occurences, 0, 0, 1, 1)
+        self.scrollArea_imgResize_occurences.setWidget(self.scrollAreaWidgetContents_imgResize)
+        self.gridLayout_3.addWidget(self.scrollArea_imgResize_occurences, 2, 0, 1, 1)
+        self.gridLayout_imageResizeOptions = QtWidgets.QGridLayout()
+        self.gridLayout_imageResizeOptions.setObjectName("gridLayout_imageResizeOptions")
+        self.label_imgResize_x_3 = QtWidgets.QLabel(Form_imageResize)
+        self.label_imgResize_x_3.setObjectName("label_imgResize_x_3")
+        self.gridLayout_imageResizeOptions.addWidget(self.label_imgResize_x_3, 2, 3, 1, 1)
+        spacerItem = QtWidgets.QSpacerItem(88, 20, QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Minimum)
+        self.gridLayout_imageResizeOptions.addItem(spacerItem, 1, 5, 1, 1)
+        self.label_imgResize_height = QtWidgets.QLabel(Form_imageResize)
+        self.label_imgResize_height.setAlignment(QtCore.Qt.AlignCenter)
+        self.label_imgResize_height.setObjectName("label_imgResize_height")
+        self.gridLayout_imageResizeOptions.addWidget(self.label_imgResize_height, 0, 1, 1, 2)
+        self.spinBox_ingResize_w_2 = QtWidgets.QSpinBox(Form_imageResize)
+        self.spinBox_ingResize_w_2.setEnabled(False)
+        self.spinBox_ingResize_w_2.setMaximum(999999)
+        self.spinBox_ingResize_w_2.setObjectName("spinBox_ingResize_w_2")
+        self.gridLayout_imageResizeOptions.addWidget(self.spinBox_ingResize_w_2, 2, 4, 1, 1)
+        self.spinBox_ingResize_h_1 = QtWidgets.QSpinBox(Form_imageResize)
+        self.spinBox_ingResize_h_1.setEnabled(False)
+        self.spinBox_ingResize_h_1.setMaximum(999999)
+        self.spinBox_ingResize_h_1.setObjectName("spinBox_ingResize_h_1")
+        self.gridLayout_imageResizeOptions.addWidget(self.spinBox_ingResize_h_1, 1, 1, 1, 2)
+        spacerItem1 = QtWidgets.QSpacerItem(88, 20, QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Minimum)
+        self.gridLayout_imageResizeOptions.addItem(spacerItem1, 0, 5, 1, 1)
+        self.pushButton_imgResize_ok = QtWidgets.QPushButton(Form_imageResize)
+        self.pushButton_imgResize_ok.setEnabled(False)
+        self.pushButton_imgResize_ok.setObjectName("pushButton_imgResize_ok")
+        self.gridLayout_imageResizeOptions.addWidget(self.pushButton_imgResize_ok, 3, 5, 1, 1)
+        self.spinBox_ingResize_w_1 = QtWidgets.QSpinBox(Form_imageResize)
+        self.spinBox_ingResize_w_1.setEnabled(False)
+        self.spinBox_ingResize_w_1.setMaximum(999999)
+        self.spinBox_ingResize_w_1.setObjectName("spinBox_ingResize_w_1")
+        self.gridLayout_imageResizeOptions.addWidget(self.spinBox_ingResize_w_1, 1, 4, 1, 1)
+        self.comboBox_resizeMethod = QtWidgets.QComboBox(Form_imageResize)
+        self.comboBox_resizeMethod.setEnabled(False)
+        self.comboBox_resizeMethod.setObjectName("comboBox_resizeMethod")
+        self.comboBox_resizeMethod.addItem("")
+        self.comboBox_resizeMethod.addItem("")
+        self.comboBox_resizeMethod.addItem("")
+        self.comboBox_resizeMethod.addItem("")
+        self.comboBox_resizeMethod.addItem("")
+        self.gridLayout_imageResizeOptions.addWidget(self.comboBox_resizeMethod, 2, 5, 1, 1)
+        self.pushButton_imgResize_cancel = QtWidgets.QPushButton(Form_imageResize)
+        self.pushButton_imgResize_cancel.setObjectName("pushButton_imgResize_cancel")
+        self.gridLayout_imageResizeOptions.addWidget(self.pushButton_imgResize_cancel, 3, 2, 1, 3)
+        self.radioButton_imgResize_cropPad = QtWidgets.QRadioButton(Form_imageResize)
+        self.radioButton_imgResize_cropPad.setObjectName("radioButton_imgResize_cropPad")
+        self.gridLayout_imageResizeOptions.addWidget(self.radioButton_imgResize_cropPad, 1, 0, 1, 1)
+        self.label_imgResize_x_2 = QtWidgets.QLabel(Form_imageResize)
+        self.label_imgResize_x_2.setObjectName("label_imgResize_x_2")
+        self.gridLayout_imageResizeOptions.addWidget(self.label_imgResize_x_2, 1, 3, 1, 1)
+        spacerItem2 = QtWidgets.QSpacerItem(148, 20, QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Minimum)
+        self.gridLayout_imageResizeOptions.addItem(spacerItem2, 3, 0, 1, 2)
+        self.spinBox_ingResize_h_2 = QtWidgets.QSpinBox(Form_imageResize)
+        self.spinBox_ingResize_h_2.setEnabled(False)
+        self.spinBox_ingResize_h_2.setMaximum(999999)
+        self.spinBox_ingResize_h_2.setObjectName("spinBox_ingResize_h_2")
+        self.gridLayout_imageResizeOptions.addWidget(self.spinBox_ingResize_h_2, 2, 1, 1, 2)
+        self.label_imgResize_width = QtWidgets.QLabel(Form_imageResize)
+        self.label_imgResize_width.setAlignment(QtCore.Qt.AlignCenter)
+        self.label_imgResize_width.setObjectName("label_imgResize_width")
+        self.gridLayout_imageResizeOptions.addWidget(self.label_imgResize_width, 0, 4, 1, 1)
+        self.label_imgResize_method = QtWidgets.QLabel(Form_imageResize)
+        self.label_imgResize_method.setObjectName("label_imgResize_method")
+        self.gridLayout_imageResizeOptions.addWidget(self.label_imgResize_method, 0, 0, 1, 1)
+        self.label_imgResize_x_1 = QtWidgets.QLabel(Form_imageResize)
+        self.label_imgResize_x_1.setObjectName("label_imgResize_x_1")
+        self.gridLayout_imageResizeOptions.addWidget(self.label_imgResize_x_1, 0, 3, 1, 1)
+        self.radioButton_imgResize_interpolate = QtWidgets.QRadioButton(Form_imageResize)
+        self.radioButton_imgResize_interpolate.setObjectName("radioButton_imgResize_interpolate")
+        self.gridLayout_imageResizeOptions.addWidget(self.radioButton_imgResize_interpolate, 2, 0, 1, 1)
+        self.gridLayout_3.addLayout(self.gridLayout_imageResizeOptions, 1, 0, 1, 1)
+        self.label_imgResize_info = QtWidgets.QLabel(Form_imageResize)
+        self.label_imgResize_info.setObjectName("label_imgResize_info")
+        self.gridLayout_3.addWidget(self.label_imgResize_info, 0, 0, 1, 1)
+
+        self.retranslateUi(Form_imageResize)
+        self.radioButton_imgResize_cropPad.toggled['bool'].connect(self.spinBox_ingResize_h_1.setEnabled)
+        #self.radioButton_imgResize_cropPad.toggled['bool'].connect(self.spinBox_ingResize_w_1.setEnabled)
+        self.radioButton_imgResize_interpolate.toggled['bool'].connect(self.spinBox_ingResize_h_2.setEnabled)
+        #self.radioButton_imgResize_interpolate.toggled['bool'].connect(self.spinBox_ingResize_w_2.setEnabled)
+        self.radioButton_imgResize_interpolate.toggled['bool'].connect(self.comboBox_resizeMethod.setEnabled)
+        self.radioButton_imgResize_cropPad.toggled['bool'].connect(self.pushButton_imgResize_ok.setEnabled)
+        self.radioButton_imgResize_interpolate.toggled['bool'].connect(self.pushButton_imgResize_ok.setEnabled)
+        self.spinBox_ingResize_h_1.valueChanged['int'].connect(self.spinBox_ingResize_h_2.setValue)
+        self.spinBox_ingResize_h_1.valueChanged['int'].connect(self.spinBox_ingResize_w_1.setValue)
+        self.spinBox_ingResize_h_1.valueChanged['int'].connect(self.spinBox_ingResize_w_2.setValue)
+        self.spinBox_ingResize_h_2.valueChanged['int'].connect(self.spinBox_ingResize_w_1.setValue)
+        self.spinBox_ingResize_h_2.valueChanged['int'].connect(self.spinBox_ingResize_w_2.setValue)
+        self.spinBox_ingResize_h_2.valueChanged['int'].connect(self.spinBox_ingResize_h_1.setValue)
+
+        QtCore.QMetaObject.connectSlotsByName(Form_imageResize)
+
+    def retranslateUi(self, Form_imageResize):
+        _translate = QtCore.QCoreApplication.translate
+        Form_imageResize.setWindowTitle(_translate("Form_imageResize", "Import assistant for unequally sized images"))
+        self.label_imgResize_x_3.setText(_translate("Form_imageResize", "x"))
+        self.label_imgResize_height.setText(_translate("Form_imageResize", "Height"))
+        self.pushButton_imgResize_ok.setText(_translate("Form_imageResize", "OK"))
+        self.comboBox_resizeMethod.setItemText(0, _translate("Form_imageResize", "Nearest"))
+        self.comboBox_resizeMethod.setItemText(1, _translate("Form_imageResize", "Linear"))
+        self.comboBox_resizeMethod.setItemText(2, _translate("Form_imageResize", "Area"))
+        self.comboBox_resizeMethod.setItemText(3, _translate("Form_imageResize", "Cubic"))
+        self.comboBox_resizeMethod.setItemText(4, _translate("Form_imageResize", "Lanczos"))
+        self.pushButton_imgResize_cancel.setText(_translate("Form_imageResize", "Cancel"))
+        self.radioButton_imgResize_cropPad.setToolTip(_translate("Form_imageResize", "Images are resized by center cropping and/or padding."))
+        self.radioButton_imgResize_cropPad.setText(_translate("Form_imageResize", "Crop/pad"))
+        self.label_imgResize_x_2.setText(_translate("Form_imageResize", "x"))
+        self.label_imgResize_width.setText(_translate("Form_imageResize", "Width"))
+        self.label_imgResize_method.setText(_translate("Form_imageResize", "Method"))
+        self.label_imgResize_x_1.setText(_translate("Form_imageResize", "x"))
+        self.radioButton_imgResize_interpolate.setToolTip(_translate("Form_imageResize", "Images are resized by interpolation"))
+        self.radioButton_imgResize_interpolate.setText(_translate("Form_imageResize", "Resize (interp.)"))
+        self.label_imgResize_info.setText(_translate("Form_imageResize", "Detected unequal image sizes. Select a method to equalize image sizes:"))
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
