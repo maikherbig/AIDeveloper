@@ -2464,17 +2464,15 @@ class MainWindow(QtWidgets.QMainWindow):
         self.actionDataToRam.setObjectName(_fromUtf8("actionDataToRam"))
         self.actionVerbose = QtWidgets.QAction(self,checkable=True)
         self.actionVerbose.setObjectName(_fromUtf8("actionVerbose"))
-#        self.actionShowDataOverview = QtWidgets.QAction(self,checkable=True)
-#        self.actionShowDataOverview.setChecked(True)
-#        self.actionShowDataOverview.setObjectName(_fromUtf8("actionShowDataOverview"))
         self.actionClearList = QtWidgets.QAction(self)
         self.actionClearList.triggered.connect(self.actionClearList_function)
         self.actionClearList.setObjectName(_fromUtf8("actionClearList"))
         self.actionRemoveSelected = QtWidgets.QAction(self)
         self.actionRemoveSelected.setObjectName(_fromUtf8("actionRemoveSelected"))
         self.actionRemoveSelected.triggered.connect(self.actionRemoveSelected_function)
-        self.actionDelete_all = QtWidgets.QAction(self)
-        self.actionDelete_all.setObjectName(_fromUtf8("actionDelete_all"))
+        self.actionSaveToPng = QtWidgets.QAction(self)
+        self.actionSaveToPng.setObjectName(_fromUtf8("actionSaveToPng"))
+        self.actionSaveToPng.triggered.connect(self.actionSaveToPng_function)
         
         self.actionGroup_Export = QtWidgets.QActionGroup(self,exclusive=True)
         self.actionExport_Off = QtWidgets.QAction(self)
@@ -2598,10 +2596,12 @@ class MainWindow(QtWidgets.QMainWindow):
         self.menuEdit.addAction(self.actionDataToRamNow)        
         self.menuEdit.addAction(self.actionDataToRam)
         self.menuEdit.addSeparator()
-#        self.menuEdit.addAction(self.actionShowDataOverview)
-        self.menuEdit.addSeparator()
         self.menuEdit.addAction(self.actionClearList)
         self.menuEdit.addAction(self.actionRemoveSelected)
+
+        self.menuEdit.addSeparator()
+        self.menuEdit.addAction(self.actionSaveToPng)
+
         self.menuEdit.addSeparator()
         self.menuEdit.addAction(self.actionVerbose)
 
@@ -3143,7 +3143,7 @@ class MainWindow(QtWidgets.QMainWindow):
         self.actionClearList.setText(_translate("MainWindow", "Clear List", None))
         self.actionDataToRamNow.setText(_translate("MainWindow", "Data to RAM now", None))
         self.actionRemoveSelected.setText(_translate("MainWindow", "Remove selected", None))
-        self.actionDelete_all.setText(_translate("MainWindow", "Delete all", None))
+        self.actionSaveToPng.setText(_translate("MainWindow", "Export selected to .png/.jpg", None))
         self.actionExport_Off.setText(_translate("MainWindow", "No exporting",None))
         self.actionExport_Original.setText(_translate("MainWindow", "Export Original Images",None))
         self.actionExport_Cropped.setText(_translate("MainWindow", "Export Cropped Images",None))
@@ -3281,7 +3281,8 @@ class MainWindow(QtWidgets.QMainWindow):
                 occurences = np.unique(img_shape,return_counts=True)
                 #inform user if there is more than one img shape 
                 if len(occurences[0])>1 or len(dims)>1:
-                    text_detail = "Following image shapes are present"
+                    text_detail = "Path: "+url
+                    text_detail += "\nFollowing image shapes are present"
                     for i in range(len(occurences[0])):
                         text_detail+="\n- "+str(occurences[1][i])+" times: "+str(occurences[0][i])
                     
@@ -3336,8 +3337,12 @@ class MainWindow(QtWidgets.QMainWindow):
                     #retval is 0 if the user clicked cancel or just closed the window; in this case just exist the function
                     if retval==0:
                         return
+
+                #get new pos_x, pos_y (after cropping, the pixel value for the middle of the image is different!)
+                pos_x = [int(np.round(img.shape[1]/2.0,0)) for img in images]
+                pos_y = [int(np.round(img.shape[0]/2.0,0)) for img in images]
                 
-                #Now, all images are of indeitical shape and can be converted to a numpy array
+                #Now, all images are of identical shape and can be converted to a numpy array
                 images = np.array((images), dtype="uint8")
                 pos_x = np.array((pos_x), dtype="uint8")
                 pos_y = np.array((pos_y), dtype="uint8")
@@ -4659,6 +4664,10 @@ class MainWindow(QtWidgets.QMainWindow):
             img_crop = img[int(y1):int(y2),int(x1):int(x2)]
             #zoom image such that the height gets the same as for non-cropped img
             factor = float(float(height)/np.max(img_crop.shape[0]))
+            if factor == np.inf:
+                factor = 1
+                if self.actionVerbose.isChecked()==True:
+                    print("Set resize factor to 1. Before, it was: "+str(factor))     
             #img_crop = zoom(img_crop,factor)
             #Get the order, specified in Options->Zoom Order
             zoom_methods = [self.actionOrder0.isChecked(),self.actionOrder1.isChecked(),self.actionOrder2.isChecked(),self.actionOrder3.isChecked(),self.actionOrder4.isChecked(),self.actionOrder5.isChecked()]
@@ -4672,7 +4681,6 @@ class MainWindow(QtWidgets.QMainWindow):
                 height, width = img_crop.shape
             if channels==3:
                 height, width, _ = img_crop.shape
-
             if channels==1:
                 qi=QtGui.QImage(img_crop.data, width, height,width, QtGui.QImage.Format_Indexed8)
             if channels==3:
@@ -10064,7 +10072,6 @@ class MainWindow(QtWidgets.QMainWindow):
         if self.groupBox_DataOverview.isChecked()==True:
             self.dataOverviewOn()
 
-    
     def actionRemoveSelected_function(self):
         #Which rows are highlighted?
         rows_selected = np.array([index.row() for index in self.table_dragdrop.selectedIndexes()])
@@ -10075,7 +10082,92 @@ class MainWindow(QtWidgets.QMainWindow):
             #if there are rows below this row, they will move up one step:
             ind = np.where(np.array(rows_selected)>row)[0]
             rows_selected[ind] -= 1
-        
+
+    def actionSaveToPng_function(self):
+        #Which table items are selected?
+        rows_selected = np.array([index.row() for index in self.table_dragdrop.selectedIndexes()])
+        if len(rows_selected)==0:
+            msg = QtWidgets.QMessageBox()
+            msg.setIcon(QtWidgets.QMessageBox.Warning)       
+            msg.setText("Please first select rows in the table!")
+            msg.setWindowTitle("No rows selected")
+            msg.setStandardButtons(QtWidgets.QMessageBox.Ok)
+            msg.exec_()
+            return
+        #Ask user to which folder the images should be written:
+        filename = QtWidgets.QFileDialog.getSaveFileName(self, 'Save to .png/.jpg', Default_dict["Path of last model"],"Image file format (*.png *.jpg *.bmp *.eps *.gif *.ico *.icns)")
+        filename = filename[0]
+        if len(filename)==0:
+            return
+        filename_X, file_extension = os.path.splitext(filename)#divide into path and file_extension if possible
+        #Check if the chosen file_extension is valid
+        if not file_extension in [".png",".jpg",".bmp",".eps",".gif",".ico",".icns"]:
+            print("Invalid file extension detected. Will use .png instead.")
+            file_extension = ".png"
+            
+        #Check the chosen export-options
+        if bool(self.actionExport_Original.isChecked())==True:
+            print("Export original images")
+            save_cropped = False
+        elif bool(self.actionExport_Cropped.isChecked())==True:
+            print("Export cropped images")
+            save_cropped = True
+        elif bool(self.actionExport_Off.isChecked())==True:
+            print("Exporting is turned off")
+            msg = QtWidgets.QMessageBox()
+            msg.setIcon(QtWidgets.QMessageBox.Information)       
+            msg.setText("Plase choose a different Export-option in ->Options->Export")
+            msg.setWindowTitle("Export is turned off!")
+            msg.setStandardButtons(QtWidgets.QMessageBox.Ok)
+            msg.exec_()
+            return
+
+        if save_cropped==True:
+            #Collect information for image processing
+            cropsize = self.spinBox_imagecrop.value()
+            color_mode = str(self.comboBox_loadedRGBorGray.currentText())
+            zoom_methods = [self.actionOrder0.isChecked(),self.actionOrder1.isChecked(),self.actionOrder2.isChecked(),self.actionOrder3.isChecked(),self.actionOrder4.isChecked(),self.actionOrder5.isChecked()]
+            zoom_order = np.where(np.array(zoom_methods)==True)[0]
+            
+            index = 0
+            for row in (rows_selected):
+                #get the corresponding rtdc_path
+                rtdc_path = str(self.table_dragdrop.cellWidget(row, 0).text())
+                nr_events = None #no number needed as we take all images (replace=False in gen_crop_img)
+                zoom_factor = float(self.table_dragdrop.item(row, 9).text())            
+                gen = aid_img.gen_crop_img(cropsize,rtdc_path,nr_events=nr_events,replace=False,random_images=False,zoom_factor=zoom_factor,zoom_order=zoom_order,color_mode=color_mode)
+                images = next(gen)[0]
+                #Save the images data to .png/.jpeg...
+                for img in images:
+                    img = PIL.Image.fromarray(img)
+                    img.save(filename_X+"_"+str(index)+file_extension)
+                    index+=1
+
+        if save_cropped==False:#save the original images without pre-processing
+            index = 0
+            for row in (rows_selected):
+                rtdc_path = str(self.table_dragdrop.cellWidget(row, 0).text())
+                failed,rtdc_ds = aid_bin.load_rtdc(rtdc_path)
+                if failed:
+                    msg = QtWidgets.QMessageBox()
+                    msg.setIcon(QtWidgets.QMessageBox.Information)       
+                    msg.setText(str(rtdc_ds))
+                    msg.setWindowTitle("Error occurred during loading file")
+                    msg.setStandardButtons(QtWidgets.QMessageBox.Ok)
+                    msg.exec_()
+                    return
+    
+                images = rtdc_ds["image"] #get the images
+                #Save the images data to .png/.jpeg...
+                for img in images:
+                    img = PIL.Image.fromarray(img)
+                    img.save(filename_X+"_"+str(index)+file_extension)
+                    index+=1
+                    
+        #If all that run without issue, remember the path for next time
+        Default_dict["Path of last model"] = os.path.split(filename)[0]
+        aid_bin.save_aid_settings(Default_dict)
+
     def actionRemoveSelectedPeaks_function(self):
         #Which rows are highlighted?
         rows_selected = np.array([index.row() for index in self.tableWidget_showSelectedPeaks.selectedIndexes()])
@@ -10425,12 +10517,12 @@ class MainWindow(QtWidgets.QMainWindow):
             
         X_valid_orig = [X.astype(np.uint8) for X in X_valid]
         X_valid = np.concatenate(X_valid)
-        dim = X_valid.shape
-
-        if dim[2]!=crop:
-            remove = int(dim[2]/2.0 - crop/2.0)
-            #X_batch = X_batch[:,:,remove:-remove,remove:-remove] #crop to crop x crop pixels #Theano
-            X_valid = X_valid[:,remove:-remove,remove:-remove] #crop to crop x crop pixels #TensorFlow
+        
+#        dim = X_valid.shape
+#        if dim[2]!=crop:
+#            remove = int(dim[2]/2.0 - crop/2.0)
+#            #X_batch = X_batch[:,:,remove:-remove,remove:-remove] #crop to crop x crop pixels #Theano
+#            X_valid = X_valid[:,remove:-remove,remove:-remove] #crop to crop x crop pixels #TensorFlow
 
         print("X_valid has following dimension:")
         print(X_valid.shape)
@@ -10599,7 +10691,7 @@ class MainWindow(QtWidgets.QMainWindow):
             msg.exec_()
             return
 
-        #The shape of Original images is not squred
+        #The shape of Original images is not squared
         if x_valid.shape[1]!=x_valid.shape[2]:
             print("Images are non-squared->use aid_img.gen_crop_img")
             #Use aid_img.gen_crop_img to crop with respect to centroid
@@ -10784,15 +10876,18 @@ class MainWindow(QtWidgets.QMainWindow):
 
         msg = QtWidgets.QMessageBox()
         msg.setIcon(QtWidgets.QMessageBox.Question)
-        text = "<html><head/><body><p>Show images or save to .rtdc?</p></body></html>"
+        text = "<html><head/><body><p>Show images or save to .rtdc/.png/.jpg?</p></body></html>"
         msg.setText(text)
         msg.setWindowTitle("Show or save?")
-        msg.setStandardButtons(QtGui.QMessageBox.Yes|QtGui.QMessageBox.Save|QtGui.QMessageBox.Cancel)
+        msg.setStandardButtons(QtGui.QMessageBox.Yes | QtGui.QMessageBox.YesToAll | QtGui.QMessageBox.Save | QtGui.QMessageBox.Cancel)
         show = msg.button(QtGui.QMessageBox.Yes)
         show.setText('Show')
-        save = msg.button(QtGui.QMessageBox.Save)
-        save.setText('Save')
-        msg.button(QtGui.QMessageBox.Cancel)
+        save_rtdc = msg.button(QtGui.QMessageBox.YesToAll)
+        save_rtdc.setText('Save to .rtdc')
+        save_png = msg.button(QtGui.QMessageBox.Save)
+        save_png.setText('Save to .png/.jpg...')
+        cancel = msg.button(QtGui.QMessageBox.Cancel)
+        cancel.setText('Cancel')
         msg.exec_()        
         
         if msg.clickedButton()==show: #Show video
@@ -10806,8 +10901,9 @@ class MainWindow(QtWidgets.QMainWindow):
                 self.plt_cm[-1].setImage(viewimgs)
             else:
                 return
-
-        elif msg.clickedButton()==save: #Save to .rtdc
+        
+        #For .rtdc saving
+        elif msg.clickedButton()==save_rtdc: #Save to .rtdc
             if total_number_of_chosen_cells==0:
                 return
             sumlen = np.sum(np.array([len(l) for l in ToSave]))
@@ -10851,7 +10947,54 @@ class MainWindow(QtWidgets.QMainWindow):
             #If all that run without issue, remember the path for next time
             Default_dict["Path of last model"] = os.path.split(filename)[0]
             aid_bin.save_aid_settings(Default_dict)
-            
+
+        #For .png saving
+        elif msg.clickedButton()==save_png: #Save to .png/.jpg
+            if total_number_of_chosen_cells==0:
+                return
+            sumlen = np.sum(np.array([len(l) for l in ToSave]))
+            self.statusbar.showMessage("Nr. of target cells above threshold = "+str(sumlen),2000)
+
+            filename = QtWidgets.QFileDialog.getSaveFileName(self, 'Save to .png/.jpg', Default_dict["Path of last model"],"Image file format (*.png *.jpg *.bmp *.eps *.gif *.ico *.icns)")
+            filename = filename[0]
+            if len(filename)==0:
+                return
+            filename_X, file_extension = os.path.splitext(filename)#divide into path and file_extension if possible
+            #Check if chosen file_extension is valid
+            if not file_extension in [".png",".jpg",".bmp",".eps",".gif",".ico",".icns"]:
+                print("Invalid file extension detected. Will use .png instead.")
+                file_extension = ".png"
+    
+            #Should cropped or original be saved?
+            if bool(self.actionExport_Original.isChecked())==True:
+                print("Export original images")
+                save_cropped = False
+            if bool(self.actionExport_Cropped.isChecked())==True:
+                print("Export cropped images")
+                save_cropped = True
+            elif bool(self.actionExport_Off.isChecked())==True:
+                print("Exporting is turned off")
+                msg = QtWidgets.QMessageBox()
+                msg.setIcon(QtWidgets.QMessageBox.Information)       
+                msg.setText("You may want to choose a different exporting option in ->Options->Export")
+                msg.setWindowTitle("Export is turned off!")
+                msg.setStandardButtons(QtWidgets.QMessageBox.Ok)
+                msg.exec_()
+                return
+
+            #Save the images data to .png/.jpeg...
+            index = 0
+            for imgs in ToSave:
+                for img in imgs:
+                    img = PIL.Image.fromarray(img)
+                    img.save(filename_X+"_"+str(index)+file_extension)
+                    index+=1
+
+            #If all that run without issue, remember the path for next time
+            Default_dict["Path of last model"] = os.path.split(filename)[0]
+            aid_bin.save_aid_settings(Default_dict)
+
+
     def copy_cm_to_clipboard(self,cm1_or_cm2):
         if cm1_or_cm2==1:
             table = self.tableWidget_CM1
