@@ -98,7 +98,7 @@ import aid_img, aid_dl, aid_bin
 import aid_frontend
 from partial_trainability import partial_trainability
 
-VERSION = "0.0.6_dev1" #Python 3.5.6 Version
+VERSION = "0.0.6_dev3" #Python 3.5.6 Version
 model_zoo_version = model_zoo.__version__()
 print("AIDeveloper Version: "+VERSION)
 print("model_zoo.py Version: "+model_zoo.__version__())
@@ -119,6 +119,7 @@ except AttributeError:
 
 def MyExceptionHook(etype, value, trace):
     """
+    Copied from: https://github.com/ZELLMECHANIK-DRESDEN/ShapeOut/blob/07d741db3bb5685790d9f9f6df394cd9577e8236/shapeout/gui/frontend.py
     Handler for all unhandled exceptions.
  
     :param `etype`: the exception type (`SyntaxError`, `ZeroDivisionError`, etc...);
@@ -139,8 +140,6 @@ def MyExceptionHook(etype, value, trace):
 
 class MyTable(QtWidgets.QTableWidget):
     dropped = QtCore.pyqtSignal(list)
-#    clicked = QtCore.pyqtSignal()
-#    dclicked = QtCore.pyqtSignal()
 
     def __init__(self,  rows, columns, parent):
         super(MyTable, self).__init__(rows, columns, parent)
@@ -164,8 +163,6 @@ class MyTable(QtWidgets.QTableWidget):
             event.ignore()
 
     def dropEvent(self, event):
-        #super(MyTable, self).dropEvent(event)
-        #print(self.drag_row, self.row(self.drag_item),self.drag_item)
         self.drag_item = None
         if event.mimeData().hasUrls:
             event.setDropAction(QtCore.Qt.CopyAction)
@@ -182,14 +179,9 @@ class MyTable(QtWidgets.QTableWidget):
         self.drag_item = self.currentItem()
         self.drag_row = self.row(self.drag_item)
 
-
-
-
-
 class MyPopup(QtWidgets.QWidget):
     def __init__(self):
         QtWidgets.QWidget.__init__(self)
-
 
 
 #Define some custom metrics which will allow to use precision, recall, etc during training
@@ -205,6 +197,8 @@ def get_custom_metrics():
 
 class WorkerSignals(QtCore.QObject):
     '''
+    Code inspired from here: https://www.learnpyqt.com/courses/concurrent-execution/multithreading-pyqt-applications-qthreadpool/
+    
     Defines the signals available from a running worker thread.
     Supported signals are:
     finished
@@ -226,6 +220,7 @@ class WorkerSignals(QtCore.QObject):
 
 class Worker(QtCore.QRunnable):
     '''
+    Code inspired/copied from: https://www.learnpyqt.com/courses/concurrent-execution/multithreading-pyqt-applications-qthreadpool/
     Worker thread
     Inherits from QRunnable to handler worker thread setup, signals and wrap-up.
     :param callback: The function callback to run on this worker thread. Supplied args and 
@@ -4051,7 +4046,7 @@ class MainWindow(QtWidgets.QMainWindow):
         elif layout_trig == "Dark":
             #Change Layout in Defaultdict to "Dark", such that next start will use Dark layout
             Default_dict["Layout"] = "Dark"
-            f = open("layout_dark.txt", "r")
+            f = open("layout_dark.txt", "r") #I obtained the layout file from: https://github.com/ColinDuquesnoy/QDarkStyleSheet/blob/master/qdarkstyle/style.qss
             f = f.read()
             app.setStyleSheet(f)
             #Standard is with tooltip
@@ -4060,7 +4055,7 @@ class MainWindow(QtWidgets.QMainWindow):
         elif layout_trig == "DarkOrange":
             #Change Layout in Defaultdict to "Dark", such that next start will use Dark layout
             Default_dict["Layout"] = "DarkOrange"
-            f = open("layout_darkorange.txt", "r")
+            f = open("layout_darkorange.txt", "r") #I obtained the layout file from: https://github.com/nphase/qt-ping-grapher/blob/master/resources/darkorange.stylesheet
             f = f.read()
             app.setStyleSheet(f)
             #Standard is with tooltip
@@ -4082,18 +4077,18 @@ class MainWindow(QtWidgets.QMainWindow):
 
         elif bool(self.actionLayout_Dark.isChecked())==True: #use dark layout
             if bool(self.actionTooltipOnOff.isChecked())==True: #with tooltips
-                f = open("layout_dark.txt", "r")
+                f = open("layout_dark.txt", "r") #I obtained the layout file from: https://github.com/ColinDuquesnoy/QDarkStyleSheet/blob/master/qdarkstyle/style.qss
                 f = f.read()
                 app.setStyleSheet(f)
 
             elif bool(self.actionTooltipOnOff.isChecked())==False: #no tooltips
-                f = open("layout_dark_notooltip.txt", "r")
+                f = open("layout_dark_notooltip.txt", "r")#I obtained the layout file from: https://github.com/ColinDuquesnoy/QDarkStyleSheet/blob/master/qdarkstyle/style.qss
                 f = f.read()
                 app.setStyleSheet(f)
 
         elif bool(self.actionLayout_DarkOrange.isChecked())==True: #use darkorange layout
             if bool(self.actionTooltipOnOff.isChecked())==True: #with tooltips
-                f = open("layout_darkorange.txt", "r")
+                f = open("layout_darkorange.txt", "r") #I obtained the layout file from: https://github.com/nphase/qt-ping-grapher/blob/master/resources/darkorange.stylesheet
                 f = f.read()
                 app.setStyleSheet(f)
 
@@ -11971,11 +11966,11 @@ def main():
     app.setWindowIcon(QtGui.QIcon(os.path.join(dir_root,"art",Default_dict["Icon theme"],"main_icon_simple_04_256"+icon_suff)))
 
     if Default_dict["Layout"] == "Dark":
-        f = open("layout_dark.txt", "r")
+        f = open("layout_dark.txt", "r") #I obtained the layout file from: https://github.com/ColinDuquesnoy/QDarkStyleSheet/blob/master/qdarkstyle/style.qss
         f = f.read()
         app.setStyleSheet(f)
     elif Default_dict["Layout"] == "DarkOrange":
-        f = open("layout_darkorange.txt", "r")
+        f = open("layout_darkorange.txt", "r") #I obtained the layout file from: https://github.com/nphase/qt-ping-grapher/blob/master/resources/darkorange.stylesheet
         f = f.read()
         app.setStyleSheet(f)
     else:
