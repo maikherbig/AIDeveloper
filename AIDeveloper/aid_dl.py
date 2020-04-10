@@ -17,9 +17,36 @@ if device_types[0]=='GPU':
     config_gpu.gpu_options.allow_growth = True
     config_gpu.gpu_options.per_process_gpu_memory_fraction = 0.7
 from keras.models import clone_model
+import keras_metrics #side package for precision, recall etc during training
+global keras_metrics
 
 
-def model_change_trainability(model_keras,trainable_new,model_metrics):    
+def get_metrics_fresh(metrics,nr_classes):
+    """
+    Function takes a list of metrics and creates fresh tensors accordingly.
+    This is necessary, after re-compiling the model because the placeholder has
+    to be updated    
+    """
+    f1 = any(["f1_score" in str(a) for a in metrics])
+    precision = any(["precision" in str(a) for a in metrics])
+    recall = any(["recall" in str(a) for a in metrics])
+    
+    Metrics =  []
+    if f1==True:
+        for class_ in range(nr_classes):
+            Metrics.append(keras_metrics.categorical_f1_score(label=class_))
+    if precision==True:
+        for class_ in range(nr_classes):
+            Metrics.append(keras_metrics.categorical_precision(label=class_))
+    if recall==True:
+        for class_ in range(nr_classes):
+            Metrics.append(keras_metrics.categorical_recall(label=class_))
+    
+    metrics =  ['accuracy'] + Metrics
+    return metrics
+
+
+def model_change_trainability(model_keras,trainable_new,model_metrics,out_dim):    
     #Function takes a keras model and list of trainable states.
     #The last n layers, which have parameters (not activation etc.) are set to 'not trainable'
     params = [model_keras.layers[i].count_params() for i in range(len(model_keras.layers))]
@@ -40,7 +67,7 @@ def model_change_trainability(model_keras,trainable_new,model_metrics):
             model_keras.layers[layer_index].trainable = trainable_new[i]   
         #Model has to be recompiled in order to see any any effect of the change
         model_keras.compile(loss='categorical_crossentropy',
-        optimizer='adam',metrics=model_metrics)
+        optimizer='adam',metrics=get_metrics_fresh(model_metrics,out_dim))
     
         text = []
         model_keras.summary(print_fn=text.append)
@@ -56,7 +83,7 @@ def model_get_trainable_list(model_keras):
     layer_names_list = [model_keras.layers[i].__class__.__name__  for i in l_para_not_zero]
     return trainable_list,layer_names_list
 
-def change_dropout(model_keras,do,model_metrics):
+def change_dropout(model_keras,do,model_metrics,out_dim):
     #Funktion takes a keras model and changes the dropout.
     #do = float (0 to 1) or list (with values from 0 to 1)
     #if do is a list: len(do) has to be equal to the nr. of dropout layers in the model
@@ -85,7 +112,7 @@ def change_dropout(model_keras,do,model_metrics):
     #Only way that it actually has a effect is to clone the model, compile and reload weights
     model_keras = clone_model(model_keras) # If I do not clone, the new rate is never used. Weights are re-init now.
     model_keras.compile(loss='categorical_crossentropy',
-                optimizer='adam', metrics=model_metrics)
+                optimizer='adam', metrics=get_metrics_fresh(model_metrics,out_dim))
     
     model_keras._make_train_function()
     model_keras.set_weights(model_weights) # Set weights
