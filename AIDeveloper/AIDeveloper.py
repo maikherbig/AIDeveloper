@@ -98,7 +98,7 @@ import aid_img, aid_dl, aid_bin
 import aid_frontend
 from partial_trainability import partial_trainability
 
-VERSION = "0.0.6_dev3" #Python 3.5.6 Version
+VERSION = "0.0.6_dev4" #Python 3.5.6 Version
 model_zoo_version = model_zoo.__version__()
 print("AIDeveloper Version: "+VERSION)
 print("model_zoo.py Version: "+model_zoo.__version__())
@@ -6712,7 +6712,7 @@ class MainWindow(QtWidgets.QMainWindow):
             if train_last_layers==True:#Train only the last n layers
                 print("Train only the last "+str(train_last_layers_n)+ " layer(s)")
                 trainable_new = (len(trainable_original)-train_last_layers_n)*[False]+train_last_layers_n*[True]
-                aid_dl.model_change_trainability(model_keras,trainable_new,model_metrics)
+                aid_dl.model_change_trainability(model_keras,trainable_new,model_metrics,out_dim)
             if train_dense_layers==True:#Train only dense layers
                 print("Train only dense layers")
                 layer_dense_ind = ["Dense" in x for x in layer_names]
@@ -6721,7 +6721,7 @@ class MainWindow(QtWidgets.QMainWindow):
                 trainable_new = len(trainable_original)*[False]
                 for index in layer_dense_ind:
                     trainable_new[index] = True
-                aid_dl.model_change_trainability(model_keras,trainable_new,model_metrics)
+                aid_dl.model_change_trainability(model_keras,trainable_new,model_metrics,out_dim)
 
             if dropout_expert_on==True:
                 #The user apparently want to change the dropout rates
@@ -6751,7 +6751,7 @@ class MainWindow(QtWidgets.QMainWindow):
                     dropout_expert_list = []
                  
                 if len(dropout_expert_list)>0 and do_list!=dropout_expert_list:#if the dropout rates of the current model is not equal to the required do_list from user...
-                    do_changed = aid_dl.change_dropout(model_keras,dropout_expert_list,model_metrics)
+                    do_changed = aid_dl.change_dropout(model_keras,dropout_expert_list,model_metrics,nr_classes)
                     if do_changed==1:
                         text_do = "Dropout rate(s) in model was/were changed to: "+str(dropout_expert_list)
                     else:
@@ -7253,7 +7253,7 @@ class MainWindow(QtWidgets.QMainWindow):
                 if train_last_layers==True:#Train only the last n layers
                     print("Train only the last "+str(train_last_layers_n)+ " layer(s)")
                     trainable_new = (len(trainable_original)-train_last_layers_n)*[False]+train_last_layers_n*[True]
-                    summary = aid_dl.model_change_trainability(model_keras,trainable_new,model_metrics)
+                    summary = aid_dl.model_change_trainability(model_keras,trainable_new,model_metrics,nr_classes)
                     text1 = "Expert mode: Request for custom trainability states: train only the last "+str(train_last_layers_n)+ " layer(s)\n"
                     #text2 = "\n--------------------\n"
                     self.fittingpopups_ui[listindex].textBrowser_FittingInfo_pop.append(text1+summary)
@@ -7265,7 +7265,7 @@ class MainWindow(QtWidgets.QMainWindow):
                     trainable_new = len(trainable_original)*[False]
                     for index in layer_dense_ind:
                         trainable_new[index] = True
-                    summary = aid_dl.model_change_trainability(model_keras,trainable_new,model_metrics)                    
+                    summary = aid_dl.model_change_trainability(model_keras,trainable_new,model_metrics,nr_classes)                  
                     text1 = "Expert mode: Request for custom trainability states: train only dense layer(s)\n"
                     #text2 = "\n--------------------\n"
                     self.fittingpopups_ui[listindex].textBrowser_FittingInfo_pop.append(text1+summary)
@@ -7286,7 +7286,7 @@ class MainWindow(QtWidgets.QMainWindow):
                         self.fittingpopups_ui[listindex].textBrowser_FittingInfo_pop.append(text)
                         dropout_expert_list = []
                     if len(dropout_expert_list)>0 and do_list!=dropout_expert_list:#if the dropout rates of the current model is not equal to the required do_list from user...
-                        do_changed = aid_dl.change_dropout(model_keras,dropout_expert_list,model_metrics)
+                        do_changed = aid_dl.change_dropout(model_keras,dropout_expert_list,model_metrics,nr_classes)
                         if do_changed==1:
                             text_do = "Dropout rate(s) in model was/were changed to: "+str(dropout_expert_list)
                         else:
@@ -7978,7 +7978,7 @@ class MainWindow(QtWidgets.QMainWindow):
                                             if verbose:
                                                 print("Train only the last "+str(train_last_layers_n)+ " layer(s)")
                                             trainable_new = (len(trainable_original)-train_last_layers_n)*[False]+train_last_layers_n*[True]
-                                            summary = aid_dl.model_change_trainability(model_keras,trainable_new,model_metrics)
+                                            summary = aid_dl.model_change_trainability(model_keras,trainable_new,model_metrics,nr_classes)
                                             text1 = "Expert mode: Request for custom trainability states: train only the last "+str(train_last_layers_n)+ " layer(s)\n"
                                             #text2 = "\n--------------------\n"
                                             self.fittingpopups_ui[listindex].textBrowser_FittingInfo_pop.append(text1+summary)
@@ -7991,7 +7991,7 @@ class MainWindow(QtWidgets.QMainWindow):
                                             trainable_new = len(trainable_original)*[False]
                                             for index in layer_dense_ind:
                                                 trainable_new[index] = True
-                                            summary = aid_dl.model_change_trainability(model_keras,trainable_new,model_metrics)                    
+                                            summary = aid_dl.model_change_trainability(model_keras,trainable_new,model_metrics,nr_classes)                 
                                             text1 = "Expert mode: Request for custom trainability states: train only dense layer(s)\n"
                                             #text2 = "\n--------------------\n"
                                             self.fittingpopups_ui[listindex].textBrowser_FittingInfo_pop.append(text1+summary)
@@ -8014,7 +8014,7 @@ class MainWindow(QtWidgets.QMainWindow):
                                                 dropout_expert_list = []
 
                                             if len(dropout_expert_list)>0 and do_list!=dropout_expert_list:#if the dropout rates of the current model is not equal to the required do_list from user...
-                                                do_changed = aid_dl.change_dropout(model_keras,dropout_expert_list,model_metrics)
+                                                do_changed = aid_dl.change_dropout(model_keras,dropout_expert_list,model_metrics,nr_classes)
                                                 if do_changed==1:
                                                     text_do = "Dropout rate(s) in model was/were changed to: "+str(dropout_expert_list)
                                                 else:
@@ -8043,14 +8043,14 @@ class MainWindow(QtWidgets.QMainWindow):
                                     #Also set the trainable back to original state                                    
                                     if verbose:
                                         print("Change 'trainable' layers back to original state")
-                                    summary = aid_dl.model_change_trainability(model_keras,trainable_original,model_metrics)                    
+                                    summary = aid_dl.model_change_trainability(model_keras,trainable_original,model_metrics,nr_classes)                 
                                     text1 = "Expert mode turns off: Request for orignal trainability states:\n"
                                     #text2 = "\n--------------------\n"
                                     self.fittingpopups_ui[listindex].textBrowser_FittingInfo_pop.append(text1+summary)
                                     if verbose:
                                         print("Change dropout rates in dropout layers back to original values")
                                     if len(do_list_original)>0:
-                                        do_changed = aid_dl.change_dropout(model_keras,do_list_original,model_metrics)
+                                        do_changed = aid_dl.change_dropout(model_keras,do_list_original,model_metrics,nr_classes)
                                         if do_changed==1:
                                             text_do = "Dropout rate(s) in model was/were changed to original values: "+str(do_list_original)
                                         else:
