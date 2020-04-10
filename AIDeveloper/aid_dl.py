@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 """
-aid_image
-some useful functions for image processing
+aid_dl
+some useful functions deep learning
 ---------
 @author: maikherbig
 """
