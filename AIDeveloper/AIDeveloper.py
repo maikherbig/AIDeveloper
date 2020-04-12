@@ -98,7 +98,7 @@ import aid_img, aid_dl, aid_bin
 import aid_frontend
 from partial_trainability import partial_trainability
 
-VERSION = "0.0.6_dev4" #Python 3.5.6 Version
+VERSION = "0.0.7" #Python 3.5.6 Version
 model_zoo_version = model_zoo.__version__()
 print("AIDeveloper Version: "+VERSION)
 print("model_zoo.py Version: "+model_zoo.__version__())
@@ -1017,6 +1017,8 @@ class MainWindow(QtWidgets.QMainWindow):
         self.groupBox_expertMode.setCheckable(True)
         self.groupBox_expertMode.setChecked(False)
         self.groupBox_expertMode.setObjectName("groupBox_expertMode")
+        self.groupBox_expertMode.toggled.connect(self.expert_mode_off)
+
         self.gridLayout_35 = QtWidgets.QGridLayout(self.groupBox_expertMode)
         self.gridLayout_35.setObjectName("gridLayout_35")
         self.scrollArea = QtWidgets.QScrollArea(self.groupBox_expertMode)
@@ -1027,11 +1029,15 @@ class MainWindow(QtWidgets.QMainWindow):
         self.scrollAreaWidgetContents.setObjectName("scrollAreaWidgetContents")
         self.gridLayout_37 = QtWidgets.QGridLayout(self.scrollAreaWidgetContents)
         self.gridLayout_37.setObjectName("gridLayout_37")
+
+        self.groupBox_modelKerasFit = QtWidgets.QGroupBox(self.scrollAreaWidgetContents)
+        self.groupBox_modelKerasFit.setObjectName("groupBox_modelKerasFit")
+        self.gridLayout_10 = QtWidgets.QGridLayout(self.groupBox_modelKerasFit)
+        self.gridLayout_10.setObjectName("gridLayout_10")
+        
         self.verticalLayout_19 = QtWidgets.QVBoxLayout()
         self.verticalLayout_19.setObjectName("verticalLayout_19")
-        self.label_modelKerasFit = QtWidgets.QLabel(self.scrollAreaWidgetContents)
-        self.label_modelKerasFit.setObjectName("label_modelKerasFit")
-        self.verticalLayout_19.addWidget(self.label_modelKerasFit)
+
         self.horizontalLayout_32 = QtWidgets.QHBoxLayout()
         self.horizontalLayout_32.setObjectName("horizontalLayout_32")
         self.label_batchSize = QtWidgets.QLabel(self.scrollAreaWidgetContents)
@@ -1049,63 +1055,124 @@ class MainWindow(QtWidgets.QMainWindow):
         self.spinBox_epochs = QtWidgets.QSpinBox(self.scrollAreaWidgetContents)
         self.spinBox_epochs.setObjectName("spinBox_epochs")
         self.horizontalLayout_33.addWidget(self.spinBox_epochs)
+        
         self.verticalLayout_19.addLayout(self.horizontalLayout_33)
-        self.gridLayout_37.addLayout(self.verticalLayout_19, 0, 0, 1, 1)
-        self.label_others = QtWidgets.QLabel(self.scrollAreaWidgetContents)
-        self.label_others.setObjectName("label_others")
-        self.gridLayout_37.addWidget(self.label_others, 1, 0, 1, 1)
+        self.gridLayout_10.addLayout(self.verticalLayout_19, 0, 0, 1, 1)
+        self.gridLayout_37.addWidget(self.groupBox_modelKerasFit, 1, 0, 1, 1)
+
+        self.groupBox_regularization = QtWidgets.QGroupBox(self.scrollAreaWidgetContents)
+        self.groupBox_regularization.setObjectName("groupBox_regularization")
+
+        self.gridLayout_46 = QtWidgets.QGridLayout(self.groupBox_regularization)
+        self.gridLayout_46.setObjectName("gridLayout_46")        
+
+        self.horizontalLayout_expt_loss = QtWidgets.QHBoxLayout()
+        self.horizontalLayout_expt_loss.setObjectName("horizontalLayout_expt_loss")
+        self.checkBox_expt_loss = QtWidgets.QCheckBox(self.groupBox_regularization)
+        self.checkBox_expt_loss.setObjectName("checkBox_expt_loss")
+        self.checkBox_expt_loss.stateChanged.connect(self.expert_loss_off)
+
+        self.horizontalLayout_expt_loss.addWidget(self.checkBox_expt_loss)
+        self.comboBox_expt_loss = QtWidgets.QComboBox(self.groupBox_regularization)
+        self.comboBox_expt_loss.setEnabled(False)
+        self.comboBox_expt_loss.setObjectName("comboBox_expt_loss")
+        self.comboBox_expt_loss.addItem("")
+        self.comboBox_expt_loss.addItem("")
+        self.comboBox_expt_loss.addItem("")
+        self.comboBox_expt_loss.addItem("")
+        self.comboBox_expt_loss.addItem("")
+        self.comboBox_expt_loss.addItem("")
+        self.comboBox_expt_loss.addItem("")
+        self.comboBox_expt_loss.addItem("")
+        self.comboBox_expt_loss.addItem("")
+        self.comboBox_expt_loss.addItem("")
+        self.comboBox_expt_loss.addItem("")
+        self.comboBox_expt_loss.addItem("")
+        self.comboBox_expt_loss.addItem("")
+        self.comboBox_expt_loss.addItem("")
+        self.comboBox_expt_loss.addItem("")
+        self.comboBox_expt_loss.addItem("")
+        self.horizontalLayout_expt_loss.addWidget(self.comboBox_expt_loss)
+        self.gridLayout_46.addLayout(self.horizontalLayout_expt_loss, 0, 0, 1, 1)
+
+
+
+
         self.horizontalLayout_34 = QtWidgets.QHBoxLayout()
         self.horizontalLayout_34.setObjectName("horizontalLayout_34")
         self.checkBox_learningRate = QtWidgets.QCheckBox(self.scrollAreaWidgetContents)
         self.checkBox_learningRate.setObjectName("checkBox_learningRate")
+        self.checkBox_learningRate.stateChanged.connect(self.expert_learningrate_off)
+
         self.horizontalLayout_34.addWidget(self.checkBox_learningRate)
         self.doubleSpinBox_learningRate = QtWidgets.QDoubleSpinBox(self.scrollAreaWidgetContents)
-        self.doubleSpinBox_learningRate.setDecimals(9)
-        self.doubleSpinBox_learningRate.setMaximum(999999999.0)
+        self.doubleSpinBox_learningRate.setDecimals(6)
+        self.doubleSpinBox_learningRate.setMaximum(999.0)
         self.doubleSpinBox_learningRate.setSingleStep(0.0001)
-        self.doubleSpinBox_learningRate.setValue(0.001)
+        self.doubleSpinBox_learningRate.setValue(Default_dict["doubleSpinBox_learningRate_Adam"])
         self.doubleSpinBox_learningRate.setObjectName("doubleSpinBox_learningRate")
         self.horizontalLayout_34.addWidget(self.doubleSpinBox_learningRate)
-        self.gridLayout_37.addLayout(self.horizontalLayout_34, 2, 0, 1, 1)
+
+        self.checkBox_optimizer = QtWidgets.QCheckBox(self.groupBox_regularization)
+        self.checkBox_optimizer.setObjectName("checkBox_optimizer")
+        self.checkBox_optimizer.stateChanged.connect(self.expert_optimizer_off)
+
+        self.horizontalLayout_34.addWidget(self.checkBox_optimizer)
+        self.comboBox_optimizer = QtWidgets.QComboBox(self.groupBox_regularization)
+        self.comboBox_optimizer.setEnabled(False)
+        self.comboBox_optimizer.setObjectName("comboBox_optimizer")
+        self.comboBox_optimizer.addItem("")
+        self.comboBox_optimizer.addItem("")
+        self.comboBox_optimizer.addItem("")
+        self.comboBox_optimizer.addItem("")
+        self.comboBox_optimizer.addItem("")
+        self.comboBox_optimizer.addItem("")
+        self.comboBox_optimizer.addItem("")
+        self.comboBox_optimizer.currentTextChanged.connect(self.expert_optimizer_changed)
+        self.horizontalLayout_34.addWidget(self.comboBox_optimizer)
+
+
+        self.gridLayout_46.addLayout(self.horizontalLayout_34, 2, 0, 1, 1)
         self.horizontalLayout_35 = QtWidgets.QHBoxLayout()
         self.horizontalLayout_35.setObjectName("horizontalLayout_35")
-        self.checkBox_trainLastNOnly = QtWidgets.QCheckBox(self.scrollAreaWidgetContents)
+        self.checkBox_trainLastNOnly = QtWidgets.QCheckBox(self.groupBox_regularization)
         self.checkBox_trainLastNOnly.setObjectName("checkBox_trainLastNOnly")
         self.horizontalLayout_35.addWidget(self.checkBox_trainLastNOnly)
-        self.spinBox_trainLastNOnly = QtWidgets.QSpinBox(self.scrollAreaWidgetContents)
+        self.spinBox_trainLastNOnly = QtWidgets.QSpinBox(self.groupBox_regularization)
         self.spinBox_trainLastNOnly.setObjectName("spinBox_trainLastNOnly")
         self.horizontalLayout_35.addWidget(self.spinBox_trainLastNOnly)
-        self.checkBox_trainDenseOnly = QtWidgets.QCheckBox(self.scrollAreaWidgetContents)
+        self.checkBox_trainDenseOnly = QtWidgets.QCheckBox(self.groupBox_regularization)
         self.checkBox_trainDenseOnly.setObjectName("checkBox_trainDenseOnly")
         self.horizontalLayout_35.addWidget(self.checkBox_trainDenseOnly)
-        self.gridLayout_37.addLayout(self.horizontalLayout_35, 3, 0, 1, 1)
+        self.gridLayout_46.addLayout(self.horizontalLayout_35, 3, 0, 1, 1)
         self.horizontalLayout_2 = QtWidgets.QHBoxLayout()
         self.horizontalLayout_2.setObjectName("horizontalLayout_2")
-        self.checkBox_dropout = QtWidgets.QCheckBox(self.scrollAreaWidgetContents)
+        self.checkBox_dropout = QtWidgets.QCheckBox(self.groupBox_regularization)
         self.checkBox_dropout.setObjectName("checkBox_dropout")
         self.horizontalLayout_2.addWidget(self.checkBox_dropout)
-        self.lineEdit_dropout = QtWidgets.QLineEdit(self.scrollAreaWidgetContents)
+        self.lineEdit_dropout = QtWidgets.QLineEdit(self.groupBox_regularization)
         self.lineEdit_dropout.setObjectName("lineEdit_dropout")
         validator = QtGui.QRegExpValidator(QtCore.QRegExp("^[0-9 . ,]+$")) #validator allows numbers, dots and commas
         #aternatively, I could use "^[0-9 . , \[ \] ]+$" - this would also allow the user to put the brackets. But why? I just do it in the program
         self.lineEdit_dropout.setValidator(validator)        
         
         self.horizontalLayout_2.addWidget(self.lineEdit_dropout)
-        self.gridLayout_37.addLayout(self.horizontalLayout_2, 4, 0, 1, 1)
+        self.gridLayout_46.addLayout(self.horizontalLayout_2, 4, 0, 1, 1)
         
         self.horizontalLayout_partialTrainability = QtWidgets.QHBoxLayout()
         self.horizontalLayout_partialTrainability.setObjectName("horizontalLayout_partialTrainability")
-        self.checkBox_partialTrainability = QtWidgets.QCheckBox(self.scrollAreaWidgetContents)
+        self.checkBox_partialTrainability = QtWidgets.QCheckBox(self.groupBox_regularization)
         self.checkBox_partialTrainability.setObjectName("checkBox_partialTrainability")
         self.horizontalLayout_partialTrainability.addWidget(self.checkBox_partialTrainability)
-        self.lineEdit_partialTrainability = QtWidgets.QLineEdit(self.scrollAreaWidgetContents)
+        self.lineEdit_partialTrainability = QtWidgets.QLineEdit(self.groupBox_regularization)
         self.lineEdit_partialTrainability.setEnabled(False)
         self.lineEdit_partialTrainability.setObjectName("lineEdit_partialTrainability")
         self.horizontalLayout_partialTrainability.addWidget(self.lineEdit_partialTrainability)
-        self.pushButton_partialTrainability = QtWidgets.QPushButton(self.scrollAreaWidgetContents)
+        self.pushButton_partialTrainability = QtWidgets.QPushButton(self.groupBox_regularization)
         self.pushButton_partialTrainability.setObjectName("pushButton_partialTrainability")
         self.horizontalLayout_partialTrainability.addWidget(self.pushButton_partialTrainability)
-        self.gridLayout_37.addLayout(self.horizontalLayout_partialTrainability, 5, 0, 1, 1)
+        self.gridLayout_46.addLayout(self.horizontalLayout_partialTrainability, 5, 0, 1, 1)
+        self.gridLayout_37.addWidget(self.groupBox_regularization, 2, 0, 1, 1)
 
 
 
@@ -1133,7 +1200,7 @@ class MainWindow(QtWidgets.QMainWindow):
         self.pushButton_lossW.setObjectName("pushButton_lossW")
         self.pushButton_lossW.setEnabled(False)
         self.horizontalLayout_lossW.addWidget(self.pushButton_lossW)
-        self.gridLayout_37.addLayout(self.horizontalLayout_lossW, 6, 0, 1, 1)
+        self.gridLayout_46.addLayout(self.horizontalLayout_lossW, 6, 0, 1, 1)
         self.pushButton_lossW.setMinimumSize(QtCore.QSize(0, 0))
         self.pushButton_lossW.setMaximumSize(QtCore.QSize(40, 16777215))
         self.pushButton_lossW.clicked.connect(lambda: self.lossWeights_popup(-1))
@@ -2699,7 +2766,8 @@ class MainWindow(QtWidgets.QMainWindow):
         self.checkBox_gaussBlur.clicked['bool'].connect(self.label_gaussBlurMax.setEnabled)
         self.checkBox_avgBlur.clicked['bool'].connect(self.label_avgBlurMin.setEnabled)
         self.checkBox_avgBlur.clicked['bool'].connect(self.label_avgBlurMax.setEnabled)
-
+        self.checkBox_optimizer.toggled['bool'].connect(self.comboBox_optimizer.setEnabled)
+        self.checkBox_expt_loss.toggled['bool'].connect(self.comboBox_expt_loss.setEnabled)
         #Start running show_cpu_ram function and run it all the time
         worker_cpu_ram = Worker(self.cpu_ram_worker)
         self.threadpool.start(worker_cpu_ram)
@@ -2844,10 +2912,12 @@ class MainWindow(QtWidgets.QMainWindow):
         self.tabWidget_DefineModel.setTabText(self.tabWidget_DefineModel.indexOf(self.tab_ExampleImgs), _translate("MainWindow", "Example imgs.", None))
         
         self.groupBox_expertMode.setTitle(_translate("MainWindow", "Expert Mode", None))
-        self.label_modelKerasFit.setText(_translate("MainWindow", "In model_keras.fit():", None))
+        self.groupBox_modelKerasFit.setTitle(_translate("MainWindow", "In model_keras.fit()", None))
+        self.groupBox_regularization.setTitle(_translate("MainWindow", "Loss / Regularization", None))
+
         self.label_batchSize.setText(_translate("MainWindow", "Batch size", None))
         self.label_epochs.setText(_translate("MainWindow", "Epochs", None))
-        self.label_others.setText(_translate("MainWindow", "Others", None))
+        #self.label_others.setText(_translate("MainWindow", "Others", None))
         self.checkBox_learningRate.setText(_translate("MainWindow", "Learning Rate", None))
         self.checkBox_trainLastNOnly.setText(_translate("MainWindow", "Train only last N layers", None))
         self.checkBox_trainDenseOnly.setText(_translate("MainWindow", "Train only Dense layers", None))
@@ -2856,15 +2926,42 @@ class MainWindow(QtWidgets.QMainWindow):
 
 
         self.groupBox_expertMode.setToolTip(_translate("MainWindow", "<html><head/><body><p>Expert mode allows changing the learning rate and you can even set parts of the neural net to \'not trainable\' in order to perform transfer learning and fine tune models. Also dropout rates can be adjusted. When expert mode is turned off again, the initial values are applied again.</p></body></html>", None))
-        self.checkBox_learningRate.setToolTip(_translate("MainWindow", "<html><head/><body><p>Change the learning rate. Optimizer is always \'adam\' and default value is 0.001</p></body></html>", None))
+        self.checkBox_learningRate.setToolTip(_translate("MainWindow", "<html><head/><body><p>Change the learning rate. The default optimizer is \'adam\' with a learning rate of 0.001</p></body></html>", None))
         self.doubleSpinBox_learningRate.setToolTip(_translate("MainWindow", "<html><head/><body><p>Change the learning rate. Typically, the optimizer \'adam\' is used and the default value is 0.001</p></body></html>", None))
+        self.checkBox_optimizer.setText(_translate("MainWindow", "Optimizer", None))
+        self.comboBox_optimizer.setItemText(0, _translate("MainWindow", "Adam", None))
+        self.comboBox_optimizer.setItemText(1, _translate("MainWindow", "SGD", None))
+        self.comboBox_optimizer.setItemText(2, _translate("MainWindow", "RMSprop", None))
+        self.comboBox_optimizer.setItemText(3, _translate("MainWindow", "Adagrad", None))
+        self.comboBox_optimizer.setItemText(4, _translate("MainWindow", "Adadelta", None))
+        self.comboBox_optimizer.setItemText(5, _translate("MainWindow", "Adamax", None))
+        self.comboBox_optimizer.setItemText(6, _translate("MainWindow", "Nadam", None))
         self.checkBox_trainLastNOnly.setToolTip(_translate("MainWindow", "<html><head/><body><p>When checked, only the last n layers of the model, which have >0 parameters will stay trainable. Layers before are set to trainable=False. Please specify n using the spinbox. After this change, the model has to be recompiled, which means the optimizer values are deleted.</p></body></html>", None))
         self.spinBox_trainLastNOnly.setToolTip(_translate("MainWindow", "<html><head/><body><p>Specify the number of last layer in your model that should be kept trainable. Only layers with >0 parameters are counted. Use the checkbox to apply this option. After this change, the model has to be recompiled, which means the optimizer values are deleted. </p></body></html>", None))
         self.checkBox_trainDenseOnly.setToolTip(_translate("MainWindow", "<html><head/><body><p>When checked, only the dense layers are kept trainable (if they have >0 parameters). Other layers are set to trainable=False. After this change, the model has to be recompiled, which means the optimizer values are deleted.</p></body></html>", None))
-        self.label_batchSize.setToolTip(_translate("MainWindow", "<html><head/><body><p>Number of samples per gradient update. If unspecified, batch_size will default to 32. (Source: Keras documentation)</p></body></html>", None))
+        self.label_batchSize.setToolTip(_translate("MainWindow", "<html><head/><body><p>Number of samples per gradient update. If unspecified, batch_size will default to 128. (Source: Keras documentation)</p></body></html>", None))
         self.spinBox_batchSize.setToolTip(_translate("MainWindow", "<html><head/><body><p>Number of samples per gradient update. If unspecified, batch_size will default to 128. (Source: Keras documentation)</p></body></html>", None))
         self.label_epochs.setToolTip(_translate("MainWindow", "<html><head/><body><p>Number of epochs to train the model on an identical batch.</p></body></html>", None))
         self.spinBox_epochs.setToolTip(_translate("MainWindow", "<html><head/><body><p>Number of epochs to train the model on identical batch.</p></body></html>", None))
+        
+        self.checkBox_expt_loss.setText(_translate("MainWindow", "Loss", None))
+        self.comboBox_expt_loss.setItemText(0, _translate("MainWindow", "categorical_crossentropy", None))
+        #self.comboBox_expt_loss.setItemText(1, _translate("MainWindow", "sparse_categorical_crossentropy", None))
+        self.comboBox_expt_loss.setItemText(1, _translate("MainWindow", "mean_squared_error", None))
+        self.comboBox_expt_loss.setItemText(2, _translate("MainWindow", "mean_absolute_error", None))
+        self.comboBox_expt_loss.setItemText(3, _translate("MainWindow", "mean_absolute_percentage_error", None))
+        self.comboBox_expt_loss.setItemText(4, _translate("MainWindow", "mean_squared_logarithmic_error", None))
+        self.comboBox_expt_loss.setItemText(5, _translate("MainWindow", "squared_hinge", None))
+        self.comboBox_expt_loss.setItemText(6, _translate("MainWindow", "hinge", None))
+        self.comboBox_expt_loss.setItemText(7, _translate("MainWindow", "categorical_hinge", None))
+        self.comboBox_expt_loss.setItemText(8, _translate("MainWindow", "logcosh", None))
+        #self.comboBox_expt_loss.setItemText(9, _translate("MainWindow", "huber_loss", None))
+        self.comboBox_expt_loss.setItemText(9, _translate("MainWindow", "binary_crossentropy", None))
+        self.comboBox_expt_loss.setItemText(10, _translate("MainWindow", "kullback_leibler_divergence", None))
+        self.comboBox_expt_loss.setItemText(11, _translate("MainWindow", "poisson", None))
+        self.comboBox_expt_loss.setItemText(12, _translate("MainWindow", "cosine_proximity", None))
+        #self.comboBox_expt_loss.setItemText(13, _translate("MainWindow", "is_categorical_crossentropy", None))
+        
         self.checkBox_dropout.setToolTip(_translate("MainWindow", "<html><head/><body><p>If your model has one or more dropout layers, you can change the dropout rates here. Insert into the lineEdit one value (e.g. 0.5) to apply this one value to all dropout layers, or insert a list of values to specify the dropout rates for each dropout layer individually (e.g. for three dropout layers: [ 0.2 , 0.5 , 0.25 ]. The model will be recompiled, but the optimizer weights are not deleted.</p></body></html>", None))
         self.lineEdit_dropout.setToolTip(_translate("MainWindow", "<html><head/><body><p>If your model has one or more dropout layers, you can change the dropout rates here. Insert into the lineEdit one value (e.g. 0.5) to apply this one value to all dropout layers, or insert a list of values to specify the dropout rates for each dropout layer individually (e.g. for three dropout layers: [ 0.2 , 0.5 , 0.25 ]. The model will be recompiled, but the optimizer weights are not deleted.</p></body></html>", None))
         self.checkBox_partialTrainability.setText(_translate("MainWindow", "Partial trainablility", None))
@@ -2961,7 +3058,6 @@ class MainWindow(QtWidgets.QMainWindow):
         self.groupBox_settings.setTitle(_translate("MainWindow", "Settings", None))
         
         
-        
         self.groupBox_settings.setTitle(_translate("MainWindow", "Settings", None))
         self.label_SortingIndex.setText(_translate("MainWindow", "Sorting class", None))
         self.label_SortingIndex.setToolTip(_translate("MainWindow", "<html><head/><body><p>Specify the class you intend to sort for ('Target cell type'). This is important if you want to know the final concentration in the target region</p></body></html>", None))
@@ -2971,8 +3067,6 @@ class MainWindow(QtWidgets.QMainWindow):
         self.pushButton_AssessModel.setText(_translate("MainWindow", "Update Plots", None))
         
         self.comboBox_probability_histogram.setToolTip(_translate("MainWindow", "<html><head/><body><p>Select a plotting style for the probability plot<br>Style1: Only outline, width 5<br>Style2: Only outline, width 10<br>Style4: Filled hist, alpha 0.6<br>Style3: Filled hist, alpha 0.7<br>Style5: Filled hist, alpha 0.8</p></body></html>",None))
-        
-        
         
         #self.comboBox_probability_histogram.setText(_translate("MainWindow", "Prob. hist.",None))
 
@@ -3108,7 +3202,6 @@ class MainWindow(QtWidgets.QMainWindow):
         self.radioButton_exportAll.setToolTip(_translate("MainWindow", "<html><head/><body><p>Apply the peak detection model on all files on the 'Build'-Tab</p></body></html>", None))
 
 
-
         self.menuFile.setTitle(_translate("MainWindow", "File", None))
         self.menuEdit.setTitle(_translate("MainWindow", "Edit", None))
         self.menu_Options.setTitle(_translate("MainWindow", "Options",None))
@@ -3123,10 +3216,6 @@ class MainWindow(QtWidgets.QMainWindow):
         self.actionSoftware.setText(_translate("MainWindow", "Software",None))
         self.actionAbout.setText(_translate("MainWindow", "About",None))
         self.actionUpdate.setText(_translate("MainWindow", "Check for updates...",None))
-
-
-
-
 
 
         self.actionLoadSession.setText(_translate("MainWindow", "Load Session", None))
@@ -3391,12 +3480,13 @@ class MainWindow(QtWidgets.QMainWindow):
                 failed,rtdc_ds = aid_bin.load_rtdc(rtdc_path)
                 if failed:
                     msg = QtWidgets.QMessageBox()
-                    msg.setIcon(QtWidgets.QMessageBox.Information)       
+                    msg.setIcon(QtWidgets.QMessageBox.Critical)       
                     msg.setText(str(rtdc_ds))
                     msg.setWindowTitle("Error occurred during loading file")
                     msg.setStandardButtons(QtWidgets.QMessageBox.Ok)
                     msg.exec_()
-                    
+                    return
+                
                 features = rtdc_ds.features
                 #Make sure that there is "images", "pos_x" and "pos_y" available
                 if "image" in features and "pos_x" in features and "pos_y" in features:
@@ -3634,6 +3724,60 @@ class MainWindow(QtWidgets.QMainWindow):
         else:
             return
 
+    def expert_mode_off(self,on_or_off):
+        """
+        Reset all values on the expert tab to the default values, excluding the metrics
+        metrics are defined only once when starting fitting and should not be changed
+        """
+        if on_or_off==0: #switch off
+            self.spinBox_batchSize.setValue(Default_dict["spinBox_batchSize"])
+            self.spinBox_epochs.setValue(1)
+            self.checkBox_expt_loss.setChecked(False)
+            self.expert_loss_off(0)
+            self.checkBox_learningRate.setChecked(False)        
+            self.expert_learningrate_off(0)
+            self.checkBox_optimizer.setChecked(False)
+            self.expert_optimizer_off(0)
+
+    def expert_loss_off(self,on_or_off):
+        if on_or_off==0: #switch off
+            #switch back to categorical_crossentropy 
+            index = self.comboBox_expt_loss.findText("categorical_crossentropy", QtCore.Qt.MatchFixedString)
+            if index >= 0:
+                self.comboBox_expt_loss.setCurrentIndex(index)
+        
+    def expert_learningrate_off(self,on_or_off):
+        if on_or_off==0: #switch off
+            #which optimizer is used? (there are different default learning-rates
+            #for each optimizer!)
+            optimizer = str(self.comboBox_optimizer.currentText())
+            self.doubleSpinBox_learningRate.setValue(Default_dict["doubleSpinBox_learningRate_"+optimizer])
+
+    def expert_optimizer_off(self,on_or_off):
+        if on_or_off==0: #switch off, set back to categorical_crossentropy
+            optimizer = "Adam"
+            index = self.comboBox_optimizer.findText(optimizer, QtCore.Qt.MatchFixedString)
+            if index >= 0:
+                self.comboBox_optimizer.setCurrentIndex(index)
+                #also reset the learning rate to the default
+                self.doubleSpinBox_learningRate.setValue(Default_dict["doubleSpinBox_learningRate_"+optimizer])
+
+    def expert_optimizer_changed(self,value):
+        #set the learning rate to the default for this optimizer
+        optimizer = value
+        value_current = float(self.doubleSpinBox_learningRate.value())
+        value_wanted = Default_dict["doubleSpinBox_learningRate_"+optimizer]
+        if value_current!=value_wanted:
+            print("Update learning rate spinbox")
+            self.doubleSpinBox_learningRate.setValue(value_wanted)
+            #Inform user
+            msg = QtWidgets.QMessageBox()
+            msg.setIcon(QtWidgets.QMessageBox.Information)       
+            msg.setWindowTitle("Learning rate to default")
+            msg.setText("Learning rate was set to the default for "+optimizer)
+            msg.setStandardButtons(QtWidgets.QMessageBox.Ok)
+            msg.exec_()
+            return
 
 
     def update_hist1(self):
@@ -3679,7 +3823,7 @@ class MainWindow(QtWidgets.QMainWindow):
         failed,rtdc_ds = aid_bin.load_rtdc(rtdc_path)
         if failed:
             msg = QtWidgets.QMessageBox()
-            msg.setIcon(QtWidgets.QMessageBox.Information)       
+            msg.setIcon(QtWidgets.QMessageBox.Critical)       
             msg.setText(str(rtdc_ds))
             msg.setWindowTitle("Error occurred during loading file")
             msg.setStandardButtons(QtWidgets.QMessageBox.Ok)
@@ -4144,7 +4288,7 @@ class MainWindow(QtWidgets.QMainWindow):
                 failed,rtdc_ds = aid_bin.load_rtdc(rtdc_path)
                 if failed:
                     msg = QtWidgets.QMessageBox()
-                    msg.setIcon(QtWidgets.QMessageBox.Information)       
+                    msg.setIcon(QtWidgets.QMessageBox.Critical)       
                     msg.setText(str(rtdc_ds))
                     msg.setWindowTitle("Error occurred during loading file")
                     msg.setStandardButtons(QtWidgets.QMessageBox.Ok)
@@ -4161,7 +4305,7 @@ class MainWindow(QtWidgets.QMainWindow):
                 failed,rtdc_ds = aid_bin.load_rtdc(rtdc_path)
                 if failed:
                     msg = QtWidgets.QMessageBox()
-                    msg.setIcon(QtWidgets.QMessageBox.Information)       
+                    msg.setIcon(QtWidgets.QMessageBox.Critical)       
                     msg.setText(str(rtdc_ds))
                     msg.setWindowTitle("Error occurred during loading file")
                     msg.setStandardButtons(QtWidgets.QMessageBox.Ok)
@@ -4227,7 +4371,7 @@ class MainWindow(QtWidgets.QMainWindow):
                 failed,rtdc_ds = aid_bin.load_rtdc(rtdc_path)
                 if failed:
                     msg = QtWidgets.QMessageBox()
-                    msg.setIcon(QtWidgets.QMessageBox.Information)       
+                    msg.setIcon(QtWidgets.QMessageBox.Critical)       
                     msg.setText(str(rtdc_ds))
                     msg.setWindowTitle("Error occurred during loading file")
                     msg.setStandardButtons(QtWidgets.QMessageBox.Ok)
@@ -4557,7 +4701,7 @@ class MainWindow(QtWidgets.QMainWindow):
                     failed,rtdc_ds = aid_bin.load_rtdc(rtdc_path)
                     if failed:
                         msg = QtWidgets.QMessageBox()
-                        msg.setIcon(QtWidgets.QMessageBox.Information)       
+                        msg.setIcon(QtWidgets.QMessageBox.Critical)       
                         msg.setText(str(rtdc_ds))
                         msg.setWindowTitle("Error occurred during loading file")
                         msg.setStandardButtons(QtWidgets.QMessageBox.Ok)
@@ -4598,7 +4742,7 @@ class MainWindow(QtWidgets.QMainWindow):
             failed,rtdc_ds = aid_bin.load_rtdc(rtdc_path)
             if failed:
                 msg = QtWidgets.QMessageBox()
-                msg.setIcon(QtWidgets.QMessageBox.Information)       
+                msg.setIcon(QtWidgets.QMessageBox.Critical)       
                 msg.setText(str(rtdc_ds))
                 msg.setWindowTitle("Error occurred during loading file")
                 msg.setStandardButtons(QtWidgets.QMessageBox.Ok)
@@ -4718,7 +4862,7 @@ class MainWindow(QtWidgets.QMainWindow):
             failed,rtdc_ds = aid_bin.load_rtdc(url)
             if failed:
                 msg = QtWidgets.QMessageBox()
-                msg.setIcon(QtWidgets.QMessageBox.Information)       
+                msg.setIcon(QtWidgets.QMessageBox.Critical)       
                 msg.setText(str(rtdc_ds))
                 msg.setWindowTitle("Error occurred during loading file")
                 msg.setStandardButtons(QtWidgets.QMessageBox.Ok)
@@ -4983,7 +5127,7 @@ class MainWindow(QtWidgets.QMainWindow):
         failed,rtdc_ds = aid_bin.load_rtdc(url)
         if failed:
             msg = QtWidgets.QMessageBox()
-            msg.setIcon(QtWidgets.QMessageBox.Information)       
+            msg.setIcon(QtWidgets.QMessageBox.Critical)       
             msg.setText(str(rtdc_ds))
             msg.setWindowTitle("Error occurred during loading file")
             msg.setStandardButtons(QtWidgets.QMessageBox.Ok)
@@ -5458,7 +5602,7 @@ class MainWindow(QtWidgets.QMainWindow):
             failed,rtdc_ds = aid_bin.load_rtdc(rtdc_path)
             if failed:
                 msg = QtWidgets.QMessageBox()
-                msg.setIcon(QtWidgets.QMessageBox.Information)       
+                msg.setIcon(QtWidgets.QMessageBox.Critical)       
                 msg.setText(str(rtdc_ds))
                 msg.setWindowTitle("Error occurred during loading file")
                 msg.setStandardButtons(QtWidgets.QMessageBox.Ok)
@@ -5942,7 +6086,7 @@ class MainWindow(QtWidgets.QMainWindow):
         except Exception as e: 
             #There is an issue building the model!
             msg = QtWidgets.QMessageBox()
-            msg.setIcon(QtWidgets.QMessageBox.Information)       
+            msg.setIcon(QtWidgets.QMessageBox.Critical)       
             msg.setText(str(e))
             msg.setWindowTitle("Error occured when building model:")
             msg.setStandardButtons(QtWidgets.QMessageBox.Ok)
@@ -6441,8 +6585,8 @@ class MainWindow(QtWidgets.QMainWindow):
             channels = in_dim[-1] #TensorFlow: channels in last dimension
 
             #Compile model (consider user-specific metrics)
-            metrics = self.get_metrics(out_dim)
-            model_keras.compile(loss='categorical_crossentropy',optimizer='adam',metrics=metrics)
+            metrics = self.get_metrics(out_dim)            
+            model_keras.compile(loss='categorical_crossentropy',optimizer='adam',metrics=metrics)#dont specify loss and optimizer yet...expert stuff will follow and model will be recompiled
 
             if channels==1:
                 channel_text = "1 channel (Grayscale)"
@@ -6616,7 +6760,7 @@ class MainWindow(QtWidgets.QMainWindow):
             except Exception as e: 
                 #There is an issue building the model!
                 msg = QtWidgets.QMessageBox()
-                msg.setIcon(QtWidgets.QMessageBox.Information)       
+                msg.setIcon(QtWidgets.QMessageBox.Critical)       
                 msg.setText(str(e))
                 msg.setWindowTitle("Error occured when building model:")
                 msg.setStandardButtons(QtWidgets.QMessageBox.Ok)
@@ -6654,9 +6798,9 @@ class MainWindow(QtWidgets.QMainWindow):
         model_metrics = self.get_metrics(out_dim)
         if "Collection" in chosen_model:
             for m in model_keras[1]: #in a collection, model_keras[0] are the names of the models and model_keras[1] is a list of all models
-                m.compile(loss='categorical_crossentropy',optimizer='adam',metrics=self.get_metrics(nr_classes))
+                m.compile(loss='categorical_crossentropy',optimizer='adam',metrics=self.get_metrics(nr_classes))#dont specify loss and optimizer yet...expert stuff will follow and model will be recompiled
         if not "Collection" in chosen_model:
-            model_keras.compile(loss='categorical_crossentropy',optimizer='adam',metrics=model_metrics)
+            model_keras.compile(loss='categorical_crossentropy',optimizer='adam',metrics=model_metrics)#dont specify loss and optimizer yet...expert stuff will follow and model will be recompiled
 
         #If expert mode is on, apply the requested options
         #This affects learning rate, trainability of layers and dropout rate
@@ -6667,6 +6811,11 @@ class MainWindow(QtWidgets.QMainWindow):
         train_last_layers_n = int(self.spinBox_trainLastNOnly.value())              
         train_dense_layers = bool(self.checkBox_trainDenseOnly.isChecked())             
         dropout_expert_on = bool(self.checkBox_dropout.isChecked())
+        loss_expert_on = bool(self.checkBox_expt_loss.isChecked())
+        loss_expert = str(self.comboBox_expt_loss.currentText()).lower()
+        optimizer_expert_on = bool(self.checkBox_optimizer.isChecked())
+        optimizer_expert = str(self.comboBox_optimizer.currentText()).lower()
+
         try:
             dropout_expert = str(self.lineEdit_dropout.text()) #due to the validator, there are no squ.brackets
             dropout_expert = "["+dropout_expert+"]"
@@ -6703,16 +6852,12 @@ class MainWindow(QtWidgets.QMainWindow):
 
 
         if expert_mode==True:
-            #Some settings only need to be changed once, after user clicked apply at next epoch
-            if learning_rate_expert_on==True:
-                if K.eval(model_keras.optimizer.lr) != learning_rate_expert: #if the learning rate in UI is NOT equal to the lr of the model...
-                    print("Change the learning rate to "+ str(learning_rate_expert))
-                    K.set_value(model_keras.optimizer.lr, learning_rate_expert)
-            #Next, apply the changes to trainable states:
+            #Apply the changes to trainable states:
             if train_last_layers==True:#Train only the last n layers
                 print("Train only the last "+str(train_last_layers_n)+ " layer(s)")
                 trainable_new = (len(trainable_original)-train_last_layers_n)*[False]+train_last_layers_n*[True]
-                aid_dl.model_change_trainability(model_keras,trainable_new,model_metrics,out_dim)
+                aid_dl.model_change_trainability(model_keras,trainable_new,model_metrics,out_dim,loss_expert,optimizer_expert,learning_rate_expert)
+
             if train_dense_layers==True:#Train only dense layers
                 print("Train only dense layers")
                 layer_dense_ind = ["Dense" in x for x in layer_names]
@@ -6721,7 +6866,7 @@ class MainWindow(QtWidgets.QMainWindow):
                 trainable_new = len(trainable_original)*[False]
                 for index in layer_dense_ind:
                     trainable_new[index] = True
-                aid_dl.model_change_trainability(model_keras,trainable_new,model_metrics,out_dim)
+                aid_dl.model_change_trainability(model_keras,trainable_new,model_metrics,out_dim,loss_expert,optimizer_expert,learning_rate_expert)
 
             if dropout_expert_on==True:
                 #The user apparently want to change the dropout rates
@@ -6751,7 +6896,7 @@ class MainWindow(QtWidgets.QMainWindow):
                     dropout_expert_list = []
                  
                 if len(dropout_expert_list)>0 and do_list!=dropout_expert_list:#if the dropout rates of the current model is not equal to the required do_list from user...
-                    do_changed = aid_dl.change_dropout(model_keras,dropout_expert_list,model_metrics,nr_classes)
+                    do_changed = aid_dl.change_dropout(model_keras,dropout_expert_list,model_metrics,nr_classes,loss_expert,optimizer_expert,learning_rate_expert)
                     if do_changed==1:
                         text_do = "Dropout rate(s) in model was/were changed to: "+str(dropout_expert_list)
                     else:
@@ -6759,6 +6904,33 @@ class MainWindow(QtWidgets.QMainWindow):
                 else:
                     text_do = "Dropout rate(s) in model was/were not changed"
                 print(text_do)
+
+                
+        text_updates = ""
+
+        #Compare current lr and the lr on expert tab:
+        lr_current = K.eval(model_keras.optimizer.lr)
+        print(lr_current)
+        lr_diff = learning_rate_expert-lr_current
+        print(learning_rate_expert)
+        if  abs(lr_diff) > 1e-6:
+            K.set_value(model_keras.optimizer.lr, learning_rate_expert)
+            text_updates +=  "Changed the learning rate to: "+ str(learning_rate_expert)+"\n"
+
+        recompile = False
+        #Compare current optimizer and the optimizer on expert tab:
+        optimizer_current = aid_dl.get_optimizer_name(model_keras).lower()#get the current optimizer of the model
+        if optimizer_current!=optimizer_expert.lower():#if the current model has a different optimizer
+            recompile = True
+            text_updates+="Changed the optimizer to: "+optimizer_expert+"\n"
+        #Compare current loss function and the loss-function on expert tab:
+        if model_keras.loss!=loss_expert:
+            recompile = True
+            text_updates+="Changed the loss function to: "+loss_expert+"\n"
+        if recompile==True:
+            print("Recompiling...")
+            aid_dl.model_compile(model_keras,loss_expert,optimizer_expert,learning_rate_expert,model_metrics,nr_classes)
+             
         self.model_keras = model_keras #overwrite the model in self
 
         if collection == False:
@@ -6793,17 +6965,17 @@ class MainWindow(QtWidgets.QMainWindow):
         if expert_mode==True:
             if dropout_expert_on:
                 text4 = text4+text_do+"\n"
-            if learning_rate_expert_on==True:
-                if K.eval(model_keras.optimizer.lr) != learning_rate_expert: #if the learning rate in UI is NOT equal to the lr of the model...
-                    text_lr = "Changed the learning rate to: "+ str(learning_rate_expert)+"\n"
-                    text4 = text4+text_lr
+#            if learning_rate_expert_on==True:
+#                if K.eval(model_keras.optimizer.lr) != learning_rate_expert: #if the learning rate in UI is NOT equal to the lr of the model...
+#                    text_lr = "Changed the learning rate to: "+ str(learning_rate_expert)+"\n"
+#                    text4 = text4+text_lr
 
         text5 = "Model summary:\n"
         summary = []
         if collection==False:
             model_keras.summary(print_fn=summary.append)
             summary = "\n".join(summary)
-            text = text_new_modelname+text0+text1+text2+text3+text4+text5+summary
+            text = text_new_modelname+text0+text1+text2+text3+text4+text_updates+text5+summary
             self.textBrowser_Info.setText(text)
                 
             #Save the model architecture: serialize to JSON
@@ -6928,16 +7100,14 @@ class MainWindow(QtWidgets.QMainWindow):
             
             #Compile model
             if collection==False:
-                model_keras.compile(loss='categorical_crossentropy',optimizer='adam',metrics=model_metrics)
+                model_keras.compile(loss='categorical_crossentropy',optimizer='adam',metrics=model_metrics)#dont specify loss and optimizer yet...expert stuff will follow and model will be recompiled
             elif collection==True:
                 #Switch off the expert tab!
                 self.fittingpopups_ui[listindex].groupBox_expertMode_pop.setChecked(False)
                 self.fittingpopups_ui[listindex].groupBox_expertMode_pop.setEnabled(False)
-
                 for m in model_keras:
-                    m.compile(loss='categorical_crossentropy',optimizer='adam',metrics=self.get_metrics(nr_classes))
+                    m.compile(loss='categorical_crossentropy',optimizer='adam',metrics=self.get_metrics(nr_classes))#dont specify loss and optimizer yet...expert stuff will follow and model will be recompiled
                     
-
             #Original learning rate:
             learning_rate_original = self.learning_rate_original#K.eval(model_keras.optimizer.lr)
             #Original trainable states of layers with parameters
@@ -7003,9 +7173,6 @@ class MainWindow(QtWidgets.QMainWindow):
             motionBlur_angle = tuple(ast.literal_eval(motionBlur_angle)) #translate string in the lineEdits to a tuple
 
 
-
-
-
             if collection==False:
                 expert_mode = bool(self.groupBox_expertMode.isChecked())
             elif collection==True:
@@ -7016,7 +7183,12 @@ class MainWindow(QtWidgets.QMainWindow):
             batchSize_expert = int(self.spinBox_batchSize.value())
             epochs_expert = int(self.spinBox_epochs.value())
             learning_rate_expert = float(self.doubleSpinBox_learningRate.value())
-            learning_rate_expert_on = bool(self.checkBox_learningRate.isChecked())   
+            learning_rate_expert_on = bool(self.checkBox_learningRate.isChecked()) 
+            loss_expert_on = bool(self.checkBox_expt_loss.isChecked())
+            loss_expert = str(self.comboBox_expt_loss.currentText()).lower()
+            optimizer_expert_on = bool(self.checkBox_optimizer.isChecked())
+            optimizer_expert = str(self.comboBox_optimizer.currentText()).lower()
+            
             train_last_layers = bool(self.checkBox_trainLastNOnly.isChecked())             
             train_last_layers_n = int(self.spinBox_trainLastNOnly.value())              
             train_dense_layers = bool(self.checkBox_trainDenseOnly.isChecked())             
@@ -7132,6 +7304,12 @@ class MainWindow(QtWidgets.QMainWindow):
                 Para_dict["epochs_expert"]=epochs_expert,
                 Para_dict["learning_rate_expert"]=learning_rate_expert,
                 Para_dict["learning_rate_expert_on"]=learning_rate_expert_on,
+
+                Para_dict["loss_expert_on"]=loss_expert_on,
+                Para_dict["loss_expert"]=loss_expert,
+                Para_dict["optimizer_expert_on"]=optimizer_expert_on,
+                Para_dict["optimizer_expert"]=optimizer_expert,
+
                 Para_dict["train_last_layers"]=train_last_layers,
                 Para_dict["train_last_layers_n"]=train_last_layers_n,
                 Para_dict["train_dense_layers"]=train_dense_layers,
@@ -7226,6 +7404,10 @@ class MainWindow(QtWidgets.QMainWindow):
                 Para_dict["epochs_expert"]=epochs_expert,
                 Para_dict["learning_rate_expert"]=learning_rate_expert,
                 Para_dict["learning_rate_expert_on"]=learning_rate_expert_on,
+                Para_dict["loss_expert_on"]=loss_expert_on,
+                Para_dict["loss_expert"]=loss_expert,
+                Para_dict["optimizer_expert_on"]=optimizer_expert_on,
+                Para_dict["optimizer_expert"]=optimizer_expert,
                 Para_dict["train_last_layers"]=train_last_layers,
                 Para_dict["train_last_layers_n"]=train_last_layers_n,
                 Para_dict["train_dense_layers"]=train_dense_layers,
@@ -7243,17 +7425,12 @@ class MainWindow(QtWidgets.QMainWindow):
                 self.fittingpopups_ui[listindex].groupBox_expertMode_pop.setChecked(True)
                 expert_mode_before = True
             #Some settings only neet to be changed once, after user clicked apply at next epoch
-                if learning_rate_expert_on==True:
-                    if K.eval(model_keras.optimizer.lr) != learning_rate_expert: #if the learning rate in UI is NOT equal to the lr of the model...
-                        text_lr = "Change the learning rate to "+ str(learning_rate_expert)
-                        K.set_value(model_keras.optimizer.lr, learning_rate_expert)
-                        self.fittingpopups_ui[listindex].textBrowser_FittingInfo_pop.append(text_lr)
                         
-                #Next, apply the changes to trainable states:
+                #Apply the changes to trainable states:
                 if train_last_layers==True:#Train only the last n layers
                     print("Train only the last "+str(train_last_layers_n)+ " layer(s)")
                     trainable_new = (len(trainable_original)-train_last_layers_n)*[False]+train_last_layers_n*[True]
-                    summary = aid_dl.model_change_trainability(model_keras,trainable_new,model_metrics,nr_classes)
+                    summary = aid_dl.model_change_trainability(model_keras,trainable_new,model_metrics,nr_classes,loss_expert,optimizer_expert,learning_rate_expert)
                     text1 = "Expert mode: Request for custom trainability states: train only the last "+str(train_last_layers_n)+ " layer(s)\n"
                     #text2 = "\n--------------------\n"
                     self.fittingpopups_ui[listindex].textBrowser_FittingInfo_pop.append(text1+summary)
@@ -7265,7 +7442,7 @@ class MainWindow(QtWidgets.QMainWindow):
                     trainable_new = len(trainable_original)*[False]
                     for index in layer_dense_ind:
                         trainable_new[index] = True
-                    summary = aid_dl.model_change_trainability(model_keras,trainable_new,model_metrics,nr_classes)                  
+                    summary = aid_dl.model_change_trainability(model_keras,trainable_new,model_metrics,nr_classes,loss_expert,optimizer_expert,learning_rate_expert)                  
                     text1 = "Expert mode: Request for custom trainability states: train only dense layer(s)\n"
                     #text2 = "\n--------------------\n"
                     self.fittingpopups_ui[listindex].textBrowser_FittingInfo_pop.append(text1+summary)
@@ -7286,7 +7463,7 @@ class MainWindow(QtWidgets.QMainWindow):
                         self.fittingpopups_ui[listindex].textBrowser_FittingInfo_pop.append(text)
                         dropout_expert_list = []
                     if len(dropout_expert_list)>0 and do_list!=dropout_expert_list:#if the dropout rates of the current model is not equal to the required do_list from user...
-                        do_changed = aid_dl.change_dropout(model_keras,dropout_expert_list,model_metrics,nr_classes)
+                        do_changed = aid_dl.change_dropout(model_keras,dropout_expert_list,model_metrics,nr_classes,loss_expert,optimizer_expert,learning_rate_expert)
                         if do_changed==1:
                             text_do = "Dropout rate(s) in model was/were changed to: "+str(dropout_expert_list)
                         else:
@@ -7295,8 +7472,32 @@ class MainWindow(QtWidgets.QMainWindow):
                         text_do = "Dropout rate(s) in model was/were not changed"
                     print(text_do)
                     self.fittingpopups_ui[listindex].textBrowser_FittingInfo_pop.append(text_do)
-        
-            self.model_keras = model_keras #overwrite the model in self
+
+
+            text_updates = ""
+            #Compare current lr and the lr on expert tab:
+            lr_current = K.eval(model_keras.optimizer.lr)
+            lr_diff = learning_rate_expert-lr_current
+            if  abs(lr_diff) > 1e-6:
+                K.set_value(model_keras.optimizer.lr, learning_rate_expert)
+                text_updates +=  "Changed the learning rate to "+ str(learning_rate_expert)+"\n"
+            recompile = False
+            #Compare current optimizer and the optimizer on expert tab:
+            optimizer_current = aid_dl.get_optimizer_name(model_keras).lower()#get the current optimizer of the model
+            if optimizer_current!=optimizer_expert.lower():#if the current model has a different optimizer
+                recompile = True
+                text_updates+="Changed the optimizer to "+optimizer_expert+"\n"
+            #Compare current loss function and the loss-function on expert tab:
+            if model_keras.loss!=loss_expert:
+                recompile = True
+                text_updates+="Changed the loss function to "+loss_expert+"\n"
+            if recompile==True:
+                print("Recompiling...")
+                aid_dl.model_compile(model_keras,loss_expert,optimizer_expert,learning_rate_expert,model_metrics,nr_classes)
+            
+            self.fittingpopups_ui[listindex].textBrowser_FittingInfo_pop.append(text_updates)
+
+            self.model_keras = model_keras #overwrite the model on self
 
             ######################Load the Training Data################################
             ind = [selectedfile["TrainOrValid"] == "Train" for selectedfile in SelectedFiles]
@@ -7415,6 +7616,13 @@ class MainWindow(QtWidgets.QMainWindow):
                 batchSize_expert = int(self.fittingpopups_ui[listindex].spinBox_batchSize_pop.value())
                 epochs_expert = int(self.fittingpopups_ui[listindex].spinBox_epochs_pop.value())
                 learning_rate_expert = float(self.fittingpopups_ui[listindex].doubleSpinBox_learningRate_pop.value())
+                
+                learning_rate_expert_on = bool(self.fittingpopups_ui[listindex].checkBox_learningRate_pop.isChecked())
+                loss_expert_on = bool(self.fittingpopups_ui[listindex].checkBox_expt_loss_pop.isChecked())
+                loss_expert = str(self.fittingpopups_ui[listindex].comboBox_expt_loss_pop.currentText())
+                optimizer_expert_on = bool(self.fittingpopups_ui[listindex].checkBox_optimizer_pop.isChecked())
+                optimizer_expert = str(self.fittingpopups_ui[listindex].comboBox_optimizer_pop.currentText())
+                
                 train_last_layers = bool(self.fittingpopups_ui[listindex].checkBox_trainLastNOnly_pop.isChecked())             
                 train_last_layers_n = int(self.fittingpopups_ui[listindex].spinBox_trainLastNOnly_pop.value())              
                 train_dense_layers = bool(self.fittingpopups_ui[listindex].checkBox_trainDenseOnly_pop.isChecked())             
@@ -7425,7 +7633,7 @@ class MainWindow(QtWidgets.QMainWindow):
                     dropout_expert = ast.literal_eval(dropout_expert)
                 except:
                     dropout_expert = []
-                #Issue here! THis toggles call of lossweights_popup! Can this be prevented?
+                #Issue here! This toggles call of lossweights_popup! Can this be prevented?
                 lossW_expert_on = bool(self.fittingpopups_ui[listindex].checkBox_lossW.isChecked())             
                 lossW_expert = str(self.fittingpopups_ui[listindex].lineEdit_lossW.text())             
                 class_weight = self.get_class_weight(self.fittingpopups_ui[listindex].SelectedFiles,lossW_expert)
@@ -7491,8 +7699,14 @@ class MainWindow(QtWidgets.QMainWindow):
                 Para_dict["expert_mode"]=expert_mode,
                 Para_dict["batchSize_expert"]=batchSize_expert,
                 Para_dict["epochs_expert"]=epochs_expert,
+                
                 Para_dict["learning_rate_expert"]=learning_rate_expert,
                 Para_dict["learning_rate_expert_on"]=learning_rate_expert_on,
+                Para_dict["loss_expert_on"]=loss_expert_on,
+                Para_dict["loss_expert"]=loss_expert,
+                Para_dict["optimizer_expert_on"]=optimizer_expert_on,
+                Para_dict["optimizer_expert"]=optimizer_expert,                
+                
                 Para_dict["train_last_layers"]=train_last_layers,
                 Para_dict["train_last_layers_n"]=train_last_layers_n,
                 Para_dict["train_dense_layers"]=train_dense_layers,
@@ -7704,7 +7918,18 @@ class MainWindow(QtWidgets.QMainWindow):
             self.fittingpopups_ui[listindex].groupBox_expertMode_pop.setChecked(expert_mode)
             self.fittingpopups_ui[listindex].spinBox_batchSize_pop.setValue(batchSize_expert)
             self.fittingpopups_ui[listindex].spinBox_epochs_pop.setValue(epochs_expert)
+
+            self.fittingpopups_ui[listindex].checkBox_learningRate_pop.setChecked(learning_rate_expert_on)
+            self.fittingpopups_ui[listindex].checkBox_expt_loss_pop.setChecked(loss_expert_on)
+            index = self.fittingpopups_ui[listindex].comboBox_expt_loss_pop.findText(loss_expert, QtCore.Qt.MatchFixedString)
+            if index >= 0:
+                self.fittingpopups_ui[listindex].comboBox_expt_loss_pop.setCurrentIndex(index)
+            self.fittingpopups_ui[listindex].checkBox_optimizer_pop.setChecked(optimizer_expert_on)
+            index = self.fittingpopups_ui[listindex].comboBox_optimizer_pop.findText(optimizer_expert, QtCore.Qt.MatchFixedString)
+            if index >= 0:
+                self.fittingpopups_ui[listindex].comboBox_optimizer_pop.setCurrentIndex(index)
             self.fittingpopups_ui[listindex].doubleSpinBox_learningRate_pop.setValue(learning_rate_expert)
+
             self.fittingpopups_ui[listindex].checkBox_trainLastNOnly_pop.setChecked(train_last_layers)
             self.fittingpopups_ui[listindex].spinBox_trainLastNOnly_pop.setValue(train_last_layers_n)
             self.fittingpopups_ui[listindex].checkBox_trainDenseOnly_pop.setChecked(train_dense_layers)
@@ -7763,7 +7988,7 @@ class MainWindow(QtWidgets.QMainWindow):
 
             
             time_start = time.time()
-            t1 = time.time() #Initialize a timer; this is used to save the meta file every some seconds
+            t1 = time.time() #Initialize a timer; this is used to save the meta file every few seconds
             t2 =  time.time() #Initialize a timer; this is used update the fitting parameters
             while counter < nr_epochs:#nr_epochs: #resample nr_epochs times
                 #Only keep fitting if the respective window is open:
@@ -7941,8 +8166,14 @@ class MainWindow(QtWidgets.QMainWindow):
                                 expert_mode = bool(self.fittingpopups_ui[listindex].groupBox_expertMode_pop.isChecked())
                                 batchSize_expert = int(self.fittingpopups_ui[listindex].spinBox_batchSize_pop.value())
                                 epochs_expert = int(self.fittingpopups_ui[listindex].spinBox_epochs_pop.value())
+                                
+                                learning_rate_expert_on = bool(self.fittingpopups_ui[listindex].checkBox_learningRate_pop.isChecked())
                                 learning_rate_expert = float(self.fittingpopups_ui[listindex].doubleSpinBox_learningRate_pop.value())
-                                learning_rate_expert_on = bool(self.fittingpopups_ui[listindex].checkBox_learningRate_pop.isChecked())   
+                                loss_expert_on = bool(self.fittingpopups_ui[listindex].checkBox_expt_loss_pop.isChecked())
+                                loss_expert = str(self.fittingpopups_ui[listindex].comboBox_expt_loss_pop.currentText())
+                                optimizer_expert_on = bool(self.fittingpopups_ui[listindex].checkBox_optimizer_pop.isChecked())
+                                optimizer_expert = str(self.fittingpopups_ui[listindex].comboBox_optimizer_pop.currentText())
+                                
                                 train_last_layers = bool(self.fittingpopups_ui[listindex].checkBox_trainLastNOnly_pop.isChecked())             
                                 train_last_layers_n = int(self.fittingpopups_ui[listindex].spinBox_trainLastNOnly_pop.value())              
                                 train_dense_layers = bool(self.fittingpopups_ui[listindex].checkBox_trainDenseOnly_pop.isChecked())             
@@ -7964,21 +8195,14 @@ class MainWindow(QtWidgets.QMainWindow):
                                 if expert_mode==True:
                                     if collection==False: #Expert mode is currently not supported for Collections
                                         expert_mode_before = True
-                                        #Some settings only needs to be changed once, after user clicked apply at next epoch
-                                        if learning_rate_expert_on==True:
-                                            if K.eval(model_keras.optimizer.lr) != learning_rate_expert: #if the learning rate in UI is NOT equal to the lr of the model...
-                                                text = "Change the learning rate to "+ str(learning_rate_expert)
-                                                if verbose:
-                                                    print(text)
-                                                K.set_value(model_keras.optimizer.lr, learning_rate_expert)
-                                                self.fittingpopups_ui[listindex].textBrowser_FittingInfo_pop.append(text)
     
-                                        #Next, apply the changes to trainable states:
+                                        #Apply changes to the trainable states:
                                         if train_last_layers==True:#Train only the last n layers
                                             if verbose:
                                                 print("Train only the last "+str(train_last_layers_n)+ " layer(s)")
                                             trainable_new = (len(trainable_original)-train_last_layers_n)*[False]+train_last_layers_n*[True]
-                                            summary = aid_dl.model_change_trainability(model_keras,trainable_new,model_metrics,nr_classes)
+                                            #Change the trainability states. Model compilation is done inside model_change_trainability
+                                            summary = aid_dl.model_change_trainability(model_keras,trainable_new,model_metrics,nr_classes,loss_expert,optimizer_expert,learning_rate_expert)
                                             text1 = "Expert mode: Request for custom trainability states: train only the last "+str(train_last_layers_n)+ " layer(s)\n"
                                             #text2 = "\n--------------------\n"
                                             self.fittingpopups_ui[listindex].textBrowser_FittingInfo_pop.append(text1+summary)
@@ -7991,11 +8215,11 @@ class MainWindow(QtWidgets.QMainWindow):
                                             trainable_new = len(trainable_original)*[False]
                                             for index in layer_dense_ind:
                                                 trainable_new[index] = True
-                                            summary = aid_dl.model_change_trainability(model_keras,trainable_new,model_metrics,nr_classes)                 
+                                            #Change the trainability states. Model compilation is done inside model_change_trainability
+                                            summary = aid_dl.model_change_trainability(model_keras,trainable_new,model_metrics,nr_classes,loss_expert,optimizer_expert,learning_rate_expert)                 
                                             text1 = "Expert mode: Request for custom trainability states: train only dense layer(s)\n"
                                             #text2 = "\n--------------------\n"
                                             self.fittingpopups_ui[listindex].textBrowser_FittingInfo_pop.append(text1+summary)
-    
     
                                         if dropout_expert_on==True:
                                             #The user apparently want to change the dropout rates
@@ -8014,7 +8238,9 @@ class MainWindow(QtWidgets.QMainWindow):
                                                 dropout_expert_list = []
 
                                             if len(dropout_expert_list)>0 and do_list!=dropout_expert_list:#if the dropout rates of the current model is not equal to the required do_list from user...
-                                                do_changed = aid_dl.change_dropout(model_keras,dropout_expert_list,model_metrics,nr_classes)
+                                                #Change dropout. Model .compile happens inside change_dropout function
+                                                do_changed = aid_dl.change_dropout(model_keras,dropout_expert_list,model_metrics,nr_classes,loss_expert,optimizer_expert,learning_rate_expert)
+
                                                 if do_changed==1:
                                                     text_do = "Dropout rate(s) in model was/were changed to: "+str(dropout_expert_list)
                                                 else:
@@ -8024,39 +8250,55 @@ class MainWindow(QtWidgets.QMainWindow):
                                             if verbose:
                                                 print(text_do)
                                             self.fittingpopups_ui[listindex].textBrowser_FittingInfo_pop.append(text_do)
-    
 
-                                self.model_keras = model_keras #overwrite the model in self
 
                                 ############################Invert 'expert' settings#########################
                                 if expert_mode==False and expert_mode_before==True: #if the expert mode was selected before, change the parameters back to original vlaues
                                     if verbose:
                                         print("Expert mode was used before and settings are now inverted")
-                                    #If the learning rate of the model is different from the original learning rate...change it back!
-                                    if K.eval(model_keras.optimizer.lr) != learning_rate_original: #if the learning rate in UI is NOT equal to the lr of the model...
-                                        text = "Change the learning rate to (original value): "+ str(learning_rate_original)
-                                        if verbose:
-                                            print(text)
-                                        K.set_value(model_keras.optimizer.lr, learning_rate_original)
-                                        self.fittingpopups_ui[listindex].textBrowser_FittingInfo_pop.append(text)
 
-                                    #Also set the trainable back to original state                                    
+                                    #Re-set trainable states back to original state                                    
                                     if verbose:
                                         print("Change 'trainable' layers back to original state")
-                                    summary = aid_dl.model_change_trainability(model_keras,trainable_original,model_metrics,nr_classes)                 
+                                    summary = aid_dl.model_change_trainability(model_keras,trainable_original,model_metrics,nr_classes,loss_expert,optimizer_expert,learning_rate_expert)                 
                                     text1 = "Expert mode turns off: Request for orignal trainability states:\n"
                                     #text2 = "\n--------------------\n"
                                     self.fittingpopups_ui[listindex].textBrowser_FittingInfo_pop.append(text1+summary)
                                     if verbose:
                                         print("Change dropout rates in dropout layers back to original values")
                                     if len(do_list_original)>0:
-                                        do_changed = aid_dl.change_dropout(model_keras,do_list_original,model_metrics,nr_classes)
+                                        do_changed = aid_dl.change_dropout(model_keras,do_list_original,model_metrics,nr_classes,loss_expert,optimizer_expert,learning_rate_expert)
                                         if do_changed==1:
                                             text_do = "Dropout rate(s) in model was/were changed to original values: "+str(do_list_original)
                                         else:
                                             text_do = "Dropout rate(s) in model was/were not changed"                                        
                                         self.fittingpopups_ui[listindex].textBrowser_FittingInfo_pop.append(text_do+"\n")
-                                
+
+
+                                text_updates = ""
+                                #Compare current lr and the lr on expert tab:
+                                lr_current = K.eval(model_keras.optimizer.lr)
+                                lr_diff = learning_rate_expert-lr_current
+                                if  abs(lr_diff) > 1e-6:
+                                    K.set_value(model_keras.optimizer.lr, learning_rate_expert)
+                                    text_updates +=  "Changed the learning rate to "+ str(learning_rate_expert)+"\n"
+                                recompile = False
+                                #Compare current optimizer and the optimizer on expert tab:
+                                optimizer_current = aid_dl.get_optimizer_name(model_keras).lower()#get the current optimizer of the model
+                                if optimizer_current!=optimizer_expert.lower():#if the current model has a different optimizer
+                                    recompile = True
+                                    text_updates+="Changed the optimizer to "+optimizer_expert+"\n"
+                                #Compare current loss function and the loss-function on expert tab:
+                                if model_keras.loss!=loss_expert:
+                                    recompile = True
+                                    model_metrics_records["loss"] = 9E20 #Reset the record for loss becasue new loss function could converge to a different min. value         
+                                    model_metrics_records["val_loss"] = 9E20 #Reset the record for loss becasue new loss function could converge to a different min. value 
+                                    text_updates+="Changed the loss function to "+loss_expert+"\n"
+                                if recompile==True:
+                                    print("Recompiling...")
+                                    aid_dl.model_compile(model_keras,loss_expert,optimizer_expert,learning_rate_expert,model_metrics,nr_classes)
+                                self.fittingpopups_ui[listindex].textBrowser_FittingInfo_pop.append(text_updates)
+
                                 self.model_keras = model_keras #overwrite the model in self
                                 self.fittingpopups_ui[listindex].checkBox_ApplyNextEpoch.setChecked(False)
 
@@ -8089,7 +8331,6 @@ class MainWindow(QtWidgets.QMainWindow):
                                 if verbose == 1:
                                     print("Time to perform average blurring="+str(t_avgBlur_2-t_avgBlur_1))
 
-                            
                             if gaussBlur_on:
                                 t_gaussBlur_1 = time.time()
                                 X_batch = aid_img.gauss_blur_cv(X_batch,gaussBlur_min,gaussBlur_max)
@@ -8097,7 +8338,6 @@ class MainWindow(QtWidgets.QMainWindow):
                                 if verbose == 1:
                                     print("Time to perform gaussian blurring="+str(t_gaussBlur_2-t_gaussBlur_1))
 
-                            
                             if motionBlur_on:
                                 t_motionBlur_1 = time.time()
                                 X_batch = aid_img.motion_blur_cv(X_batch,motionBlur_kernel,motionBlur_angle)
@@ -8490,7 +8730,7 @@ class MainWindow(QtWidgets.QMainWindow):
         self.fittingpopups_ui[listindex].pushButton_showModelSumm_pop.clicked.connect(lambda: self.showModelSumm_pop(listindex))
         self.fittingpopups_ui[listindex].pushButton_saveModelSumm_pop.clicked.connect(lambda: self.saveModelSumm_pop(listindex))
         #Expert mode functions
-        self.fittingpopups_ui[listindex].checkBox_pTr_pop.toggled.connect(lambda on_or_off: self.partialtrainability_activated_pop(on_or_off,listindex))
+        #self.fittingpopups_ui[listindex].checkBox_pTr_pop.toggled.connect(lambda on_or_off: self.partialtrainability_activated_pop(on_or_off,listindex))
         self.fittingpopups_ui[listindex].pushButton_lossW.clicked.connect(lambda: self.lossWeights_popup(listindex))
         self.fittingpopups_ui[listindex].checkBox_lossW.clicked.connect(lambda on_or_off: self.lossWeights_activated(on_or_off,listindex))
 
@@ -9257,7 +9497,7 @@ class MainWindow(QtWidgets.QMainWindow):
                     except Exception as e:
                         #There is an issue for the rolling median plotting!
                         msg = QtWidgets.QMessageBox()
-                        msg.setIcon(QtWidgets.QMessageBox.Information)       
+                        msg.setIcon(QtWidgets.QMessageBox.Warning)       
                         msg.setText(str(e)+"\n->There are likely too few points to have a rolling median with such a window size ("+str(round(win))+")")
                         msg.setWindowTitle("Error occured when plotting rolling median:")
                         msg.setStandardButtons(QtWidgets.QMessageBox.Ok)
@@ -10145,7 +10385,7 @@ class MainWindow(QtWidgets.QMainWindow):
                 failed,rtdc_ds = aid_bin.load_rtdc(rtdc_path)
                 if failed:
                     msg = QtWidgets.QMessageBox()
-                    msg.setIcon(QtWidgets.QMessageBox.Information)       
+                    msg.setIcon(QtWidgets.QMessageBox.Critical)       
                     msg.setText(str(rtdc_ds))
                     msg.setWindowTitle("Error occurred during loading file")
                     msg.setStandardButtons(QtWidgets.QMessageBox.Ok)
@@ -10644,12 +10884,13 @@ class MainWindow(QtWidgets.QMainWindow):
         failed,rtdc_ds = aid_bin.load_rtdc(rtdc_path)
         if failed:
             msg = QtWidgets.QMessageBox()
-            msg.setIcon(QtWidgets.QMessageBox.Information)       
+            msg.setIcon(QtWidgets.QMessageBox.Critical)       
             msg.setText(str(rtdc_ds))
             msg.setWindowTitle("Error occurred during loading file")
             msg.setStandardButtons(QtWidgets.QMessageBox.Ok)
             msg.exec_()
-                    
+            return
+        
         #Make the Image dimensions matching the requirements of the model
         model_in = int(self.spinBox_Crop_2.value())
         model_out = int(self.spinBox_OutClasses_2.value())
@@ -11802,7 +12043,7 @@ class MainWindow(QtWidgets.QMainWindow):
                     failed,rtdc_ds = aid_bin.load_rtdc(rtdc_path)
                     if failed:
                         msg = QtWidgets.QMessageBox()
-                        msg.setIcon(QtWidgets.QMessageBox.Information)       
+                        msg.setIcon(QtWidgets.QMessageBox.Critical)       
                         msg.setText(str(rtdc_ds))
                         msg.setWindowTitle("Error occurred during loading file")
                         msg.setStandardButtons(QtWidgets.QMessageBox.Ok)
