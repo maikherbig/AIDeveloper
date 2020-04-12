@@ -45,8 +45,6 @@ except AttributeError:
 
 class MyTable(QtWidgets.QTableWidget):
     dropped = QtCore.pyqtSignal(list)
-#    clicked = QtCore.pyqtSignal()
-#    dclicked = QtCore.pyqtSignal()
 
     def __init__(self,  rows, columns, parent):
         super(MyTable, self).__init__(rows, columns, parent)
@@ -70,8 +68,6 @@ class MyTable(QtWidgets.QTableWidget):
             event.ignore()
 
     def dropEvent(self, event):
-        #super(MyTable, self).dropEvent(event)
-        #print(self.drag_row, self.row(self.drag_item),self.drag_item)
         self.drag_item = None
         if event.mimeData().hasUrls:
             event.setDropAction(QtCore.Qt.CopyAction)
@@ -740,111 +736,192 @@ class Fitting_Ui(QtWidgets.QWidget):
         self.scrollAreaWidgetContents_pop.setGeometry(QtCore.QRect(0, 0, 399, 220))
         self.scrollAreaWidgetContents_pop.setObjectName("scrollAreaWidgetContents_pop")
         self.gridLayout_4 = QtWidgets.QGridLayout(self.scrollAreaWidgetContents_pop)
-        self.gridLayout_4.setObjectName("gridLayout_4")
-        self.verticalLayout_23_pop = QtWidgets.QVBoxLayout()
-        self.verticalLayout_23_pop.setObjectName("verticalLayout_23_pop")
-        self.label_others_pop = QtWidgets.QLabel(self.scrollAreaWidgetContents_pop)
-        self.label_others_pop.setObjectName("label_others_pop")
-        self.verticalLayout_23_pop.addWidget(self.label_others_pop)
-        self.horizontalLayout_42_pop = QtWidgets.QHBoxLayout()
-        self.horizontalLayout_42_pop.setObjectName("horizontalLayout_42_pop")
-        self.checkBox_learningRate_pop = QtWidgets.QCheckBox(self.scrollAreaWidgetContents_pop)
-        self.checkBox_learningRate_pop.setObjectName("checkBox_learningRate_pop")
-        self.horizontalLayout_42_pop.addWidget(self.checkBox_learningRate_pop)
-        self.doubleSpinBox_learningRate_pop = QtWidgets.QDoubleSpinBox(self.scrollAreaWidgetContents_pop)
-        self.doubleSpinBox_learningRate_pop.setObjectName("doubleSpinBox_learningRate_pop")
-        self.horizontalLayout_42_pop.addWidget(self.doubleSpinBox_learningRate_pop)
-        self.verticalLayout_23_pop.addLayout(self.horizontalLayout_42_pop)
-        self.horizontalLayout_43_pop = QtWidgets.QHBoxLayout()
-        self.horizontalLayout_43_pop.setObjectName("horizontalLayout_43_pop")
-        self.checkBox_trainLastNOnly_pop = QtWidgets.QCheckBox(self.scrollAreaWidgetContents_pop)
-        self.checkBox_trainLastNOnly_pop.setLayoutDirection(QtCore.Qt.LeftToRight)
-        self.checkBox_trainLastNOnly_pop.setCheckable(True)
-        self.checkBox_trainLastNOnly_pop.setObjectName("checkBox_trainLastNOnly_pop")
-        self.horizontalLayout_43_pop.addWidget(self.checkBox_trainLastNOnly_pop)
-        self.spinBox_trainLastNOnly_pop = QtWidgets.QSpinBox(self.scrollAreaWidgetContents_pop)
-        self.spinBox_trainLastNOnly_pop.setObjectName("spinBox_trainLastNOnly_pop")
-        self.horizontalLayout_43_pop.addWidget(self.spinBox_trainLastNOnly_pop)
-        self.checkBox_trainDenseOnly_pop = QtWidgets.QCheckBox(self.scrollAreaWidgetContents_pop)
-        self.checkBox_trainDenseOnly_pop.setObjectName("checkBox_trainDenseOnly_pop")
-        self.horizontalLayout_43_pop.addWidget(self.checkBox_trainDenseOnly_pop)
-        self.verticalLayout_23_pop.addLayout(self.horizontalLayout_43_pop)
-        self.gridLayout_4.addLayout(self.verticalLayout_23_pop, 1, 0, 1, 1)
+        
+        
+        
+        
+        
+        self.groupBox_modelKerasFit_pop = QtWidgets.QGroupBox(self.scrollAreaWidgetContents_pop)
+        self.groupBox_modelKerasFit_pop.setObjectName("groupBox_modelKerasFit_pop")
+        self.gridLayout_11 = QtWidgets.QGridLayout(self.groupBox_modelKerasFit_pop)
+        self.gridLayout_11.setObjectName("gridLayout_11")
         self.verticalLayout_22_pop = QtWidgets.QVBoxLayout()
         self.verticalLayout_22_pop.setObjectName("verticalLayout_22_pop")
-        self.label_modelKerasFit_pop = QtWidgets.QLabel(self.scrollAreaWidgetContents_pop)
-        self.label_modelKerasFit_pop.setObjectName("label_modelKerasFit_pop")
-        self.verticalLayout_22_pop.addWidget(self.label_modelKerasFit_pop)
         self.horizontalLayout_40_pop = QtWidgets.QHBoxLayout()
         self.horizontalLayout_40_pop.setObjectName("horizontalLayout_40_pop")
-        self.label_batchSize_pop = QtWidgets.QLabel(self.scrollAreaWidgetContents_pop)
+        
+        self.label_batchSize_pop = QtWidgets.QLabel(self.groupBox_modelKerasFit_pop)
         self.label_batchSize_pop.setObjectName("label_batchSize_pop")
         self.horizontalLayout_40_pop.addWidget(self.label_batchSize_pop)
-        self.spinBox_batchSize_pop = QtWidgets.QSpinBox(self.scrollAreaWidgetContents_pop)
+        self.spinBox_batchSize_pop = QtWidgets.QSpinBox(self.groupBox_modelKerasFit_pop)
+#        self.spinBox_batchSize_pop.setMinimum(1)
+#        self.spinBox_batchSize_pop.setMaximum(999999999)
+#        self.spinBox_batchSize_pop.setProperty("value", 128)
         self.spinBox_batchSize_pop.setObjectName("spinBox_batchSize_pop")
         self.horizontalLayout_40_pop.addWidget(self.spinBox_batchSize_pop)
         self.verticalLayout_22_pop.addLayout(self.horizontalLayout_40_pop)
         self.horizontalLayout_41_pop = QtWidgets.QHBoxLayout()
         self.horizontalLayout_41_pop.setObjectName("horizontalLayout_41_pop")
-        self.label_epochs_pop = QtWidgets.QLabel(self.scrollAreaWidgetContents_pop)
+        self.label_epochs_pop = QtWidgets.QLabel(self.groupBox_modelKerasFit_pop)
         self.label_epochs_pop.setObjectName("label_epochs_pop")
         self.horizontalLayout_41_pop.addWidget(self.label_epochs_pop)
-        self.spinBox_epochs_pop = QtWidgets.QSpinBox(self.scrollAreaWidgetContents_pop)
+        self.spinBox_epochs_pop = QtWidgets.QSpinBox(self.groupBox_modelKerasFit_pop)
+#        self.spinBox_epochs_pop.setMinimum(1)
+#        self.spinBox_epochs_pop.setMaximum(999999999)
         self.spinBox_epochs_pop.setObjectName("spinBox_epochs_pop")
         self.horizontalLayout_41_pop.addWidget(self.spinBox_epochs_pop)
         self.verticalLayout_22_pop.addLayout(self.horizontalLayout_41_pop)
-        self.gridLayout_4.addLayout(self.verticalLayout_22_pop, 0, 0, 1, 1)
+        self.gridLayout_11.addLayout(self.verticalLayout_22_pop, 0, 0, 1, 1)
+        self.gridLayout_4.addWidget(self.groupBox_modelKerasFit_pop, 0, 0, 1, 1)
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        self.groupBox_regularization_pop = QtWidgets.QGroupBox(self.scrollAreaWidgetContents_pop)
+        self.groupBox_regularization_pop.setObjectName("groupBox_regularization_pop")
+        self.gridLayout_12 = QtWidgets.QGridLayout(self.groupBox_regularization_pop)
+        self.gridLayout_12.setObjectName("gridLayout_12")
+        self.horizontalLayout_loss_pop = QtWidgets.QHBoxLayout()
+        self.horizontalLayout_loss_pop.setObjectName("horizontalLayout_loss_pop")
+        self.checkBox_expt_loss_pop = QtWidgets.QCheckBox(self.groupBox_regularization_pop)
+        self.checkBox_expt_loss_pop.setObjectName("checkBox_expt_loss_pop")
+        self.horizontalLayout_loss_pop.addWidget(self.checkBox_expt_loss_pop)
+        self.comboBox_expt_loss_pop = QtWidgets.QComboBox(self.groupBox_regularization_pop)
+        self.comboBox_expt_loss_pop.setEnabled(False)
+        self.comboBox_expt_loss_pop.setObjectName("comboBox_expt_loss_pop")
+        self.comboBox_expt_loss_pop.addItem("")
+        self.comboBox_expt_loss_pop.addItem("")
+        self.comboBox_expt_loss_pop.addItem("")
+        self.comboBox_expt_loss_pop.addItem("")
+        self.comboBox_expt_loss_pop.addItem("")
+        self.comboBox_expt_loss_pop.addItem("")
+        self.comboBox_expt_loss_pop.addItem("")
+        self.comboBox_expt_loss_pop.addItem("")
+        self.comboBox_expt_loss_pop.addItem("")
+        self.comboBox_expt_loss_pop.addItem("")
+        self.comboBox_expt_loss_pop.addItem("")
+        self.comboBox_expt_loss_pop.addItem("")
+        self.comboBox_expt_loss_pop.addItem("")
+        self.comboBox_expt_loss_pop.addItem("")
+        self.comboBox_expt_loss_pop.addItem("")
+        self.comboBox_expt_loss_pop.addItem("")
+        self.horizontalLayout_loss_pop.addWidget(self.comboBox_expt_loss_pop)
+        self.gridLayout_12.addLayout(self.horizontalLayout_loss_pop, 0, 0, 1, 1)
+        self.horizontalLayout_lropti = QtWidgets.QHBoxLayout()
+        self.horizontalLayout_lropti.setObjectName("horizontalLayout_lropti")
+        
+        
+        self.checkBox_learningRate_pop = QtWidgets.QCheckBox(self.groupBox_regularization_pop)
+        self.checkBox_learningRate_pop.setObjectName("checkBox_learningRate_pop")
+        self.horizontalLayout_lropti.addWidget(self.checkBox_learningRate_pop)
+        self.doubleSpinBox_learningRate_pop = QtWidgets.QDoubleSpinBox(self.groupBox_regularization_pop)
+        self.doubleSpinBox_learningRate_pop.setEnabled(False)
+#        self.doubleSpinBox_learningRate_pop.setDecimals(6)
+#        self.doubleSpinBox_learningRate_pop.setMinimum(0.0)
+#        self.doubleSpinBox_learningRate_pop.setMaximum(999.0)
+#        self.doubleSpinBox_learningRate_pop.setSingleStep(0.0001)
+#        self.doubleSpinBox_learningRate_pop.setProperty("value", 0.001)
+        self.doubleSpinBox_learningRate_pop.setObjectName("doubleSpinBox_learningRate_pop")
+        self.horizontalLayout_lropti.addWidget(self.doubleSpinBox_learningRate_pop)
+        self.checkBox_optimizer_pop = QtWidgets.QCheckBox(self.groupBox_regularization_pop)
+        self.checkBox_optimizer_pop.setObjectName("checkBox_optimizer_pop")
+        self.horizontalLayout_lropti.addWidget(self.checkBox_optimizer_pop)
+        self.comboBox_optimizer_pop = QtWidgets.QComboBox(self.groupBox_regularization_pop)
+        self.comboBox_optimizer_pop.setEnabled(False)
+        self.comboBox_optimizer_pop.setObjectName("comboBox_optimizer_pop")
+        self.comboBox_optimizer_pop.addItem("")
+        self.comboBox_optimizer_pop.addItem("")
+        self.comboBox_optimizer_pop.addItem("")
+        self.comboBox_optimizer_pop.addItem("")
+        self.comboBox_optimizer_pop.addItem("")
+        self.comboBox_optimizer_pop.addItem("")
+        self.comboBox_optimizer_pop.addItem("")
+        self.horizontalLayout_lropti.addWidget(self.comboBox_optimizer_pop)
+        self.gridLayout_12.addLayout(self.horizontalLayout_lropti, 1, 0, 1, 1)
+        self.horizontalLayout_43_pop = QtWidgets.QHBoxLayout()
+        self.horizontalLayout_43_pop.setObjectName("horizontalLayout_43_pop")
+        self.checkBox_trainLastNOnly_pop = QtWidgets.QCheckBox(self.groupBox_regularization_pop)
+        self.checkBox_trainLastNOnly_pop.setLayoutDirection(QtCore.Qt.LeftToRight)
+        self.checkBox_trainLastNOnly_pop.setCheckable(True)
+        self.checkBox_trainLastNOnly_pop.setObjectName("checkBox_trainLastNOnly_pop")
+        self.horizontalLayout_43_pop.addWidget(self.checkBox_trainLastNOnly_pop)
+        self.spinBox_trainLastNOnly_pop = QtWidgets.QSpinBox(self.groupBox_regularization_pop)
+        self.spinBox_trainLastNOnly_pop.setEnabled(False)
+        self.spinBox_trainLastNOnly_pop.setMaximum(9999)
+        self.spinBox_trainLastNOnly_pop.setObjectName("spinBox_trainLastNOnly_pop")
+        self.horizontalLayout_43_pop.addWidget(self.spinBox_trainLastNOnly_pop)
+        self.checkBox_trainDenseOnly_pop = QtWidgets.QCheckBox(self.groupBox_regularization_pop)
+        self.checkBox_trainDenseOnly_pop.setObjectName("checkBox_trainDenseOnly_pop")
+        self.horizontalLayout_43_pop.addWidget(self.checkBox_trainDenseOnly_pop)
+        self.gridLayout_12.addLayout(self.horizontalLayout_43_pop, 2, 0, 1, 1)
         self.horizontalLayout_3_pop = QtWidgets.QHBoxLayout()
         self.horizontalLayout_3_pop.setObjectName("horizontalLayout_3_pop")
-        self.checkBox_dropout_pop = QtWidgets.QCheckBox(self.scrollAreaWidgetContents_pop)
+        self.checkBox_dropout_pop = QtWidgets.QCheckBox(self.groupBox_regularization_pop)
         self.checkBox_dropout_pop.setObjectName("checkBox_dropout_pop")
         self.horizontalLayout_3_pop.addWidget(self.checkBox_dropout_pop)
-        self.lineEdit_dropout_pop = QtWidgets.QLineEdit(self.scrollAreaWidgetContents_pop)
-        self.lineEdit_dropout_pop.setObjectName("lineEdit_dropout_pop")
+        self.lineEdit_dropout_pop = QtWidgets.QLineEdit(self.groupBox_regularization_pop)
+        self.lineEdit_dropout_pop.setEnabled(False)
         validator = QtGui.QRegExpValidator(QtCore.QRegExp("^[0-9 . ,]+$")) #validator allows numbers, dots and commas
         #aternatively, I could use "^[0-9 . , \[ \] ]+$" - this would also allow the user to put the brackets. But why? I just do it in the program
         self.lineEdit_dropout_pop.setValidator(validator)        
 
+        self.lineEdit_dropout_pop.setObjectName("lineEdit_dropout_pop")
         self.horizontalLayout_3_pop.addWidget(self.lineEdit_dropout_pop)
-
-        self.gridLayout_4.addLayout(self.horizontalLayout_3_pop, 2, 0, 1, 1)
+        self.gridLayout_12.addLayout(self.horizontalLayout_3_pop, 3, 0, 1, 1)
         
-
-        self.horizontalLayout_pTr_pop = QtWidgets.QHBoxLayout()
-        self.horizontalLayout_pTr_pop.setObjectName("horizontalLayout_pTr_pop")
-        self.checkBox_pTr_pop = QtWidgets.QCheckBox(self.scrollAreaWidgetContents_pop)
-        self.checkBox_pTr_pop.setObjectName("checkBox_pTr_pop")
-        self.horizontalLayout_pTr_pop.addWidget(self.checkBox_pTr_pop)
+#        self.horizontalLayout_pTr_pop = QtWidgets.QHBoxLayout()
+#        self.horizontalLayout_pTr_pop.setObjectName("horizontalLayout_pTr_pop")
+#        self.checkBox_pTr_pop = QtWidgets.QCheckBox(self.groupBox_regularization_pop)
+#        self.checkBox_pTr_pop.setObjectName("checkBox_pTr_pop")
+#        self.horizontalLayout_pTr_pop.addWidget(self.checkBox_pTr_pop)
+#        self.checkBox_pTr_pop.setEnabled(False) #For now this option is just a placeholder!
+#        self.lineEdit_pTr_pop = QtWidgets.QLineEdit(self.groupBox_regularization_pop)
+#        self.lineEdit_pTr_pop.setEnabled(False)
+#        self.lineEdit_pTr_pop.setObjectName("lineEdit_pTr_pop")
+#        self.horizontalLayout_pTr_pop.addWidget(self.lineEdit_pTr_pop)
+#        self.pushButton_pTr_pop = QtWidgets.QPushButton(self.groupBox_regularization_pop)
+#        self.pushButton_pTr_pop.setEnabled(False)
+#        self.pushButton_pTr_pop.setMaximumSize(QtCore.QSize(40, 16777215))
+#        self.pushButton_pTr_pop.setObjectName("pushButton_pTr_pop")
+#        self.horizontalLayout_pTr_pop.addWidget(self.pushButton_pTr_pop)
+#        self.gridLayout_12.addLayout(self.horizontalLayout_pTr_pop, 4, 0, 1, 1)
         
-        self.checkBox_pTr_pop.setEnabled(False) #For now this option is just a placeholder!
-        
-        self.lineEdit_pTr_pop = QtWidgets.QLineEdit(self.scrollAreaWidgetContents_pop)
-        self.lineEdit_pTr_pop.setObjectName("lineEdit_pTr_pop")
-        self.lineEdit_pTr_pop.setEnabled(False)
-        self.horizontalLayout_pTr_pop.addWidget(self.lineEdit_pTr_pop)
-        self.pushButton_pTr_pop = QtWidgets.QPushButton(self.scrollAreaWidgetContents_pop)
-        self.pushButton_pTr_pop.setMaximumSize(QtCore.QSize(40, 16777215))
-        self.pushButton_pTr_pop.setObjectName("pushButton_pTr_pop")
-        self.pushButton_pTr_pop.setEnabled(False)
-        self.horizontalLayout_pTr_pop.addWidget(self.pushButton_pTr_pop)
-        self.gridLayout_4.addLayout(self.horizontalLayout_pTr_pop, 3, 0, 1, 1)
-
         self.horizontalLayout_lossW_pop = QtWidgets.QHBoxLayout()
         self.horizontalLayout_lossW_pop.setObjectName("horizontalLayout_lossW_pop")
-        self.checkBox_lossW = QtWidgets.QCheckBox(self.scrollAreaWidgetContents_pop)
+        self.checkBox_lossW = QtWidgets.QCheckBox(self.groupBox_regularization_pop)
         self.checkBox_lossW.setObjectName("checkBox_lossW")
         self.horizontalLayout_lossW_pop.addWidget(self.checkBox_lossW)
-        self.lineEdit_lossW = QtWidgets.QLineEdit(self.scrollAreaWidgetContents_pop)
-        self.lineEdit_lossW.setObjectName("lineEdit_lossW")
+        self.lineEdit_lossW = QtWidgets.QLineEdit(self.groupBox_regularization_pop)
         self.lineEdit_lossW.setEnabled(False)
+        self.lineEdit_lossW.setObjectName("lineEdit_lossW")
         self.horizontalLayout_lossW_pop.addWidget(self.lineEdit_lossW)
-        self.pushButton_lossW = QtWidgets.QPushButton(self.scrollAreaWidgetContents_pop)
+        self.pushButton_lossW = QtWidgets.QPushButton(self.groupBox_regularization_pop)
+        self.pushButton_lossW.setEnabled(False)
         self.pushButton_lossW.setMaximumSize(QtCore.QSize(40, 16777215))
         self.pushButton_lossW.setObjectName("pushButton_lossW")
-        self.pushButton_lossW.setEnabled(False)
         self.horizontalLayout_lossW_pop.addWidget(self.pushButton_lossW)
-        self.gridLayout_4.addLayout(self.horizontalLayout_lossW_pop, 4, 0, 1, 1)
-                
+        self.gridLayout_12.addLayout(self.horizontalLayout_lossW_pop, 5, 0, 1, 1)
+        self.gridLayout_4.addWidget(self.groupBox_regularization_pop, 1, 0, 1, 1)
+           
+        
+        
+        
+        
+        
+        
+        
+        
+        
         self.scrollArea_expertMode_pop.setWidget(self.scrollAreaWidgetContents_pop)
         self.gridLayout_3.addWidget(self.scrollArea_expertMode_pop, 0, 0, 1, 1)
         self.gridLayout_2.addWidget(self.groupBox_expertMode_pop, 0, 0, 1, 1)
@@ -1030,7 +1107,11 @@ class Fitting_Ui(QtWidgets.QWidget):
         self.doubleSpinBox_learningRate_pop.setEnabled(False)
         self.spinBox_trainLastNOnly_pop.setEnabled(False)
         self.lineEdit_dropout_pop.setEnabled(False)
-        self.checkBox_learningRate_pop.toggled['bool'].connect(self.doubleSpinBox_learningRate_pop.setEnabled)        
+                        
+        self.checkBox_learningRate_pop.toggled['bool'].connect(self.doubleSpinBox_learningRate_pop.setEnabled) 
+        self.checkBox_expt_loss_pop.toggled['bool'].connect(self.comboBox_expt_loss_pop.setEnabled)
+        self.checkBox_optimizer_pop.toggled['bool'].connect(self.comboBox_optimizer_pop.setEnabled)
+
         self.checkBox_trainLastNOnly_pop.toggled['bool'].connect(self.spinBox_trainLastNOnly_pop.setEnabled)
         self.checkBox_dropout_pop.toggled['bool'].connect(self.lineEdit_dropout_pop.setEnabled)
 
@@ -1047,6 +1128,13 @@ class Fitting_Ui(QtWidgets.QWidget):
         self.checkBox_avgBlur_pop.clicked['bool'].connect(self.label_avgBlurMin_pop.setEnabled)
         self.checkBox_avgBlur_pop.clicked['bool'].connect(self.label_avgBlurMax_pop.setEnabled)
 
+        self.checkBox_optimizer_pop.toggled['bool'].connect(self.comboBox_optimizer_pop.setEnabled)
+        self.checkBox_expt_loss_pop.toggled['bool'].connect(self.comboBox_expt_loss_pop.setEnabled)
+        self.comboBox_optimizer_pop.currentTextChanged.connect(self.expert_optimizer_changed_pop)
+        self.checkBox_optimizer_pop.stateChanged.connect(self.expert_optimizer_off_pop)
+        self.checkBox_learningRate_pop.stateChanged.connect(self.expert_learningrate_off_pop)
+        self.checkBox_expt_loss_pop.stateChanged.connect(self.expert_loss_off_pop)
+        self.groupBox_expertMode_pop.toggled.connect(self.expert_mode_off_pop)
 
 
         self.retranslateUi(Form)
@@ -1215,8 +1303,8 @@ class Fitting_Ui(QtWidgets.QWidget):
 
         self.groupBox_expertMode_pop.setToolTip(_translate("Form", "<html><head/><body><p>Expert mode allows changing the learning rate and you can even set parts of the neural net to \'not trainable\' in order to perform transfer learning and fine tune models. Also dropout rates can be adjusted. When expert mode is turned off again, the initial values are applied again.</p></body></html>", None))
         self.groupBox_expertMode_pop.setTitle(_translate("Form", "Expert mode", None))
-        self.label_others_pop.setText(_translate("Form", "Others", None))
-        self.checkBox_learningRate_pop.setToolTip(_translate("Form", "<html><head/><body><p>Change the learning rate. Optimizer is always \'adam\' and default value is 0.001</p></body></html>", None))
+        self.groupBox_modelKerasFit_pop.setTitle(_translate("Form", "In model_keras.fit()", None))       
+        self.checkBox_learningRate_pop.setToolTip(_translate("Form", "<html><head/><body><p>Change the learning rate. The default optimizer is \'adam\' with a learning rate of 0.001</p></body></html>", None))
         self.checkBox_learningRate_pop.setText(_translate("Form", "Learning Rate", None))
         self.doubleSpinBox_learningRate_pop.setToolTip(_translate("Form", "<html><head/><body><p>Change the learning rate. Optimizer is always \'adam\' and default value is 0.001</p></body></html>", None))
         self.checkBox_trainLastNOnly_pop.setToolTip(_translate("Form", "<html><head/><body><p>When checked, only the last n layers of the model, which have >0 parameters will stay trainable. Layers before are set to trainable=False. Please specify n using the spinbox. After this change, the model has to be recompiled, which means the optimizer values are deleted.</p></body></html>", None))
@@ -1224,22 +1312,53 @@ class Fitting_Ui(QtWidgets.QWidget):
         self.spinBox_trainLastNOnly_pop.setToolTip(_translate("Form", "<html><head/><body><p>Specify the number of last layer in your model that should be kept trainable. Only layers with >0 parameters are counted. Use the checkbox to apply this option. After this change, the model has to be recompiled, which means the optimizer values are deleted. </p></body></html>", None))
         self.checkBox_trainDenseOnly_pop.setToolTip(_translate("Form", "<html><head/><body><p>When checked, only the dense layers are kept trainable (if they have >0 parameters).Other layers are set to trainable=False. After this change, the model has to be recompiled, which means the optimizer values are deleted.</p></body></html>", None))
         self.checkBox_trainDenseOnly_pop.setText(_translate("Form", "Train Dense only", None))
-        self.label_modelKerasFit_pop.setText(_translate("Form", "In model_keras.fit():", None))
-        self.label_batchSize_pop.setToolTip(_translate("Form", "<html><head/><body><p>Number of samples per gradient update. If unspecified, batch_size will default to 32. (Source: Keras documentation)</p></body></html>", None))
+
+        self.label_batchSize_pop.setToolTip(_translate("Form", "<html><head/><body><p>Number of samples per gradient update. If unspecified, batch_size will default to 128. (Source: Keras documentation)</p></body></html>", None))
         self.label_batchSize_pop.setText(_translate("Form", "Batch size", None))
         self.spinBox_batchSize_pop.setToolTip(_translate("Form", "<html><head/><body><p>Number of samples per gradient update. If unspecified, batch_size will default to 128. (Source: Keras documentation)</p></body></html>", None))
         self.label_epochs_pop.setToolTip(_translate("Form", "<html><head/><body><p>Number of epochs to train the model on identical batch.</p></body></html>", None))
         self.label_epochs_pop.setText(_translate("Form", "Epochs", None))
         self.spinBox_epochs_pop.setToolTip(_translate("Form", "<html><head/><body><p>Number of epochs to train the model on identical batch.</p></body></html>", None))
+
+        self.groupBox_regularization_pop.setTitle(_translate("Form", "Loss / Regularization", None))
+        self.checkBox_expt_loss_pop.setText(_translate("Form", "Loss", None))
+        self.comboBox_expt_loss_pop.setItemText(0, _translate("Form", "categorical_crossentropy", None))
+        #self.comboBox_expt_loss_pop.setItemText(1, _translate("Form", "sparse_categorical_crossentropy", None))
+        self.comboBox_expt_loss_pop.setItemText(1, _translate("Form", "mean_squared_error", None))
+        self.comboBox_expt_loss_pop.setItemText(2, _translate("Form", "mean_absolute_error", None))
+        self.comboBox_expt_loss_pop.setItemText(3, _translate("Form", "mean_absolute_percentage_error", None))
+        self.comboBox_expt_loss_pop.setItemText(4, _translate("Form", "mean_squared_logarithmic_error", None))
+        self.comboBox_expt_loss_pop.setItemText(5, _translate("Form", "squared_hinge", None))
+        self.comboBox_expt_loss_pop.setItemText(6, _translate("Form", "hinge", None))
+        self.comboBox_expt_loss_pop.setItemText(7, _translate("Form", "categorical_hinge", None))
+        self.comboBox_expt_loss_pop.setItemText(8, _translate("Form", "logcosh", None))
+        #self.comboBox_expt_loss_pop.setItemText(10, _translate("Form", "huber_loss", None))
+        self.comboBox_expt_loss_pop.setItemText(9, _translate("Form", "binary_crossentropy", None))
+        self.comboBox_expt_loss_pop.setItemText(10, _translate("Form", "kullback_leibler_divergence", None))
+        self.comboBox_expt_loss_pop.setItemText(11, _translate("Form", "poisson", None))
+        self.comboBox_expt_loss_pop.setItemText(12, _translate("Form", "cosine_proximity", None))
+        #self.comboBox_expt_loss_pop.setItemText(15, _translate("Form", "is_categorical_crossentropy", None))
+
+
+        self.checkBox_optimizer_pop.setText(_translate("Form", "Optimizer", None))
+        self.comboBox_optimizer_pop.setItemText(0, _translate("Form", "Adam", None))
+        self.comboBox_optimizer_pop.setItemText(1, _translate("Form", "SGD", None))
+        self.comboBox_optimizer_pop.setItemText(2, _translate("Form", "RMSprop", None))
+        self.comboBox_optimizer_pop.setItemText(3, _translate("Form", "Adagrad", None))
+        self.comboBox_optimizer_pop.setItemText(4, _translate("Form", "Adadelta", None))
+        self.comboBox_optimizer_pop.setItemText(5, _translate("Form", "Adamax", None))
+        self.comboBox_optimizer_pop.setItemText(6, _translate("Form", "Nadam", None))
+
+
         self.checkBox_dropout_pop.setToolTip(_translate("Form", "<html><head/><body><p>If your model has one or more dropout layers, you can change the dropout rates here. Insert into the lineEdit one value (e.g. 0.5) to apply this one value to all dropout layers, or insert a list of values to specify the dropout rates for each dropout layer individually (e.g. for three dropout layers: [ 0.2 , 0.5 , 0.25 ]. The model will be recompiled, but the optimizer weights are not deleted.</p></body></html>", None))
         self.checkBox_dropout_pop.setText(_translate("Form", "Change Dropout to", None))
         self.lineEdit_dropout_pop.setToolTip(_translate("Form", "<html><head/><body><p>If your model has one or more dropout layers, you can change the dropout rates here. Insert into the lineEdit one value (e.g. 0.5) to apply this one value to all dropout layers, or insert a list of values to specify the dropout rates for each dropout layer individually (e.g. for three dropout layers: [ 0.2 , 0.5 , 0.25 ]. The model will be recompiled, but the optimizer weights are not deleted.</p></body></html>", None))
 
-        self.checkBox_pTr_pop.setText(_translate("Form", "Partial trainability", None))
-        self.checkBox_pTr_pop.setToolTip(_translate("Form", "<html><head/><body><p>Partial trainability allows you to make parts of a layer non-trainable. Hence, this option makes most sense in combination with 'Load and continue' training a model. After checking this box, the model you chose on 'Define model'-tab is initialized. The line on the right shows the trainability of each layer in the model. Use the button on the right ('...') to open a popup menu, which allows you to specify individual trainabilities for each layer.</p></body></html>", None))
-        self.lineEdit_pTr_pop.setToolTip(_translate("Form", "<html><head/><body><p>Partial trainability allows you to make parts of a layer non-trainable. Hence, this option makes most sense in combination with 'Load and continue' training a model. After checking this box, the model you chose on 'Define model'-tab is initialized. The line on the right shows the trainability of each layer in the model. Use the button on the right ('...') to open a popup menu, which allows you to specify individual trainabilities for each layer.</p></body></html>", None))
-        self.pushButton_pTr_pop.setText(_translate("Form", "...", None))
-        self.pushButton_pTr_pop.setToolTip(_translate("Form", "<html><head/><body><p>Partial trainability allows you to make parts of a layer non-trainable. Hence, this option makes most sense in combination with 'Load and continue' training a model. After checking this box, the model you chose on 'Define model'-tab is initialized. The line on the right shows the trainability of each layer in the model. Use the button on the right ('...') to open a popup menu, which allows you to specify individual trainabilities for each layer.</p></body></html>", None))
+#        self.checkBox_pTr_pop.setText(_translate("Form", "Partial trainability", None))
+#        self.checkBox_pTr_pop.setToolTip(_translate("Form", "<html><head/><body><p>Partial trainability allows you to make parts of a layer non-trainable. Hence, this option makes most sense in combination with 'Load and continue' training a model. After checking this box, the model you chose on 'Define model'-tab is initialized. The line on the right shows the trainability of each layer in the model. Use the button on the right ('...') to open a popup menu, which allows you to specify individual trainabilities for each layer.</p></body></html>", None))
+#        self.lineEdit_pTr_pop.setToolTip(_translate("Form", "<html><head/><body><p>Partial trainability allows you to make parts of a layer non-trainable. Hence, this option makes most sense in combination with 'Load and continue' training a model. After checking this box, the model you chose on 'Define model'-tab is initialized. The line on the right shows the trainability of each layer in the model. Use the button on the right ('...') to open a popup menu, which allows you to specify individual trainabilities for each layer.</p></body></html>", None))
+#        self.pushButton_pTr_pop.setText(_translate("Form", "...", None))
+#        self.pushButton_pTr_pop.setToolTip(_translate("Form", "<html><head/><body><p>Partial trainability allows you to make parts of a layer non-trainable. Hence, this option makes most sense in combination with 'Load and continue' training a model. After checking this box, the model you chose on 'Define model'-tab is initialized. The line on the right shows the trainability of each layer in the model. Use the button on the right ('...') to open a popup menu, which allows you to specify individual trainabilities for each layer.</p></body></html>", None))
 
         self.checkBox_lossW.setText(_translate("Form", "Loss Weights", None))
         self.checkBox_lossW.setToolTip(_translate("Form", "<html><head/><body><p>Specify scalar coefficients to weight the loss contributions of different classes.</p></body></html>", None))
@@ -1364,6 +1483,83 @@ class Fitting_Ui(QtWidgets.QWidget):
             self.doubleSpinBox_hueDelta_pop.setEnabled(True)
         else:
             return
+
+
+    def expert_mode_off_pop(self,on_or_off):
+        """
+        Reset all values on the expert tab to the default values, excluding the metrics
+        metrics are defined only once when starting fitting and should not be changed
+        """
+        if on_or_off==0: #switch off
+            self.spinBox_batchSize_pop.setValue(Default_dict["spinBox_batchSize"])
+            self.spinBox_epochs_pop.setValue(1)
+            self.checkBox_expt_loss_pop.setChecked(False)
+            self.expert_loss_off_pop(0)
+            self.checkBox_learningRate_pop.setChecked(False)        
+            self.expert_learningrate_off_pop(0)
+            self.checkBox_optimizer_pop.setChecked(False)
+            self.expert_optimizer_off_pop(0)
+
+
+    def expert_loss_off_pop(self,on_or_off):
+        if on_or_off==0: #switch off
+            #switch back to categorical_crossentropy 
+            index = self.comboBox_expt_loss_pop.findText("categorical_crossentropy", QtCore.Qt.MatchFixedString)
+            if index >= 0:
+                self.comboBox_expt_loss_pop.setCurrentIndex(index)
+        
+    def expert_learningrate_off_pop(self,on_or_off):
+        if on_or_off==0: #switch off
+            #which optimizer is used? (there are different default learning-rates
+            #for each optimizer!)
+            optimizer = str(self.comboBox_optimizer_pop.currentText())
+            self.doubleSpinBox_learningRate_pop.setValue(Default_dict["doubleSpinBox_learningRate_"+optimizer])
+
+    def expert_optimizer_off_pop(self,on_or_off):
+        if on_or_off==0: #switch off, set back to categorical_crossentropy
+            optimizer = "Adam"
+            index = self.comboBox_optimizer_pop.findText(optimizer, QtCore.Qt.MatchFixedString)
+            if index >= 0:
+                self.comboBox_optimizer_pop.setCurrentIndex(index)
+                #also reset the learning rate to the default
+                self.doubleSpinBox_learningRate_pop.setValue(Default_dict["doubleSpinBox_learningRate_"+optimizer])
+
+    def expert_optimizer_changed_pop(self,value):
+        #set the learning rate to the default for this optimizer
+        optimizer = value
+        value_current = float(self.doubleSpinBox_learningRate_pop.value())
+        value_wanted = Default_dict["doubleSpinBox_learningRate_"+optimizer]
+        text = str(self.textBrowser_FittingInfo_pop.toPlainText())
+        if value_current!=value_wanted and len(text)>120:#avoid that the message pops up when window is created
+            self.doubleSpinBox_learningRate_pop.setValue(value_wanted)
+            #Inform user
+            msg = QtWidgets.QMessageBox()
+            msg.setIcon(QtWidgets.QMessageBox.Information)       
+            msg.setWindowTitle("Learning rate to default")
+            msg.setText("Learning rate was set to the default for "+optimizer)
+            msg.setStandardButtons(QtWidgets.QMessageBox.Ok)
+            msg.exec_()
+            return
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 class popup_trainability(QtWidgets.QWidget):
