@@ -1,8 +1,7 @@
 # -*- coding: utf-8 -*-
 """
-aideveloper_bin
-some useful functions that I want to keep separate to
-make the main script a bit shorter
+aid_bin.py
+some functions that I want to keep separate to make the main script a bit shorter
 ---------
 @author: maikherbig
 """
@@ -59,7 +58,27 @@ def get_default_dict(dir_settings):
         if "Image_import_dimension" not in Default_dict.keys():
             Default_dict["Image_import_dimension"] = 150
             Default_dict["Image_import_interpol_method"] = "Lanczos"
-    
+
+        if "spinBox_batchSize" not in Default_dict.keys():
+            Default_dict["spinBox_batchSize"] = 128
+        if "doubleSpinBox_learningRate_Adam" not in Default_dict.keys():
+            Default_dict["doubleSpinBox_learningRate_Adam"] = 0.001
+        if "doubleSpinBox_learningRate_SGD" not in Default_dict.keys():
+            Default_dict["doubleSpinBox_learningRate_SGD"] = 0.01
+        if "doubleSpinBox_learningRate_RMSprop" not in Default_dict.keys():
+            Default_dict["doubleSpinBox_learningRate_RMSprop"] = 0.001
+        if "doubleSpinBox_learningRate_Adagrad" not in Default_dict.keys():
+            Default_dict["doubleSpinBox_learningRate_Adagrad"] = 0.01
+        if "doubleSpinBox_learningRate_Adadelta" not in Default_dict.keys():
+            Default_dict["doubleSpinBox_learningRate_Adadelta"] = 1.0
+        if "doubleSpinBox_learningRate_Adamax" not in Default_dict.keys():
+            Default_dict["doubleSpinBox_learningRate_Adamax"] = 0.002
+        if "doubleSpinBox_learningRate_Nadam" not in Default_dict.keys():
+            Default_dict["doubleSpinBox_learningRate_Nadam"] = 0.002
+
+
+
+
     return Default_dict
 
 def save_default_dict(dir_settings):
@@ -90,7 +109,16 @@ def save_default_dict(dir_settings):
     "MotionBlur On": False, "MotionBlur Kernel":"0,5", "MotionBlur Angle":"-10,10",\
     
     "Layout": "Normal", "Icon theme":"Icon theme 1",\
-    "Path of last model":"c:\\"}
+    "Path of last model":"c:\\",\
+
+    "spinBox_batchSize":128,\
+    "doubleSpinBox_learningRate_Adam":0.001,\
+    "doubleSpinBox_learningRate_SGD":0.01,\
+    "doubleSpinBox_learningRate_RMSprop":0.001,\
+    "doubleSpinBox_learningRate_Adagrad":0.01,\
+    "doubleSpinBox_learningRate_Adadelta":1.0,\
+    "doubleSpinBox_learningRate_Adamax":0.002,\
+    "doubleSpinBox_learningRate_Nadam":0.002}
 
     with open(dir_settings, 'w') as f:
         json.dump(Default_dict,f)
