@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 """
 aid_dl
-some useful functions deep learning
+functions deep learning
 ---------
 @author: maikherbig
 """
@@ -16,7 +16,7 @@ config_gpu = tf.ConfigProto()
 if device_types[0]=='GPU':
     config_gpu.gpu_options.allow_growth = True
     config_gpu.gpu_options.per_process_gpu_memory_fraction = 0.7
-from keras.models import clone_model
+import keras
 import keras_metrics #side package for precision, recall etc during training
 global keras_metrics
 
@@ -46,7 +46,7 @@ def get_metrics_fresh(metrics,nr_classes):
     return metrics
 
 
-def model_change_trainability(model_keras,trainable_new,model_metrics,out_dim):    
+def model_change_trainability(model_keras,trainable_new,model_metrics,out_dim,loss_,optimizer_,learning_rate_):    
     #Function takes a keras model and list of trainable states.
     #The last n layers, which have parameters (not activation etc.) are set to 'not trainable'
     params = [model_keras.layers[i].count_params() for i in range(len(model_keras.layers))]
@@ -66,8 +66,7 @@ def model_change_trainability(model_keras,trainable_new,model_metrics,out_dim):
             layer_index = l_para_not_zero[i]
             model_keras.layers[layer_index].trainable = trainable_new[i]   
         #Model has to be recompiled in order to see any any effect of the change
-        model_keras.compile(loss='categorical_crossentropy',
-        optimizer='adam',metrics=get_metrics_fresh(model_metrics,out_dim))
+        model_compile(model_keras,loss_,optimizer_,learning_rate_,model_metrics,out_dim)
     
         text = []
         model_keras.summary(print_fn=text.append)
@@ -83,7 +82,15 @@ def model_get_trainable_list(model_keras):
     layer_names_list = [model_keras.layers[i].__class__.__name__  for i in l_para_not_zero]
     return trainable_list,layer_names_list
 
-def change_dropout(model_keras,do,model_metrics,out_dim):
+def get_optimizer_name(model_keras):
+    optimizer = str(model_keras.optimizer)
+    optimizer = optimizer.split("<keras.optimizers.")[1].split(" object at")[0]
+    if optimizer in ['SGD','RMSprop','Adagrad','Adadelta','Adam','Nadam']:
+        return optimizer
+    else:
+        return 0
+    
+def change_dropout(model_keras,do,model_metrics,out_dim,loss_,optimizer_,learning_rate_):
     #Funktion takes a keras model and changes the dropout.
     #do = float (0 to 1) or list (with values from 0 to 1)
     #if do is a list: len(do) has to be equal to the nr. of dropout layers in the model
@@ -110,13 +117,34 @@ def change_dropout(model_keras,do,model_metrics,out_dim):
                 model_keras.layers[ind[i]].rate = do[i]
                 
     #Only way that it actually has a effect is to clone the model, compile and reload weights
-    model_keras = clone_model(model_keras) # If I do not clone, the new rate is never used. Weights are re-init now.
-    model_keras.compile(loss='categorical_crossentropy',
-                optimizer='adam', metrics=get_metrics_fresh(model_metrics,out_dim))
+    model_keras = keras.models.clone_model(model_keras) # If I do not clone, the new rate is never used. Weights are re-init now.
+    model_compile(model_keras,loss_,optimizer_,learning_rate_,model_metrics,out_dim)
     
     model_keras._make_train_function()
     model_keras.set_weights(model_weights) # Set weights
     model_keras.optimizer.set_weights(optimizer_weights)#Set optimizer values
+    return 1
+
+def model_compile(model_keras,loss_,optimizer_,learning_rate_,model_metrics,out_dim):
+    optimizer_ = optimizer_.lower()
+    if optimizer_=='sgd':
+        optimizer_ = keras.optimizers.SGD(lr=learning_rate_, momentum=0.0, nesterov=False)
+    elif optimizer_=='rmsprop':
+        optimizer_ = keras.optimizers.RMSprop(lr=learning_rate_, rho=0.9)
+    elif optimizer_=='adagrad':
+        optimizer_ = keras.optimizers.Adagrad(lr=learning_rate_)
+    elif optimizer_=='adadelta':
+        optimizer_ = keras.optimizers.Adadelta(lr=learning_rate_, rho=0.95)
+    elif optimizer_=='adam':
+        optimizer_ = keras.optimizers.Adam(lr=learning_rate_, beta_1=0.9, beta_2=0.999, amsgrad=False)
+    elif optimizer_=='adamax':
+        optimizer_ = keras.optimizers.Adamax(lr=learning_rate_, beta_1=0.9, beta_2=0.999)
+    elif optimizer_=='nadam':
+        optimizer_ = keras.optimizers.Nadam(lr=learning_rate_, beta_1=0.9, beta_2=0.999)
+    else:
+        print("Unknown optimizer!")
+    model_keras.compile(loss=loss_,optimizer=optimizer_,
+                        metrics=get_metrics_fresh(model_metrics,out_dim))
     return 1
 
 def get_dropout(model_keras):
