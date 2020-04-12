@@ -4190,7 +4190,8 @@ class MainWindow(QtWidgets.QMainWindow):
         elif layout_trig == "Dark":
             #Change Layout in Defaultdict to "Dark", such that next start will use Dark layout
             Default_dict["Layout"] = "Dark"
-            f = open("layout_dark.txt", "r") #I obtained the layout file from: https://github.com/ColinDuquesnoy/QDarkStyleSheet/blob/master/qdarkstyle/style.qss
+            dir_layout = os.path.join(dir_root,"layout_dark.txt")#dir to settings
+            f = open(dir_layout, "r") #I obtained the layout file from: https://github.com/ColinDuquesnoy/QDarkStyleSheet/blob/master/qdarkstyle/style.qss
             f = f.read()
             app.setStyleSheet(f)
             #Standard is with tooltip
@@ -4199,7 +4200,8 @@ class MainWindow(QtWidgets.QMainWindow):
         elif layout_trig == "DarkOrange":
             #Change Layout in Defaultdict to "Dark", such that next start will use Dark layout
             Default_dict["Layout"] = "DarkOrange"
-            f = open("layout_darkorange.txt", "r") #I obtained the layout file from: https://github.com/nphase/qt-ping-grapher/blob/master/resources/darkorange.stylesheet
+            dir_layout = os.path.join(dir_root,"layout_darkorange.txt")#dir to settings
+            f = open(dir_layout, "r") #I obtained the layout file from: https://github.com/nphase/qt-ping-grapher/blob/master/resources/darkorange.stylesheet
             f = f.read()
             app.setStyleSheet(f)
             #Standard is with tooltip
@@ -4221,23 +4223,27 @@ class MainWindow(QtWidgets.QMainWindow):
 
         elif bool(self.actionLayout_Dark.isChecked())==True: #use dark layout
             if bool(self.actionTooltipOnOff.isChecked())==True: #with tooltips
-                f = open("layout_dark.txt", "r") #I obtained the layout file from: https://github.com/ColinDuquesnoy/QDarkStyleSheet/blob/master/qdarkstyle/style.qss
+                dir_layout = os.path.join(dir_root,"layout_dark.txt")#dir to settings
+                f = open(dir_layout, "r") #I obtained the layout file from: https://github.com/ColinDuquesnoy/QDarkStyleSheet/blob/master/qdarkstyle/style.qss
                 f = f.read()
                 app.setStyleSheet(f)
 
             elif bool(self.actionTooltipOnOff.isChecked())==False: #no tooltips
-                f = open("layout_dark_notooltip.txt", "r")#I obtained the layout file from: https://github.com/ColinDuquesnoy/QDarkStyleSheet/blob/master/qdarkstyle/style.qss
+                dir_layout = os.path.join(dir_root,"layout_dark_notooltip.txt")#dir to settings
+                f = open(dir_layout, "r")#I obtained the layout file from: https://github.com/ColinDuquesnoy/QDarkStyleSheet/blob/master/qdarkstyle/style.qss
                 f = f.read()
                 app.setStyleSheet(f)
 
         elif bool(self.actionLayout_DarkOrange.isChecked())==True: #use darkorange layout
             if bool(self.actionTooltipOnOff.isChecked())==True: #with tooltips
-                f = open("layout_darkorange.txt", "r") #I obtained the layout file from: https://github.com/nphase/qt-ping-grapher/blob/master/resources/darkorange.stylesheet
+                dir_layout = os.path.join(dir_root,"layout_darkorange.txt")#dir to settings
+                f = open(dir_layout, "r") #I obtained the layout file from: https://github.com/nphase/qt-ping-grapher/blob/master/resources/darkorange.stylesheet
                 f = f.read()
                 app.setStyleSheet(f)
 
             elif bool(self.actionTooltipOnOff.isChecked())==False: #no tooltips
-                f = open("layout_darkorange_notooltip.txt", "r")
+                dir_layout = os.path.join(dir_root,"layout_darkorange_notooltip.txt")#dir to settings
+                f = open(dir_layout, "r")
                 f = f.read()
                 app.setStyleSheet(f)
 
@@ -12207,11 +12213,13 @@ def main():
     app.setWindowIcon(QtGui.QIcon(os.path.join(dir_root,"art",Default_dict["Icon theme"],"main_icon_simple_04_256"+icon_suff)))
 
     if Default_dict["Layout"] == "Dark":
-        f = open("layout_dark.txt", "r") #I obtained the layout file from: https://github.com/ColinDuquesnoy/QDarkStyleSheet/blob/master/qdarkstyle/style.qss
+        dir_layout = os.path.join(dir_root,"layout_dark.txt")#dir to settings
+        f = open(dir_layout, "r") #I obtained the layout file from: https://github.com/ColinDuquesnoy/QDarkStyleSheet/blob/master/qdarkstyle/style.qss
         f = f.read()
         app.setStyleSheet(f)
     elif Default_dict["Layout"] == "DarkOrange":
-        f = open("layout_darkorange.txt", "r") #I obtained the layout file from: https://github.com/nphase/qt-ping-grapher/blob/master/resources/darkorange.stylesheet
+        dir_layout = os.path.join(dir_root,"layout_darkorange.txt")#dir to settings
+        f = open(dir_layout, "r") #I obtained the layout file from: https://github.com/nphase/qt-ping-grapher/blob/master/resources/darkorange.stylesheet
         f = f.read()
         app.setStyleSheet(f)
     else:
