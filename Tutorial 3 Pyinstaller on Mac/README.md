@@ -80,7 +80,7 @@ If you never used your Mac for Python programming you may first want to update P
   * Go to [https://github.com/maikherbig/AIDeveloper](https://github.com/maikherbig/AIDeveloper)  
   * Click the green button to download as zip  
   * Unpack it and find in "\Tutorial 3 Pyinstaller on Mac" the zip file "AIDeveloper_0.0.6_files.zip"  
-  * Unzip it and start a new Terminal at this folder. Note this in this folder is also a .spec file  
+  * Unzip it and start a new Terminal at this folder. Note that this folder contains a .spec file  
   
 * To start PyInstaller, use the following command:  
 `pyinstaller AIDeveloper_0.0.6_keep.spec`  
