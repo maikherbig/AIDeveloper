@@ -67,7 +67,7 @@ def gen_crop_img(cropsize,rtdc_path,nr_events=100,replace=True,random_images=Tru
             
     elif len(images_shape)==3:#Loaded images are Grayscale
         channels=1
-        if color_mode=='RGB':#If the user want to use RGB, but did only load Grayscale images, simply copy the information to all 3 channels
+        if color_mode=='RGB':#If the user wants to use RGB, but did only load Grayscale images, simply copy the information to all 3 channels
             images = np.stack((images,)*3, axis=-1)
             print("Copied information to all three channels to convert Grayscale to RGB")
 
@@ -114,6 +114,8 @@ def gen_crop_img(cropsize,rtdc_path,nr_events=100,replace=True,random_images=Tru
 
     if padding_w==False: #If there is no padding in width, means cells that are at the border can be out of frame
         #Indices of cells that would fit into the required cropping frame (cells at the end of the image do not fit)
+        
+        
         ind = np.where( (x1>=0) & (x2<=zoom_factor*images_shape[2]) & (y1>=0) & (y2<=zoom_factor*images_shape[1]))[0]        
     if padding_w==True:
         ind = range(len(images))
@@ -613,8 +615,9 @@ def norm_imgs(X,norm,mean_trainingdata=None,std_trainingdata=None):
                 std = 0.0001
                 print("Set the standard deviation to 0.0001 because otherwise div. by 0 would have happend!")
             line = (line-mean)/std
-        elif norm == "StdScaling using mean and std of all training data":
-            line = (line-mean_trainingdata)/std_trainingdata 
+        elif norm == "StdScaling using mean and std of all training data":         
+            line = (line-mean_trainingdata.values[0])/std_trainingdata.values[0]
+            
         #Under NO circumstances, training data should contain nan values
         ind = np.isnan(line)
         line[ind] = np.random.random() #replace nan with random values. This is better than nan, since .fit will collapse and never get back
