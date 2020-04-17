@@ -8,6 +8,7 @@ some functions for image processing that are essential for AIDeveloper
 
 import numpy as np
 import os, shutil,h5py
+import pandas as pd
 rand_state = np.random.RandomState(117) #to get the same random number on diff. PCs
 import aid_bin
 from pyqtgraph.Qt import QtWidgets
@@ -593,6 +594,10 @@ def crop_imgs_to_ram(SelectedFiles,crop,zoom_factors=None,zoom_order=0,color_mod
 
 def norm_imgs(X,norm,mean_trainingdata=None,std_trainingdata=None):
     if norm == "StdScaling using mean and std of all training data":
+        #make sure pandas series is converted to numpy array
+        if type(mean_trainingdata)==pd.core.series.Series:
+            mean_trainingdata=mean_trainingdata.values[0]
+            std_trainingdata=std_trainingdata.values[0]
         if np.allclose(std_trainingdata,0):
             std_trainingdata = 0.0001
             print("Set the standard deviation (std_trainingdata) to 0.0001 because otherwise div. by 0 would have happend!")
@@ -601,6 +606,8 @@ def norm_imgs(X,norm,mean_trainingdata=None,std_trainingdata=None):
         #Add the "channels" dimension
         X = np.expand_dims(X,3)    
     X = X.astype(np.float32)
+    
+    
     for k in range(X.shape[0]):
         line = X[k,:,:,:]
         ###########Scaling############
@@ -615,8 +622,8 @@ def norm_imgs(X,norm,mean_trainingdata=None,std_trainingdata=None):
                 std = 0.0001
                 print("Set the standard deviation to 0.0001 because otherwise div. by 0 would have happend!")
             line = (line-mean)/std
-        elif norm == "StdScaling using mean and std of all training data":         
-            line = (line-mean_trainingdata.values[0])/std_trainingdata.values[0]
+        elif norm == "StdScaling using mean and std of all training data":
+            line = (line-mean_trainingdata)/std_trainingdata
             
         #Under NO circumstances, training data should contain nan values
         ind = np.isnan(line)
