@@ -775,17 +775,30 @@ class Fitting_Ui(QtWidgets.QWidget):
         self.gridLayout_4.addWidget(self.groupBox_modelKerasFit_pop, 0, 0, 1, 1)
         
         
+        self.groupBox_expt_imgProc_pop = QtWidgets.QGroupBox(self.scrollAreaWidgetContents_pop)
+        self.groupBox_expt_imgProc_pop.setObjectName("groupBox_expt_imgProc_pop")
+        self.gridLayout_48 = QtWidgets.QGridLayout(self.groupBox_expt_imgProc_pop)
+        self.gridLayout_48.setObjectName("gridLayout_48")
+        self.checkBox_expt_paddingMode_pop = QtWidgets.QCheckBox(self.groupBox_expt_imgProc_pop)
+        self.checkBox_expt_paddingMode_pop.setObjectName("checkBox_expt_paddingMode_pop")
+        self.gridLayout_48.addWidget(self.checkBox_expt_paddingMode_pop, 0, 0, 1, 1)
+        self.comboBox_expt_paddingMode_pop = QtWidgets.QComboBox(self.groupBox_expt_imgProc_pop)
+        self.comboBox_expt_paddingMode_pop.setEnabled(False)
+        self.comboBox_expt_paddingMode_pop.setObjectName("comboBox_expt_paddingMode_pop")
+        self.comboBox_expt_paddingMode_pop.addItem("")
+        self.comboBox_expt_paddingMode_pop.addItem("")
+        self.comboBox_expt_paddingMode_pop.addItem("")
+        self.comboBox_expt_paddingMode_pop.addItem("")
+        self.comboBox_expt_paddingMode_pop.addItem("")
+        self.comboBox_expt_paddingMode_pop.addItem("")
+        self.comboBox_expt_paddingMode_pop.addItem("")
+        self.comboBox_expt_paddingMode_pop.addItem("")
+        self.comboBox_expt_paddingMode_pop.addItem("")
+        self.comboBox_expt_paddingMode_pop.addItem("")
+        self.gridLayout_48.addWidget(self.comboBox_expt_paddingMode_pop, 0, 1, 1, 1)
+        self.gridLayout_4.addWidget(self.groupBox_expt_imgProc_pop, 2, 0, 1, 1)
         
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
+              
         
         self.groupBox_regularization_pop = QtWidgets.QGroupBox(self.scrollAreaWidgetContents_pop)
         self.groupBox_regularization_pop.setObjectName("groupBox_regularization_pop")
@@ -1111,6 +1124,7 @@ class Fitting_Ui(QtWidgets.QWidget):
         self.checkBox_learningRate_pop.toggled['bool'].connect(self.doubleSpinBox_learningRate_pop.setEnabled) 
         self.checkBox_expt_loss_pop.toggled['bool'].connect(self.comboBox_expt_loss_pop.setEnabled)
         self.checkBox_optimizer_pop.toggled['bool'].connect(self.comboBox_optimizer_pop.setEnabled)
+        self.checkBox_expt_paddingMode_pop.toggled['bool'].connect(self.comboBox_expt_paddingMode_pop.setEnabled)
 
         self.checkBox_trainLastNOnly_pop.toggled['bool'].connect(self.spinBox_trainLastNOnly_pop.setEnabled)
         self.checkBox_dropout_pop.toggled['bool'].connect(self.lineEdit_dropout_pop.setEnabled)
@@ -1135,6 +1149,7 @@ class Fitting_Ui(QtWidgets.QWidget):
         self.checkBox_learningRate_pop.stateChanged.connect(self.expert_learningrate_off_pop)
         self.checkBox_expt_loss_pop.stateChanged.connect(self.expert_loss_off_pop)
         self.groupBox_expertMode_pop.toggled.connect(self.expert_mode_off_pop)
+        self.checkBox_expt_paddingMode_pop.stateChanged.connect(self.expert_paddingMode_off_pop)
 
 
         self.retranslateUi(Form)
@@ -1320,6 +1335,31 @@ class Fitting_Ui(QtWidgets.QWidget):
         self.label_epochs_pop.setText(_translate("Form", "Epochs", None))
         self.spinBox_epochs_pop.setToolTip(_translate("Form", "<html><head/><body><p>Number of epochs to train the model on identical batch.</p></body></html>", None))
 
+        self.groupBox_expt_imgProc_pop.setTitle(_translate("Form", "Image processing", None))
+        self.checkBox_expt_paddingMode_pop.setText(_translate("Form", "Padding mode", None))
+        self.comboBox_expt_paddingMode_pop.setToolTip(_translate("Form", "<html><head/><body><p>By default, the padding mode is \"constant\", which means that zeros are padded.\n"
+"\"edge\": Pads with the edge values of array.\n"
+"\"linear_ramp\": Pads with the linear ramp between end_value and the array edge value.\n"
+"\"maximum\": Pads with the maximum value of all or part of the vector along each axis.\n"
+"\"mean\": Pads with the mean value of all or part of the vector along each axis.\n"
+"\"median\": Pads with the median value of all or part of the vector along each axis.\n"
+"\"minimum\": Pads with the minimum value of all or part of the vector along each axis.\n"
+"\"reflect\": Pads with the reflection of the vector mirrored on the first and last values of the vector along each axis.\n"
+"\"symmetric\": Pads with the reflection of the vector mirrored along the edge of the array.\n"
+"\"wrap\": Pads with the wrap of the vector along the axis. The first values are used to pad the end and the end values are used to pad the beginning.\n"
+"Text copied from https://docs.scipy.org/doc/numpy/reference/generated/numpy.pad.html</p></body></html>", None))
+        self.comboBox_expt_paddingMode_pop.setItemText(0, _translate("Form", "constant", None))
+        self.comboBox_expt_paddingMode_pop.setItemText(1, _translate("Form", "edge", None))
+        self.comboBox_expt_paddingMode_pop.setItemText(2, _translate("Form", "linear_ramp", None))
+        self.comboBox_expt_paddingMode_pop.setItemText(3, _translate("Form", "maximum", None))
+        self.comboBox_expt_paddingMode_pop.setItemText(4, _translate("Form", "mean", None))
+        self.comboBox_expt_paddingMode_pop.setItemText(5, _translate("Form", "median", None))
+        self.comboBox_expt_paddingMode_pop.setItemText(6, _translate("Form", "minimum", None))
+        self.comboBox_expt_paddingMode_pop.setItemText(7, _translate("Form", "reflect", None))
+        self.comboBox_expt_paddingMode_pop.setItemText(8, _translate("Form", "symmetric", None))
+        self.comboBox_expt_paddingMode_pop.setItemText(9, _translate("Form", "wrap", None))
+
+
         self.groupBox_regularization_pop.setTitle(_translate("Form", "Loss / Regularization", None))
         self.checkBox_expt_loss_pop.setText(_translate("Form", "Loss", None))
         self.comboBox_expt_loss_pop.setItemText(0, _translate("Form", "categorical_crossentropy", None))
@@ -1499,6 +1539,8 @@ class Fitting_Ui(QtWidgets.QWidget):
             self.expert_learningrate_off_pop(0)
             self.checkBox_optimizer_pop.setChecked(False)
             self.expert_optimizer_off_pop(0)
+            self.checkBox_expt_paddingMode_pop.setChecked(False)            
+            self.expert_paddingMode_off_pop(0)
 
 
     def expert_loss_off_pop(self,on_or_off):
@@ -1542,7 +1584,12 @@ class Fitting_Ui(QtWidgets.QWidget):
             return
 
 
-
+    def expert_paddingMode_off_pop(self,value):
+        if value==0: #switch off
+            #switch back to "constant" padding 
+            index = self.comboBox_expt_paddingMode_pop.findText("constant", QtCore.Qt.MatchFixedString)
+            if index >= 0:
+                self.comboBox_expt_paddingMode_pop.setCurrentIndex(index)
 
 
 
