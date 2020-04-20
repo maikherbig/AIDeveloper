@@ -2237,7 +2237,7 @@ class MainWindow(QtWidgets.QMainWindow):
         ###########################History Tab################################
         self.tableWidget_HistoryItems.doubleClicked.connect(self.tableWidget_HistoryItems_dclick)
         conversion_methods_source = ["Keras TensorFlow", "Frozen TensorFlow .pb"]
-        conversion_methods_target = [".nnet","Frozen TensorFlow .pb", "Optimized TensorFlow .pb", "ONNX (via keras2onnx)", "ONNX (via MMdnn)", "PyTorch Script","Caffe Script","CNTK Script","MXNet Script","ONNX Script","TensorFlow Script","Keras Script"]
+        conversion_methods_target = [".nnet","Frozen TensorFlow .pb", "Optimized TensorFlow .pb", "ONNX (via keras2onnx)", "ONNX (via MMdnn)","CoreML", "PyTorch Script","Caffe Script","CNTK Script","MXNet Script","ONNX Script","TensorFlow Script","Keras Script"]
         self.comboBox_convertTo.addItems(conversion_methods_target)
         self.comboBox_convertTo.setMinimumSize(QtCore.QSize(200,22))
         self.comboBox_convertTo.setMaximumSize(QtCore.QSize(200, 22))
@@ -9930,37 +9930,43 @@ class MainWindow(QtWidgets.QMainWindow):
         ##################Keras TensorFlow -> Caffe Script####################
         elif target_format=="Caffe Script" and source_format=="Keras TensorFlow":
             aid_dl.convert_kerastf_2_script(path,"caffe")
-            text = "Conversion Keras TensorFlow -> Caffe Script is done. You can now use this script and the saved weights to build the model using your PyTorch installation."
+            text = "Conversion Keras TensorFlow -> Caffe Script is done. You can now use this script and the saved weights to build the model using your Caffe installation."
             conversion_successful_msg(text)
 
         ##################Keras TensorFlow -> CNTK Script####################
         elif target_format=="CNTK Script" and source_format=="Keras TensorFlow":
             aid_dl.convert_kerastf_2_script(path,"cntk")
-            text = "Conversion Keras TensorFlow -> CNTK Script is done. You can now use this script and the saved weights to build the model using your PyTorch installation."
+            text = "Conversion Keras TensorFlow -> CNTK Script is done. You can now use this script and the saved weights to build the model using your CNTK installation."
             conversion_successful_msg(text)
 
         ##################Keras TensorFlow -> mxnet Script####################
         elif target_format=="MXNet Script" and source_format=="Keras TensorFlow":
             aid_dl.convert_kerastf_2_script(path,"mxnet")
-            text = "Conversion Keras TensorFlow -> MXNet Script is done. You can now use this script and the saved weights to build the model using your PyTorch installation."
+            text = "Conversion Keras TensorFlow -> MXNet Script is done. You can now use this script and the saved weights to build the model using your MXNet installation."
             conversion_successful_msg(text)
 
         ##################Keras TensorFlow -> onnx Script####################
         elif target_format=="ONNX Script" and source_format=="Keras TensorFlow":
             aid_dl.convert_kerastf_2_script(path,"onnx")
-            text = "Conversion Keras TensorFlow -> ONNX Script is done. You can now use this script and the saved weights to build the model using your PyTorch installation."
+            text = "Conversion Keras TensorFlow -> ONNX Script is done. You can now use this script and the saved weights to build the model using your ONNX installation."
             conversion_successful_msg(text)
 
         ##################Keras TensorFlow -> TensorFlow Script####################
         elif target_format=="TensorFlow Script" and source_format=="Keras TensorFlow":
             aid_dl.convert_kerastf_2_script(path,"tensorflow")
-            text = "Conversion Keras TensorFlow -> TensorFlow Script is done. You can now use this script and the saved weights to build the model using your PyTorch installation."
+            text = "Conversion Keras TensorFlow -> TensorFlow Script is done. You can now use this script and the saved weights to build the model using your Tensorflow installation."
             conversion_successful_msg(text)
 
         ##################Keras TensorFlow -> Keras Script####################
-        elif "Keras Script" in target_format and source_format=="Keras TensorFlow":
+        elif target_format=="Keras Script" and source_format=="Keras TensorFlow":
             aid_dl.convert_kerastf_2_script(path,"keras")
-            text = "Conversion Keras TensorFlow -> Keras Script is done. You can now use this script and the saved weights to build the model using your PyTorch installation."
+            text = "Conversion Keras TensorFlow -> Keras Script is done. You can now use this script and the saved weights to build the model using your Keras installation."
+            conversion_successful_msg(text)
+
+        ##################Keras TensorFlow -> CoreML####################
+        elif "CoreML" in target_format and source_format=="Keras TensorFlow":
+            aid_dl.convert_kerastf_2_coreml(path)
+            text = "Conversion Keras TensorFlow -> CoreML is done."
             conversion_successful_msg(text)
 
         else:
