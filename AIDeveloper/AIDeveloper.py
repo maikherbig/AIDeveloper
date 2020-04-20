@@ -98,7 +98,7 @@ import aid_img, aid_dl, aid_bin
 import aid_frontend
 from partial_trainability import partial_trainability
 
-VERSION = "0.0.7" #Python 3.5.6 Version
+VERSION = "0.0.7_dev1" #Python 3.5.6 Version
 model_zoo_version = model_zoo.__version__()
 print("AIDeveloper Version: "+VERSION)
 print("model_zoo.py Version: "+model_zoo.__version__())
@@ -2236,8 +2236,8 @@ class MainWindow(QtWidgets.QMainWindow):
 
         ###########################History Tab################################
         self.tableWidget_HistoryItems.doubleClicked.connect(self.tableWidget_HistoryItems_dclick)
-        conversion_methods_source = ["Keras TensorFlow format", "Frozen TensorFlow .pb"]
-        conversion_methods_target = [".nnet","Frozen TensorFlow .pb", "Optimized TensorFlow .pb", "ONNX"]
+        conversion_methods_source = ["Keras TensorFlow", "Frozen TensorFlow .pb"]
+        conversion_methods_target = [".nnet","Frozen TensorFlow .pb", "Optimized TensorFlow .pb", "ONNX (via keras2onnx)", "ONNX (via MMdnn)", "PyTorch Script","Caffe Script","CNTK Script","MXNet Script","ONNX Script","TensorFlow Script","Keras Script"]
         self.comboBox_convertTo.addItems(conversion_methods_target)
         self.comboBox_convertTo.setMinimumSize(QtCore.QSize(200,22))
         self.comboBox_convertTo.setMaximumSize(QtCore.QSize(200, 22))
@@ -9715,18 +9715,9 @@ class MainWindow(QtWidgets.QMainWindow):
         try:
             while tries<15:#try a few times
                 try:
-                    temp_path = os.path.join(dir_root,"temp")
-                    #temp_path = "."+os.sep+"temp"
-                    if os.path.isdir(temp_path):
-                        print("Found existing temporary folder")
-                    
-                    if not os.path.exists(temp_path):
-                        os.mkdir(temp_path)
-                        print("Created temporary folder: "+temp_path)
-#                    else:    
-#                        print("Directory " , temp_path ,  " already exists")
+                    temp_path = aid_bin.create_temp_folder()#create a temp folder if it does not already exist
                     #Create a  random filename for a temp. file
-                    someletters = ["S","T","E","R","N","B","U","R","G","P","I","L","S"]
+                    someletters = list("STERNBURGPILS")
                     temporaryfile = np.random.choice(someletters,5,replace=True)
                     temporaryfile = "".join(temporaryfile)+".xlsx"
                     temporaryfile = os.path.join(temp_path,temporaryfile)
@@ -9878,7 +9869,7 @@ class MainWindow(QtWidgets.QMainWindow):
 
 
         ##################Keras TensorFlow -> .nnet############################
-        if ".nnet" in target_format and "Keras TensorFlow" in source_format: 
+        if target_format==".nnet" and source_format=="Keras TensorFlow": 
             ConvertToNnet = 1
             worker = Worker(self.history_tab_convertModel_nnet_worker,ConvertToNnet)
             def get_model_keras_from_worker(dic):
@@ -9897,34 +9888,79 @@ class MainWindow(QtWidgets.QMainWindow):
             self.threadpool.start(worker)
 
         ##################Keras TensorFlow -> Frozen .pb#######################
-        elif "Frozen Tensor" in target_format and "Keras TensorFlow" in source_format:
+        elif target_format=="Frozen TensorFlow .pb" and source_format=="Keras TensorFlow":
             #target filename should be like source +_frozen.pb
             path_new = os.path.splitext(path)[0] + "_frozen.pb"
-            model_convert.convert_kerastf_2_frozen_pb(path,path_new)
+            aid_dl.convert_kerastf_2_frozen_pb(path,path_new)
             text = "Conversion Keras TensorFlow -> Frozen .pb is done"
             conversion_successful_msg(text)
         ##################Keras TensorFlow -> Optimized .pb####################
-        elif "Optimized Tensor" in target_format and "Keras TensorFlow" in source_format:
-            #target filename should be like source +_frozen.pb
+        elif target_format=="Optimized TensorFlow .pb" and source_format=="Keras TensorFlow":
             path_new = os.path.splitext(path)[0] + "_optimized.pb"
-            model_convert.convert_kerastf_2_optimized_pb(path,path_new)
+            aid_dl.convert_kerastf_2_optimized_pb(path,path_new)
             text = "Conversion Keras TensorFlow -> Optimized .pb is done"
             conversion_successful_msg(text)
 
         ####################Frozen -> Optimized .pb############################
-        elif "Optimized Tensor" in target_format and "Frozen Tensor" in source_format:
-            #target filename should be like source +_frozen.pb
+        elif target_format=="Optimized TensorFlow .pb" and source_format=="Frozen TensorFlow .pb":
             path_new = os.path.splitext(path)[0] + "_optimized.pb"
-            model_convert.convert_frozen_2_optimized_pb(path,path_new)
+            aid_dl.convert_frozen_2_optimized_pb(path,path_new)
             text = "Conversion Frozen -> Optimized .pb is done"
             conversion_successful_msg(text)
 
         ##################Keras TensorFlow -> ONNX####################
-        elif "ONNX" in target_format and "Keras TensorFlow" in source_format:
-            #target filename should be like source +_frozen.pb
+        elif target_format=="ONNX (via keras2onnx)" and source_format=="Keras TensorFlow":
             path_new = os.path.splitext(path)[0] + ".onnx"
-            model_convert.convert_kerastf_2_onnx(path,path_new)
-            text = "Conversion Keras TensorFlow -> ONNX is done"
+            aid_dl.convert_kerastf_2_onnx(path,path_new)
+            text = "Conversion Keras TensorFlow -> ONNX (via keras2onnx) is done"
+            conversion_successful_msg(text)
+
+        ##################Keras TensorFlow -> ONNX via MMdnn####################
+        elif target_format=="ONNX (via MMdnn)" and source_format=="Keras TensorFlow":
+            aid_dl.convert_kerastf_2_onnx_mmdnn(path)
+            text = "Conversion Keras TensorFlow -> ONNX (via MMdnn) is done"
+            conversion_successful_msg(text)
+
+        ##################Keras TensorFlow -> PyTorch Script####################
+        elif target_format=="PyTorch Script"  and source_format=="Keras TensorFlow":
+            aid_dl.convert_kerastf_2_script(path,"pytorch")
+            text = "Conversion Keras TensorFlow -> PyTorch Script is done. You can now use this script and the saved weights to build the model using your PyTorch installation."
+            conversion_successful_msg(text)
+
+        ##################Keras TensorFlow -> Caffe Script####################
+        elif target_format=="Caffe Script" and source_format=="Keras TensorFlow":
+            aid_dl.convert_kerastf_2_script(path,"caffe")
+            text = "Conversion Keras TensorFlow -> Caffe Script is done. You can now use this script and the saved weights to build the model using your PyTorch installation."
+            conversion_successful_msg(text)
+
+        ##################Keras TensorFlow -> CNTK Script####################
+        elif target_format=="CNTK Script" and source_format=="Keras TensorFlow":
+            aid_dl.convert_kerastf_2_script(path,"cntk")
+            text = "Conversion Keras TensorFlow -> CNTK Script is done. You can now use this script and the saved weights to build the model using your PyTorch installation."
+            conversion_successful_msg(text)
+
+        ##################Keras TensorFlow -> mxnet Script####################
+        elif target_format=="MXNet Script" and source_format=="Keras TensorFlow":
+            aid_dl.convert_kerastf_2_script(path,"mxnet")
+            text = "Conversion Keras TensorFlow -> MXNet Script is done. You can now use this script and the saved weights to build the model using your PyTorch installation."
+            conversion_successful_msg(text)
+
+        ##################Keras TensorFlow -> onnx Script####################
+        elif target_format=="ONNX Script" and source_format=="Keras TensorFlow":
+            aid_dl.convert_kerastf_2_script(path,"onnx")
+            text = "Conversion Keras TensorFlow -> ONNX Script is done. You can now use this script and the saved weights to build the model using your PyTorch installation."
+            conversion_successful_msg(text)
+
+        ##################Keras TensorFlow -> TensorFlow Script####################
+        elif target_format=="TensorFlow Script" and source_format=="Keras TensorFlow":
+            aid_dl.convert_kerastf_2_script(path,"tensorflow")
+            text = "Conversion Keras TensorFlow -> TensorFlow Script is done. You can now use this script and the saved weights to build the model using your PyTorch installation."
+            conversion_successful_msg(text)
+
+        ##################Keras TensorFlow -> Keras Script####################
+        elif "Keras Script" in target_format and source_format=="Keras TensorFlow":
+            aid_dl.convert_kerastf_2_script(path,"keras")
+            text = "Conversion Keras TensorFlow -> Keras Script is done. You can now use this script and the saved weights to build the model using your PyTorch installation."
             conversion_successful_msg(text)
 
         else:
