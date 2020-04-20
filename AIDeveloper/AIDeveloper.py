@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-AIDeveloper: GUI-based software for training, evaluating and applying deep neural nets for image classification
+AIDeveloper
 ---------
 @author: maikherbig
 """
@@ -90,7 +90,7 @@ from keras.utils import np_utils
 from keras.utils.conv_utils import convert_kernel
 import keras_metrics #side package for precision, recall etc during training
 global keras_metrics
-import model_zoo,model_convert 
+import model_zoo 
 from keras2onnx import convert_keras
 from onnx import save_model as save_onnx
 
@@ -98,7 +98,7 @@ import aid_img, aid_dl, aid_bin
 import aid_frontend
 from partial_trainability import partial_trainability
 
-VERSION = "0.0.7_dev1" #Python 3.5.6 Version
+VERSION = "0.0.8" #Python 3.5.6 Version
 model_zoo_version = model_zoo.__version__()
 print("AIDeveloper Version: "+VERSION)
 print("model_zoo.py Version: "+model_zoo.__version__())
@@ -1175,13 +1175,6 @@ class MainWindow(QtWidgets.QMainWindow):
         self.gridLayout_37.addWidget(self.groupBox_regularization, 2, 0, 1, 1)
 
 
-
-
-
-
-
-
-
         self.pushButton_partialTrainability.setEnabled(False)
         self.pushButton_partialTrainability.setMinimumSize(QtCore.QSize(0, 0))
         self.pushButton_partialTrainability.setMaximumSize(QtCore.QSize(40, 16777215))
@@ -1203,8 +1196,29 @@ class MainWindow(QtWidgets.QMainWindow):
         self.gridLayout_46.addLayout(self.horizontalLayout_lossW, 6, 0, 1, 1)
         self.pushButton_lossW.setMinimumSize(QtCore.QSize(0, 0))
         self.pushButton_lossW.setMaximumSize(QtCore.QSize(40, 16777215))
-        self.pushButton_lossW.clicked.connect(lambda: self.lossWeights_popup(-1))
 
+        self.groupBox_expt_imgProc = QtWidgets.QGroupBox(self.scrollAreaWidgetContents)
+        self.groupBox_expt_imgProc.setObjectName("groupBox_expt_imgProc")
+        self.gridLayout_48 = QtWidgets.QGridLayout(self.groupBox_expt_imgProc)
+        self.gridLayout_48.setObjectName("gridLayout_48")
+        self.checkBox_expt_paddingMode = QtWidgets.QCheckBox(self.groupBox_expt_imgProc)
+        self.checkBox_expt_paddingMode.setObjectName("checkBox_expt_paddingMode")
+        self.gridLayout_48.addWidget(self.checkBox_expt_paddingMode, 0, 0, 1, 1)
+        self.comboBox_expt_paddingMode = QtWidgets.QComboBox(self.groupBox_expt_imgProc)
+        self.comboBox_expt_paddingMode.setEnabled(False)
+        self.comboBox_expt_paddingMode.setObjectName("comboBox_expt_paddingMode")
+        self.comboBox_expt_paddingMode.addItem("")
+        self.comboBox_expt_paddingMode.addItem("")
+        self.comboBox_expt_paddingMode.addItem("")
+        self.comboBox_expt_paddingMode.addItem("")
+        self.comboBox_expt_paddingMode.addItem("")
+        self.comboBox_expt_paddingMode.addItem("")
+        self.comboBox_expt_paddingMode.addItem("")
+        self.comboBox_expt_paddingMode.addItem("")
+        self.comboBox_expt_paddingMode.addItem("")
+        self.comboBox_expt_paddingMode.addItem("")
+        self.gridLayout_48.addWidget(self.comboBox_expt_paddingMode, 0, 1, 1, 1)
+        self.gridLayout_37.addWidget(self.groupBox_expt_imgProc, 4, 0, 1, 1)
 
 
         self.groupBox_expertMetrics = QtWidgets.QGroupBox(self.scrollAreaWidgetContents)
@@ -2233,6 +2247,9 @@ class MainWindow(QtWidgets.QMainWindow):
         self.checkBox_trainDenseOnly.setChecked(False)
         self.checkBox_partialTrainability.toggled.connect(self.partialtrainability_activated)
         self.checkBox_lossW.clicked.connect(lambda on_or_off: self.lossWeights_activated(on_or_off,-1))
+        self.pushButton_lossW.clicked.connect(lambda: self.lossWeights_popup(-1))
+
+        self.checkBox_expt_paddingMode.stateChanged.connect(self.expert_paddingMode_off)
 
         ###########################History Tab################################
         self.tableWidget_HistoryItems.doubleClicked.connect(self.tableWidget_HistoryItems_dclick)
@@ -2768,6 +2785,8 @@ class MainWindow(QtWidgets.QMainWindow):
         self.checkBox_avgBlur.clicked['bool'].connect(self.label_avgBlurMax.setEnabled)
         self.checkBox_optimizer.toggled['bool'].connect(self.comboBox_optimizer.setEnabled)
         self.checkBox_expt_loss.toggled['bool'].connect(self.comboBox_expt_loss.setEnabled)
+        self.checkBox_expt_paddingMode.toggled['bool'].connect(self.comboBox_expt_paddingMode.setEnabled)
+
         #Start running show_cpu_ram function and run it all the time
         worker_cpu_ram = Worker(self.cpu_ram_worker)
         self.threadpool.start(worker_cpu_ram)
@@ -2975,7 +2994,29 @@ class MainWindow(QtWidgets.QMainWindow):
         self.lineEdit_lossW.setToolTip(_translate("MainWindow", "<html><head/><body><p>Specify scalar coefficients to weight the loss contributions of different classes.</p></body></html>", None))
         self.pushButton_lossW.setText(_translate("MainWindow", "...", None))
 
-
+        self.groupBox_expt_imgProc.setTitle(_translate("MainWindow", "Image processing", None))
+        self.checkBox_expt_paddingMode.setText(_translate("MainWindow", "Padding mode", None))
+        self.comboBox_expt_paddingMode.setToolTip(_translate("MainWindow", "<html><head/><body><p>By default, the padding mode is \"constant\", which means that zeros are padded.\n"
+"\"edge\": Pads with the edge values of array.\n"
+"\"linear_ramp\": Pads with the linear ramp between end_value and the array edge value.\n"
+"\"maximum\": Pads with the maximum value of all or part of the vector along each axis.\n"
+"\"mean\": Pads with the mean value of all or part of the vector along each axis.\n"
+"\"median\": Pads with the median value of all or part of the vector along each axis.\n"
+"\"minimum\": Pads with the minimum value of all or part of the vector along each axis.\n"
+"\"reflect\": Pads with the reflection of the vector mirrored on the first and last values of the vector along each axis.\n"
+"\"symmetric\": Pads with the reflection of the vector mirrored along the edge of the array.\n"
+"\"wrap\": Pads with the wrap of the vector along the axis. The first values are used to pad the end and the end values are used to pad the beginning.\n"
+"Text copied from https://docs.scipy.org/doc/numpy/reference/generated/numpy.pad.html</p></body></html>", None))
+        self.comboBox_expt_paddingMode.setItemText(0, _translate("MainWindow", "constant", None))
+        self.comboBox_expt_paddingMode.setItemText(1, _translate("MainWindow", "edge", None))
+        self.comboBox_expt_paddingMode.setItemText(2, _translate("MainWindow", "linear_ramp", None))
+        self.comboBox_expt_paddingMode.setItemText(3, _translate("MainWindow", "maximum", None))
+        self.comboBox_expt_paddingMode.setItemText(4, _translate("MainWindow", "mean", None))
+        self.comboBox_expt_paddingMode.setItemText(5, _translate("MainWindow", "median", None))
+        self.comboBox_expt_paddingMode.setItemText(6, _translate("MainWindow", "minimum", None))
+        self.comboBox_expt_paddingMode.setItemText(7, _translate("MainWindow", "reflect", None))
+        self.comboBox_expt_paddingMode.setItemText(8, _translate("MainWindow", "symmetric", None))
+        self.comboBox_expt_paddingMode.setItemText(9, _translate("MainWindow", "wrap", None))
 
         self.groupBox_expertMetrics.setTitle(_translate("MainWindow", "Metrics", None))
         text_metrics_tt = "Define metrics, that are computed after each training iteration ('epoch'). Those metrics are can then also be displayed in real-time during training and are tracked/saved in the meta.xlsx file. Each model where any metric for the validation set breaks a new record is saved (minimum val. loss achived -> model is saved. maximum val. accuracy achieved-> model is saved)."
@@ -2996,10 +3037,6 @@ class MainWindow(QtWidgets.QMainWindow):
         self.checkBox_expertRecall.setText(_translate("MainWindow", "Recall", None))
         text_recall_tt = "Compute recall and validation recall after each epoch for each class. Each model, where the corresponding metric for the validatio-set achieves a new record will be saved."
         self.checkBox_expertRecall.setToolTip(_translate("MainWindow", "<html><head/><body><p>"+text_recall_tt+"</p></body></html>", None))
-
-
-
-
 
 
         self.groupBox_Finalize.setTitle(_translate("MainWindow", "Model summary and Fit", None))
@@ -3397,7 +3434,7 @@ class MainWindow(QtWidgets.QMainWindow):
                         Default_dict["Image_import_dimension"] = final_h
 
                         if self.popup_imgRes_ui.radioButton_imgResize_cropPad.isChecked():#cropping and padding method
-                            images = aid_img.image_resize_crop_pad(images,pos_x,pos_y,final_h,final_w,channels,verbose=False)
+                            images = aid_img.image_resize_crop_pad(images,pos_x,pos_y,final_h,final_w,channels,verbose=False,padding_mode='constant')
                         elif self.popup_imgRes_ui.radioButton_imgResize_interpolate.isChecked():
                             interpolation_method = str(self.popup_imgRes_ui.comboBox_resizeMethod.currentText())
                             Default_dict["Image_import_interpol_method"] = interpolation_method
@@ -3738,6 +3775,8 @@ class MainWindow(QtWidgets.QMainWindow):
             self.expert_learningrate_off(0)
             self.checkBox_optimizer.setChecked(False)
             self.expert_optimizer_off(0)
+            self.checkBox_expt_paddingMode.setChecked(False)            
+            self.expert_paddingMode_off(0)
 
     def expert_loss_off(self,on_or_off):
         if on_or_off==0: #switch off
@@ -3779,7 +3818,13 @@ class MainWindow(QtWidgets.QMainWindow):
             msg.exec_()
             return
 
-
+    def expert_paddingMode_off(self,on_or_off):
+        if on_or_off==0: #switch off
+            #switch back to "constant" padding 
+            index = self.comboBox_expt_paddingMode.findText("constant", QtCore.Qt.MatchFixedString)
+            if index >= 0:
+                self.comboBox_expt_paddingMode.setCurrentIndex(index)
+        
     def update_hist1(self):
         feature = str(self.comboBox_feat1.currentText())
         feature_values = self.rtdc_ds[feature]
@@ -6821,6 +6866,8 @@ class MainWindow(QtWidgets.QMainWindow):
         loss_expert = str(self.comboBox_expt_loss.currentText()).lower()
         optimizer_expert_on = bool(self.checkBox_optimizer.isChecked())
         optimizer_expert = str(self.comboBox_optimizer.currentText()).lower()
+        padding_expert_on = bool(self.checkBox_expt_paddingMode.isChecked())
+        padding_expert = str(self.comboBox_expt_paddingMode.currentText()).lower()
 
         try:
             dropout_expert = str(self.lineEdit_dropout.text()) #due to the validator, there are no squ.brackets
@@ -7194,7 +7241,9 @@ class MainWindow(QtWidgets.QMainWindow):
             loss_expert = str(self.comboBox_expt_loss.currentText()).lower()
             optimizer_expert_on = bool(self.checkBox_optimizer.isChecked())
             optimizer_expert = str(self.comboBox_optimizer.currentText()).lower()
-            
+            padding_expert_on = bool(self.checkBox_expt_paddingMode.isChecked())
+            padding_expert = str(self.comboBox_expt_paddingMode.currentText()).lower()
+
             train_last_layers = bool(self.checkBox_trainLastNOnly.isChecked())             
             train_last_layers_n = int(self.spinBox_trainLastNOnly.value())              
             train_dense_layers = bool(self.checkBox_trainDenseOnly.isChecked())             
@@ -7315,6 +7364,8 @@ class MainWindow(QtWidgets.QMainWindow):
                 Para_dict["loss_expert"]=loss_expert,
                 Para_dict["optimizer_expert_on"]=optimizer_expert_on,
                 Para_dict["optimizer_expert"]=optimizer_expert,
+                Para_dict["padding_expert_on"]=padding_expert_on,
+                Para_dict["padding_expert"]=padding_expert,
 
                 Para_dict["train_last_layers"]=train_last_layers,
                 Para_dict["train_last_layers_n"]=train_last_layers_n,
@@ -7414,6 +7465,9 @@ class MainWindow(QtWidgets.QMainWindow):
                 Para_dict["loss_expert"]=loss_expert,
                 Para_dict["optimizer_expert_on"]=optimizer_expert_on,
                 Para_dict["optimizer_expert"]=optimizer_expert,
+                Para_dict["padding_expert_on"]=padding_expert_on,
+                Para_dict["padding_expert"]=padding_expert,
+                
                 Para_dict["train_last_layers"]=train_last_layers,
                 Para_dict["train_last_layers_n"]=train_last_layers_n,
                 Para_dict["train_dense_layers"]=train_dense_layers,
@@ -7531,7 +7585,7 @@ class MainWindow(QtWidgets.QMainWindow):
                     #if Data_to_RAM was not enabled:
                     #if not self.actionDataToRam.isChecked():
                     if len(DATA)==0: #Here, the entire training set needs to be used! Not only random images!
-                        gen_train = aid_img.gen_crop_img(crop,rtdc_path_train[i],random_images=False,zoom_factor=zoom_factors_train[i],zoom_order=zoom_order,color_mode=self.get_color_mode()) #Replace true means that individual cells could occur several times
+                        gen_train = aid_img.gen_crop_img(crop,rtdc_path_train[i],random_images=False,zoom_factor=zoom_factors_train[i],zoom_order=zoom_order,color_mode=self.get_color_mode(),padding_mode=padding_expert) #Replace true means that individual cells could occur several times
 #                    else: #get a similar generator, using the ram-data
 #                        if len(DATA)==0:
 #                            gen_train = aid_img.gen_crop_img(crop,rtdc_path_train[i],random_images=False) #Replace true means that individual cells could occur several times
@@ -7628,7 +7682,10 @@ class MainWindow(QtWidgets.QMainWindow):
                 loss_expert = str(self.fittingpopups_ui[listindex].comboBox_expt_loss_pop.currentText())
                 optimizer_expert_on = bool(self.fittingpopups_ui[listindex].checkBox_optimizer_pop.isChecked())
                 optimizer_expert = str(self.fittingpopups_ui[listindex].comboBox_optimizer_pop.currentText())
-                
+
+                padding_expert_on = bool(self.fittingpopups_ui[listindex].checkBox_expt_paddingMode_pop.isChecked())
+                padding_expert = str(self.fittingpopups_ui[listindex].comboBox_expt_paddingMode_pop.currentText())
+
                 train_last_layers = bool(self.fittingpopups_ui[listindex].checkBox_trainLastNOnly_pop.isChecked())             
                 train_last_layers_n = int(self.fittingpopups_ui[listindex].spinBox_trainLastNOnly_pop.value())              
                 train_dense_layers = bool(self.fittingpopups_ui[listindex].checkBox_trainDenseOnly_pop.isChecked())             
@@ -7712,6 +7769,9 @@ class MainWindow(QtWidgets.QMainWindow):
                 Para_dict["loss_expert"]=loss_expert,
                 Para_dict["optimizer_expert_on"]=optimizer_expert_on,
                 Para_dict["optimizer_expert"]=optimizer_expert,                
+
+                Para_dict["padding_expert_on"]=padding_expert_on,
+                Para_dict["padding_expert"]=padding_expert,                
                 
                 Para_dict["train_last_layers"]=train_last_layers,
                 Para_dict["train_last_layers_n"]=train_last_layers_n,
@@ -7773,10 +7833,10 @@ class MainWindow(QtWidgets.QMainWindow):
             X_valid,y_valid,Indices = [],[],[]
             for i in range(len(SelectedFiles_valid)):
                 if not self.actionDataToRam.isChecked():
-                    gen_valid = aid_img.gen_crop_img(crop,rtdc_path_valid[i],nr_events_epoch_valid[i],random_images=shuffle_valid[i],replace=True,zoom_factor=zoom_factors_valid[i],zoom_order=zoom_order,color_mode=self.get_color_mode()) #Replace true means that individual cells could occur several times
+                    gen_valid = aid_img.gen_crop_img(crop,rtdc_path_valid[i],nr_events_epoch_valid[i],random_images=shuffle_valid[i],replace=True,zoom_factor=zoom_factors_valid[i],zoom_order=zoom_order,color_mode=self.get_color_mode(),padding_mode=padding_expert) #Replace true means that individual cells could occur several times
                 else: #get a similar generator, using the ram-data
                     if len(DATA)==0:
-                        gen_valid = aid_img.gen_crop_img(crop,rtdc_path_valid[i],nr_events_epoch_valid[i],random_images=shuffle_valid[i],replace=True,zoom_factor=zoom_factors_valid[i],zoom_order=zoom_order,color_mode=self.get_color_mode()) #Replace true means that individual cells could occur several times
+                        gen_valid = aid_img.gen_crop_img(crop,rtdc_path_valid[i],nr_events_epoch_valid[i],random_images=shuffle_valid[i],replace=True,zoom_factor=zoom_factors_valid[i],zoom_order=zoom_order,color_mode=self.get_color_mode(),padding_mode=padding_expert) #Replace true means that individual cells could occur several times
                     else:
                         gen_valid = aid_img.gen_crop_img_ram(DATA,rtdc_path_valid[i],nr_events_epoch_valid[i],random_images=shuffle_valid[i],replace=True) #Replace true means that individual cells could occur several times
                         if self.actionVerbose.isChecked():
@@ -7936,6 +7996,11 @@ class MainWindow(QtWidgets.QMainWindow):
                 self.fittingpopups_ui[listindex].comboBox_optimizer_pop.setCurrentIndex(index)
             self.fittingpopups_ui[listindex].doubleSpinBox_learningRate_pop.setValue(learning_rate_expert)
 
+            self.fittingpopups_ui[listindex].checkBox_expt_paddingMode_pop.setChecked(padding_expert_on)
+            index = self.fittingpopups_ui[listindex].comboBox_expt_paddingMode_pop.findText(padding_expert, QtCore.Qt.MatchFixedString)
+            if index >= 0:
+                self.fittingpopups_ui[listindex].comboBox_expt_paddingMode_pop.setCurrentIndex(index)
+
             self.fittingpopups_ui[listindex].checkBox_trainLastNOnly_pop.setChecked(train_last_layers)
             self.fittingpopups_ui[listindex].spinBox_trainLastNOnly_pop.setValue(train_last_layers_n)
             self.fittingpopups_ui[listindex].checkBox_trainDenseOnly_pop.setChecked(train_dense_layers)
@@ -8007,7 +8072,7 @@ class MainWindow(QtWidgets.QMainWindow):
                     for i in range(len(SelectedFiles_train)):
 #                        if not self.actionDataToRam.isChecked():
                         if len(DATA)==0:
-                            gen_train = aid_img.gen_crop_img(cropsize2,rtdc_path_train[i],nr_events_epoch_train[i],random_images=shuffle_train[i],replace=True,zoom_factor=zoom_factors_train[i],zoom_order=zoom_order,color_mode=self.get_color_mode()) #Replace true means that individual cells could occur several times
+                            gen_train = aid_img.gen_crop_img(cropsize2,rtdc_path_train[i],nr_events_epoch_train[i],random_images=shuffle_train[i],replace=True,zoom_factor=zoom_factors_train[i],zoom_order=zoom_order,color_mode=self.get_color_mode(),padding_mode=padding_expert) #Replace true means that individual cells could occur several times
 #                        else:
 #                            if len(DATA)==0:
 #                                gen_train = aid_img.gen_crop_img(cropsize2,rtdc_path_train[i],nr_events_epoch_train[i],replace=True) #Replace true means that individual cells could occur several times
@@ -8179,7 +8244,9 @@ class MainWindow(QtWidgets.QMainWindow):
                                 loss_expert = str(self.fittingpopups_ui[listindex].comboBox_expt_loss_pop.currentText())
                                 optimizer_expert_on = bool(self.fittingpopups_ui[listindex].checkBox_optimizer_pop.isChecked())
                                 optimizer_expert = str(self.fittingpopups_ui[listindex].comboBox_optimizer_pop.currentText())
-                                
+                                padding_expert_on = bool(self.fittingpopups_ui[listindex].checkBox_expt_paddingMode_pop.isChecked())
+                                padding_expert = str(self.fittingpopups_ui[listindex].comboBox_expt_paddingMode_pop.currentText())
+
                                 train_last_layers = bool(self.fittingpopups_ui[listindex].checkBox_trainLastNOnly_pop.isChecked())             
                                 train_last_layers_n = int(self.fittingpopups_ui[listindex].spinBox_trainLastNOnly_pop.value())              
                                 train_dense_layers = bool(self.fittingpopups_ui[listindex].checkBox_trainDenseOnly_pop.isChecked())             
@@ -8914,7 +8981,9 @@ class MainWindow(QtWidgets.QMainWindow):
         
         motionBlur_kernel = tuple(ast.literal_eval(motionBlur_kernel)) #translate string in the lineEdits to a tuple
         motionBlur_angle = tuple(ast.literal_eval(motionBlur_angle)) #translate string in the lineEdits to a tuple
-        
+
+        padding_expert = str(self.comboBox_expt_paddingMode.currentText()).lower()
+
         #which index is requested by user:?
         req_index = int(self.spinBox_ShowIndex.value())
         if tr_or_valid=='Training':
@@ -8949,10 +9018,10 @@ class MainWindow(QtWidgets.QMainWindow):
             mean_trainingdata,std_trainingdata = [],[]
             for i in range(len(SelectedFiles)):
                 if not self.actionDataToRam.isChecked():
-                    gen = aid_img.gen_crop_img(crop,rtdc_path[i],random_images=False,zoom_factor=zoom_factors[i],zoom_order=zoom_order,color_mode=self.get_color_mode()) #Replace true means that individual cells could occur several times
+                    gen = aid_img.gen_crop_img(crop,rtdc_path[i],random_images=False,zoom_factor=zoom_factors[i],zoom_order=zoom_order,color_mode=self.get_color_mode(),padding_mode=padding_expert) #Replace true means that individual cells could occur several times
                 else:
                     if len(self.ram)==0:
-                        gen = aid_img.gen_crop_img(crop,rtdc_path[i],random_images=False,zoom_factor=zoom_factors[i],zoom_order=zoom_order,color_mode=self.get_color_mode()) #Replace true means that individual cells could occur several times
+                        gen = aid_img.gen_crop_img(crop,rtdc_path[i],random_images=False,zoom_factor=zoom_factors[i],zoom_order=zoom_order,color_mode=self.get_color_mode(),padding_mode=padding_expert) #Replace true means that individual cells could occur several times
                     else:    
                         gen = aid_img.gen_crop_img_ram(self.ram,rtdc_path[i],random_images=False) #Replace true means that individual cells could occur several times
                         if self.actionVerbose.isChecked():
@@ -8981,10 +9050,10 @@ class MainWindow(QtWidgets.QMainWindow):
             X,y = [],[]
             for i in range(len(SelectedFiles)):
                 if not self.actionDataToRam.isChecked():
-                    gen = aid_img.gen_crop_img(cropsize2,rtdc_path[i],10,random_images=True,replace=True,zoom_factor=zoom_factors[i],zoom_order=zoom_order,color_mode=self.get_color_mode()) #Replace true means that individual cells could occur several times
+                    gen = aid_img.gen_crop_img(cropsize2,rtdc_path[i],10,random_images=True,replace=True,zoom_factor=zoom_factors[i],zoom_order=zoom_order,color_mode=self.get_color_mode(),padding_mode=padding_expert) #Replace true means that individual cells could occur several times
                 else:
                     if len(self.ram)==0:
-                        gen = aid_img.gen_crop_img(cropsize2,rtdc_path[i],10,random_images=True,replace=True,zoom_factor=zoom_factors[i],zoom_order=zoom_order,color_mode=self.get_color_mode()) #Replace true means that individual cells could occur several times
+                        gen = aid_img.gen_crop_img(cropsize2,rtdc_path[i],10,random_images=True,replace=True,zoom_factor=zoom_factors[i],zoom_order=zoom_order,color_mode=self.get_color_mode(),padding_mode=padding_expert) #Replace true means that individual cells could occur several times
                     else:   
                         gen = aid_img.gen_crop_img_ram(self.ram,rtdc_path[i],10,random_images=True,replace=True) #Replace true means that individual cells could occur several times
                         if self.actionVerbose.isChecked():
@@ -9050,10 +9119,10 @@ class MainWindow(QtWidgets.QMainWindow):
             X,y = [],[]
             for i in range(len(SelectedFiles)):
                 if not self.actionDataToRam.isChecked():
-                    gen = aid_img.gen_crop_img(crop,rtdc_path[i],10,random_images=True,replace=True,zoom_factor=zoom_factors[i],zoom_order=zoom_order,color_mode=self.get_color_mode()) #Replace true means that individual cells could occur several times
+                    gen = aid_img.gen_crop_img(crop,rtdc_path[i],10,random_images=True,replace=True,zoom_factor=zoom_factors[i],zoom_order=zoom_order,color_mode=self.get_color_mode(),padding_mode=padding_expert) #Replace true means that individual cells could occur several times
                 else:
                     if len(self.ram)==0:
-                        gen = aid_img.gen_crop_img(crop,rtdc_path[i],10,random_images=True,replace=True,zoom_factor=zoom_factors[i],zoom_order=zoom_order,color_mode=self.get_color_mode()) #Replace true means that individual cells could occur several times
+                        gen = aid_img.gen_crop_img(crop,rtdc_path[i],10,random_images=True,replace=True,zoom_factor=zoom_factors[i],zoom_order=zoom_order,color_mode=self.get_color_mode(),padding_mode=padding_expert) #Replace true means that individual cells could occur several times
                     else:                        
                         gen = aid_img.gen_crop_img_ram(self.ram,rtdc_path[i],10,random_images=True,replace=True) #Replace true means that individual cells could occur several times
                         if self.actionVerbose.isChecked():
@@ -9206,6 +9275,8 @@ class MainWindow(QtWidgets.QMainWindow):
         motionBlur_kernel = tuple(ast.literal_eval(motionBlur_kernel)) #translate string in the lineEdits to a tuple
         motionBlur_angle = tuple(ast.literal_eval(motionBlur_angle)) #translate string in the lineEdits to a tuple
 
+        padding_expert = str(self.fittingpopups_ui[listindex].comboBox_expt_paddingMode_pop.currentText()).lower()
+
         #which index is requested by user:?
         req_index = int(self.fittingpopups_ui[listindex].spinBox_ShowIndex_pop.value())
         if tr_or_valid=='Training':
@@ -9240,10 +9311,10 @@ class MainWindow(QtWidgets.QMainWindow):
             mean_trainingdata,std_trainingdata = [],[]
             for i in range(len(SelectedFiles)):
                 if not self.actionDataToRam.isChecked():
-                    gen = aid_img.gen_crop_img(crop,rtdc_path[i],random_images=False,zoom_factor=zoom_factors[i],zoom_order=zoom_order,color_mode=self.get_color_mode()) #Replace true means that individual cells could occur several times
+                    gen = aid_img.gen_crop_img(crop,rtdc_path[i],random_images=False,zoom_factor=zoom_factors[i],zoom_order=zoom_order,color_mode=self.get_color_mode(),padding_mode=padding_expert) #Replace true means that individual cells could occur several times
                 else:
                     if len(self.ram)==0:
-                        gen = aid_img.gen_crop_img(crop,rtdc_path[i],random_images=False,zoom_factor=zoom_factors[i],zoom_order=zoom_order,color_mode=self.get_color_mode()) #Replace true means that individual cells could occur several times
+                        gen = aid_img.gen_crop_img(crop,rtdc_path[i],random_images=False,zoom_factor=zoom_factors[i],zoom_order=zoom_order,color_mode=self.get_color_mode(),padding_mode=padding_expert) #Replace true means that individual cells could occur several times
                     else:    
                         gen = aid_img.gen_crop_img_ram(self.ram,rtdc_path[i],random_images=False) #Replace true means that individual cells could occur several times
                         if self.actionVerbose.isChecked():
@@ -9272,10 +9343,10 @@ class MainWindow(QtWidgets.QMainWindow):
             X,y = [],[]
             for i in range(len(SelectedFiles)):
                 if not self.actionDataToRam.isChecked():
-                    gen = aid_img.gen_crop_img(cropsize2,rtdc_path[i],10,random_images=shuffle[i],replace=True,zoom_factor=zoom_factors[i],zoom_order=zoom_order,color_mode=self.get_color_mode()) #Replace true means that individual cells could occur several times
+                    gen = aid_img.gen_crop_img(cropsize2,rtdc_path[i],10,random_images=shuffle[i],replace=True,zoom_factor=zoom_factors[i],zoom_order=zoom_order,color_mode=self.get_color_mode(),padding_mode=padding_expert) #Replace true means that individual cells could occur several times
                 else:
                     if len(self.ram)==0:
-                        gen = aid_img.gen_crop_img(cropsize2,rtdc_path[i],10,random_images=shuffle[i],replace=True,zoom_factor=zoom_factors[i],zoom_order=zoom_order,color_mode=self.get_color_mode()) #Replace true means that individual cells could occur several times
+                        gen = aid_img.gen_crop_img(cropsize2,rtdc_path[i],10,random_images=shuffle[i],replace=True,zoom_factor=zoom_factors[i],zoom_order=zoom_order,color_mode=self.get_color_mode(),padding_mode=padding_expert) #Replace true means that individual cells could occur several times
                     else:   
                         gen = aid_img.gen_crop_img_ram(self.ram,rtdc_path[i],10,random_images=shuffle[i],replace=True) #Replace true means that individual cells could occur several times
                         if self.actionVerbose.isChecked():
@@ -9337,10 +9408,10 @@ class MainWindow(QtWidgets.QMainWindow):
             X,y = [],[]
             for i in range(len(SelectedFiles)):
                 if not self.actionDataToRam.isChecked():
-                    gen = aid_img.gen_crop_img(crop,rtdc_path[i],10,random_images=shuffle[i],replace=True,zoom_factor=zoom_factors[i],zoom_order=zoom_order,color_mode=self.get_color_mode()) #Replace true means that individual cells could occur several times
+                    gen = aid_img.gen_crop_img(crop,rtdc_path[i],10,random_images=shuffle[i],replace=True,zoom_factor=zoom_factors[i],zoom_order=zoom_order,color_mode=self.get_color_mode(),padding_mode=padding_expert) #Replace true means that individual cells could occur several times
                 else:
                     if len(self.ram)==0:
-                        gen = aid_img.gen_crop_img(crop,rtdc_path[i],10,random_images=shuffle[i],replace=True,zoom_factor=zoom_factors[i],zoom_order=zoom_order,color_mode=self.get_color_mode()) #Replace true means that individual cells could occur several times
+                        gen = aid_img.gen_crop_img(crop,rtdc_path[i],10,random_images=shuffle[i],replace=True,zoom_factor=zoom_factors[i],zoom_order=zoom_order,color_mode=self.get_color_mode(),padding_mode=padding_expert) #Replace true means that individual cells could occur several times
                     else:                        
                         gen = aid_img.gen_crop_img_ram(self.ram,rtdc_path[i],10,random_images=shuffle[i],replace=True) #Replace true means that individual cells could occur several times
                         if self.actionVerbose.isChecked():
@@ -10418,7 +10489,7 @@ class MainWindow(QtWidgets.QMainWindow):
                 rtdc_path = str(self.table_dragdrop.cellWidget(row, 0).text())
                 nr_events = None #no number needed as we take all images (replace=False in gen_crop_img)
                 zoom_factor = float(self.table_dragdrop.item(row, 9).text())            
-                gen = aid_img.gen_crop_img(cropsize,rtdc_path,nr_events=nr_events,replace=False,random_images=False,zoom_factor=zoom_factor,zoom_order=zoom_order,color_mode=color_mode)
+                gen = aid_img.gen_crop_img(cropsize,rtdc_path,nr_events=nr_events,replace=False,random_images=False,zoom_factor=zoom_factor,zoom_order=zoom_order,color_mode=color_mode,padding_mode='constant')
                 images = next(gen)[0]
                 #Save the images data to .png/.jpeg...
                 for img in images:
@@ -10773,7 +10844,8 @@ class MainWindow(QtWidgets.QMainWindow):
             mean_trainingdata = None
             std_trainingdata = None
             
-        crop = int(self.spinBox_Crop_2.value())
+        crop = int(self.spinBox_Crop_2.value()) 
+        padding_expert = str(self.comboBox_expt_paddingMode.currentText()).lower()
 
         #read self.ram to new variable ; DONT clear ram after since multiple assessments can run on the same data.
         DATA = self.ram
@@ -10783,10 +10855,10 @@ class MainWindow(QtWidgets.QMainWindow):
         X_valid,y_valid,Indices = [],[],[]
         for i in range(len(SelectedFiles_valid)):
             if not self.actionDataToRam.isChecked():
-                gen_valid = aid_img.gen_crop_img(crop,rtdc_path_valid[i],nr_events_epoch_valid[i],random_images=shuffle_valid[i],replace=True,zoom_factor=zoom_factors_valid[i],zoom_order=zoom_order,color_mode=self.get_color_mode()) #Replace=True means that individual cells could occur several times
+                gen_valid = aid_img.gen_crop_img(crop,rtdc_path_valid[i],nr_events_epoch_valid[i],random_images=shuffle_valid[i],replace=True,zoom_factor=zoom_factors_valid[i],zoom_order=zoom_order,color_mode=self.get_color_mode(),padding_mode=padding_expert) #Replace=True means that individual cells could occur several times
             else: #get a similar generator, using the ram-data
                 if len(DATA)==0:
-                    gen_valid = aid_img.gen_crop_img(crop,rtdc_path_valid[i],nr_events_epoch_valid[i],random_images=shuffle_valid[i],replace=True,zoom_factor=zoom_factors_valid[i],zoom_order=zoom_order,color_mode=self.get_color_mode()) #Replace=True means that individual cells could occur several times
+                    gen_valid = aid_img.gen_crop_img(crop,rtdc_path_valid[i],nr_events_epoch_valid[i],random_images=shuffle_valid[i],replace=True,zoom_factor=zoom_factors_valid[i],zoom_order=zoom_order,color_mode=self.get_color_mode(),padding_mode=padding_expert) #Replace=True means that individual cells could occur several times
                 else:
                     if self.actionVerbose.isChecked():
                         print("Loaded data from RAM")
@@ -11958,8 +12030,9 @@ class MainWindow(QtWidgets.QMainWindow):
 
         #what input size is required by loaded model?
         crop = int(self.spinBox_Crop_2.value())
-        norm = self.comboBox_Normalization_2.currentText()
-        norm = str(norm)
+        norm = str(self.comboBox_Normalization_2.currentText())
+        padding_expert = str(self.comboBox_expt_paddingMode.currentText())
+
         #if normalization method needs mean/std of training set, the metafile needs to be loaded:
         if norm == "StdScaling using mean and std of all training data":
             modelindex = int(self.spinBox_ModelIndex_2.value())
@@ -12018,7 +12091,7 @@ class MainWindow(QtWidgets.QMainWindow):
             #Iterate over all Files
             for rtdc_path in Files:
                 #get all images, cropped correcetly
-                gen_train = aid_img.gen_crop_img(crop,rtdc_path,random_images=False,color_mode=color_mode)    
+                gen_train = aid_img.gen_crop_img(crop,rtdc_path,random_images=False,color_mode=color_mode,padding_mode=padding_expert)    
                 x_train,index = next(gen_train) #x_train-images of all cells, index-original index of all cells           
                 
                 if norm == "StdScaling using mean and std of all training data":
