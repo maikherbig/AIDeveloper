@@ -38,7 +38,7 @@ def check_squared(images):
         print("Final size after correcting: "+str(images.shape))
     return images
 
-def gen_crop_img(cropsize,rtdc_path,nr_events=100,replace=True,random_images=True,zoom_factor=1,zoom_order=0,color_mode='Grayscale'):
+def gen_crop_img(cropsize,rtdc_path,nr_events=100,replace=True,random_images=True,zoom_factor=1,zoom_order=0,color_mode='Grayscale',padding_mode='constant'):
     failed,rtdc_ds = aid_bin.load_rtdc(rtdc_path)
     if failed:
         msg = QtWidgets.QMessageBox()
@@ -188,9 +188,9 @@ def gen_crop_img(cropsize,rtdc_path,nr_events=100,replace=True,random_images=Tru
 
     if padding_h==True and padding_w==True:
         if channels==1:
-            images = np.pad(images,pad_width=( (0, 0),(diff_h, diff_h),(diff_w, diff_w) ),mode='constant')
+            images = np.pad(images,pad_width=( (0, 0),(diff_h, diff_h),(diff_w, diff_w) ),mode=padding_mode)
         elif channels==3:
-            images = np.pad(images,pad_width=( (0, 0),(diff_h, diff_h),(diff_w, diff_w),(0, 0) ),mode='constant')
+            images = np.pad(images,pad_width=( (0, 0),(diff_h, diff_h),(diff_w, diff_w),(0, 0) ),mode=padding_mode)
         else:
             print("Invalid image dimensions: "+str(images.shape))
             return
@@ -216,9 +216,9 @@ def gen_crop_img(cropsize,rtdc_path,nr_events=100,replace=True,random_images=Tru
 
     if padding_h==True:
         if channels==1:
-            images = np.pad(images,pad_width=( (0, 0),(diff_h, diff_h),(0, 0) ),mode='constant')
+            images = np.pad(images,pad_width=( (0, 0),(diff_h, diff_h),(0, 0) ),mode=padding_mode)
         elif channels==3:
-            images = np.pad(images,pad_width=( (0, 0),(diff_h, diff_h),(0, 0),(0, 0) ),mode='constant')
+            images = np.pad(images,pad_width=( (0, 0),(diff_h, diff_h),(0, 0),(0, 0) ),mode=padding_mode)
         else:
             print("Invalid image dimensions: "+str(images.shape))
             return
@@ -227,9 +227,9 @@ def gen_crop_img(cropsize,rtdc_path,nr_events=100,replace=True,random_images=Tru
         
     if padding_w==True:
         if channels==1:
-            images = np.pad(images,pad_width=( (0, 0),(0, 0),(diff_w, diff_w) ),mode='constant')
+            images = np.pad(images,pad_width=( (0, 0),(0, 0),(diff_w, diff_w) ),mode=padding_mode)
         elif channels==3:
-            images = np.pad(images,pad_width=( (0, 0),(0, 0),(diff_w, diff_w),(0, 0) ),mode='constant')
+            images = np.pad(images,pad_width=( (0, 0),(0, 0),(diff_w, diff_w),(0, 0) ),mode=padding_mode)
         else:
             print("Invalid image dimensions: "+str(images.shape))
             return
@@ -655,7 +655,7 @@ def imgs_2_rtdc(fname,images,pos_x,pos_y):
     hdf.close()
 
 
-def image_resize_crop_pad(images,pos_x,pos_y,final_h,final_w,channels,verbose=False):
+def image_resize_crop_pad(images,pos_x,pos_y,final_h,final_w,channels,verbose=False,padding_mode='constant'):
     """
     Function takes a list images (list of numpy arrays) an resizes them to 
     an equal size by center cropping and/or padding.
@@ -712,9 +712,9 @@ def image_resize_crop_pad(images,pos_x,pos_y,final_h,final_w,channels,verbose=Fa
         #Execute padding-only operation and overwrite original on list "images"
         if padding_h==True and padding_w==True:
             if channels==1:
-                images[i] = np.pad(image,pad_width=( (diff_h, diff_h+odd_h),(diff_w, diff_w+odd_w) ),mode='constant')
+                images[i] = np.pad(image,pad_width=( (diff_h, diff_h+odd_h),(diff_w, diff_w+odd_w) ),mode=padding_mode)
             elif channels==3:
-                images[i] = np.pad(image,pad_width=( (diff_h, diff_h+odd_h),(diff_w, diff_w+odd_w),(0, 0) ),mode='constant')
+                images[i] = np.pad(image,pad_width=( (diff_h, diff_h+odd_h),(diff_w, diff_w+odd_w),(0, 0) ),mode=padding_mode)
             else:
                 if verbose:
                     print("Invalid image dimensions: "+str(image.shape))
@@ -732,9 +732,9 @@ def image_resize_crop_pad(images,pos_x,pos_y,final_h,final_w,channels,verbose=Fa
         else:
             if padding_h==True:
                 if channels==1:
-                    image = np.pad(image,pad_width=( (diff_h, diff_h+odd_h),(0, 0) ),mode='constant')
+                    image = np.pad(image,pad_width=( (diff_h, diff_h+odd_h),(0, 0) ),mode=padding_mode)
                 elif channels==3:
-                    image = np.pad(image,pad_width=( (diff_h, diff_h+odd_h),(0, 0),(0, 0) ),mode='constant')
+                    image = np.pad(image,pad_width=( (diff_h, diff_h+odd_h),(0, 0),(0, 0) ),mode=padding_mode)
                 else:
                     if verbose:
                         print("Invalid image dimensions: "+str(image.shape))
@@ -743,9 +743,9 @@ def image_resize_crop_pad(images,pos_x,pos_y,final_h,final_w,channels,verbose=Fa
                 
             if padding_w==True:
                 if channels==1:
-                    image = np.pad(image,pad_width=( (0, 0),(diff_w, diff_w+odd_w) ),mode='constant')
+                    image = np.pad(image,pad_width=( (0, 0),(diff_w, diff_w+odd_w) ),mode=padding_mode)
                 elif channels==3:
-                    image = np.pad(image,pad_width=( (0, 0),(diff_w, diff_w+odd_w),(0, 0) ),mode='constant')
+                    image = np.pad(image,pad_width=( (0, 0),(diff_w, diff_w+odd_w),(0, 0) ),mode=padding_mode)
                 else:
                     if verbose:
                         print("Invalid image dimensions: "+str(image.shape))
