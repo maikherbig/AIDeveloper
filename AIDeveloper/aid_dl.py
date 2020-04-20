@@ -26,6 +26,7 @@ from keras import backend as K
 from keras2onnx import convert_keras
 from onnx import save_model as save_onnx
 from mmdnn.conversion._script import convertToIR,IRToCode,convert
+import coremltools
 import aid_bin
 
 def get_metrics_fresh(metrics,nr_classes):
@@ -460,3 +461,13 @@ def convert_kerastf_2_onnx_mmdnn(model_path):
             print("temp. file not found/ not deleted: "+file)
             
     sess.close()
+
+def convert_kerastf_2_coreml(model_path):
+    tf.reset_default_graph() #Make sure to start with a fresh session
+    sess = tf.InteractiveSession()
+    path_out = os.path.splitext(model_path)[0] + ".mlmodel"
+    model = coremltools.converters.keras.convert(model_path, input_names=['inputTensor'],output_names=['outputTensor'],model_precision='float32',use_float_arraytype=True,predicted_probabilities_output="outputTensor")
+    model.save(path_out)
+    sess.close()
+
+
