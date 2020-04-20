@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html>
+<title>MMdnn Visualizer</title>
+
+<head>
+    <meta charset="utf-8">
+    <link rel="stylesheet" href="style.css">
+    <!-- force reload every 30 seconds -->
+    <!-- <meta http-equiv="refresh" content="30" /> -->
+
+</head>
+
+<body>
+
+
+    <div class='title'>MMDNN Visualizer</div>
+    <div class="titleWrapper"></div>
+
+</style>
+
+    <svg id="draw" width='400px' height='400px'></svg>
+    <div id="import" class="shadow_box">
+        <h4>Choose Your Model
+            <input id="importModel" type='file' label='Upload' accept='.json' } />
+
+
+        </h4>
+        <!-- <button id="r_btn" onclick="reverse()">BT</button> -->
+        <label class="switch">
+            <input type="checkbox" checked onchange="reverse()">
+            <span class="slider round"></span>
+        </label>
+        <!-- <span id="order" >BT</span> -->
+
+    </div>
+    <div id="layerInfo" class="shadow_box">
+        <div id="layerName">Layer Config</div>
+        <div id="layerConfig"></div>
+    </div>
+
+    <div id ="tips" class="shadow_box">
+        <h4 >Tips</h4>
+        <ul style="margin:0px 4px 8px 0px">
+        <li>
+                <div>
+                    <button onclick="search()">QuickSearch</button>
+                </div>
+                <div>
+                    <input type="text" id="uname" name="name"
+                            placeholder="Search for Layer Name"
+                            size="20"  required>
+                </div>
+
+            </li>
+        <li>wheel for scrolling</li>
+        <li>shift+wheel for zooming</li>
+        <li>mouse for paning</li>
+
+
+        </ul>
+    </div>
+
+    <script type="text/javascript" src="http://d3js.org/d3.v4.js"></script>
+    <script type="text/javascript" src="http://www.samsarin.com/project/dagre/latest/dagre.min.js"></script>
+    <script type="text/javascript" src="./draw.js"></script>
+
+</body>
+<html>
