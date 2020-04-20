@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-AIDeveloper
+AIDeveloper: GUI-based software for training, evaluating and applying deep neural nets for image classification
 ---------
 @author: maikherbig
 """
