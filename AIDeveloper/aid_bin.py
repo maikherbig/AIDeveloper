@@ -482,8 +482,15 @@ def check_update(this_version):
         return dic
 
 
-
-
+def create_temp_folder():
+    temp_path = os.path.join(dir_root,"temp")
+    if os.path.isdir(temp_path):
+        print("Found existing temporary folder")
+    
+    if not os.path.exists(temp_path):
+        os.mkdir(temp_path)
+        print("Created temporary folder: "+temp_path)
+    return temp_path
 
 
 
