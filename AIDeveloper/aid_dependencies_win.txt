@@ -4,8 +4,8 @@ absl-py                   0.4.1                    py35_0
 altgraph                  0.16.1                    <pip>
 astor                     0.7.1                    py35_0
 blas                      1.0                         mkl
-ca-certificates           2019.10.16                    0
-certifi                   2018.8.24                py35_1
+ca-certificates           2020.4.5.1           hecc5488_0    conda-forge
+certifi                   2018.8.24             py35_1001    conda-forge
 dclab                     0.10.5                    <pip>
 dis3                      0.1.3                     <pip>
 et_xmlfile                1.0.1            py35h2c13def_0
@@ -31,8 +31,8 @@ libprotobuf               3.6.0                h1a1b453_0
 macholib                  1.11                      <pip>
 markdown                  2.6.11                   py35_0
 mkl                       2018.0.3                      1
-mkl_fft                   1.0.6            py35hdbbee80_0
-mkl_random                1.0.1            py35h77b88f5_1
+mkl_fft                   1.0.9                    py35_0    conda-forge
+mkl_random                1.0.1                    py35_0    conda-forge
 npTDMS                    0.13.0                    <pip>
 numpy                     1.15.2           py35ha559c80_0
 numpy-base                1.15.2           py35h8128ebf_0
@@ -40,7 +40,7 @@ onnx                      1.5.0                     <pip>
 onnxconverter-common      1.4.2                     <pip>
 opencv-python             4.1.1.26                  <pip>
 openpyxl                  2.5.6                    py35_0
-openssl                   1.1.1d               he774522_3
+openssl                   1.1.1f               hfa6e2cd_0    conda-forge
 pandas                    0.24.0                    <pip>
 patsy                     0.5.1                     <pip>
 pefile                    2018.8.8                  <pip>
@@ -48,9 +48,11 @@ Pillow                    5.4.1                     <pip>
 pip                       10.0.1                   py35_0
 protobuf                  3.6.0            py35he025d50_0
 psutil                    5.4.7            py35hfa6e2cd_0
+pydot                     1.2.4                    py35_0
 PyInstaller               3.5.dev0+80bd962c3           <pip>
+pyparsing                 2.4.6                      py_0
 pyqt                      5.9.2            py35h6538335_2
-pyqtgraph                 0.10.0           py35h28b3542_3
+pyqtgraph                 0.11.0rc0                  py_0    conda-forge
 python                    3.5.6                he025d50_0
 python-dateutil           2.7.5                     <pip>
 pytz                      2018.9                    <pip>
@@ -64,6 +66,8 @@ sip                       4.19.8           py35h6538335_0
 six                       1.11.0                   py35_1
 sqlite                    3.26.0               he774522_0
 statsmodels               0.9.0                     <pip>
+tbb                       2020.1               he980bc4_0    conda-forge
+tbb4py                    2019.1          py35he980bc4_1000    conda-forge
 tensorboard               1.10.0           py35he025d50_0
 tensorflow                1.10.0          eigen_py35h38c8211_0
 tensorflow-base           1.10.0          eigen_py35h45df0d8_0
