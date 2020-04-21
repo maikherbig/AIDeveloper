@@ -53,7 +53,7 @@ The script based version was tested using Python 3.5 on Windows, Mac and Linux. 
 * Generate an environment using the provided .yml file (AID_myenv_Win7.yml): `conda env create -f AID_myenv_Win7.yml`
 * This will create a new environment called "myenv"
 * Activate it: `conda activate myenv`
-* Run AIDeveloper using `python AIDeveloper_0.0.6.py`
+* Run AIDeveloper using `python AIDeveloper.py`
   
   
 # AIDeveloper in scientific literature  
