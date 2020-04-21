@@ -37,7 +37,7 @@ pycosat                        0.6.3
 PyInstaller                    4.0.dev0+89a5f6e9c9
 PyQt5                          5.9.2              
 PyQt5-sip                      12.7.1             
-pyqtgraph                      0.10.0             
+pyqtgraph                      0.11.0rc0          
 python-dateutil                2.7.5              
 pytz                           2019.3             
 PyYAML                         5.3                
@@ -58,4 +58,4 @@ urllib3                        1.25.8
 Werkzeug                       1.0.0              
 wheel                          0.34.2             
 xlrd                           1.1.0              
-(myenv) martinks-mbp:~ maiksurlaub$ 
+(myenv) martinks-mbp:AID_0.0.8 maiksurlaub$ 
