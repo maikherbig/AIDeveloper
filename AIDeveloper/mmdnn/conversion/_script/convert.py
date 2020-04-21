@@ -93,10 +93,10 @@ def get_network_filename(framework, temp_filename, output_model_filename):
     return temp_filename
 
 
-def _convert(args, unknown_args):
+def _convert(args, unknown_args,temp_filename):
     #parser = _get_parser()
     #args, unknown_args = parser.parse_known_args()
-    temp_filename = uuid.uuid4().hex
+    #temp_filename = uuid.uuid4().hex
     ir_args, unknown_args = _extract_ir_args(args, unknown_args, temp_filename)
     ret = convertToIR._convert(ir_args)
     if int(ret) != 0:
