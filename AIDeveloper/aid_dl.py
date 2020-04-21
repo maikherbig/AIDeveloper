@@ -447,7 +447,8 @@ def convert_kerastf_2_onnx_mmdnn(model_path):
     string = "--srcFramework keras --inputWeight "+relpath+" --dstFramework onnx --outputModel "+tmp_out_model
     parser = convert._get_parser()
     args, unknown_args = parser.parse_known_args(string.split())
-    convert._convert(args,unknown_args)
+    temp_filename = os.path.splitext(relpath)[0]+"conv"
+    convert._convert(args,unknown_args,temp_filename)
 
     out_model_onnx = os.path.splitext(model_path)[0]+".onnx"
     shutil.copyfile(tmp_out_model,out_model_onnx) #copy the original model file there
@@ -469,5 +470,3 @@ def convert_kerastf_2_coreml(model_path):
     model = coremltools.converters.keras.convert(model_path, input_names=['inputTensor'],output_names=['outputTensor'],model_precision='float32',use_float_arraytype=True,predicted_probabilities_output="outputTensor")
     model.save(path_out)
     sess.close()
-
-
