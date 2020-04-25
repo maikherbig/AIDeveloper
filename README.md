@@ -45,6 +45,8 @@ The script based version was tested using Python 3.5 on Windows, Mac and Linux. 
 
 # Installation instructions to run AIDeveloper from script
 **_you only need to do this if you are a developer/programmer_**
+* Install [Visual studio build tools](https://visualstudio.microsoft.com/visual-cpp-build-tools/). During installation, make sure to check C++ Buildtools:
+![alt text](https://github.com/maikherbig/AIDeveloper/blob/master/art/VS_Build_Tools.png "Installation of VS Build tools")
 * Get a Python distribution. AIDeveloper was developed using Anaconda3 5.3.1 64bit. You can find this particular version in the installer archive of Anconda: https://repo.continuum.io/archive/
 * Download the entire GitHub repository of AIDeveloper: find the green button on the top right ("Clone or download"), click it and then click "Download ZIP"
 * Unzip the folder for example to C:\Users\MyPC\Downloads\AIDeveloper_0.0.6
