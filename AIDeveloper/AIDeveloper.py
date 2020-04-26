@@ -8,7 +8,7 @@ import os,sys
 if not sys.platform.startswith("win"):
     from multiprocessing import freeze_support
     freeze_support()
-#Make sure to get the right icon file on win,linux and mac
+# Make sure to get the right icon file on win,linux and mac
 if sys.platform=="darwin":
     icon_suff = ".icns"
 else:
@@ -98,7 +98,7 @@ import aid_img, aid_dl, aid_bin
 import aid_frontend
 from partial_trainability import partial_trainability
 
-VERSION = "0.0.8" #Python 3.5.6 Version
+VERSION = "0.0.8_dev2" #Python 3.5.6 Version
 model_zoo_version = model_zoo.__version__()
 print("AIDeveloper Version: "+VERSION)
 print("model_zoo.py Version: "+model_zoo.__version__())
@@ -288,7 +288,7 @@ class MainWindow(QtWidgets.QMainWindow):
         self.splitter_3.setOrientation(QtCore.Qt.Vertical)
         self.splitter_3.setObjectName(_fromUtf8("splitter_3"))
         self.groupBox_dragdrop = QtWidgets.QGroupBox(self.splitter_3)
-        self.groupBox_dragdrop.setMinimumSize(QtCore.QSize(0, 351))
+        self.groupBox_dragdrop.setMinimumSize(QtCore.QSize(0, 200))
         self.groupBox_dragdrop.setObjectName(_fromUtf8("groupBox_dragdrop"))
         self.gridLayout_8 = QtWidgets.QGridLayout(self.groupBox_dragdrop)
         self.gridLayout_8.setObjectName(_fromUtf8("gridLayout_8"))
@@ -1366,7 +1366,7 @@ class MainWindow(QtWidgets.QMainWindow):
         sizePolicy.setVerticalStretch(0)
         sizePolicy.setHeightForWidth(self.widget_Scatterplot.sizePolicy().hasHeightForWidth())
         self.widget_Scatterplot.setSizePolicy(sizePolicy)
-        self.widget_Scatterplot.setMinimumSize(QtCore.QSize(491, 521))
+        self.widget_Scatterplot.setMinimumSize(QtCore.QSize(491, 350))
         self.widget_Scatterplot.setObjectName(_fromUtf8("widget_Scatterplot"))
         self.verticalLayout_9.addWidget(self.widget_Scatterplot)
         self.horizontalLayout_7 = QtWidgets.QHBoxLayout()
@@ -2031,8 +2031,8 @@ class MainWindow(QtWidgets.QMainWindow):
         self.tableWidget_showSelectedPeaks = QtWidgets.QTableWidget(self.splitter_11)
         self.tableWidget_showSelectedPeaks.setObjectName("tableWidget_showSelectedPeaks")
         self.gridLayout_28.addWidget(self.splitter_11, 0, 0, 1, 1)
-        
-        
+
+
         self.groupBox_peakDetModel = QtWidgets.QGroupBox(self.splitter_10)
         self.groupBox_peakDetModel.setObjectName("groupBox_peakDetModel")
         self.gridLayout_31 = QtWidgets.QGridLayout(self.groupBox_peakDetModel)
@@ -6847,10 +6847,10 @@ class MainWindow(QtWidgets.QMainWindow):
             return
 
         model_metrics = self.get_metrics(out_dim)
-        if "Collection" in chosen_model:
+        if "collection" in chosen_model.lower():
             for m in model_keras[1]: #in a collection, model_keras[0] are the names of the models and model_keras[1] is a list of all models
                 m.compile(loss='categorical_crossentropy',optimizer='adam',metrics=self.get_metrics(nr_classes))#dont specify loss and optimizer yet...expert stuff will follow and model will be recompiled
-        if not "Collection" in chosen_model:
+        if not "collection" in chosen_model.lower():
             model_keras.compile(loss='categorical_crossentropy',optimizer='adam',metrics=model_metrics)#dont specify loss and optimizer yet...expert stuff will follow and model will be recompiled
 
         #If expert mode is on, apply the requested options
@@ -6962,28 +6962,46 @@ class MainWindow(QtWidgets.QMainWindow):
         text_updates = ""
 
         #Compare current lr and the lr on expert tab:
-        lr_current = K.eval(model_keras.optimizer.lr)
-        print(lr_current)
+        if collection == False:
+            lr_current = K.eval(model_keras.optimizer.lr)
+        else:
+            lr_current = K.eval(model_keras[1][0].optimizer.lr)
+        print("Current learning rate: "+str(lr_current))
         lr_diff = learning_rate_expert-lr_current
-        print(learning_rate_expert)
+        print("Current learning rate: "+str(lr_current))
         if  abs(lr_diff) > 1e-6:
             K.set_value(model_keras.optimizer.lr, learning_rate_expert)
             text_updates +=  "Changed the learning rate to: "+ str(learning_rate_expert)+"\n"
 
         recompile = False
         #Compare current optimizer and the optimizer on expert tab:
-        optimizer_current = aid_dl.get_optimizer_name(model_keras).lower()#get the current optimizer of the model
+        if collection==False:
+            optimizer_current = aid_dl.get_optimizer_name(model_keras).lower()#get the current optimizer of the model
+        else:
+            optimizer_current = aid_dl.get_optimizer_name(model_keras[1][0]).lower()#get the current optimizer of the model
+
         if optimizer_current!=optimizer_expert.lower():#if the current model has a different optimizer
             recompile = True
             text_updates+="Changed the optimizer to: "+optimizer_expert+"\n"
         #Compare current loss function and the loss-function on expert tab:
-        if model_keras.loss!=loss_expert:
-            recompile = True
-            text_updates+="Changed the loss function to: "+loss_expert+"\n"
+
+        if collection==False:
+            if model_keras.loss!=loss_expert:
+                recompile = True
+                text_updates+="Changed the loss function to: "+loss_expert+"\n"
+        if collection==True:
+            if model_keras[1][0].loss!=loss_expert:
+                recompile = True
+                text_updates+="Changed the loss function to: "+loss_expert+"\n"
+
         if recompile==True:
-            print("Recompiling...")
-            aid_dl.model_compile(model_keras,loss_expert,optimizer_expert,learning_rate_expert,model_metrics,nr_classes)
-             
+            if collection==True:
+                print("Recompiling...")
+                aid_dl.model_compile(model_keras,loss_expert,optimizer_expert,learning_rate_expert,model_metrics,nr_classes)
+            if collection==False:
+                for m in model_keras[1]:
+                    print("Recompiling...")
+                    aid_dl.model_compile(m,loss_expert,optimizer_expert,learning_rate_expert,model_metrics,nr_classes)
         self.model_keras = model_keras #overwrite the model in self
 
         if collection == False:
@@ -7536,25 +7554,52 @@ class MainWindow(QtWidgets.QMainWindow):
 
             text_updates = ""
             #Compare current lr and the lr on expert tab:
-            lr_current = K.eval(model_keras.optimizer.lr)
+            if collection == False:
+                lr_current = K.eval(model_keras.optimizer.lr)
+            else:
+                lr_current = K.eval(model_keras[0].optimizer.lr)
+
             lr_diff = learning_rate_expert-lr_current
             if  abs(lr_diff) > 1e-6:
-                K.set_value(model_keras.optimizer.lr, learning_rate_expert)
+                if collection == False:
+                    K.set_value(model_keras.optimizer.lr, learning_rate_expert)
+                if collection == True:
+                    for m in model_keras:
+                        K.set_value(m.optimizer.lr, learning_rate_expert)
                 text_updates +=  "Changed the learning rate to "+ str(learning_rate_expert)+"\n"
             recompile = False
             #Compare current optimizer and the optimizer on expert tab:
-            optimizer_current = aid_dl.get_optimizer_name(model_keras).lower()#get the current optimizer of the model
+            if collection==False:
+                optimizer_current = aid_dl.get_optimizer_name(model_keras).lower()#get the current optimizer of the model
+            if collection==True:
+                optimizer_current = aid_dl.get_optimizer_name(model_keras[0]).lower()#get the current optimizer of the model
+
             if optimizer_current!=optimizer_expert.lower():#if the current model has a different optimizer
                 recompile = True
                 text_updates+="Changed the optimizer to "+optimizer_expert+"\n"
+
             #Compare current loss function and the loss-function on expert tab:
-            if model_keras.loss!=loss_expert:
-                recompile = True
-                text_updates+="Changed the loss function to "+loss_expert+"\n"
+            if collection==False:
+                if model_keras.loss!=loss_expert:
+                    recompile = True
+                    text_updates+="Changed the loss function to "+loss_expert+"\n"
+            if collection==True:
+                if model_keras[0].loss!=loss_expert:
+                    recompile = True
+                    text_updates+="Changed the loss function to "+loss_expert+"\n"
+
+
+
+
+
             if recompile==True:
                 print("Recompiling...")
-                aid_dl.model_compile(model_keras,loss_expert,optimizer_expert,learning_rate_expert,model_metrics,nr_classes)
-            
+                if collection==False:
+                    aid_dl.model_compile(model_keras,loss_expert,optimizer_expert,learning_rate_expert,model_metrics,nr_classes)
+                if collection==True:
+                    for m in model_keras[1]:
+                        aid_dl.model_compile(model_keras, loss_expert, optimizer_expert, learning_rate_expert,model_metrics, nr_classes)
+
             self.fittingpopups_ui[listindex].textBrowser_FittingInfo_pop.append(text_updates)
 
             self.model_keras = model_keras #overwrite the model on self
@@ -8350,26 +8395,49 @@ class MainWindow(QtWidgets.QMainWindow):
 
                                 text_updates = ""
                                 #Compare current lr and the lr on expert tab:
-                                lr_current = K.eval(model_keras.optimizer.lr)
+                                if collection==False:
+                                    lr_current = K.eval(model_keras.optimizer.lr)
+                                else:
+                                    lr_current = K.eval(model_keras[0].optimizer.lr)
+
                                 lr_diff = learning_rate_expert-lr_current
                                 if  abs(lr_diff) > 1e-6:
-                                    K.set_value(model_keras.optimizer.lr, learning_rate_expert)
+                                    if collection==False:
+                                        K.set_value(model_keras.optimizer.lr, learning_rate_expert)
+                                    else:
+                                        K.set_value(model_keras[0].optimizer.lr, learning_rate_expert)
+
                                     text_updates +=  "Changed the learning rate to "+ str(learning_rate_expert)+"\n"
                                 recompile = False
                                 #Compare current optimizer and the optimizer on expert tab:
-                                optimizer_current = aid_dl.get_optimizer_name(model_keras).lower()#get the current optimizer of the model
+                                if collection==False:
+                                    optimizer_current = aid_dl.get_optimizer_name(model_keras).lower()#get the current optimizer of the model
+                                else:
+                                    optimizer_current = aid_dl.get_optimizer_name(model_keras[0]).lower()#get the current optimizer of the model
+
                                 if optimizer_current!=optimizer_expert.lower():#if the current model has a different optimizer
                                     recompile = True
                                     text_updates+="Changed the optimizer to "+optimizer_expert+"\n"
+
                                 #Compare current loss function and the loss-function on expert tab:
-                                if model_keras.loss!=loss_expert:
+                                if collection==False:
+                                    loss_ = model_keras.loss
+                                else:
+                                    loss_ = model_keras[0].loss
+                                if loss_!=loss_expert:
                                     recompile = True
-                                    model_metrics_records["loss"] = 9E20 #Reset the record for loss becasue new loss function could converge to a different min. value         
-                                    model_metrics_records["val_loss"] = 9E20 #Reset the record for loss becasue new loss function could converge to a different min. value 
+                                    model_metrics_records["loss"] = 9E20 #Reset the record for loss because new loss function could converge to a different min. value
+                                    model_metrics_records["val_loss"] = 9E20 #Reset the record for loss because new loss function could converge to a different min. value
                                     text_updates+="Changed the loss function to "+loss_expert+"\n"
-                                if recompile==True:
+
+                                if recompile==True and collection==False:
                                     print("Recompiling...")
                                     aid_dl.model_compile(model_keras,loss_expert,optimizer_expert,learning_rate_expert,model_metrics,nr_classes)
+                                elif recompile==True and collection==True:
+                                    print("Recompiling...")
+                                    for m in model_keras:
+                                        aid_dl.model_compile(m,loss_expert,optimizer_expert,learning_rate_expert,model_metrics,nr_classes)
+
                                 self.fittingpopups_ui[listindex].textBrowser_FittingInfo_pop.append(text_updates)
 
                                 self.model_keras = model_keras #overwrite the model in self
@@ -12067,7 +12135,7 @@ class MainWindow(QtWidgets.QMainWindow):
             #Ask the user: Do you want to get a specific fixed addon to filename, OR do you want to have the parent-foldername added?
                 msg = QtWidgets.QMessageBox()
                 msg.setIcon(QtWidgets.QMessageBox.Question)
-                text = "Do you want to get a specific fixed addon to filename,<b>or do you want to have the parent-foldername added for each file individually?"
+                text = "Do you want to get a specific fixed addon to filename, <b>or do you want to have the parent-foldername added for each file individually?"
                 text = "<html><head/><body><p>"+text+"</p></body></html>"
                 msg.setText(text)
                 msg.setWindowTitle("Filename-addon for created files")
