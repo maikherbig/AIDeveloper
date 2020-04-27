@@ -6684,7 +6684,7 @@ class MainWindow(QtWidgets.QMainWindow):
                 #Load the full model
                 try:
                     model_keras = load_model(load_modelname,custom_objects=get_custom_metrics())
-                except:    
+                except: 
                     K.clear_session() #On linux It happened that there was an error, if another fitting was run before                  
                     model_keras = load_model(load_modelname,custom_objects=get_custom_metrics())
                 #model_config = model_keras.config() #Load the model config (this is the architecture)
@@ -6707,6 +6707,9 @@ class MainWindow(QtWidgets.QMainWindow):
                     meta = pd.read_excel(metaname,sheetname="Parameters")
                     if "Chosen Model" in list(meta.keys()):
                         chosen_model = meta["Chosen Model"].iloc[-1]
+                else:
+                    chosen_model = str(self.comboBox_ModelSelection.currentText())
+
             except:
                 chosen_model = str(self.comboBox_ModelSelection.currentText())
 
@@ -6883,7 +6886,14 @@ class MainWindow(QtWidgets.QMainWindow):
         
         if collection==False: #if there is a single model:
             #Original learning rate (before expert mode is switched on!)
-            self.learning_rate_original = K.eval(model_keras.optimizer.lr)
+            try:
+                self.learning_rate_original = K.eval(model_keras.optimizer.lr)
+            except:
+                print("Session busy. Try again in fresh session...")
+                tf.reset_default_graph() #Make sure to start with a fresh session
+                sess = tf.InteractiveSession()
+                self.learning_rate_original = K.eval(model_keras.optimizer.lr)
+                
             #Get initial trainability states of model
             self.trainable_original, self.layer_names = aid_dl.model_get_trainable_list(model_keras)
             trainable_original, layer_names = self.trainable_original, self.layer_names
@@ -7160,7 +7170,7 @@ class MainWindow(QtWidgets.QMainWindow):
                 load_modelname = "" #No model is loaded
 
             if collection==False:    
-                model_config = model_keras.get_config()#["layers"] 
+                #model_config = model_keras.get_config()#["layers"] 
                 nr_classes = int(model_keras.output.shape.dims[1])
             if collection==True:
                 #model_config = model_keras.get_config()#["layers"] 
@@ -10126,7 +10136,11 @@ class MainWindow(QtWidgets.QMainWindow):
         #Define a new session -> Necessary for threading in TensorFlow
         with tf.Session(graph = tf.Graph(), config=config_gpu) as sess:
             path = self.model_2_convert
-            model_keras = load_model(path,custom_objects=get_custom_metrics())
+            try:
+                model_keras = load_model(path,custom_objects=get_custom_metrics())
+            except:
+                model_keras = load_model(path)
+                
             dic = {"model_keras":model_keras}
             history_callback.emit(dic)
             progress_callback.emit(1)
@@ -10135,6 +10149,8 @@ class MainWindow(QtWidgets.QMainWindow):
                 #Since this happened in a thread, TensorFlow cant access it anywhere else
                 #Therefore perform Conversion to nnet right away:
                 model_config = model_keras.get_config()#["layers"]
+                if type(model_config)==dict:
+                    model_config = model_config["layers"]#for keras version>2.2.3, there is a change in the output of get_config()
                 #Convert model to theano weights format (Only necesary for CNNs)
                 for layer in model_keras.layers:
                    if layer.__class__.__name__ in ['Convolution1D', 'Convolution2D']:
@@ -10765,7 +10781,7 @@ class MainWindow(QtWidgets.QMainWindow):
         
     
     def inference_time_worker(self,progress_callback,history_callback):
-                
+        #Initiate a fresh session
         with tf.Session(graph = tf.Graph(), config=config_gpu) as sess:
             model_keras = load_model(self.load_model_path,custom_objects=get_custom_metrics())
             #Get the model input dimensions
@@ -11841,7 +11857,11 @@ class MainWindow(QtWidgets.QMainWindow):
             if len(scores_i[i])>1:#only continue of there multiple events (histogram does not make sense otherwise)
                 range_hist = (scores_i[i].min(), scores_i[i].max())
                 first_edge, last_edge = np.lib.histograms._get_outer_edges(scores_i[i], range=range_hist)
-                width = np.lib.histograms._hist_bin_selectors['auto'](scores_i[i])
+                try: #numpy 1.15
+                    width = np.lib.histograms._hist_bin_selectors['auto'](scores_i[i])
+                except:#numpy >1.15
+                    width = np.lib.histograms._hist_bin_selectors['auto'](scores_i[i],(np.min(scores_i[i]),np.min(scores_i[i])))
+                    
                 n_equal_bins = int(np.ceil(np.lib.histograms._unsigned_subtract(last_edge, first_edge) / width))
                 if n_equal_bins>1E4: #Who needs more than 10k bins?!:
                     n_equal_bins = int(1E4)
