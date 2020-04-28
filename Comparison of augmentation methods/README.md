@@ -193,7 +193,7 @@ for i in range(1,5):
     ax.axis("off")
 fig.suptitle("imgaug (backend skimage) "+str(np.round(dt,2))+"s")
 plt.savefig("02_Brightness_imgaug.png")
-plt.close(1)
+plt.close(1)</code></pre>
 
 ![alt text](https://github.com/maikherbig/AIDeveloper/blob/master/Comparison%20of%20augmentation%20methods/art/02_Brightness_imgaug.png "02_Affine augmentation_Keras_ImageDataGenerator")  
 
@@ -212,7 +212,7 @@ for i in range(1,5):
     ax.axis("off")
 fig.suptitle("AIDeveloper "+str(np.round(dt,2))+"s")
 plt.savefig("02_Brightness_aid_img.png")
-plt.close(1)
+plt.close(1)</code></pre>
 
 ![alt text](https://github.com/maikherbig/AIDeveloper/blob/master/Comparison%20of%20augmentation%20methods/art/02_Brightness_aid_img.png "02_Affine augmentation_Keras_ImageDataGenerator")  
 
