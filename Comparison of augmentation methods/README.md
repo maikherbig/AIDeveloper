@@ -27,14 +27,13 @@ path = os.path.join("imgaug","quokka.jpg")
 img = load_img(path,color_mode=color_mode.lower()) #This uses PIL and supports many many formats!
 img = np.array(img)
 images = []
-for i in range(250):
+for i in range(250):#Replicate the image 250 times
     images.append(img)
 images = np.array((images), dtype="uint8")</code></pre>
 
 ## Affine augmentation  
-Define some parameters  
-<pre><code>
-v_flip = True#bool, if random vertical flipping should be applied
+Define some parameters
+<pre><code>v_flip = True#bool, if random vertical flipping should be applied
 h_flip = True#bool, if random horizontal flipping should be applied
 rotation = 45#degrees of random rotation
 width_shift = 0.2#shift the image left right
@@ -42,7 +41,7 @@ height_shift = 0.2#shift the image up down
 zoom = 0.2#random zooming in range
 shear = 0.2#random shear in range
 
-#For imgaug, define a function that performs affine augmentations in sequence
+#For imgaug, define a function that performs affine augmentations in sequence  
 def imgaug_affine(images,v_flip,h_flip,rotation,width_shift,height_shift,zoom,shear,backend):
     v_flip_imgaug = 0.5 if v_flip==True else 0.0
     h_flip_imgaug = 0.5 if h_flip==True else 0.0
@@ -55,7 +54,7 @@ def imgaug_affine(images,v_flip,h_flip,rotation,width_shift,height_shift,zoom,sh
                     rotate=(-rotation, rotation),
                     translate_percent={"x": (-width_shift, width_shift), "y": (-height_shift, height_shift)},
                     scale={"x": (1-zoom, 1+zoom), "y": (1-zoom, 1+zoom)},
-                    shear=(-shear, shear),backend=backend)  ])
+                    shear=(-shear, shear),backend=backend)])
     return gen(images=images) #Imgaug image augmentation</code></pre>
 
 
@@ -78,6 +77,10 @@ plt.show()
 plt.savefig("02_Affine_Keras.pdf")
 plt.close(1)</code></pre>
 
+![alt text](https://github.com/maikherbig/AIDeveloper/blob/master/Comparison%20of%20augmentation%20methods/art/02_Affine_Keras_02.png "02_Affine augmentation_Keras_ImageDataGenerator")  
+
+
+
 # Affine augmentation: imgaug using skimage backend  
 <pre><code>
 t1 = time.time()
@@ -95,4 +98,15 @@ fig.suptitle("imgaug (backend skimage) "+str(np.round(dt,2))+"s")
 plt.show()
 plt.savefig("02_Affine_imgaug_sk.pdf")
 plt.close(1)</code></pre>
+
+
+
+
+
+
+
+
+
+
+
 
