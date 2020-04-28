@@ -32,7 +32,7 @@ for i in range(250): #Replicate the image 250 times
 images = np.array((images), dtype="uint8")</code></pre>
 
 ## Affine augmentation  
-Define some parameters and a function that is required for imgaug:
+Define some parameters and the imgaug augmentation function:  
 <pre><code>v_flip = True #bool, if random vertical flipping should be applied
 h_flip = True #bool, if random horizontal flipping should be applied
 rotation = 45 #degrees of random rotation
@@ -135,7 +135,7 @@ plt.close(1)</code></pre>
 For me it was actually rather surprising, that a simple linear transformation  
 of the brightness of the image and (especially) adding random noise can take  
 quite a while.  
-Define some parameters and a function (required for imgaug):
+Define some parameters and the imgaug augmentation function:  
 <pre><code>add_lower = -50
 add_upper = 50
 mult_lower = 0.8
@@ -212,7 +212,7 @@ plt.close(1)</code></pre>
 ![alt text](https://github.com/maikherbig/AIDeveloper/blob/master/Comparison%20of%20augmentation%20methods/art/02_Brightness_aid_img.png "02_Affine augmentation_Keras_ImageDataGenerator")  
 
 ## Gaussian blur  
-Define some parameters and a function (required for imgaug):
+Define some parameters and the imgaug augmentation function:  
 <pre><code>sigma_low = 0
 sigma_high = 20
 
@@ -260,7 +260,7 @@ plt.close(1)</code></pre>
 ![alt text](https://github.com/maikherbig/AIDeveloper/blob/master/Comparison%20of%20augmentation%20methods/art/03_Gaussblur_aid_img.png "02_Affine augmentation_Keras_ImageDataGenerator")  
 
 ## Saturation/Hue augmentation  
-Define some parameters and a function (required for imgaug):
+Define some parameters and the imgaug augmentation function:  
 <pre><code>hue_on = True
 hue_low = 0.9
 hue_high = 1.1
