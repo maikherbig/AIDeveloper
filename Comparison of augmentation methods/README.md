@@ -77,7 +77,7 @@ plt.show()
 plt.savefig("02_Affine_Keras.pdf")
 plt.close(1)</code></pre>
 
-![alt text](https://github.com/maikherbig/AIDeveloper/blob/master/Comparison%20of%20augmentation%20methods/art/02_Affine_Keras_02.png "02_Affine augmentation_Keras_ImageDataGenerator")  
+![alt text](https://github.com/maikherbig/AIDeveloper/blob/master/Comparison%20of%20augmentation%20methods/art/02_Affine_Keras.png "02_Affine augmentation_Keras_ImageDataGenerator")  
 
 
 
