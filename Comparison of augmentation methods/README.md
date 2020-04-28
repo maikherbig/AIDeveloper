@@ -27,19 +27,19 @@ path = os.path.join("imgaug","quokka.jpg")
 img = load_img(path,color_mode=color_mode.lower()) #This uses PIL and supports many many formats!
 img = np.array(img)
 images = []
-for i in range(250):#Replicate the image 250 times
+for i in range(250): #Replicate the image 250 times
     images.append(img)
 images = np.array((images), dtype="uint8")</code></pre>
 
 ## Affine augmentation  
-Define some parameters
-<pre><code>v_flip = True#bool, if random vertical flipping should be applied
-h_flip = True#bool, if random horizontal flipping should be applied
-rotation = 45#degrees of random rotation
-width_shift = 0.2#shift the image left right
-height_shift = 0.2#shift the image up down
-zoom = 0.2#random zooming in range
-shear = 0.2#random shear in range
+Define some parameters and a function that is required for imgaug:
+<pre><code>v_flip = True #bool, if random vertical flipping should be applied
+h_flip = True #bool, if random horizontal flipping should be applied
+rotation = 45 #degrees of random rotation
+width_shift = 0.2 #shift the image left right
+height_shift = 0.2 #shift the image up down
+zoom = 0.2 #random zooming in range
+shear = 0.2 #random shear in range
 
 #For imgaug, define a function that performs affine augmentations in sequence  
 def imgaug_affine(images,v_flip,h_flip,rotation,width_shift,height_shift,zoom,shear,backend):
@@ -56,7 +56,6 @@ def imgaug_affine(images,v_flip,h_flip,rotation,width_shift,height_shift,zoom,sh
                     scale={"x": (1-zoom, 1+zoom), "y": (1-zoom, 1+zoom)},
                     shear=(-shear, shear),backend=backend)])
     return gen(images=images) #Imgaug image augmentation</code></pre>
-
 
 ### Affine augmentation: Keras ImageDataGenerator  
 <pre><code>t1 = time.time()
@@ -78,8 +77,6 @@ plt.close(1)</code></pre>
 
 ![alt text](https://github.com/maikherbig/AIDeveloper/blob/master/Comparison%20of%20augmentation%20methods/art/02_Affine_Keras.png "02_Affine augmentation_Keras_ImageDataGenerator")  
 
-
-
 ### Affine augmentation: imgaug using skimage backend  
 <pre><code>t1 = time.time()
 images_imgaug_sk = imgaug_affine(images,v_flip,h_flip,rotation,width_shift,height_shift,zoom,shear,backend="skimage")
@@ -98,7 +95,7 @@ plt.close(1)</code></pre>
 
 ![alt text](https://github.com/maikherbig/AIDeveloper/blob/master/Comparison%20of%20augmentation%20methods/art/02_Affine_imgaug_sk.png "02_Affine augmentation_Keras_ImageDataGenerator")  
 
-### Affine augmentation: imgaug using OpenCV (cv2) backend  
+### Affine augmentation: imgaug using OpenCV (cv2) backend   
 <pre><code>t1 = time.time()
 images_imgaug_cv = imgaug_affine(images,v_flip,h_flip,rotation,width_shift,height_shift,zoom,shear,backend="cv2")
 t2 = time.time()
@@ -116,7 +113,7 @@ plt.close(1)</code></pre>
 
 ![alt text](https://github.com/maikherbig/AIDeveloper/blob/master/Comparison%20of%20augmentation%20methods/art/02_Affine_imgaug_cv2.png "02_Affine augmentation_Keras_ImageDataGenerator")  
 
-### Affine augmentation: AIDeveloper's aid_img.py
+### Affine augmentation: AIDeveloper's aid_img.py  
 <pre><code>t1 = time.time()
 images_aid = aid_img.affine_augm(images,v_flip,h_flip,rotation,width_shift,height_shift,zoom,shear) #Affine image augmentation
 t2 = time.time()
@@ -134,7 +131,7 @@ plt.close(1)</code></pre>
   
 ![alt text](https://github.com/maikherbig/AIDeveloper/blob/master/Comparison%20of%20augmentation%20methods/art/02_Affine_aid_img.png "02_Affine augmentation_Keras_ImageDataGenerator")  
 
-## Brightness augmentation + noise
+## Brightness augmentation + noise  
 For me it was actually rather surprising, that a simple linear transformation  
 of the brightness of the image and (especially) adding random noise can take  
 quite a while.  
@@ -155,7 +152,7 @@ def imgaug_brightness_noise(images,add_low,add_high,mult_low,mult_high,noise_mea
     images = seq(images=images)
     return images</code></pre>
 
-### Brightness augmentation: Keras ImageDataGenerator
+### Brightness augmentation: Keras ImageDataGenerator  
 Unfortunately, there is no option in ImageDataGenerator to add random noise.  
 Therefore I'll now only alter the brightness (only in case of ImageDataGenerator)
 
@@ -178,8 +175,7 @@ plt.close(1)</code></pre>
 
 ![alt text](https://github.com/maikherbig/AIDeveloper/blob/master/Comparison%20of%20augmentation%20methods/art/02_Brightness_Keras.png "02_Affine augmentation_Keras_ImageDataGenerator")  
 
-
-### Brightness augmentation: imgaug
+### Brightness augmentation: imgaug  
 <pre><code>t1 = time.time()
 images_imgaug = imgaug_brightness_noise(images,add_lower,add_upper,mult_lower,mult_upper,gaussnoise_mean,gaussnoise_scale)
 t2 = time.time()
@@ -197,8 +193,7 @@ plt.close(1)</code></pre>
 
 ![alt text](https://github.com/maikherbig/AIDeveloper/blob/master/Comparison%20of%20augmentation%20methods/art/02_Brightness_imgaug.png "02_Affine augmentation_Keras_ImageDataGenerator")  
 
-
-### Brightness augmentation: AIDeveloper's aid_img.py
+### Brightness augmentation: AIDeveloper's aid_img.py  
 <pre><code>t1 = time.time()
 images_aid = aid_img.brightn_noise_augm_cv2(images,add_lower,add_upper,mult_lower,mult_upper,gaussnoise_mean,gaussnoise_scale)
 t2 = time.time()
@@ -216,8 +211,7 @@ plt.close(1)</code></pre>
 
 ![alt text](https://github.com/maikherbig/AIDeveloper/blob/master/Comparison%20of%20augmentation%20methods/art/02_Brightness_aid_img.png "02_Affine augmentation_Keras_ImageDataGenerator")  
 
-
-## Gaussian blur
+## Gaussian blur  
 Define some parameters and a function (required for imgaug):
 <pre><code>sigma_low = 0
 sigma_high = 20
@@ -229,7 +223,7 @@ def imgaug_gaussnoise(images,sigma_high):
     images = seq(images=images)
     return images</code></pre>
 
-### Gaussian blur: imgaug
+### Gaussian blur: imgaug  
 <pre><code>t1 = time.time()
 images_imgaug = imgaug_gaussnoise(images,sigma_high)
 t2 = time.time()
@@ -247,8 +241,7 @@ plt.close(1)</code></pre>
 
 ![alt text](https://github.com/maikherbig/AIDeveloper/blob/master/Comparison%20of%20augmentation%20methods/art/03_Gaussblur_imgaug.png "02_Affine augmentation_Keras_ImageDataGenerator")  
 
-
-### Gaussian blur: AIDeveloper's aid_img.py
+### Gaussian blur: AIDeveloper's aid_img.py  
 <pre><code>t1 = time.time()
 images_aid = aid_img.gauss_blur_cv(images,sigma_low,sigma_high)
 t2 = time.time()
@@ -266,10 +259,7 @@ plt.close(1)</code></pre>
 
 ![alt text](https://github.com/maikherbig/AIDeveloper/blob/master/Comparison%20of%20augmentation%20methods/art/03_Gaussblur_aid_img.png "02_Affine augmentation_Keras_ImageDataGenerator")  
 
-
-
 ## Saturation/Hue augmentation  
-
 Define some parameters and a function (required for imgaug):
 <pre><code>hue_on = True
 hue_low = 0.9
@@ -284,7 +274,6 @@ def imgaug_contrast(images,sigma_high):
         ])
     images = seq(images=images)
     return images</code></pre>
-
 
 ### Saturation/Hue augmentation, imgaug  
 <pre><code>t1 = time.time()
@@ -304,7 +293,6 @@ plt.close(1)</code></pre>
 
 ![alt text](https://github.com/maikherbig/AIDeveloper/blob/master/Comparison%20of%20augmentation%20methods/art/04_Sat_Hue_imgaug.png "02_Affine augmentation_Keras_ImageDataGenerator")  
 
-
 ### Saturation/Hue augmentation, AIDeveloper's aid_img.py  
 <pre><code>t1 = time.time()
 images_aid = aid_img.satur_hue_augm_cv2(images,saturation_on,sat_low,sat_high,hue_on,hue_high-1)
@@ -322,3 +310,8 @@ plt.savefig("04_Sat_Hue_aid_img.png")
 plt.close(1)</code></pre>
 
 ![alt text](https://github.com/maikherbig/AIDeveloper/blob/master/Comparison%20of%20augmentation%20methods/art/04_Sat_Hue_aid_img.png "02_Affine augmentation_Keras_ImageDataGenerator")  
+
+
+
+
+
