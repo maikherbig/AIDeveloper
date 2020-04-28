@@ -69,7 +69,7 @@ for i in range(len(devices)):
 import numpy as np
 rand_state = np.random.RandomState(117) #to get the same random number on diff. PCs
 from scipy import ndimage,misc
-from sklearn import metrics ,preprocessing
+from sklearn import metrics,preprocessing
 import PIL
 import dclab
 import cv2
@@ -79,12 +79,16 @@ import psutil
 
 from keras.models import model_from_json,model_from_config,load_model,clone_model
 from keras import backend as K
-keras_gpu_avail = K.tensorflow_backend._get_available_gpus()
-if len(keras_gpu_avail)>0:
-    print("Following GPU is used:")
-    print(keras_gpu_avail)
-    print("------------------------")
-
+if 'GPU' in device_types:
+    keras_gpu_avail = K.tensorflow_backend._get_available_gpus()
+    if len(keras_gpu_avail)>0:
+        print("Following GPU is used:")
+        print(keras_gpu_avail)
+        print("------------------------")
+    else:
+        print("TensorFlow detected GPU, but Keras didn't")
+        print("------------------------")
+        
 from keras.preprocessing.image import load_img
 from keras.utils import np_utils
 from keras.utils.conv_utils import convert_kernel
@@ -6791,7 +6795,7 @@ class MainWindow(QtWidgets.QMainWindow):
                 msg.setWindowTitle("No valid file was chosen")
                 msg.setStandardButtons(QtWidgets.QMessageBox.Ok)
                 msg.exec_()
-                return       
+                return  
             
             if 0 in indices:
                 #out_dim = len(set(indices))
