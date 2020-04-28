@@ -217,20 +217,108 @@ plt.close(1)</code></pre>
 ![alt text](https://github.com/maikherbig/AIDeveloper/blob/master/Comparison%20of%20augmentation%20methods/art/02_Brightness_aid_img.png "02_Affine augmentation_Keras_ImageDataGenerator")  
 
 
+## Gaussian blur
+Define some parameters and a function (required for imgaug):
+<pre><code>sigma_low = 0
+sigma_high = 20
+
+def imgaug_gaussnoise(images,sigma_high):
+    seq = imgaug.augmenters.Sequential([
+        imgaug.augmenters.blur.GaussianBlur(sigma=(sigma_low, sigma_high))
+        ])
+    images = seq(images=images)
+    return images</code></pre>
+
+### Gaussian blur: imgaug
+<pre><code>t1 = time.time()
+images_imgaug = imgaug_gaussnoise(images,sigma_high)
+t2 = time.time()
+dt = t2-t1
+print("imgaug "+str(np.round(dt,2))+"s")
+
+fig=plt.figure(1)
+for i in range(1,5):
+    ax=fig.add_subplot(2,2,i)        
+    ax.imshow(images_imgaug[i])
+    ax.axis("off")
+fig.suptitle("imgaug "+str(np.round(dt,2))+"s")
+plt.savefig("03_Gaussblur_imgaug.png")
+plt.close(1)</code></pre>
+
+![alt text](https://github.com/maikherbig/AIDeveloper/blob/master/Comparison%20of%20augmentation%20methods/art/03_Gaussblur_imgaug.png "02_Affine augmentation_Keras_ImageDataGenerator")  
+
+
+### Gaussian blur: AIDeveloper's aid_img.py
+<pre><code>t1 = time.time()
+images_aid = aid_img.gauss_blur_cv(images,sigma_low,sigma_high)
+t2 = time.time()
+dt = t2-t1
+print("AIDeveloper "+str(np.round(dt,2))+"s")
+
+fig=plt.figure(1)
+for i in range(1,5):
+    ax=fig.add_subplot(2,2,i)        
+    ax.imshow(images_aid[i])
+    ax.axis("off")
+fig.suptitle("AIDeveloper "+str(np.round(dt,2))+"s")
+plt.savefig("03_Gaussblur_aid_img.png")
+plt.close(1)</code></pre>
+
+![alt text](https://github.com/maikherbig/AIDeveloper/blob/master/Comparison%20of%20augmentation%20methods/art/03_Gaussblur_aid_img.png "02_Affine augmentation_Keras_ImageDataGenerator")  
 
 
 
+## Saturation/Hue augmentation  
+
+Define some parameters and a function (required for imgaug):
+<pre><code>hue_on = True
+hue_low = 0.9
+hue_high = 1.1
+saturation_on = True
+sat_low = 0.5
+sat_high = 1.5
+
+def imgaug_contrast(images,sigma_high):
+    seq = imgaug.augmenters.Sequential([
+        imgaug.augmenters.MultiplyHueAndSaturation(mul_saturation=(sat_low, sat_high),mul_hue=(hue_low, hue_high))
+        ])
+    images = seq(images=images)
+    return images</code></pre>
 
 
+### Saturation/Hue augmentation, imgaug  
+<pre><code>t1 = time.time()
+images_imgaug = imgaug_contrast(images,sigma_high)
+t2 = time.time()
+dt = t2-t1
+print("imgaug "+str(np.round(dt,2))+"s")
+
+fig=plt.figure(1)
+for i in range(1,5):
+    ax=fig.add_subplot(2,2,i)        
+    ax.imshow(images_imgaug[i])
+    ax.axis("off")
+fig.suptitle("imgaug "+str(np.round(dt,2))+"s")
+plt.savefig("04_Sat_Hue_imgaug.png")
+plt.close(1)</code></pre>
+
+![alt text](https://github.com/maikherbig/AIDeveloper/blob/master/Comparison%20of%20augmentation%20methods/art/04_Sat_Hue_imgaug.png "02_Affine augmentation_Keras_ImageDataGenerator")  
 
 
+### Saturation/Hue augmentation, AIDeveloper's aid_img.py  
+<pre><code>t1 = time.time()
+images_aid = aid_img.satur_hue_augm_cv2(images,saturation_on,sat_low,sat_high,hue_on,hue_high-1)
+t2 = time.time()
+dt = t2-t1
+print("AIDeveloper "+str(np.round(dt,2))+"s")
 
+fig=plt.figure(1)
+for i in range(1,5):
+    ax=fig.add_subplot(2,2,i)        
+    ax.imshow(images_aid[i])
+    ax.axis("off")
+fig.suptitle("AIDeveloper "+str(np.round(dt,2))+"s")
+plt.savefig("04_Sat_Hue_aid_img.png")
+plt.close(1)</code></pre>
 
-
-
-
-
-
-
-
-
+![alt text](https://github.com/maikherbig/AIDeveloper/blob/master/Comparison%20of%20augmentation%20methods/art/04_Sat_Hue_aid_img.png "02_Affine augmentation_Keras_ImageDataGenerator")  
