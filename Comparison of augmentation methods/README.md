@@ -2,18 +2,21 @@
 
 ![alt text](https://github.com/maikherbig/AIDeveloper/blob/master/Comparison%20of%20augmentation%20methods/art/01_Quokka_Horiz_Vertical.png "01_Quokka")  
 
-Image augmetation is a powerful technique, allowing you to increase the size
-of your dataset. Image augmentation is based on a mathematical alteration of
-the original images in a meaningful manner. For example, lets have a look at
-this quokka. Flipping the image along the horizontal axis is a useful
-opertation, as this image shows a scene that could appaer in the real world and
-would help durig training to obtain a more robust model. On contrary, flipping
-along the vertical axis results in images that one would probably never see in
-a real-world scenario.  
+Image augmetation is a powerful technique, allowing to artifically increase the size
+of a dataset. Image augmentation is based on a mathematical alteration of
+the original images, which should ideally be done in a meaningful manner. 
+For example, for the image of the quokka (shown above), horitontal flipping
+is a useful operation, since the resulting image shows a scene that could 
+appaer in the real world. Such an augmentation operation would would help durig training 
+to obtain a more robust model. On contrary, flipping along the vertical axis 
+results in an image that one would probably never see in a real-world scenario.  
 
-Datasets for deep learning purposes are typically on the size of thousands to
-millions of images, resulting in a high computational demand to perform such
-image augmentation operations.  
+Fortunately,  there are multiple libraries readily availabe to perform
+image augmentation. In the inital release of AIDeveloper (v.0.0.4), the Keras
+ImageDataGenerator was used, but interestingly, the computational time for
+augmenting images was often simiar to the time required to train the neural
+net. Considering the continuously growing amount of available data, more efficient
+algorithms are needed.  
 
 Here, I want to compare the speed of the following image augmentation algorithms:  
 * [Keras ImageDataGenerator](https://keras.io/preprocessing/image/#imagedatagenerator-class)   
@@ -21,26 +24,26 @@ Here, I want to compare the speed of the following image augmentation algorithms
 * [AIDevelopers aid_img.py](https://github.com/maikherbig/AIDeveloper/blob/master/AIDeveloper/aid_img.py)  
   
 
-First, lets load the quokka image provided by the imgaug library:
+First load the quokka image provided by the imgaug library:
 
 <pre><code>color_mode = "RGB"
 path = os.path.join("imgaug","quokka.jpg")
 img = load_img(path,color_mode=color_mode.lower()) #This uses PIL and supports many many formats!
 img = np.array(img)
 images = []
-for i in range(250): #Replicate the image 250 times
+for i in range(250): # Replicate the image 250 times
     images.append(img)
 images = np.array((images), dtype="uint8")</code></pre>
 
 ## Affine augmentation  
 Define some parameters and the imgaug augmentation function:  
-<pre><code>v_flip = True #bool, if random vertical flipping should be applied
-h_flip = True #bool, if random horizontal flipping should be applied
+<pre><code>v_flip = True # bool, if random vertical flipping should be applied
+h_flip = True # bool, if random horizontal flipping should be applied
 rotation = 45 #degrees of random rotation
-width_shift = 0.2 #shift the image left right
-height_shift = 0.2 #shift the image up down
-zoom = 0.2 #random zooming in range
-shear = 0.2 #random shear in range
+width_shift = 0.2 # shift the image left right
+height_shift = 0.2 # shift the image up down
+zoom = 0.2 # random zooming in range
+shear = 0.2 # random shear in range
 
 #For imgaug, define a function that performs affine augmentations in sequence  
 def imgaug_affine(images,v_flip,h_flip,rotation,width_shift,height_shift,zoom,shear,backend):
@@ -312,12 +315,34 @@ plt.close(1)</code></pre>
 
 ![alt text](https://github.com/maikherbig/AIDeveloper/blob/master/Comparison%20of%20augmentation%20methods/art/04_Sat_Hue_aid_img.png "02_Affine augmentation_Keras_ImageDataGenerator")  
 
+## System properties  
+<pre><code>Print some information about the used system and python package versions
+text = ""
+text+="System used:\n"
+text+="OS: "+platform.platform()+"\n"
+text+="CPU: "+platform.processor()+"\n"
+text+="Python package versions:\n"
+text+="Keras: v"+keras.__version__+"\n"
+text+="PIL: v"+PIL.__version__+"\n"
+text+="TensorFlow: v"+tf.__version__+"\n"
+text+="OpenCV: v"+cv2.__version__+"\n"</code></pre>  
+
+Output:
+<pre><code>System used:
+OS: Windows-7-6.1.7601-SP1
+CPU: Intel64 Family 6 Model 60 Stepping 3, GenuineIntel
+Python package versions:
+Keras: v2.2.5
+PIL: v5.4.1
+TensorFlow: v1.14.0
+OpenCV: v4.1.1</code></pre> 
+
 
 ## Result, Summary  
-This table provides an overview of the results. The table lists augmentation  
-operations and the required computational time for that operation when using  
+This table provides an overview of the results. The table lists augmentation
+operations and the required computational time for that operation when using
 AIDevelopers aid_img.py (AID), imgaug, or ImageDataGenerator. All augmentation
-operations were tested using 250 images of size 643x960 pixels.
+operations were tested using 250 images of size 643x960 pixels.  
 | Operation      | AID  | imgaug       | Keras ImageDataGenerator |
 |----------------|------|--------------|--------------------------|
 | Affine         | 1.9s | 2.1s / 50.4s | 38.2s                    |
@@ -325,16 +350,16 @@ operations were tested using 250 images of size 643x960 pixels.
 | Gaussian blur  | 0.4s | 3.1s         | NA                       |
 | Saturation/Hue | 3.3s | 25.32s       | NA                       |
 
-For each of the tested augmentation operations, the implementations of  
-AIDeveloper need the least time to finish. This advantage in speed can mostly  
-be accredited to efficient useage of OpenCV implementations. For the affine  
-("geometric") augmentation, the library imgaug provides scikit-image and  
-OpenCV 
-the affine 
-The table shows that each of the tested augmentation operations runs fastest
-when using the implementations of AIDeveloper
-Each augmentation operation is 
-The augmentation algorithms provided by AIDeveloper are up to 26 times faster  
-for the
+For each of the tested augmentation operations, the implementations of
+AIDeveloper need the least time to finish. For the affine augmentation, 
+AIDevelopers implementations are 20 times faster than Keras ImageDataGenerator.
+This advantage in speed can mostly be accredited to efficient usage of OpenCV 
+implementations. For the affine ("geometric") augmentation, the library imgaug 
+provides scikit-image and OpenCV backends and the table shows that the same 
+operation runs 24 times faster when using the OpenCV backend.
+Currently, Keras ImageDataGenerator does not provide options for Gaussian blur 
+or Saturation/Hue. Hence, these operations could only be compared between 
+imgaug and AIDeveloper and the table shows that AIDevelopers implementation
+are approximately 7 times faster.
 
 
