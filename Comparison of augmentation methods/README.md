@@ -2,17 +2,17 @@
 
 ![alt text](https://github.com/maikherbig/AIDeveloper/blob/master/Comparison%20of%20augmentation%20methods/art/01_Quokka_Horiz_Vertical.png "01_Quokka")  
 
-Image augmetation is a powerful technique, allowing you to increase the size  
-of your dataset. Image augmentation is based on a mathematical alteration of 
-the original images in a meaningful manner. For example, lets have a look at 
-this quokka. Flipping the image along the horizontal axis is a useful 
-opertation, as this image shows a scene that could appaer in the real world and 
-would help durig training to obtain a more robust model. On contrary, flipping 
-along the vertical axis results in images that one would probably never see in 
+Image augmetation is a powerful technique, allowing you to increase the size
+of your dataset. Image augmentation is based on a mathematical alteration of
+the original images in a meaningful manner. For example, lets have a look at
+this quokka. Flipping the image along the horizontal axis is a useful
+opertation, as this image shows a scene that could appaer in the real world and
+would help durig training to obtain a more robust model. On contrary, flipping
+along the vertical axis results in images that one would probably never see in
 a real-world scenario.  
 
-Datasets for deep learning purposes are typically on the size of thousands to  
-millions of images, resulting in a high computational demand to perform such 
+Datasets for deep learning purposes are typically on the size of thousands to
+millions of images, resulting in a high computational demand to perform such
 image augmentation operations.  
 
 Here, I want to compare the speed of the following image augmentation algorithms:  
@@ -313,15 +313,28 @@ plt.close(1)</code></pre>
 ![alt text](https://github.com/maikherbig/AIDeveloper/blob/master/Comparison%20of%20augmentation%20methods/art/04_Sat_Hue_aid_img.png "02_Affine augmentation_Keras_ImageDataGenerator")  
 
 
-## Summary  
+## Result, Summary  
 This table provides an overview of the results. The table lists augmentation  
 operations and the required computational time for that operation when using  
-AIDevelopers aid_img.py (AID), imgaug, or ImageDataGenerator.
+AIDevelopers aid_img.py (AID), imgaug, or ImageDataGenerator. All augmentation
+operations were tested using 250 images of size 643x960 pixels.
 | Operation      | AID  | imgaug       | Keras ImageDataGenerator |
 |----------------|------|--------------|--------------------------|
 | Affine         | 1.9s | 2.1s / 50.4s | 38.2s                    |
 | Brightness     | 3.1s | 11.3s        | 11.6s                    |
 | Gaussian blur  | 0.4s | 3.1s         | NA                       |
 | Saturation/Hue | 3.3s | 25.32s       | NA                       |
+
+For each of the tested augmentation operations, the implementations of  
+AIDeveloper need the least time to finish. This advantage in speed can mostly  
+be accredited to efficient useage of OpenCV implementations. For the affine  
+("geometric") augmentation, the library imgaug provides scikit-image and  
+OpenCV 
+the affine 
+The table shows that each of the tested augmentation operations runs fastest
+when using the implementations of AIDeveloper
+Each augmentation operation is 
+The augmentation algorithms provided by AIDeveloper are up to 26 times faster  
+for the
 
 
