@@ -19,6 +19,15 @@ Here, I want to compare the speed of the following image augmentation algorithms
 * [Keras ImageDataGenerator](https://keras.io/preprocessing/image/#imagedatagenerator-class)   
 * [imgaug](https://imgaug.readthedocs.io/en/latest/)  
 * [AIDevelopers aid_img.py](https://github.com/maikherbig/AIDeveloper/blob/master/AIDeveloper/aid_img.py)  
+  
+This table provides a quick overview of the results. Below the table, you find 
+more details and the correspoding code.   
+| Operation      | AID  | imgaug       | Keras ImageDataGenerator |
+|----------------|------|--------------|--------------------------|
+| Affine         | 1.9s | 2.1s / 50.4s | 38.2s                    |
+| Brightness     | 3.1s | 11.3s        | 11.6s                    |
+| Gaussian blur  | 0.4s | 3.1s         | NA                       |
+| Saturation/Hue | 3.3s | 25.32s       | NA                       |
 
 First, lets load the quokka image provided by the imgaug library:
 
