@@ -2,19 +2,19 @@
 
 ![alt text](https://github.com/maikherbig/AIDeveloper/blob/master/Comparison%20of%20augmentation%20methods/art/01_Quokka_Horiz_Vertical.png "01_Quokka")  
 
-Image augmetation is a powerful technique, allowing to artifically increase the size
+Image augmentation is a powerful technique, allowing to artificially increase the size
 of a dataset. Image augmentation is based on a mathematical alteration of
 the original images, which should ideally be done in a meaningful manner. 
-For example, for the image of the quokka (shown above), horitontal flipping
+For example, for the image of the quokka (shown above), horizontal flipping
 is a useful operation, since the resulting image shows a scene that could 
-appaer in the real world. Such an augmentation operation would would help durig training 
+appear in the real world. Such an augmentation operation would help during training 
 to obtain a more robust model. On contrary, flipping along the vertical axis 
 results in an image that one would probably never see in a real-world scenario.  
 
-Fortunately,  there are multiple libraries readily availabe to perform
-image augmentation. In the inital release of AIDeveloper (v.0.0.4), the Keras
+Fortunately, there are multiple libraries readily available to perform
+image augmentation. In the initial release of AIDeveloper (v.0.0.4), the Keras
 ImageDataGenerator was used, but interestingly, the computational time for
-augmenting images was often simiar to the time required to train the neural
+augmenting images was often similar to the time required to train the neural
 net. Considering the continuously growing amount of available data, more efficient
 algorithms are needed.  
 
@@ -359,7 +359,7 @@ provides scikit-image and OpenCV backends and the table shows that the same
 operation runs 24 times faster when using the OpenCV backend.
 Currently, Keras ImageDataGenerator does not provide options for Gaussian blur 
 or Saturation/Hue. Hence, these operations could only be compared between 
-imgaug and AIDeveloper and the table shows that AIDevelopers implementation
+imgaug and AIDeveloper and the table shows that AIDevelopers implementations
 are approximately 7 times faster.
 
 
