@@ -7108,10 +7108,10 @@ class MainWindow(QtWidgets.QMainWindow):
                 text_updates+="Changed the loss function to: "+loss_expert+"\n"
 
         if recompile==True:
-            if collection==True:
+            if collection==False:
                 print("Recompiling...")
                 aid_dl.model_compile(model_keras,loss_expert,optimizer_expert,learning_rate_expert,model_metrics,nr_classes)
-            if collection==False:
+            if collection==True:
                 for m in model_keras[1]:
                     print("Recompiling...")
                     aid_dl.model_compile(m,loss_expert,optimizer_expert,learning_rate_expert,model_metrics,nr_classes)
