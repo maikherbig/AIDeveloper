@@ -2,21 +2,6 @@ import pyqtgraph as pg
 from pyqtgraph.Qt import QtCore, QtWidgets, QtGui
 import sys,os,json
 
-#dir_root = os.getcwd()
-#dir_settings = os.path.join(dir_root,"AIDeveloper_Settings.json")#dir to settings
-#if os.path.isfile(dir_settings):
-#    pass
-#else:
-#    dir_root = os.path.dirname(sys.argv[0]) #Get directory of this script
-#    dir_settings = os.path.join(dir_root,"AIDeveloper_Settings.json")#dir to settings
-
-#The above does not work:
-#When using the search-function in windows to look for AIDeveloper.exe, and starting
-#it from there (double-click on the search result), the app crashed because it
-#set the dir_root to C:/Windows/System32
-#The only way I found to get the directory where AID sits, is to import a module
-#and call "__file__"
-
 import aid_start #import a module that sits in the AIDeveloper folder
 dir_root = os.path.dirname(aid_start.__file__)#ask the module for its origin
 dir_settings = os.path.join(dir_root,"AIDeveloper_Settings.json")#dir to settings
@@ -27,6 +12,8 @@ with open(dir_settings) as f:
         Default_dict["Icon theme"] = "Icon theme 1"
     if "Path of last model" not in Default_dict.keys():
         Default_dict["Path of last model"] = 'c:\\'
+
+tooltips = aid_start.get_tooltips()
 
 try:
     _fromUtf8 = QtCore.QString.fromUtf8
@@ -159,112 +146,54 @@ class Fitting_Ui(QtWidgets.QWidget):
         self.gridLayout_3_pop.setObjectName("gridLayout_3_pop")
         self.tabWidget_DefineModel_pop = QtWidgets.QTabWidget(self.groupBox_ChangeModel_pop)
         self.tabWidget_DefineModel_pop.setEnabled(True)
-        self.tabWidget_DefineModel_pop.setToolTip("")
         self.tabWidget_DefineModel_pop.setUsesScrollButtons(True)
         self.tabWidget_DefineModel_pop.setObjectName("tabWidget_DefineModel_pop")
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+
+
+
         self.tab_DefineModel_pop = QtWidgets.QWidget()
         self.tab_DefineModel_pop.setObjectName("tab_DefineModel_pop")
         self.gridLayout = QtWidgets.QGridLayout(self.tab_DefineModel_pop)
         self.gridLayout.setObjectName("gridLayout")
+        self.scrollArea_defineModel_pop = QtWidgets.QScrollArea(self.tab_DefineModel_pop)
+        self.scrollArea_defineModel_pop.setWidgetResizable(True)
+        self.scrollArea_defineModel_pop.setObjectName("scrollArea_defineModel_pop")
+        self.scrollAreaWidgetContents = QtWidgets.QWidget()
+        self.scrollAreaWidgetContents.setGeometry(QtCore.QRect(0, 0, 523, 352))
+        self.scrollAreaWidgetContents.setObjectName("scrollAreaWidgetContents")
+        self.gridLayout_13 = QtWidgets.QGridLayout(self.scrollAreaWidgetContents)
+        self.gridLayout_13.setObjectName("gridLayout_13")
         self.verticalLayout_defineModel_pop = QtWidgets.QVBoxLayout()
         self.verticalLayout_defineModel_pop.setObjectName("verticalLayout_defineModel_pop")
-        
-        
-        
-        
-        
-        
-        
-        
-#        self.horizontalLayout_2_pop = QtWidgets.QHBoxLayout()
-#        self.horizontalLayout_2_pop.setObjectName("horizontalLayout_2_pop")
-#        self.label_ModelGeom_pop = QtWidgets.QLabel(self.tab_DefineModel_pop)
-#        self.label_ModelGeom_pop.setObjectName("label_ModelGeom_pop")
-#        self.horizontalLayout_2_pop.addWidget(self.label_ModelGeom_pop)
-#        self.horizontalLayout_2_pop.setAlignment(QtCore.Qt.AlignRight | QtCore.Qt.AlignVCenter)
-#        self.comboBox_ModelSelection_pop = QtWidgets.QComboBox(self.tab_DefineModel_pop)
-#        self.comboBox_ModelSelection_pop.setEnabled(False)
-#        self.comboBox_ModelSelection_pop.setMinimumSize(QtCore.QSize(200, 20))
-#        self.comboBox_ModelSelection_pop.setMaximumSize(QtCore.QSize(16777215, 20))
-#        self.comboBox_ModelSelection_pop.setEditable(True)
-#        self.comboBox_ModelSelection_pop.setObjectName("comboBox_ModelSelection_pop")
-#        self.horizontalLayout_2_pop.addWidget(self.comboBox_ModelSelection_pop)
-#        self.verticalLayout_defineModel_pop.addLayout(self.horizontalLayout_2_pop)
-#        self.horizontalLayout_colorNorm_pop = QtWidgets.QHBoxLayout()
-#        self.horizontalLayout_colorNorm_pop.setObjectName("horizontalLayout_colorNorm_pop")
-#        self.horizontalLayout_8_pop = QtWidgets.QHBoxLayout()
-#        self.horizontalLayout_8_pop.setObjectName("horizontalLayout_8_pop")
-#        self.label_colorModeIcon_pop = QtWidgets.QLabel(self.tab_DefineModel_pop)
-#        self.label_colorModeIcon_pop.setObjectName("label_colorModeIcon_pop")
-#        self.horizontalLayout_8_pop.addWidget(self.label_colorModeIcon_pop)
-#        self.label_colorMode_pop = QtWidgets.QLabel(self.tab_DefineModel_pop)
-#        self.label_colorMode_pop.setObjectName("label_colorMode_pop")
-#        self.horizontalLayout_8_pop.addWidget(self.label_colorMode_pop)
-#        self.comboBox_colorMode_pop = QtWidgets.QComboBox(self.tab_DefineModel_pop)
-#        self.comboBox_colorMode_pop.setEnabled(False)
-#        self.comboBox_colorMode_pop.setObjectName("comboBox_colorMode_pop")
-#        self.horizontalLayout_8_pop.addWidget(self.comboBox_colorMode_pop)
-#        self.horizontalLayout_colorNorm_pop.addLayout(self.horizontalLayout_8_pop)
-#        self.horizontalLayout_5_pop = QtWidgets.QHBoxLayout()
-#        self.horizontalLayout_5_pop.setObjectName("horizontalLayout_5_pop")
-#        self.label_NormalizationIcon_pop = QtWidgets.QLabel(self.tab_DefineModel_pop)
-#        self.label_NormalizationIcon_pop.setLayoutDirection(QtCore.Qt.RightToLeft)
-#        self.label_NormalizationIcon_pop.setObjectName("label_NormalizationIcon_pop")
-#        self.horizontalLayout_5_pop.addWidget(self.label_NormalizationIcon_pop)
-#        self.label_Normalization_pop = QtWidgets.QLabel(self.tab_DefineModel_pop)
-#        self.label_Normalization_pop.setLayoutDirection(QtCore.Qt.RightToLeft)
-#        self.label_Normalization_pop.setObjectName("label_Normalization_pop")
-#        self.label_Normalization_pop.setAlignment(QtCore.Qt.AlignRight | QtCore.Qt.AlignVCenter)
-#        self.horizontalLayout_5_pop.addWidget(self.label_Normalization_pop)
-#        self.comboBox_Normalization_pop = QtWidgets.QComboBox(self.tab_DefineModel_pop)
-#        self.comboBox_Normalization_pop.setEnabled(False)
-#        self.comboBox_Normalization_pop.setMinimumSize(QtCore.QSize(100, 0))
-#        self.comboBox_Normalization_pop.setObjectName("comboBox_Normalization_pop")
-#        self.horizontalLayout_5_pop.addWidget(self.comboBox_Normalization_pop)
-#        self.horizontalLayout_colorNorm_pop.addLayout(self.horizontalLayout_5_pop)
-#        self.verticalLayout_defineModel_pop.addLayout(self.horizontalLayout_colorNorm_pop)
-#        self.horizontalLayout_6_pop = QtWidgets.QHBoxLayout()
-#        self.horizontalLayout_6_pop.setObjectName("horizontalLayout_6_pop")
-#        self.horizontalLayout_4_pop = QtWidgets.QHBoxLayout()
-#        self.horizontalLayout_4_pop.setObjectName("horizontalLayout_4_pop")
-#        self.label_CropIcon_pop = QtWidgets.QLabel(self.tab_DefineModel_pop)
-#        self.label_CropIcon_pop.setObjectName("label_CropIcon_pop")
-#        self.horizontalLayout_4_pop.addWidget(self.label_CropIcon_pop)
-#        self.label_Crop_pop = QtWidgets.QLabel(self.tab_DefineModel_pop)
-#        self.label_Crop_pop.setObjectName("label_Crop_pop")
-#        self.horizontalLayout_4_pop.addWidget(self.label_Crop_pop)
-#        self.spinBox_imagecrop_pop = QtWidgets.QSpinBox(self.tab_DefineModel_pop)
-#        self.spinBox_imagecrop_pop.setEnabled(False)
-#        self.spinBox_imagecrop_pop.setMaximum(9999)
-#        self.spinBox_imagecrop_pop.setObjectName("spinBox_imagecrop_pop")
-#        self.horizontalLayout_4_pop.addWidget(self.spinBox_imagecrop_pop)
-#        self.horizontalLayout_6_pop.addLayout(self.horizontalLayout_4_pop)
-#        self.horizontalLayout_3_pop_2 = QtWidgets.QHBoxLayout()
-#        self.horizontalLayout_3_pop_2.setObjectName("horizontalLayout_3_pop_2")
-#        self.label_Crop_NrEpochs_pop = QtWidgets.QLabel(self.tab_DefineModel_pop)
-#        self.label_Crop_NrEpochs_pop.setObjectName("label_Crop_NrEpochs_pop")
-#        self.horizontalLayout_3_pop_2.addWidget(self.label_Crop_NrEpochs_pop)
-#        self.spinBox_NrEpochs_pop = QtWidgets.QSpinBox(self.tab_DefineModel_pop)
-#        self.spinBox_NrEpochs_pop.setObjectName("spinBox_NrEpochs_pop")
-#        self.horizontalLayout_3_pop_2.addWidget(self.spinBox_NrEpochs_pop)
-#        self.horizontalLayout_6_pop.addLayout(self.horizontalLayout_3_pop_2)
-#        self.verticalLayout_defineModel_pop.addLayout(self.horizontalLayout_6_pop)
-        
-        
-        
-        
         self.horizontalLayout_2_pop = QtWidgets.QHBoxLayout()
         self.horizontalLayout_2_pop.setObjectName("horizontalLayout_2_pop")
-        self.label_ModelGeomIcon_pop = QtWidgets.QLabel(self.tab_DefineModel_pop)
+        spacerItem = QtWidgets.QSpacerItem(40, 20, QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Minimum)
+        self.horizontalLayout_2_pop.addItem(spacerItem)
+        self.label_ModelGeomIcon_pop = QtWidgets.QLabel(self.scrollAreaWidgetContents)
+        self.label_ModelGeomIcon_pop.setAlignment(QtCore.Qt.AlignRight|QtCore.Qt.AlignTrailing|QtCore.Qt.AlignVCenter)
         self.label_ModelGeomIcon_pop.setText("")
         self.label_ModelGeomIcon_pop.setObjectName("label_ModelGeomIcon_pop")
-        self.label_ModelGeomIcon_pop.setAlignment(QtCore.Qt.AlignRight|QtCore.Qt.AlignTrailing|QtCore.Qt.AlignVCenter)
         self.horizontalLayout_2_pop.addWidget(self.label_ModelGeomIcon_pop)
-        self.label_ModelGeom_pop = QtWidgets.QLabel(self.tab_DefineModel_pop)
+        self.label_ModelGeom_pop = QtWidgets.QLabel(self.scrollAreaWidgetContents)
         self.label_ModelGeom_pop.setObjectName("label_ModelGeom_pop")
         self.label_ModelGeom_pop.setAlignment(QtCore.Qt.AlignRight|QtCore.Qt.AlignTrailing|QtCore.Qt.AlignVCenter)
         self.horizontalLayout_2_pop.addWidget(self.label_ModelGeom_pop)
-        self.comboBox_ModelSelection_pop = QtWidgets.QComboBox(self.tab_DefineModel_pop)
+        self.comboBox_ModelSelection_pop = QtWidgets.QComboBox(self.scrollAreaWidgetContents)
         self.comboBox_ModelSelection_pop.setEnabled(False)
         self.comboBox_ModelSelection_pop.setMinimumSize(QtCore.QSize(200, 20))
         self.comboBox_ModelSelection_pop.setMaximumSize(QtCore.QSize(16777215, 20))
@@ -272,143 +201,209 @@ class Fitting_Ui(QtWidgets.QWidget):
         self.comboBox_ModelSelection_pop.setObjectName("comboBox_ModelSelection_pop")
         self.horizontalLayout_2_pop.addWidget(self.comboBox_ModelSelection_pop)
         self.verticalLayout_defineModel_pop.addLayout(self.horizontalLayout_2_pop)
-        self.horizontalLayout_colorNorm_pop = QtWidgets.QHBoxLayout()
-        self.horizontalLayout_colorNorm_pop.setObjectName("horizontalLayout_colorNorm_pop")
+        self.groupBox_expt_imgProc_pop = QtWidgets.QGroupBox(self.scrollAreaWidgetContents)
+        self.groupBox_expt_imgProc_pop.setObjectName("groupBox_expt_imgProc_pop")
+        self.gridLayout_10 = QtWidgets.QGridLayout(self.groupBox_expt_imgProc_pop)
+        self.gridLayout_10.setObjectName("gridLayout_10")
         self.horizontalLayout_8_pop = QtWidgets.QHBoxLayout()
         self.horizontalLayout_8_pop.setObjectName("horizontalLayout_8_pop")
-        self.label_CropIcon_pop = QtWidgets.QLabel(self.tab_DefineModel_pop)
+        self.label_CropIcon_pop = QtWidgets.QLabel(self.groupBox_expt_imgProc_pop)
         self.label_CropIcon_pop.setText("")
+        #self.label_CropIcon_pop.setPixmap(QtGui.QPixmap("../../51 GUI_MORE-ACS_Modelbuilder/MORE-ModelMaker_v0.1.6_ForPython_3.5/art/cropping_small.png"))
         self.label_CropIcon_pop.setAlignment(QtCore.Qt.AlignRight|QtCore.Qt.AlignTrailing|QtCore.Qt.AlignVCenter)
         self.label_CropIcon_pop.setObjectName("label_CropIcon_pop")
         self.horizontalLayout_8_pop.addWidget(self.label_CropIcon_pop)
-        self.label_Crop_pop = QtWidgets.QLabel(self.tab_DefineModel_pop)
+        self.label_Crop_pop = QtWidgets.QLabel(self.groupBox_expt_imgProc_pop)
         self.label_Crop_pop.setAlignment(QtCore.Qt.AlignRight|QtCore.Qt.AlignTrailing|QtCore.Qt.AlignVCenter)
         self.label_Crop_pop.setObjectName("label_Crop_pop")
         self.horizontalLayout_8_pop.addWidget(self.label_Crop_pop)
-        self.spinBox_imagecrop_pop = QtWidgets.QSpinBox(self.tab_DefineModel_pop)
+        self.spinBox_imagecrop_pop = QtWidgets.QSpinBox(self.groupBox_expt_imgProc_pop)
         self.spinBox_imagecrop_pop.setEnabled(False)
         self.spinBox_imagecrop_pop.setMaximum(9999)
         self.spinBox_imagecrop_pop.setObjectName("spinBox_imagecrop_pop")
         self.horizontalLayout_8_pop.addWidget(self.spinBox_imagecrop_pop)
-        self.horizontalLayout_colorNorm_pop.addLayout(self.horizontalLayout_8_pop)
+        self.gridLayout_10.addLayout(self.horizontalLayout_8_pop, 0, 0, 1, 1)
         self.horizontalLayout_5_pop = QtWidgets.QHBoxLayout()
         self.horizontalLayout_5_pop.setObjectName("horizontalLayout_5_pop")
-        self.label_NormalizationIcon_pop = QtWidgets.QLabel(self.tab_DefineModel_pop)
+        self.label_NormalizationIcon_pop = QtWidgets.QLabel(self.groupBox_expt_imgProc_pop)
         self.label_NormalizationIcon_pop.setText("")
+        #self.label_NormalizationIcon_pop.setPixmap(QtGui.QPixmap("../013_AIDeveloper_0.0.8_dev1/art/Icon theme 1/normalization.png"))
         self.label_NormalizationIcon_pop.setAlignment(QtCore.Qt.AlignRight|QtCore.Qt.AlignTrailing|QtCore.Qt.AlignVCenter)
         self.label_NormalizationIcon_pop.setObjectName("label_NormalizationIcon_pop")
         self.horizontalLayout_5_pop.addWidget(self.label_NormalizationIcon_pop)
-        self.label_Normalization_pop = QtWidgets.QLabel(self.tab_DefineModel_pop)
+        self.label_Normalization_pop = QtWidgets.QLabel(self.groupBox_expt_imgProc_pop)
         self.label_Normalization_pop.setLayoutDirection(QtCore.Qt.RightToLeft)
         self.label_Normalization_pop.setAlignment(QtCore.Qt.AlignRight|QtCore.Qt.AlignTrailing|QtCore.Qt.AlignVCenter)
         self.label_Normalization_pop.setObjectName("label_Normalization_pop")
         self.horizontalLayout_5_pop.addWidget(self.label_Normalization_pop)
-        self.comboBox_Normalization_pop = QtWidgets.QComboBox(self.tab_DefineModel_pop)
+        self.comboBox_Normalization_pop = QtWidgets.QComboBox(self.groupBox_expt_imgProc_pop)
         self.comboBox_Normalization_pop.setEnabled(False)
         self.comboBox_Normalization_pop.setMinimumSize(QtCore.QSize(100, 0))
         self.comboBox_Normalization_pop.setObjectName("comboBox_Normalization_pop")
         self.horizontalLayout_5_pop.addWidget(self.comboBox_Normalization_pop)
-        self.horizontalLayout_colorNorm_pop.addLayout(self.horizontalLayout_5_pop)
-        self.verticalLayout_defineModel_pop.addLayout(self.horizontalLayout_colorNorm_pop)
-        self.horizontalLayout_6_pop = QtWidgets.QHBoxLayout()
-        self.horizontalLayout_6_pop.setObjectName("horizontalLayout_6_pop")
-        self.horizontalLayout_4_pop = QtWidgets.QHBoxLayout()
-        self.horizontalLayout_4_pop.setObjectName("horizontalLayout_4_pop")
-        self.label_Crop_NrEpochsIcon_pop = QtWidgets.QLabel(self.tab_DefineModel_pop)
-        self.label_Crop_NrEpochsIcon_pop.setText("")
-        self.label_Crop_NrEpochsIcon_pop.setAlignment(QtCore.Qt.AlignRight|QtCore.Qt.AlignTrailing|QtCore.Qt.AlignVCenter)
-        self.label_Crop_NrEpochsIcon_pop.setObjectName("label_Crop_NrEpochsIcon_pop")
-        self.horizontalLayout_4_pop.addWidget(self.label_Crop_NrEpochsIcon_pop)
-        self.label_Crop_NrEpochs_pop = QtWidgets.QLabel(self.tab_DefineModel_pop)
-        self.label_Crop_NrEpochs_pop.setAlignment(QtCore.Qt.AlignRight|QtCore.Qt.AlignTrailing|QtCore.Qt.AlignVCenter)
-        self.label_Crop_NrEpochs_pop.setObjectName("label_Crop_NrEpochs_pop")
-        self.horizontalLayout_4_pop.addWidget(self.label_Crop_NrEpochs_pop)
-        self.spinBox_NrEpochs_pop = QtWidgets.QSpinBox(self.tab_DefineModel_pop)
-        self.spinBox_NrEpochs_pop.setMaximum(999999999)
-        self.spinBox_NrEpochs_pop.setObjectName("spinBox_NrEpochs_pop")
-        self.horizontalLayout_4_pop.addWidget(self.spinBox_NrEpochs_pop)
-        self.horizontalLayout_6_pop.addLayout(self.horizontalLayout_4_pop)
+        self.gridLayout_10.addLayout(self.horizontalLayout_5_pop, 0, 1, 1, 1)
+        self.horizontalLayout_2 = QtWidgets.QHBoxLayout()
+        self.horizontalLayout_2.setObjectName("horizontalLayout_2")
+        self.label_padIcon_pop = QtWidgets.QLabel(self.groupBox_expt_imgProc_pop)
+        self.label_padIcon_pop.setText("")
+        #self.label_padIcon_pop.setPixmap(QtGui.QPixmap("../013_AIDeveloper_0.0.8_dev1/art/Icon theme 1/padding.png"))
+        self.label_padIcon_pop.setAlignment(QtCore.Qt.AlignRight|QtCore.Qt.AlignTrailing|QtCore.Qt.AlignVCenter)
+        self.label_padIcon_pop.setObjectName("label_padIcon_pop")
+        self.horizontalLayout_2.addWidget(self.label_padIcon_pop)
+        self.label_paddingMode_pop = QtWidgets.QLabel(self.groupBox_expt_imgProc_pop)
+        self.label_paddingMode_pop.setObjectName("label_paddingMode_pop")
+        self.horizontalLayout_2.addWidget(self.label_paddingMode_pop)
+        self.comboBox_paddingMode_pop = QtWidgets.QComboBox(self.groupBox_expt_imgProc_pop)
+        self.comboBox_paddingMode_pop.setEnabled(True)
+        self.comboBox_paddingMode_pop.setObjectName("comboBox_paddingMode_pop")
+        self.comboBox_paddingMode_pop.addItem("")
+        self.comboBox_paddingMode_pop.addItem("")
+        self.comboBox_paddingMode_pop.addItem("")
+        self.comboBox_paddingMode_pop.addItem("")
+        self.comboBox_paddingMode_pop.addItem("")
+        self.comboBox_paddingMode_pop.addItem("")
+        self.comboBox_paddingMode_pop.addItem("")
+        self.comboBox_paddingMode_pop.addItem("")
+        self.comboBox_paddingMode_pop.addItem("")
+        self.comboBox_paddingMode_pop.addItem("")
+        self.horizontalLayout_2.addWidget(self.comboBox_paddingMode_pop)
+        self.gridLayout_10.addLayout(self.horizontalLayout_2, 1, 0, 1, 1)
         self.horizontalLayout_3_pop_2 = QtWidgets.QHBoxLayout()
         self.horizontalLayout_3_pop_2.setObjectName("horizontalLayout_3_pop_2")
-        self.label_colorModeIcon_pop = QtWidgets.QLabel(self.tab_DefineModel_pop)
+        self.label_colorModeIcon_pop = QtWidgets.QLabel(self.groupBox_expt_imgProc_pop)
         self.label_colorModeIcon_pop.setText("")
+        #self.label_colorModeIcon_pop.setPixmap(QtGui.QPixmap("../../51 GUI_MORE-ACS_Modelbuilder/Icons/color_mode.png"))
         self.label_colorModeIcon_pop.setScaledContents(False)
         self.label_colorModeIcon_pop.setAlignment(QtCore.Qt.AlignRight|QtCore.Qt.AlignTrailing|QtCore.Qt.AlignVCenter)
         self.label_colorModeIcon_pop.setObjectName("label_colorModeIcon_pop")
         self.horizontalLayout_3_pop_2.addWidget(self.label_colorModeIcon_pop)
-        self.label_colorMode_pop = QtWidgets.QLabel(self.tab_DefineModel_pop)
+        self.label_colorMode_pop = QtWidgets.QLabel(self.groupBox_expt_imgProc_pop)
         self.label_colorMode_pop.setAlignment(QtCore.Qt.AlignRight|QtCore.Qt.AlignTrailing|QtCore.Qt.AlignVCenter)
         self.label_colorMode_pop.setObjectName("label_colorMode_pop")
         self.horizontalLayout_3_pop_2.addWidget(self.label_colorMode_pop)
-        self.comboBox_colorMode_pop = QtWidgets.QComboBox(self.tab_DefineModel_pop)
+        self.comboBox_colorMode_pop = QtWidgets.QComboBox(self.groupBox_expt_imgProc_pop)
         self.comboBox_colorMode_pop.setEnabled(False)
         self.comboBox_colorMode_pop.setObjectName("comboBox_colorMode_pop")
         self.horizontalLayout_3_pop_2.addWidget(self.comboBox_colorMode_pop)
-        self.horizontalLayout_6_pop.addLayout(self.horizontalLayout_3_pop_2)
+        self.gridLayout_10.addLayout(self.horizontalLayout_3_pop_2, 1, 1, 1, 1)
+        self.verticalLayout_defineModel_pop.addWidget(self.groupBox_expt_imgProc_pop)
+        self.horizontalLayout_6_pop = QtWidgets.QHBoxLayout()
+        self.horizontalLayout_6_pop.setObjectName("horizontalLayout_6_pop")
         self.verticalLayout_defineModel_pop.addLayout(self.horizontalLayout_6_pop)
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
+        self.groupBox_system_pop = QtWidgets.QGroupBox(self.scrollAreaWidgetContents)
+        self.groupBox_system_pop.setObjectName("groupBox_system_pop")
+        self.gridLayout_48 = QtWidgets.QGridLayout(self.groupBox_system_pop)
+        self.gridLayout_48.setObjectName("gridLayout_48")
+        self.radioButton_gpu_pop = QtWidgets.QRadioButton(self.groupBox_system_pop)
+        self.radioButton_gpu_pop.setEnabled(False)
+        self.radioButton_gpu_pop.setObjectName("radioButton_gpu_pop")
+        self.gridLayout_48.addWidget(self.radioButton_gpu_pop, 1, 3, 1, 1)
+        self.comboBox_cpu_pop = QtWidgets.QComboBox(self.groupBox_system_pop)
+        self.comboBox_cpu_pop.setObjectName("comboBox_cpu_pop")
+        self.comboBox_cpu_pop.setEnabled(False)
+        self.gridLayout_48.addWidget(self.comboBox_cpu_pop, 0, 4, 1, 1)
+        spacerItem = QtWidgets.QSpacerItem(198, 20, QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Minimum)
+        self.gridLayout_48.addItem(spacerItem, 0, 5, 1, 3)
+        self.radioButton_cpu_pop = QtWidgets.QRadioButton(self.groupBox_system_pop)
+        self.radioButton_cpu_pop.setEnabled(False)
+        self.radioButton_cpu_pop.setObjectName("radioButton_cpu_pop")
+        self.gridLayout_48.addWidget(self.radioButton_cpu_pop, 0, 3, 1, 1)
+        self.doubleSpinBox_memory_pop = QtWidgets.QDoubleSpinBox(self.groupBox_system_pop)
+        self.doubleSpinBox_memory_pop.setEnabled(False)
+        self.doubleSpinBox_memory_pop.setObjectName("doubleSpinBox_memory_pop")
+        self.gridLayout_48.addWidget(self.doubleSpinBox_memory_pop, 1, 7, 1, 1)
+        self.comboBox_gpu_pop = QtWidgets.QComboBox(self.groupBox_system_pop)
+        self.comboBox_gpu_pop.setEnabled(False)
+        self.comboBox_gpu_pop.setObjectName("comboBox_gpu_pop")
+        self.gridLayout_48.addWidget(self.comboBox_gpu_pop, 1, 4, 1, 2)
+        self.label_memory_pop = QtWidgets.QLabel(self.groupBox_system_pop)
+        self.label_memory_pop.setAlignment(QtCore.Qt.AlignRight|QtCore.Qt.AlignTrailing|QtCore.Qt.AlignVCenter)
+        self.label_memory_pop.setObjectName("label_memory_pop")
+        self.gridLayout_48.addWidget(self.label_memory_pop, 1, 6, 1, 1)
+        self.line_nrEpochs_cpu_pop = QtWidgets.QFrame(self.groupBox_system_pop)
+        self.line_nrEpochs_cpu_pop.setFrameShape(QtWidgets.QFrame.VLine)
+        self.line_nrEpochs_cpu_pop.setFrameShadow(QtWidgets.QFrame.Sunken)
+        self.line_nrEpochs_cpu_pop.setObjectName("line_nrEpochs_cpu_pop")
+        self.gridLayout_48.addWidget(self.line_nrEpochs_cpu_pop, 0, 2, 2, 1)
+        self.horizontalLayout_4_pop = QtWidgets.QHBoxLayout()
+        self.horizontalLayout_4_pop.setObjectName("horizontalLayout_4_pop")
+        self.label_Crop_NrEpochsIcon_pop = QtWidgets.QLabel(self.groupBox_system_pop)
+        self.label_Crop_NrEpochsIcon_pop.setText("")
+        self.label_Crop_NrEpochsIcon_pop.setAlignment(QtCore.Qt.AlignRight|QtCore.Qt.AlignTrailing|QtCore.Qt.AlignVCenter)
+        self.label_Crop_NrEpochsIcon_pop.setObjectName("label_Crop_NrEpochsIcon_pop")
+        self.horizontalLayout_4_pop.addWidget(self.label_Crop_NrEpochsIcon_pop)
+        self.label_Crop_NrEpochs_pop = QtWidgets.QLabel(self.groupBox_system_pop)
+        self.label_Crop_NrEpochs_pop.setAlignment(QtCore.Qt.AlignRight|QtCore.Qt.AlignTrailing|QtCore.Qt.AlignVCenter)
+        self.label_Crop_NrEpochs_pop.setObjectName("label_Crop_NrEpochs_pop")
+        self.horizontalLayout_4_pop.addWidget(self.label_Crop_NrEpochs_pop)
+        self.spinBox_NrEpochs_pop = QtWidgets.QSpinBox(self.groupBox_system_pop)
+        self.spinBox_NrEpochs_pop.setMaximum(999999999)
+        self.spinBox_NrEpochs_pop.setObjectName("spinBox_NrEpochs_pop")
+        self.horizontalLayout_4_pop.addWidget(self.spinBox_NrEpochs_pop)
+        self.gridLayout_48.addLayout(self.horizontalLayout_4_pop, 0, 1, 1, 1)
+        spacerItem1 = QtWidgets.QSpacerItem(211, 20, QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Minimum)
+        self.gridLayout_48.addItem(spacerItem1, 1, 1, 1, 1)
+        self.verticalLayout_defineModel_pop.addWidget(self.groupBox_system_pop)
         self.horizontalLayout_modelname_2_pop = QtWidgets.QHBoxLayout()
         self.horizontalLayout_modelname_2_pop.setObjectName("horizontalLayout_modelname_2_pop")
-        self.pushButton_modelname_pop = QtWidgets.QPushButton(self.tab_DefineModel_pop)
+        self.pushButton_modelname_pop = QtWidgets.QPushButton(self.scrollAreaWidgetContents)
         self.pushButton_modelname_pop.setEnabled(False)
         self.pushButton_modelname_pop.setObjectName("pushButton_modelname_pop")
         self.horizontalLayout_modelname_2_pop.addWidget(self.pushButton_modelname_pop)
-        self.lineEdit_modelname_pop = QtWidgets.QLineEdit(self.tab_DefineModel_pop)
+        self.lineEdit_modelname_pop = QtWidgets.QLineEdit(self.scrollAreaWidgetContents)
         self.lineEdit_modelname_pop.setEnabled(False)
         self.lineEdit_modelname_pop.setMinimumSize(QtCore.QSize(0, 22))
         self.lineEdit_modelname_pop.setMaximumSize(QtCore.QSize(16777215, 22))
         self.lineEdit_modelname_pop.setObjectName("lineEdit_modelname_pop")
         self.horizontalLayout_modelname_2_pop.addWidget(self.lineEdit_modelname_pop)
         self.verticalLayout_defineModel_pop.addLayout(self.horizontalLayout_modelname_2_pop)
-        self.line2_pop = QtWidgets.QFrame(self.tab_DefineModel_pop)
+        self.line2_pop = QtWidgets.QFrame(self.scrollAreaWidgetContents)
         self.line2_pop.setFrameShape(QtWidgets.QFrame.HLine)
         self.line2_pop.setFrameShadow(QtWidgets.QFrame.Sunken)
         self.line2_pop.setObjectName("line2_pop")
         self.verticalLayout_defineModel_pop.addWidget(self.line2_pop)
         self.horizontalLayout_9_pop = QtWidgets.QHBoxLayout()
         self.horizontalLayout_9_pop.setObjectName("horizontalLayout_9_pop")
-        self.pushButton_showModelSumm_pop = QtWidgets.QPushButton(self.tab_DefineModel_pop)
+        self.pushButton_showModelSumm_pop = QtWidgets.QPushButton(self.scrollAreaWidgetContents)
         self.pushButton_showModelSumm_pop.setObjectName("pushButton_showModelSumm_pop")
         self.horizontalLayout_9_pop.addWidget(self.pushButton_showModelSumm_pop)
-        self.pushButton_saveModelSumm_pop = QtWidgets.QPushButton(self.tab_DefineModel_pop)
+        self.pushButton_saveModelSumm_pop = QtWidgets.QPushButton(self.scrollAreaWidgetContents)
         self.pushButton_saveModelSumm_pop.setObjectName("pushButton_saveModelSumm_pop")
         self.horizontalLayout_9_pop.addWidget(self.pushButton_saveModelSumm_pop)
         self.verticalLayout_defineModel_pop.addLayout(self.horizontalLayout_9_pop)
-        self.line_pop = QtWidgets.QFrame(self.tab_DefineModel_pop)
-        self.line_pop.setFrameShape(QtWidgets.QFrame.HLine)
-        self.line_pop.setFrameShadow(QtWidgets.QFrame.Sunken)
-        self.line_pop.setObjectName("line_pop")
-        self.verticalLayout_defineModel_pop.addWidget(self.line_pop)
         self.horizontalLayout_7_pop = QtWidgets.QHBoxLayout()
         self.horizontalLayout_7_pop.setObjectName("horizontalLayout_7_pop")
+        self.verticalLayout_defineModel_pop.addLayout(self.horizontalLayout_7_pop)
+        self.gridLayout_13.addLayout(self.verticalLayout_defineModel_pop, 0, 0, 1, 1)
+        self.scrollArea_defineModel_pop.setWidget(self.scrollAreaWidgetContents)
+        self.gridLayout.addWidget(self.scrollArea_defineModel_pop, 0, 0, 1, 1)
+        self.horizontalLayout_3 = QtWidgets.QHBoxLayout()
+        self.horizontalLayout_3.setObjectName("horizontalLayout_3")
         self.checkBox_ApplyNextEpoch = QtWidgets.QCheckBox(self.tab_DefineModel_pop)
         self.checkBox_ApplyNextEpoch.setAutoFillBackground(False)
         self.checkBox_ApplyNextEpoch.setTristate(False)
         self.checkBox_ApplyNextEpoch.setObjectName("checkBox_ApplyNextEpoch")
-        self.horizontalLayout_7_pop.addWidget(self.checkBox_ApplyNextEpoch)
+        self.horizontalLayout_3.addWidget(self.checkBox_ApplyNextEpoch)
         self.checkBox_saveEpoch_pop = QtWidgets.QCheckBox(self.tab_DefineModel_pop)
         self.checkBox_saveEpoch_pop.setObjectName("checkBox_saveEpoch_pop")
-        self.horizontalLayout_7_pop.addWidget(self.checkBox_saveEpoch_pop)
+        self.horizontalLayout_3.addWidget(self.checkBox_saveEpoch_pop)
         self.pushButton_Pause_pop = QtWidgets.QPushButton(self.tab_DefineModel_pop)
+        self.pushButton_Pause_pop.setMinimumSize(QtCore.QSize(121, 28))
+        self.pushButton_Pause_pop.setMaximumSize(QtCore.QSize(121, 28))
         self.pushButton_Pause_pop.setObjectName("pushButton_Pause_pop")
-        self.horizontalLayout_7_pop.addWidget(self.pushButton_Pause_pop)
+        self.horizontalLayout_3.addWidget(self.pushButton_Pause_pop)
         self.pushButton_Stop_pop = QtWidgets.QPushButton(self.tab_DefineModel_pop)
+        self.pushButton_Stop_pop.setMinimumSize(QtCore.QSize(41, 28))
+        self.pushButton_Stop_pop.setMaximumSize(QtCore.QSize(93, 28))
         self.pushButton_Stop_pop.setObjectName("pushButton_Stop_pop")
-        self.horizontalLayout_7_pop.addWidget(self.pushButton_Stop_pop)
-        self.verticalLayout_defineModel_pop.addLayout(self.horizontalLayout_7_pop)
-        self.gridLayout.addLayout(self.verticalLayout_defineModel_pop, 0, 0, 1, 1)
+        self.horizontalLayout_3.addWidget(self.pushButton_Stop_pop)
+        self.gridLayout.addLayout(self.horizontalLayout_3, 1, 0, 1, 1)
+
+
+
+
+        
+        
         self.tabWidget_DefineModel_pop.addTab(self.tab_DefineModel_pop, "")
         self.tab_KerasImgAug_pop = QtWidgets.QWidget()
         self.tab_KerasImgAug_pop.setObjectName("tab_KerasImgAug_pop")
@@ -471,26 +466,26 @@ class Fitting_Ui(QtWidgets.QWidget):
         self.lineEdit_Rotation_pop.setObjectName("lineEdit_Rotation_pop")
         self.lineEdit_Rotation_pop.setValidator(self.onlyFloat)
         self.verticalLayout_12_pop.addWidget(self.lineEdit_Rotation_pop)
-        self.lineEdit_Rotation_pop_2 = QtWidgets.QLineEdit(self.layoutWidget_5)
-        self.lineEdit_Rotation_pop_2.setObjectName("lineEdit_Rotation_pop_2")
-        self.lineEdit_Rotation_pop_2.setValidator(self.onlyFloat)
+        self.lineEdit_widthShift_pop = QtWidgets.QLineEdit(self.layoutWidget_5)
+        self.lineEdit_widthShift_pop.setObjectName("lineEdit_widthShift_pop")
+        self.lineEdit_widthShift_pop.setValidator(self.onlyFloat)
 
-        self.verticalLayout_12_pop.addWidget(self.lineEdit_Rotation_pop_2)
-        self.lineEdit_Rotation_pop_3 = QtWidgets.QLineEdit(self.layoutWidget_5)
-        self.lineEdit_Rotation_pop_3.setObjectName("lineEdit_Rotation_pop_3")
-        self.lineEdit_Rotation_pop_3.setValidator(self.onlyFloat)
+        self.verticalLayout_12_pop.addWidget(self.lineEdit_widthShift_pop)
+        self.lineEdit_heightShift_pop = QtWidgets.QLineEdit(self.layoutWidget_5)
+        self.lineEdit_heightShift_pop.setObjectName("lineEdit_heightShift_pop")
+        self.lineEdit_heightShift_pop.setValidator(self.onlyFloat)
 
-        self.verticalLayout_12_pop.addWidget(self.lineEdit_Rotation_pop_3)
-        self.lineEdit_Rotation_pop_4 = QtWidgets.QLineEdit(self.layoutWidget_5)
-        self.lineEdit_Rotation_pop_4.setObjectName("lineEdit_Rotation_pop_4")
-        self.lineEdit_Rotation_pop_4.setValidator(self.onlyFloat)
+        self.verticalLayout_12_pop.addWidget(self.lineEdit_heightShift_pop)
+        self.lineEdit_zoomRange_pop = QtWidgets.QLineEdit(self.layoutWidget_5)
+        self.lineEdit_zoomRange_pop.setObjectName("lineEdit_zoomRange_pop")
+        self.lineEdit_zoomRange_pop.setValidator(self.onlyFloat)
 
-        self.verticalLayout_12_pop.addWidget(self.lineEdit_Rotation_pop_4)
-        self.lineEdit_Rotation_pop_5 = QtWidgets.QLineEdit(self.layoutWidget_5)
-        self.lineEdit_Rotation_pop_5.setObjectName("lineEdit_Rotation_pop_5")
-        self.lineEdit_Rotation_pop_5.setValidator(self.onlyFloat)
+        self.verticalLayout_12_pop.addWidget(self.lineEdit_zoomRange_pop)
+        self.lineEdit_shearRange_pop = QtWidgets.QLineEdit(self.layoutWidget_5)
+        self.lineEdit_shearRange_pop.setObjectName("lineEdit_shearRange_pop")
+        self.lineEdit_shearRange_pop.setValidator(self.onlyFloat)
 
-        self.verticalLayout_12_pop.addWidget(self.lineEdit_Rotation_pop_5)
+        self.verticalLayout_12_pop.addWidget(self.lineEdit_shearRange_pop)
         self.verticalLayout_10_pop.addWidget(self.splitter_2_pop)
         self.verticalLayout_9_pop.addLayout(self.verticalLayout_10_pop)
         self.gridLayout_8.addLayout(self.verticalLayout_9_pop, 0, 0, 1, 1)
@@ -775,28 +770,6 @@ class Fitting_Ui(QtWidgets.QWidget):
         self.gridLayout_4.addWidget(self.groupBox_modelKerasFit_pop, 0, 0, 1, 1)
         
         
-        self.groupBox_expt_imgProc_pop = QtWidgets.QGroupBox(self.scrollAreaWidgetContents_pop)
-        self.groupBox_expt_imgProc_pop.setObjectName("groupBox_expt_imgProc_pop")
-        self.gridLayout_48 = QtWidgets.QGridLayout(self.groupBox_expt_imgProc_pop)
-        self.gridLayout_48.setObjectName("gridLayout_48")
-        self.checkBox_expt_paddingMode_pop = QtWidgets.QCheckBox(self.groupBox_expt_imgProc_pop)
-        self.checkBox_expt_paddingMode_pop.setObjectName("checkBox_expt_paddingMode_pop")
-        self.gridLayout_48.addWidget(self.checkBox_expt_paddingMode_pop, 0, 0, 1, 1)
-        self.comboBox_expt_paddingMode_pop = QtWidgets.QComboBox(self.groupBox_expt_imgProc_pop)
-        self.comboBox_expt_paddingMode_pop.setEnabled(False)
-        self.comboBox_expt_paddingMode_pop.setObjectName("comboBox_expt_paddingMode_pop")
-        self.comboBox_expt_paddingMode_pop.addItem("")
-        self.comboBox_expt_paddingMode_pop.addItem("")
-        self.comboBox_expt_paddingMode_pop.addItem("")
-        self.comboBox_expt_paddingMode_pop.addItem("")
-        self.comboBox_expt_paddingMode_pop.addItem("")
-        self.comboBox_expt_paddingMode_pop.addItem("")
-        self.comboBox_expt_paddingMode_pop.addItem("")
-        self.comboBox_expt_paddingMode_pop.addItem("")
-        self.comboBox_expt_paddingMode_pop.addItem("")
-        self.comboBox_expt_paddingMode_pop.addItem("")
-        self.gridLayout_48.addWidget(self.comboBox_expt_paddingMode_pop, 0, 1, 1, 1)
-        self.gridLayout_4.addWidget(self.groupBox_expt_imgProc_pop, 2, 0, 1, 1)
         
               
         
@@ -925,14 +898,7 @@ class Fitting_Ui(QtWidgets.QWidget):
         self.horizontalLayout_lossW_pop.addWidget(self.pushButton_lossW)
         self.gridLayout_12.addLayout(self.horizontalLayout_lossW_pop, 5, 0, 1, 1)
         self.gridLayout_4.addWidget(self.groupBox_regularization_pop, 1, 0, 1, 1)
-           
-        
-        
-        
-        
-        
-        
-        
+                   
         
         
         self.scrollArea_expertMode_pop.setWidget(self.scrollAreaWidgetContents_pop)
@@ -953,9 +919,24 @@ class Fitting_Ui(QtWidgets.QWidget):
         self.label_NormalizationIcon_pop.setPixmap(QtGui.QPixmap(os.path.join(dir_root,"art",Default_dict["Icon theme"],"normalization.png")))
         self.label_Crop_NrEpochsIcon_pop.setPixmap(QtGui.QPixmap(os.path.join(dir_root,"art",Default_dict["Icon theme"],"nr_epochs.png")))
         self.label_ModelGeomIcon_pop.setPixmap(QtGui.QPixmap(os.path.join(dir_root,"art",Default_dict["Icon theme"],"model_architecture.png")))
+        self.label_padIcon_pop.setPixmap(QtGui.QPixmap(os.path.join(dir_root,"art",Default_dict["Icon theme"],"padding.png")))
         
         self.label_CropIcon_pop.setPixmap(QtGui.QPixmap(os.path.join(dir_root,"art",Default_dict["Icon theme"],"cropping.png")))
         self.label_Crop_pop.setAlignment(QtCore.Qt.AlignRight | QtCore.Qt.AlignVCenter)
+        
+        icon = QtGui.QIcon()
+        icon.addPixmap(QtGui.QPixmap(os.path.join(dir_root,"art",Default_dict["Icon theme"],"gpu.png")), QtGui.QIcon.Normal, QtGui.QIcon.Off)
+        self.radioButton_gpu_pop.setIcon(icon)
+
+
+        icon1 = QtGui.QIcon()
+        icon1.addPixmap(QtGui.QPixmap(os.path.join(dir_root,"art",Default_dict["Icon theme"],"cpu.png")), QtGui.QIcon.Normal, QtGui.QIcon.Off)
+        self.radioButton_cpu_pop.setIcon(icon1)
+        
+        
+        
+        
+        
         self.checkBox_ApplyNextEpoch.setIcon(QtGui.QIcon(os.path.join(dir_root,"art",Default_dict["Icon theme"],"thumb.png")))
 
         self.checkBox_saveEpoch_pop.setIcon(QtGui.QIcon(os.path.join(dir_root,"art",Default_dict["Icon theme"],"save_epoch.png")))
@@ -1027,7 +1008,7 @@ class Fitting_Ui(QtWidgets.QWidget):
         self.spinBox_trainLastNOnly_pop.setMaximum(9999)
         self.spinBox_batchSize_pop.setMinimum(1)
         self.spinBox_batchSize_pop.setMaximum(999999999)
-        self.spinBox_batchSize_pop.setValue(128)
+        self.spinBox_batchSize_pop.setValue(32)
         self.spinBox_epochs_pop.setMinimum(1)
         self.spinBox_epochs_pop.setMaximum(999999999)
 
@@ -1101,7 +1082,7 @@ class Fitting_Ui(QtWidgets.QWidget):
         #Adjust some QObjects manually
         self.spinBox_batchSize_pop.setMinimum(1)       
         self.spinBox_batchSize_pop.setMaximum(1E6)       
-        self.spinBox_batchSize_pop.setValue(128)       
+        self.spinBox_batchSize_pop.setValue(32)       
         self.spinBox_epochs_pop.setMinimum(1)       
         self.spinBox_epochs_pop.setMaximum(1E6)       
         self.spinBox_epochs_pop.setValue(1)       
@@ -1124,7 +1105,6 @@ class Fitting_Ui(QtWidgets.QWidget):
         self.checkBox_learningRate_pop.toggled['bool'].connect(self.doubleSpinBox_learningRate_pop.setEnabled) 
         self.checkBox_expt_loss_pop.toggled['bool'].connect(self.comboBox_expt_loss_pop.setEnabled)
         self.checkBox_optimizer_pop.toggled['bool'].connect(self.comboBox_optimizer_pop.setEnabled)
-        self.checkBox_expt_paddingMode_pop.toggled['bool'].connect(self.comboBox_expt_paddingMode_pop.setEnabled)
 
         self.checkBox_trainLastNOnly_pop.toggled['bool'].connect(self.spinBox_trainLastNOnly_pop.setEnabled)
         self.checkBox_dropout_pop.toggled['bool'].connect(self.lineEdit_dropout_pop.setEnabled)
@@ -1149,7 +1129,6 @@ class Fitting_Ui(QtWidgets.QWidget):
         self.checkBox_learningRate_pop.stateChanged.connect(self.expert_learningrate_off_pop)
         self.checkBox_expt_loss_pop.stateChanged.connect(self.expert_loss_off_pop)
         self.groupBox_expertMode_pop.toggled.connect(self.expert_mode_off_pop)
-        self.checkBox_expt_paddingMode_pop.stateChanged.connect(self.expert_paddingMode_off_pop)
 
 
         self.retranslateUi(Form)
@@ -1159,155 +1138,167 @@ class Fitting_Ui(QtWidgets.QWidget):
     def retranslateUi(self, Form):
         Form.setWindowTitle(_translate("Form", "Form", None))
         self.pushButton_UpdatePlot_pop.setText(_translate("Form", "Update Plot", None))
-        self.checkBox_realTimePlotting_pop.setToolTip(_translate("Form", "<html><head/><body><p>Plot model metrics like accuracy, val. accuracy... in real time. Please first hit 'Update plot' to initiate the plotting region.</p></body></html>", None))
+        self.checkBox_realTimePlotting_pop.setToolTip(_translate("Form", tooltips["checkBox_realTimePlotting_pop"], None))
         self.checkBox_realTimePlotting_pop.setText(_translate("Form", "Real-time plotting", None))
         self.label_realTimeEpochs_pop.setText(_translate("Form", "Nr. of epochs for RT", None))
-        self.label_realTimeEpochs_pop.setToolTip(_translate("Form", "<html><head/><body><p>Define how many of the last epochs should be plotted in real time. 250 means the last 250 epochs are plotted</p></body></html>", None))
-        self.spinBox_realTimeEpochs.setToolTip(_translate("Form", "<html><head/><body><p>Define how many of the last epochs should be plotted in real time. 250 means the last 250 epochs are plotted</p></body></html>", None))
+        self.label_realTimeEpochs_pop.setToolTip(_translate("Form",tooltips["label_realTimeEpochs_pop"] , None))
+        self.spinBox_realTimeEpochs.setToolTip(_translate("Form", tooltips["label_realTimeEpochs_pop"], None))
 
 
         self.groupBox_FittingInfo_pop.setTitle(_translate("Form", "Fitting Info", None))
         self.pushButton_saveTextWindow_pop.setText(_translate("Form", "Save text ", None))
-        self.pushButton_clearTextWindow_pop.setToolTip(_translate("Form", "Clear the text window (fitting info)", None))
+        self.pushButton_clearTextWindow_pop.setToolTip(_translate("Form",tooltips["pushButton_clearTextWindow_pop"] , None))
         self.pushButton_clearTextWindow_pop.setText(_translate("Form", "Clear text", None))
         self.groupBox_ChangeModel_pop.setTitle(_translate("Form", "Change fitting parameters", None))
         self.label_ModelGeom_pop.setText(_translate("Form", "Model Architecture", None))
+        self.label_ModelGeom_pop.setToolTip(_translate("Form", tooltips["comboBox_ModelSelection"], None))
+        self.label_ModelGeomIcon_pop.setToolTip(_translate("Form", tooltips["comboBox_ModelSelection"], None))
+        self.comboBox_ModelSelection_pop.setToolTip(_translate("Form", tooltips["comboBox_ModelSelection"], None))
+
         self.label_colorMode_pop.setToolTip(_translate("Form", "Color mode used for this model", None))
         self.label_colorMode_pop.setText(_translate("Form", "Color Mode", None))
+        self.label_colorModeIcon_pop.setToolTip(_translate("Form", "Color mode used for this model", None))
+
         self.comboBox_colorMode_pop.setToolTip(_translate("Form", "Color mode used for this model", None))
-        self.label_Normalization_pop.setToolTip(_translate("Form", "<html><head/><body><p>Image normalization method. Default is \'Div. by 255\'. Other normalization methods may not be supported by the Sorting Software</p></body></html>", None))
+        self.label_Normalization_pop.setToolTip(_translate("Form", tooltips["label_Normalization"], None))
         self.label_Normalization_pop.setText(_translate("Form", "Normalization", None))
-        self.comboBox_Normalization_pop.setToolTip(_translate("Form", "<html><head/><body><p>Image normalization method. Default is \'Div. by 255\'. Other normalization methods may not be supported by the Sorting Software</p></body></html>", None))
-        self.label_Crop_pop.setToolTip(_translate("Form", "<html><head/><body><p>Models need a defined input image size. Choose wisely since cutting off from large objects might result in information loss.</p></body></html>", None))
+        self.label_NormalizationIcon_pop.setToolTip(_translate("Form", tooltips["label_Normalization"], None))
+        self.comboBox_Normalization_pop.setToolTip(_translate("Form", tooltips["label_Normalization"], None))
+        self.label_Crop_pop.setToolTip(_translate("Form", tooltips["label_Crop"], None))
         self.label_Crop_pop.setText(_translate("Form", "Input image size", None))
-        self.spinBox_imagecrop_pop.setToolTip(_translate("Form", "<html><head/><body><p>Models need a defined input image size. Choose wisely since cutting off from large objects might result in information loss.</p></body></html>", None))
+        self.label_CropIcon_pop.setToolTip(_translate("Form", tooltips["label_Crop"], None))
+
+        self.label_padIcon_pop.setToolTip(_translate("Form", tooltips["label_paddingMode"], None))
+        self.comboBox_paddingMode_pop.setToolTip(_translate("Form", tooltips["label_paddingMode"], None))
+        self.label_paddingMode_pop.setToolTip(_translate("Form", tooltips["label_paddingMode"], None))
+        self.spinBox_imagecrop_pop.setToolTip(_translate("Form", tooltips["label_Crop"], None))
         self.label_Crop_NrEpochs_pop.setToolTip(_translate("Form", "Total number of training iterations", None))
         self.label_Crop_NrEpochs_pop.setText(_translate("Form", "Nr. epochs", None))
         self.spinBox_NrEpochs_pop.setToolTip(_translate("Form", "Total number of training iterations", None))
-        self.pushButton_modelname_pop.setToolTip(_translate("Form", "Define path and filename for the model you want to fit", None))
+        self.label_Crop_NrEpochsIcon_pop.setToolTip(_translate("Form", "Total number of training iterations", None))
+
+        self.radioButton_cpu_pop.setToolTip(_translate("MainWindow",tooltips["radioButton_cpu"] , None))
+        self.comboBox_cpu_pop.setToolTip(_translate("MainWindow",tooltips["radioButton_cpu"] , None))
+        self.radioButton_gpu_pop.setToolTip(_translate("MainWindow",tooltips["radioButton_gpu"] , None))
+        self.comboBox_gpu_pop.setToolTip(_translate("MainWindow",tooltips["comboBox_gpu"] , None))
+
+        self.label_memory_pop.setText(_translate("MainWindow", "Memory", None))
+        self.label_memory_pop.setToolTip(_translate("MainWindow", tooltips["label_memory"],None))
+        self.doubleSpinBox_memory_pop.setToolTip(_translate("MainWindow", tooltips["label_memory"],None))
+
+
+
+
+
+
+
+
+        self.pushButton_modelname_pop.setToolTip(_translate("Form", tooltips["pushButton_modelname"], None))
         self.pushButton_modelname_pop.setText(_translate("Form", "Model path:", None))
-        self.lineEdit_modelname_pop.setToolTip(_translate("Form", "Define path and filename for the model you want to fit", None))
+        self.lineEdit_modelname_pop.setToolTip(_translate("Form", tooltips["pushButton_modelname"], None))
         self.pushButton_showModelSumm_pop.setText(_translate("Form", "Show model summary", None))
         self.pushButton_saveModelSumm_pop.setText(_translate("Form", "Save model summary", None))
-        self.checkBox_ApplyNextEpoch.setToolTip(_translate("Form", "Changes made in this window will be applied at the next epoch", None))
+        self.checkBox_ApplyNextEpoch.setToolTip(_translate("Form", tooltips["checkBox_ApplyNextEpoch"], None))
         self.checkBox_ApplyNextEpoch.setText(_translate("Form", "Apply at next epoch", None))
-        self.checkBox_saveEpoch_pop.setToolTip(_translate("Form", "Save the model, when the current epoch is done", None))
+        self.checkBox_saveEpoch_pop.setToolTip(_translate("Form",tooltips["checkBox_saveEpoch_pop"] , None))
         self.checkBox_saveEpoch_pop.setText(_translate("Form", "Save Model", None))
-        self.pushButton_Pause_pop.setToolTip(_translate("Form", "Pause fitting, push this button again to continue", None))
+        self.pushButton_Pause_pop.setToolTip(_translate("Form", tooltips["pushButton_Pause_pop"], None))
         self.pushButton_Pause_pop.setText(_translate("Form", " ", None))
-        self.pushButton_Stop_pop.setToolTip(_translate("Form", "Stop fitting entirely, Close this window manually, after the progressbar shows 100%", None))
+        self.pushButton_Stop_pop.setToolTip(_translate("Form", tooltips["pushButton_Stop_pop"], None))
         self.pushButton_Stop_pop.setText(_translate("Form", "", None))
         self.tabWidget_DefineModel_pop.setTabText(self.tabWidget_DefineModel_pop.indexOf(self.tab_DefineModel_pop), _translate("Form", "Define Model", None))
-        self.tab_KerasImgAug_pop.setToolTip(_translate("Form", "<html><head/><body><p>Define settings for  affine image augmentations</p></body></html>", None))
-        self.label_RefreshAfterEpochs_pop.setToolTip(_translate("Form", "<html><head/><body><p>Affine image augmentation takes quite long; so maybe use the same images for this nr. of epochs</p></body></html>", None))
+        self.tab_KerasImgAug_pop.setToolTip(_translate("Form", tooltips["tab_kerasAug"], None))
+        self.label_RefreshAfterEpochs_pop.setToolTip(_translate("Form", tooltips["spinBox_RefreshAfterEpochs"], None))
         self.label_RefreshAfterEpochs_pop.setText(_translate("Form", "Refresh after nr. epochs:", None))
-        self.spinBox_RefreshAfterEpochs_pop.setToolTip(_translate("Form", "<html><head/><body><p>Affine image augmentation using takes quite long; so maybe use the same images for this nr. of epochs</p></body></html>", None))
-        self.checkBox_HorizFlip_pop.setToolTip(_translate("Form", "<html><head/><body><p>Flip some training images randomly along horiz. axis (left becomes right; right becomes left)</p></body></html>", None))
+        self.spinBox_RefreshAfterEpochs_pop.setToolTip(_translate("Form", tooltips["spinBox_RefreshAfterEpochs"], None))
+        self.checkBox_HorizFlip_pop.setToolTip(_translate("Form", tooltips["checkBox_HorizFlip"], None))
         self.checkBox_HorizFlip_pop.setText(_translate("Form", "Horizontal flip", None))
-        self.checkBox_VertFlip_pop.setToolTip(_translate("Form", "<html><head/><body><p>Flip some training images randomly along vert. axis (bottom up; top down)</p></body></html>", None))
+        self.checkBox_VertFlip_pop.setToolTip(_translate("Form", tooltips["checkBox_VertFlip"], None))
         self.checkBox_VertFlip_pop.setText(_translate("Form", "Vertical flip", None))
-        self.label_Rotation_pop.setToolTip(_translate("Form", "<html><head/><body><p>Degree range for random rotations</p></body></html>", None))
+        self.label_Rotation_pop.setToolTip(_translate("Form", tooltips["label_Rotation"], None))
         self.label_Rotation_pop.setText(_translate("Form", "Rotation", None))
-        self.label_width_shift_pop.setToolTip(_translate("Form", "<html><head/><body><p>Define random shift of width<br>Fraction of total width, if &lt; 1. Otherwise pixels if>=1.<br>Value defines an interval (-width_shift_range, +width_shift_range) from which random numbers are created</p></body></html>", None))
+        self.label_width_shift_pop.setToolTip(_translate("Form", tooltips["label_width_shift"], None))
         self.label_width_shift_pop.setText(_translate("Form", "Width shift", None))
-        self.label_height_shift_pop.setToolTip(_translate("Form", "<html><head/><body><p>Define random shift of height<br>Fraction of total height if &lt; 1. Otherwise pixels if>=1.<br>Value defines an interval (-height_shift_range, +height_shift_range) from which random numbers are created</p></body></html>", None))
+        self.label_height_shift_pop.setToolTip(_translate("Form", tooltips["label_height_shift"], None))
         self.label_height_shift_pop.setText(_translate("Form", "Height shift", None))
-        self.label_zoom_pop.setToolTip(_translate("Form", "<html><head/><body><p>Range for random zoom</p></body></html>", None))
+        self.label_zoom_pop.setToolTip(_translate("Form", tooltips["label_zoom"], None))
         self.label_zoom_pop.setText(_translate("Form", "Zoom", None))
-        self.label_shear_pop.setToolTip(_translate("Form", "<html><head/><body><p>Shear Intensity (Shear angle in counter-clockwise direction in degrees)</p></body></html>", None))
+        self.label_shear_pop.setToolTip(_translate("Form",tooltips["label_shear"], None))
         self.label_shear_pop.setText(_translate("Form", "Shear", None))
-        self.lineEdit_Rotation_pop.setToolTip(_translate("Form", "<html><head/><body><p>Degree range for random rotations</p></body></html>", None))
-        self.lineEdit_Rotation_pop_2.setToolTip(_translate("Form", "<html><head/><body><p>Define random shift of width<br>Fraction of total width, if &lt; 1. Otherwise pixels if>=1.<br>Value defines an interval (-width_shift_range, +width_shift_range) from which random numbers are created</p></body></html>", None))
-        self.lineEdit_Rotation_pop_3.setToolTip(_translate("Form", "<html><head/><body><p>Define random shift of height<br>Fraction of total height if &lt; 1. Otherwise pixels if>=1.<br>Value defines an interval (-height_shift_range, +height_shift_range) from which random numbers are created   </p></body></html>", None))
-        self.lineEdit_Rotation_pop_4.setToolTip(_translate("Form", "<html><head/><body><p>Range for random zoom</p></body></html>", None))
-        self.lineEdit_Rotation_pop_5.setToolTip(_translate("Form", "<html><head/><body><p>Shear Intensity (Shear angle in counter-clockwise direction in degrees)</p></body></html>", None))
+        self.lineEdit_Rotation_pop.setToolTip(_translate("Form", tooltips["label_Rotation"], None))
+        self.lineEdit_widthShift_pop.setToolTip(_translate("Form", tooltips["label_width_shift"], None))
+        self.lineEdit_heightShift_pop.setToolTip(_translate("Form", tooltips["label_height_shift"], None))
+        self.lineEdit_zoomRange_pop.setToolTip(_translate("Form", tooltips["label_zoom"], None))
+        self.lineEdit_shearRange_pop.setToolTip(_translate("Form", tooltips["label_shear"], None))
         self.tabWidget_DefineModel_pop.setTabText(self.tabWidget_DefineModel_pop.indexOf(self.tab_KerasImgAug_pop), _translate("Form", "Affine img. augm.", None))
-        self.label_RefreshAfterNrEpochs_pop.setToolTip(_translate("Form", "<html><head/><body><p>Brightness augmentation is really fast, so best you refresh images for each epoch (set to 1)</p></body></html>", None))
+        self.label_RefreshAfterNrEpochs_pop.setToolTip(_translate("Form", tooltips["label_RefreshAfterNrEpochs"], None))
         self.label_RefreshAfterNrEpochs_pop.setText(_translate("Form", "Refresh after nr. epochs:", None))
-        self.spinBox_RefreshAfterNrEpochs_pop.setToolTip(_translate("Form", "<html><head/><body><p>Brightness augmentation is really fast, so best you refresh images for each epoch (set to 1)</p></body></html>", None))
-        self.groupBox_BrightnessAugmentation_pop.setToolTip(_translate("Form", "<html><head/><body><p>Define add/multiply offset to make image randomly slightly brighter or darker. Additive offset (A) is one number that is added to all pixels values; Multipl. offset (M) is a value to multiply each pixel value with: NewImage = A + M*Image</p></body></html>", None))
+        self.spinBox_RefreshAfterNrEpochs_pop.setToolTip(_translate("Form", tooltips["label_RefreshAfterNrEpochs"], None))
+        self.groupBox_BrightnessAugmentation_pop.setToolTip(_translate("Form", tooltips["groupBox_BrightnessAugmentation"], None))
         self.groupBox_BrightnessAugmentation_pop.setTitle(_translate("Form", "Brightness augmentation", None))
-        self.label_Plus_pop.setToolTip(_translate("Form", "<html><head/><body><p>Define lower threshold for additive offset</p></body></html>", None))
+        self.label_Plus_pop.setToolTip(_translate("Form", tooltips["spinBox_PlusLower"], None))
         self.label_Plus_pop.setText(_translate("Form", "Add.", None))
-        self.spinBox_PlusLower_pop.setToolTip(_translate("Form", "<html><head/><body><p>Define lower threshold for additive offset</p></body></html>", None))
+        self.spinBox_PlusLower_pop.setToolTip(_translate("Form", tooltips["spinBox_PlusLower"], None))
         #self.label_PlusTo_pop.setToolTip(_translate("Form", "<html><head/><body><p>Define upper threshold for additive offset</p></body></html>", None))
         #self.label_PlusTo_pop.setText(_translate("Form", "...", None))
-        self.spinBox_PlusUpper_pop.setToolTip(_translate("Form", "<html><head/><body><p>Define upper threshold for additive offset</p></body></html>", None))
-        self.label_Mult_pop.setToolTip(_translate("Form", "<html><head/><body><p>Define lower threshold for multiplicative offset</p></body></html>", None))
+        self.spinBox_PlusUpper_pop.setToolTip(_translate("Form", tooltips["spinBox_PlusUpper"], None))
+        self.label_Mult_pop.setToolTip(_translate("Form", tooltips["doubleSpinBox_MultLower"], None))
         self.label_Mult_pop.setText(_translate("Form", "Mult.", None))
-        self.doubleSpinBox_MultLower_pop.setToolTip(_translate("Form", "<html><head/><body><p>Define lower threshold for multiplicative offset</p></body></html>", None))
+        self.doubleSpinBox_MultLower_pop.setToolTip(_translate("Form", tooltips["doubleSpinBox_MultLower"], None))
         #self.label_Rotation_MultTo_pop.setText(_translate("Form", "...", None))
-        self.groupBox_GaussianNoise_pop.setToolTip(_translate("Form", "<html><head/><body><p>Define Gaussian Noise, which is added to the image</p></body></html>", None))
+        self.groupBox_GaussianNoise_pop.setToolTip(_translate("Form", tooltips["groupBox_GaussianNoise"], None))
         self.groupBox_GaussianNoise_pop.setTitle(_translate("Form", "Gaussian noise", None))
-        self.label_GaussianNoiseMean_pop.setToolTip(_translate("Form", "<html><head/><body><p>Define the mean of the Gaussian noise. Typically this should be zero. If you use a positive number it would mean that your noise tends to be positive, i.e. bright.</p></body></html>", None))
+        self.label_GaussianNoiseMean_pop.setToolTip(_translate("Form", tooltips["label_GaussianNoiseMean"], None))
         self.label_GaussianNoiseMean_pop.setText(_translate("Form", "Mean", None))
-        self.doubleSpinBox_GaussianNoiseMean_pop.setToolTip(_translate("Form", "<html><head/><body><p>Define the mean of the Gaussian noise. Typically this should be zero. If you use a positive number it would mean that your noise tends to be positive, i.e. bright.</p></body></html>", None))
-        self.label_GaussianNoiseScale_pop.setToolTip(_translate("Form", "<html><head/><body><p>Define the standard deviation of the Gaussian noise. A larger number means a wider distribution of the noise, which results in an image that looks more noisy. Prefer to change this parameter over chainging the mean.</p></body></html>", None))
+        self.doubleSpinBox_GaussianNoiseMean_pop.setToolTip(_translate("Form", tooltips["label_GaussianNoiseMean"], None))
+        self.label_GaussianNoiseScale_pop.setToolTip(_translate("Form", tooltips["label_GaussianNoiseScale"], None))
         self.label_GaussianNoiseScale_pop.setText(_translate("Form", "Scale", None))
-        self.doubleSpinBox_GaussianNoiseScale_pop.setToolTip(_translate("Form", "<html><head/><body><p>Define the standard deviation of the Gaussian noise. A larger number means a wider distribution of the noise, which results in an image that looks more noisy. Prefer to change this parameter over chainging the mean.</p></body></html>", None))
+        self.doubleSpinBox_GaussianNoiseScale_pop.setToolTip(_translate("Form",tooltips["label_GaussianNoiseScale"], None))
 
         self.groupBox_colorAugmentation_pop.setTitle(_translate("Form", "Color augm.", None))
         self.checkBox_contrast_pop.setText(_translate("Form", "Contrast", None))
-        self.checkBox_contrast_pop.setToolTip(_translate("Form", "<html><head/><body><p>Augment contrast using a random factor. Applicable for Grayscale and RGB. Left spinbox (lower factor) has to be >0. '0.70' to '1.3' means plus/minus 30% contrast (at random)</p></body></html>", None))
+        self.checkBox_contrast_pop.setToolTip(_translate("Form", tooltips["checkBox_contrast"], None))
         self.checkBox_saturation_pop.setText(_translate("Form", "Saturation", None))
-        self.checkBox_saturation_pop.setToolTip(_translate("Form", "<html><head/><body><p>Augment saturation using a random factor. Applicable for RGB only. Left spinbox (lower factor) has to be >0. '0.70' to '1.3' means plus/minus 30% saturation (at random)</p></body></html>", None))
+        self.checkBox_saturation_pop.setToolTip(_translate("Form", tooltips["checkBox_saturation"], None))
         self.checkBox_hue_pop.setText(_translate("Form", "Hue", None))
-        self.checkBox_hue_pop.setToolTip(_translate("Form", "<html><head/><body><p>Augment hue using a random factor. Applicable for RGB only. Left spinbox (lower factor) has to be >0. '0.70' to '1.3' means plus/minus 30% hue (at random)</p></body></html>", None))
+        self.checkBox_hue_pop.setToolTip(_translate("Form",tooltips["checkBox_hue"], None))
 
 
 
 
         self.groupBox_blurringAug_pop.setTitle(_translate("MainWindow", "Blurring", None))
-        tooltip_blurringAug = "Define methods to randomly blur images."
-        self.groupBox_blurringAug_pop.setToolTip(_translate("MainWindow", "<html><head/><body><p>"+tooltip_blurringAug+"</p></body></html>", None))
-        self.label_motionBlurKernel_pop.setToolTip(_translate("MainWindow", "<html><head/><body><p>Define kernels by giving a range [min,max]. Values in this range are then randomly picked for each image</p></body></html>", None))
+        self.groupBox_blurringAug_pop.setToolTip(_translate("MainWindow", tooltips["groupBox_blurringAug"], None))
+        self.label_motionBlurKernel_pop.setToolTip(_translate("MainWindow", tooltips["label_motionBlurKernel"], None))
         self.label_motionBlurKernel_pop.setText(_translate("MainWindow", "Kernel", None))
-        self.lineEdit_motionBlurAngle_pop.setToolTip(_translate("MainWindow", "<html><head/><body><p>Define angle for the motion blur by defining a range \"min degree,max degree\". Values in this range are then randomly picked for each image</p></body></html>", None))
+        self.lineEdit_motionBlurAngle_pop.setToolTip(_translate("MainWindow", tooltips["lineEdit_motionBlurAngle"], None))
         #self.lineEdit_motionBlurAngle_pop.setText(_translate("MainWindow", "-10,10", None))
-        self.label_avgBlurMin_pop.setToolTip(_translate("MainWindow", "<html><head/><body><p>Define the minimum kernel size for average blur</p></body></html>", None))
+        self.label_avgBlurMin_pop.setToolTip(_translate("MainWindow", tooltips["label_avgBlurMin"], None))
         self.label_avgBlurMin_pop.setText(_translate("MainWindow", "Min", None))
-        self.spinBox_gaussBlurMax_pop.setToolTip(_translate("MainWindow", "<html><head/><body><p>Define the maximum kernel size for gaussian blur</p></body></html>", None))
-        tooltip_motionBlur = "Apply random motion blurring. Motion blur is defined by an intensity ('kernel') and a direction ('angle'). Please define a range for 'kernel' and 'angle'. AID will pick a random value (within each range) for each image."
-        self.checkBox_motionBlur_pop.setToolTip(_translate("MainWindow", "<html><head/><body><p>"+tooltip_motionBlur+"</p></body></html>", None))
+        self.spinBox_gaussBlurMax_pop.setToolTip(_translate("MainWindow", tooltips["spinBox_gaussBlurMax"], None))
+        self.checkBox_motionBlur_pop.setToolTip(_translate("MainWindow", tooltips["checkBox_motionBlur"], None))
         self.checkBox_motionBlur_pop.setText(_translate("MainWindow", "Motion", None))
-        self.spinBox_avgBlurMin_pop.setToolTip(_translate("MainWindow", "<html><head/><body><p>Define the minimum kernel size for average blur</p></body></html>", None))
-        self.spinBox_gaussBlurMin_pop.setToolTip(_translate("MainWindow", "<html><head/><body><p>Define the minimum kernel size for gaussian blur</p></body></html>", None))
-        self.label_motionBlurAngle_pop.setToolTip(_translate("MainWindow", "<html><head/><body><p>Define a range of angles for the motion blur: 'min degree,max degree'. Values from this range are then randomly picked for each image</p></body></html>", None))
+        self.spinBox_avgBlurMin_pop.setToolTip(_translate("MainWindow", tooltips["spinBox_avgBlurMin"], None))
+        self.spinBox_gaussBlurMin_pop.setToolTip(_translate("MainWindow", tooltips["spinBox_avgBlurMin"], None))
+        self.label_motionBlurAngle_pop.setToolTip(_translate("MainWindow", tooltips["label_motionBlurAngle"], None))
         self.label_motionBlurAngle_pop.setText(_translate("MainWindow", "Angle", None))
-        self.label_gaussBlurMin_pop.setToolTip(_translate("MainWindow", "<html><head/><body><p>Define the minimum kernel size for gaussian blur</p></body></html>", None))
+        self.label_gaussBlurMin_pop.setToolTip(_translate("MainWindow", tooltips["label_gaussBlurMin"], None))
         self.label_gaussBlurMin_pop.setText(_translate("MainWindow", "Min", None))
-        self.label_gaussBlurMin_pop.setToolTip(_translate("MainWindow", "<html><head/><body><p>Define the minimum kernel size for gaussian blur</p></body></html>", None))
-        tooltip_gaussianBlur = "Apply random gaussian blurring. For gaussian blurring, a gaussian kernel of defined size is used. Please define a min. and max. kernel size. For each image a random value is picked from this range to generate a gaussian kernel."
-        self.checkBox_gaussBlur_pop.setToolTip(_translate("MainWindow", "<html><head/><body><p>"+tooltip_gaussianBlur+"</p></body></html>", None))
+        self.label_gaussBlurMin_pop.setToolTip(_translate("MainWindow", tooltips["label_gaussBlurMin"], None))
+        self.checkBox_gaussBlur_pop.setToolTip(_translate("MainWindow", tooltips["checkBox_gaussBlur"], None))
         self.checkBox_gaussBlur_pop.setText(_translate("MainWindow", "Gauss", None))
-        self.spinBox_avgBlurMax_pop.setToolTip(_translate("MainWindow", "<html><head/><body><p>Define the maximum kernel size for average blur</p></body></html>", None))
-        self.label_gaussBlurMax_pop.setToolTip(_translate("MainWindow", "<html><head/><body><p>Define the maximum kernel size for gaussian blur</p></body></html>", None))
+        self.spinBox_avgBlurMax_pop.setToolTip(_translate("MainWindow", tooltips["spinBox_avgBlurMax"], None))
+        self.label_gaussBlurMax_pop.setToolTip(_translate("MainWindow", tooltips["spinBox_avgBlurMax"], None))
         self.label_gaussBlurMax_pop.setText(_translate("MainWindow", "Max", None))
-        self.label_gaussBlurMax_pop.setToolTip(_translate("MainWindow", "<html><head/><body><p>Define the maximum kernel size for gaussian blur</p></body></html>", None))
-        tooltip_avgBlur = "Apply random average blurring. Define a range of kernel sizes for the average blur (min. and max. kernel size). Values from this range are then randomly picked for each image. To blur an image, all pixels within the kernel area used to compute an average pixel value. The central element of the kernel area in the image is then set to this value. This operation is carried out over the entire image"
-        self.checkBox_avgBlur_pop.setToolTip(_translate("MainWindow", "<html><head/><body><p>"+tooltip_avgBlur+"</p></body></html>", None))        
+        self.label_gaussBlurMax_pop.setToolTip(_translate("MainWindow", tooltips["spinBox_avgBlurMax"], None))
+        self.checkBox_avgBlur_pop.setToolTip(_translate("MainWindow", tooltips["checkBox_avgBlur"], None))        
         self.checkBox_avgBlur_pop.setText(_translate("MainWindow", "Average", None))
         
-        self.label_avgBlurMax_pop.setToolTip(_translate("MainWindow", "<html><head/><body><p>Define the maximum kernel size for average blur</p></body></html>", None))
+        self.label_avgBlurMax_pop.setToolTip(_translate("MainWindow", tooltips["label_avgBlurMax"], None))
         self.label_avgBlurMax_pop.setText(_translate("MainWindow", "Max", None))
-        self.spinBox_avgBlurMin_pop.setToolTip(_translate("MainWindow", "<html><head/><body><p>Define the minimum kernel size for average blur</p></body></html>", None))
-        self.spinBox_avgBlurMax_pop.setToolTip(_translate("MainWindow", "<html><head/><body><p>Define the maximum kernel size for average blur</p></body></html>", None))
-        self.lineEdit_motionBlurKernel_pop.setToolTip(_translate("MainWindow", "<html><head/><body><p>Define kernels by giving a range \"min,max\". Values from this range are then randomly picked for each image</p></body></html>", None))
+        self.spinBox_avgBlurMin_pop.setToolTip(_translate("MainWindow", tooltips["spinBox_avgBlurMin"], None))
+        self.spinBox_avgBlurMax_pop.setToolTip(_translate("MainWindow", tooltips["spinBox_avgBlurMax"], None))
+        self.lineEdit_motionBlurKernel_pop.setToolTip(_translate("MainWindow", tooltips["lineEdit_motionBlurKernel"], None))
         #self.lineEdit_motionBlurKernel_pop.setText(_translate("MainWindow", "0,5", None))
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
         
         self.tabWidget_DefineModel_pop.setTabText(self.tabWidget_DefineModel_pop.indexOf(self.tab_BrightnessAug_pop), _translate("Form", "Brightn/Color augm.", None))
@@ -1316,48 +1307,38 @@ class Fitting_Ui(QtWidgets.QWidget):
         self.tabWidget_DefineModel_pop.setTabText(self.tabWidget_DefineModel_pop.indexOf(self.tab_ExampleImgs_pop), _translate("Form", "Example imgs.", None))
         self.tabWidget_DefineModel_pop.setTabToolTip(self.tabWidget_DefineModel_pop.indexOf(self.tab_ExampleImgs_pop), _translate("Form", "<html><head/><body><p>Show random example images of the training data</p></body></html>", None))
 
-        self.groupBox_expertMode_pop.setToolTip(_translate("Form", "<html><head/><body><p>Expert mode allows changing the learning rate and you can even set parts of the neural net to \'not trainable\' in order to perform transfer learning and fine tune models. Also dropout rates can be adjusted. When expert mode is turned off again, the initial values are applied again.</p></body></html>", None))
+        self.groupBox_expertMode_pop.setToolTip(_translate("Form", tooltips["groupBox_expertMode"], None))
         self.groupBox_expertMode_pop.setTitle(_translate("Form", "Expert mode", None))
         self.groupBox_modelKerasFit_pop.setTitle(_translate("Form", "In model_keras.fit()", None))       
-        self.checkBox_learningRate_pop.setToolTip(_translate("Form", "<html><head/><body><p>Change the learning rate. The default optimizer is \'adam\' with a learning rate of 0.001</p></body></html>", None))
+        self.checkBox_learningRate_pop.setToolTip(_translate("Form", tooltips["checkBox_learningRate"], None))
         self.checkBox_learningRate_pop.setText(_translate("Form", "Learning Rate", None))
-        self.doubleSpinBox_learningRate_pop.setToolTip(_translate("Form", "<html><head/><body><p>Change the learning rate. Optimizer is always \'adam\' and default value is 0.001</p></body></html>", None))
-        self.checkBox_trainLastNOnly_pop.setToolTip(_translate("Form", "<html><head/><body><p>When checked, only the last n layers of the model, which have >0 parameters will stay trainable. Layers before are set to trainable=False. Please specify n using the spinbox. After this change, the model has to be recompiled, which means the optimizer values are deleted.</p></body></html>", None))
+        self.doubleSpinBox_learningRate_pop.setToolTip(_translate("Form", tooltips["checkBox_learningRate"], None))
+        self.checkBox_trainLastNOnly_pop.setToolTip(_translate("Form", tooltips["checkBox_trainLastNOnly"], None))
         self.checkBox_trainLastNOnly_pop.setText(_translate("Form", "Train last N layers only. N=", None))
-        self.spinBox_trainLastNOnly_pop.setToolTip(_translate("Form", "<html><head/><body><p>Specify the number of last layer in your model that should be kept trainable. Only layers with >0 parameters are counted. Use the checkbox to apply this option. After this change, the model has to be recompiled, which means the optimizer values are deleted. </p></body></html>", None))
-        self.checkBox_trainDenseOnly_pop.setToolTip(_translate("Form", "<html><head/><body><p>When checked, only the dense layers are kept trainable (if they have >0 parameters).Other layers are set to trainable=False. After this change, the model has to be recompiled, which means the optimizer values are deleted.</p></body></html>", None))
+        self.spinBox_trainLastNOnly_pop.setToolTip(_translate("Form", tooltips["spinBox_trainLastNOnly"], None))
+        self.checkBox_trainDenseOnly_pop.setToolTip(_translate("Form", tooltips["checkBox_trainDenseOnly"], None))
         self.checkBox_trainDenseOnly_pop.setText(_translate("Form", "Train Dense only", None))
 
-        self.label_batchSize_pop.setToolTip(_translate("Form", "<html><head/><body><p>Number of samples per gradient update. If unspecified, batch_size will default to 128. (Source: Keras documentation)</p></body></html>", None))
+        self.label_batchSize_pop.setToolTip(_translate("Form", tooltips["label_batchSize"], None))
         self.label_batchSize_pop.setText(_translate("Form", "Batch size", None))
-        self.spinBox_batchSize_pop.setToolTip(_translate("Form", "<html><head/><body><p>Number of samples per gradient update. If unspecified, batch_size will default to 128. (Source: Keras documentation)</p></body></html>", None))
-        self.label_epochs_pop.setToolTip(_translate("Form", "<html><head/><body><p>Number of epochs to train the model on identical batch.</p></body></html>", None))
+        self.spinBox_batchSize_pop.setToolTip(_translate("Form", tooltips["label_batchSize"], None))
+        self.label_epochs_pop.setToolTip(_translate("Form", tooltips["label_epochs"], None))
         self.label_epochs_pop.setText(_translate("Form", "Epochs", None))
-        self.spinBox_epochs_pop.setToolTip(_translate("Form", "<html><head/><body><p>Number of epochs to train the model on identical batch.</p></body></html>", None))
+        self.spinBox_epochs_pop.setToolTip(_translate("Form", tooltips["label_epochs"], None))
 
         self.groupBox_expt_imgProc_pop.setTitle(_translate("Form", "Image processing", None))
-        self.checkBox_expt_paddingMode_pop.setText(_translate("Form", "Padding mode", None))
-        self.comboBox_expt_paddingMode_pop.setToolTip(_translate("Form", "<html><head/><body><p>By default, the padding mode is \"constant\", which means that zeros are padded.\n"
-"\"edge\": Pads with the edge values of array.\n"
-"\"linear_ramp\": Pads with the linear ramp between end_value and the array edge value.\n"
-"\"maximum\": Pads with the maximum value of all or part of the vector along each axis.\n"
-"\"mean\": Pads with the mean value of all or part of the vector along each axis.\n"
-"\"median\": Pads with the median value of all or part of the vector along each axis.\n"
-"\"minimum\": Pads with the minimum value of all or part of the vector along each axis.\n"
-"\"reflect\": Pads with the reflection of the vector mirrored on the first and last values of the vector along each axis.\n"
-"\"symmetric\": Pads with the reflection of the vector mirrored along the edge of the array.\n"
-"\"wrap\": Pads with the wrap of the vector along the axis. The first values are used to pad the end and the end values are used to pad the beginning.\n"
-"Text copied from https://docs.scipy.org/doc/numpy/reference/generated/numpy.pad.html</p></body></html>", None))
-        self.comboBox_expt_paddingMode_pop.setItemText(0, _translate("Form", "constant", None))
-        self.comboBox_expt_paddingMode_pop.setItemText(1, _translate("Form", "edge", None))
-        self.comboBox_expt_paddingMode_pop.setItemText(2, _translate("Form", "linear_ramp", None))
-        self.comboBox_expt_paddingMode_pop.setItemText(3, _translate("Form", "maximum", None))
-        self.comboBox_expt_paddingMode_pop.setItemText(4, _translate("Form", "mean", None))
-        self.comboBox_expt_paddingMode_pop.setItemText(5, _translate("Form", "median", None))
-        self.comboBox_expt_paddingMode_pop.setItemText(6, _translate("Form", "minimum", None))
-        self.comboBox_expt_paddingMode_pop.setItemText(7, _translate("Form", "reflect", None))
-        self.comboBox_expt_paddingMode_pop.setItemText(8, _translate("Form", "symmetric", None))
-        self.comboBox_expt_paddingMode_pop.setItemText(9, _translate("Form", "wrap", None))
+        self.label_paddingMode_pop.setText(_translate("Form", "Padding mode", None))
+        self.comboBox_paddingMode_pop.setToolTip(_translate("Form", tooltips["label_paddingMode"], None))
+        self.comboBox_paddingMode_pop.setItemText(0, _translate("Form", "constant", None))
+        self.comboBox_paddingMode_pop.setItemText(1, _translate("Form", "edge", None))
+        self.comboBox_paddingMode_pop.setItemText(2, _translate("Form", "linear_ramp", None))
+        self.comboBox_paddingMode_pop.setItemText(3, _translate("Form", "maximum", None))
+        self.comboBox_paddingMode_pop.setItemText(4, _translate("Form", "mean", None))
+        self.comboBox_paddingMode_pop.setItemText(5, _translate("Form", "median", None))
+        self.comboBox_paddingMode_pop.setItemText(6, _translate("Form", "minimum", None))
+        self.comboBox_paddingMode_pop.setItemText(7, _translate("Form", "reflect", None))
+        self.comboBox_paddingMode_pop.setItemText(8, _translate("Form", "symmetric", None))
+        self.comboBox_paddingMode_pop.setItemText(9, _translate("Form", "wrap", None))
 
 
         self.groupBox_regularization_pop.setTitle(_translate("Form", "Loss / Regularization", None))
@@ -1390,20 +1371,20 @@ class Fitting_Ui(QtWidgets.QWidget):
         self.comboBox_optimizer_pop.setItemText(6, _translate("Form", "Nadam", None))
 
 
-        self.checkBox_dropout_pop.setToolTip(_translate("Form", "<html><head/><body><p>If your model has one or more dropout layers, you can change the dropout rates here. Insert into the lineEdit one value (e.g. 0.5) to apply this one value to all dropout layers, or insert a list of values to specify the dropout rates for each dropout layer individually (e.g. for three dropout layers: [ 0.2 , 0.5 , 0.25 ]. The model will be recompiled, but the optimizer weights are not deleted.</p></body></html>", None))
+        self.checkBox_dropout_pop.setToolTip(_translate("Form", tooltips["checkBox_dropout"], None))
         self.checkBox_dropout_pop.setText(_translate("Form", "Change Dropout to", None))
-        self.lineEdit_dropout_pop.setToolTip(_translate("Form", "<html><head/><body><p>If your model has one or more dropout layers, you can change the dropout rates here. Insert into the lineEdit one value (e.g. 0.5) to apply this one value to all dropout layers, or insert a list of values to specify the dropout rates for each dropout layer individually (e.g. for three dropout layers: [ 0.2 , 0.5 , 0.25 ]. The model will be recompiled, but the optimizer weights are not deleted.</p></body></html>", None))
+        self.lineEdit_dropout_pop.setToolTip(_translate("Form", tooltips["checkBox_dropout"], None))
 
 #        self.checkBox_pTr_pop.setText(_translate("Form", "Partial trainability", None))
-#        self.checkBox_pTr_pop.setToolTip(_translate("Form", "<html><head/><body><p>Partial trainability allows you to make parts of a layer non-trainable. Hence, this option makes most sense in combination with 'Load and continue' training a model. After checking this box, the model you chose on 'Define model'-tab is initialized. The line on the right shows the trainability of each layer in the model. Use the button on the right ('...') to open a popup menu, which allows you to specify individual trainabilities for each layer.</p></body></html>", None))
-#        self.lineEdit_pTr_pop.setToolTip(_translate("Form", "<html><head/><body><p>Partial trainability allows you to make parts of a layer non-trainable. Hence, this option makes most sense in combination with 'Load and continue' training a model. After checking this box, the model you chose on 'Define model'-tab is initialized. The line on the right shows the trainability of each layer in the model. Use the button on the right ('...') to open a popup menu, which allows you to specify individual trainabilities for each layer.</p></body></html>", None))
+#        self.checkBox_pTr_pop.setToolTip(_translate("Form", tooltips["checkBox_partialTrainability"], None))
+#        self.lineEdit_pTr_pop.setToolTip(_translate("Form", tooltips["checkBox_partialTrainability"], None))
 #        self.pushButton_pTr_pop.setText(_translate("Form", "...", None))
-#        self.pushButton_pTr_pop.setToolTip(_translate("Form", "<html><head/><body><p>Partial trainability allows you to make parts of a layer non-trainable. Hence, this option makes most sense in combination with 'Load and continue' training a model. After checking this box, the model you chose on 'Define model'-tab is initialized. The line on the right shows the trainability of each layer in the model. Use the button on the right ('...') to open a popup menu, which allows you to specify individual trainabilities for each layer.</p></body></html>", None))
+#        self.pushButton_pTr_pop.setToolTip(_translate("Form", tooltips["checkBox_partialTrainability"], None))
 
         self.checkBox_lossW.setText(_translate("Form", "Loss Weights", None))
-        self.checkBox_lossW.setToolTip(_translate("Form", "<html><head/><body><p>Specify scalar coefficients to weight the loss contributions of different classes.</p></body></html>", None))
-        self.lineEdit_lossW.setToolTip(_translate("Form", "<html><head/><body><p>Specify scalar coefficients to weight the loss contributions of different classes.</p></body></html>", None))
-        self.pushButton_lossW.setToolTip(_translate("Form", "<html><head/><body><p>Specify scalar coefficients to weight the loss contributions of different classes.</p></body></html>", None))
+        self.checkBox_lossW.setToolTip(_translate("Form", tooltips["checkBox_lossW"], None))
+        self.lineEdit_lossW.setToolTip(_translate("Form", tooltips["checkBox_lossW"], None))
+        self.pushButton_lossW.setToolTip(_translate("Form", tooltips["checkBox_lossW"], None))
         self.pushButton_lossW.setText(_translate("Form", "...", None))
 
         self.tabWidget_DefineModel_pop.setTabText(self.tabWidget_DefineModel_pop.indexOf(self.tab_expertMode_pop), _translate("Form", "Expert", None))
@@ -1420,38 +1401,38 @@ class Fitting_Ui(QtWidgets.QWidget):
             return
     def keras_changed_width_shift_pop(self,on_or_off):
         if on_or_off==0:
-            self.lineEdit_Rotation_pop_2.setText(str(0))
-            self.lineEdit_Rotation_pop_2.setEnabled(False)
+            self.lineEdit_widthShift_pop.setText(str(0))
+            self.lineEdit_widthShift_pop.setEnabled(False)
         elif on_or_off==2:
-            self.lineEdit_Rotation_pop_2.setText(str(Default_dict ["width_shift"]))
-            self.lineEdit_Rotation_pop_2.setEnabled(True)
+            self.lineEdit_widthShift_pop.setText(str(Default_dict ["width_shift"]))
+            self.lineEdit_widthShift_pop.setEnabled(True)
         else:
             return
     def keras_changed_height_shift_pop(self,on_or_off):
         if on_or_off==0:
-            self.lineEdit_Rotation_pop_3.setText(str(0))
-            self.lineEdit_Rotation_pop_3.setEnabled(False)
+            self.lineEdit_heightShift_pop.setText(str(0))
+            self.lineEdit_heightShift_pop.setEnabled(False)
         elif on_or_off==2:
-            self.lineEdit_Rotation_pop_3.setText(str(Default_dict ["height_shift"]))
-            self.lineEdit_Rotation_pop_3.setEnabled(True)
+            self.lineEdit_heightShift_pop.setText(str(Default_dict ["height_shift"]))
+            self.lineEdit_heightShift_pop.setEnabled(True)
         else:
             return
     def keras_changed_zoom_pop(self,on_or_off):
         if on_or_off==0:
-            self.lineEdit_Rotation_pop_4.setText(str(0))
-            self.lineEdit_Rotation_pop_4.setEnabled(False)
+            self.lineEdit_zoomRange_pop.setText(str(0))
+            self.lineEdit_zoomRange_pop.setEnabled(False)
         elif on_or_off==2:
-            self.lineEdit_Rotation_pop_4.setText(str(Default_dict ["zoom"]))
-            self.lineEdit_Rotation_pop_4.setEnabled(True)
+            self.lineEdit_zoomRange_pop.setText(str(Default_dict ["zoom"]))
+            self.lineEdit_zoomRange_pop.setEnabled(True)
         else:
             return
     def keras_changed_shear_pop(self,on_or_off):
         if on_or_off==0:
-            self.lineEdit_Rotation_pop_5.setText(str(0))
-            self.lineEdit_Rotation_pop_5.setEnabled(False)
+            self.lineEdit_shearRange_pop.setText(str(0))
+            self.lineEdit_shearRange_pop.setEnabled(False)
         elif on_or_off==2:
-            self.lineEdit_Rotation_pop_5.setText(str(Default_dict ["shear"]))
-            self.lineEdit_Rotation_pop_5.setEnabled(True)
+            self.lineEdit_shearRange_pop.setText(str(Default_dict ["shear"]))
+            self.lineEdit_shearRange_pop.setEnabled(True)
         else:
             return
     def keras_changed_brightplus_pop(self,on_or_off):
@@ -1539,8 +1520,6 @@ class Fitting_Ui(QtWidgets.QWidget):
             self.expert_learningrate_off_pop(0)
             self.checkBox_optimizer_pop.setChecked(False)
             self.expert_optimizer_off_pop(0)
-            self.checkBox_expt_paddingMode_pop.setChecked(False)            
-            self.expert_paddingMode_off_pop(0)
 
 
     def expert_loss_off_pop(self,on_or_off):
@@ -1583,13 +1562,6 @@ class Fitting_Ui(QtWidgets.QWidget):
             msg.exec_()
             return
 
-
-    def expert_paddingMode_off_pop(self,value):
-        if value==0: #switch off
-            #switch back to "constant" padding 
-            index = self.comboBox_expt_paddingMode_pop.findText("constant", QtCore.Qt.MatchFixedString)
-            if index >= 0:
-                self.comboBox_expt_paddingMode_pop.setCurrentIndex(index)
 
 
 
