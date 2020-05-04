@@ -8,13 +8,12 @@ from keras.models import Sequential,Model
 from keras.layers import Add,Concatenate,Input,Dense,Dropout,Flatten,Activation,Conv2D,MaxPooling2D,BatchNormalization,GlobalAveragePooling2D
 from keras.layers.merge import add
 from keras import regularizers
-from keras.utils import multi_gpu_model
 import keras_applications
 import keras
 import numpy as np
 
 
-version = "0.0.7_Original" #1.) Use any string you like to specify/define your version of the model_zoo
+version = "0.0.8_Original" #1.) Use any string you like to specify/define your version of the model_zoo
 def __version__():
     #print(version)
     return version
@@ -30,10 +29,9 @@ predefined_6_2 = ["pretrained_resnet50","pretrained_resnet101","pretrained_resne
 predefined_7 = ["Collection_1","Collection_2","Collection_3","Collection_4","Collection_5","Collection_6"]
 
 predefined_coll_test = ["Collection_test"]
-parallel_models = ["Nitta_et_al_6layer_parallel","pretrained_inception_v3_parallel"]
 
 predefined_models = predefined_1+predefined_2+predefined_3+predefined_4+\
-predefined_5+predefined_6_1+predefined_6_2+predefined_7+predefined_coll_test+parallel_models
+predefined_5+predefined_6_1+predefined_6_2+predefined_7+predefined_coll_test
 def get_predefined_models(): #this function is used inside AIDeveloper.py
     return predefined_models
 
@@ -71,8 +69,6 @@ def get_model(modelname,in_dim,channels,out_dim):
 
     elif modelname=="Nitta_et_al_6layer":
         model = nitta_et_al_6layer(in_dim,in_dim,channels,out_dim)
-    elif modelname=="Nitta_et_al_6layer_parallel":
-        model = nitta_et_al_6layer_parallel(in_dim,in_dim,channels,out_dim)
 
     elif modelname=="Nitta_et_al_8layer":
         model =  nitta_et_al_8layer(in_dim,in_dim,channels,out_dim)
@@ -98,8 +94,7 @@ def get_model(modelname,in_dim,channels,out_dim):
         model =  pretrained_mobilenet(in_dim,in_dim,channels,out_dim)
     elif modelname=="pretrained_inception_v3":
         model =  pretrained_inception_v3(in_dim,in_dim,channels,out_dim)
-    elif modelname=="pretrained_inception_v3_parallel":
-        model =  pretrained_inception_v3_parallel(in_dim,in_dim,channels,out_dim)
+
     elif modelname=="pretrained_vgg19":
         model =  pretrained_vgg19(in_dim,in_dim,channels,out_dim)
     elif modelname=="pretrained_vgg16":
@@ -964,37 +959,6 @@ def nitta_et_al_8layer(in_dim1,in_dim2,channels,out_dim):
     return model
 
 
-def nitta_et_al_6layer_parallel(in_dim1, in_dim2, channels, out_dim):
-    """
-    The settins of this model are shown in the paper
-    "Intelligent Image-Activated Cell Sorting" on Figure 5A
-    """
-    model = Sequential()
-
-    model.add(Conv2D(32, 3, 3, input_shape=(in_dim1, in_dim2, channels), name="inputTensor"))  # TensorFlow
-    model.add(Activation('relu'))
-    model.add(Conv2D(32, 3, 3))
-    model.add(Activation('relu'))
-    model.add(MaxPooling2D(pool_size=(2, 2)))
-    model.add(Dropout(0.25))
-
-    model.add(Conv2D(64, 3, 3))
-    model.add(Activation('relu'))
-    model.add(Conv2D(64, 3, 3))
-    model.add(Activation('relu'))
-    model.add(MaxPooling2D(pool_size=(2, 2)))
-    model.add(Dropout(0.25))
-
-    model.add(Flatten())  # this converts our 3D feature maps to 1D feature vectors
-
-    model.add(Dense(256))
-    model.add(Activation('relu'))
-    model.add(Dropout(0.5))
-    model.add(Dense(out_dim))
-    model.add(Activation('softmax', name="outputTensor"))
-    model = multi_gpu_model(model, gpus=3)#indicate the numbers of gpus that you have
-    return model
-
 
 def Nitta_et_al_6layer_linact(in_dim1,in_dim2,channels,out_dim):
     """
@@ -1036,7 +1000,7 @@ def pretrained_xception(in_dim1,in_dim2,channels,out_dim):
     It is recommended to use the expert model in AIDeveloper to only train the dense layers
     """
     try:
-        pretrained_model  = keras_applications.xception.Xception(weights='imagenet',input_shape=(in_dim1,in_dim2,channels),include_top=False)
+        pretrained_model  = keras_applications.xception.Xception(weights='imagenet',input_shape=(in_dim1,in_dim2,channels),include_top=False,backend = keras.backend, layers = keras.layers, models = keras.models, utils = keras.utils)
     except:
         pretrained_model  = keras.applications.xception.Xception(weights='imagenet',input_shape=(in_dim1,in_dim2,channels),include_top=False)
         
@@ -1064,7 +1028,7 @@ def pretrained_vgg16(in_dim1,in_dim2,channels,out_dim):
     It is recommended to use the expert model in AIDeveloper to only train the dense layers
     """
     try:
-        pretrained_model  = keras_applications.vgg16.VGG16(weights='imagenet',input_shape=(in_dim1,in_dim2,channels),include_top=False)
+        pretrained_model  = keras_applications.vgg16.VGG16(weights='imagenet',input_shape=(in_dim1,in_dim2,channels),include_top=False,backend = keras.backend, layers = keras.layers, models = keras.models, utils = keras.utils)
     except:
         pretrained_model  = keras.applications.vgg16.VGG16(weights='imagenet',input_shape=(in_dim1,in_dim2,channels),include_top=False)
         
@@ -1092,7 +1056,7 @@ def pretrained_vgg19(in_dim1,in_dim2,channels,out_dim):
     It is recommended to use the expert model in AIDeveloper to only train the dense layers
     """
     try:
-        pretrained_model  = keras_applications.vgg19.VGG19(weights='imagenet',input_shape=(in_dim1,in_dim2,channels),include_top=False)
+        pretrained_model  = keras_applications.vgg19.VGG19(weights='imagenet',input_shape=(in_dim1,in_dim2,channels),include_top=False,backend = keras.backend, layers = keras.layers, models = keras.models, utils = keras.utils)
     except:
         pretrained_model  = keras.applications.vgg19.VGG19(weights='imagenet',input_shape=(in_dim1,in_dim2,channels),include_top=False)
 
@@ -1120,7 +1084,7 @@ def pretrained_inception_v3(in_dim1,in_dim2,channels,out_dim):
     It is recommended to use the expert model in AIDeveloper to only train the dense layers
     """
     try:
-        pretrained_model  = keras_applications.inception_v3.InceptionV3(weights='imagenet',input_shape=(in_dim1,in_dim2,channels),include_top=False)
+        pretrained_model  = keras_applications.inception_v3.InceptionV3(weights='imagenet',input_shape=(in_dim1,in_dim2,channels),include_top=False,backend = keras.backend, layers = keras.layers, models = keras.models, utils = keras.utils)
     except:
         pretrained_model  = keras.applications.inception_v3.InceptionV3(weights='imagenet',input_shape=(in_dim1,in_dim2,channels),include_top=False)
 
@@ -1140,34 +1104,6 @@ def pretrained_inception_v3(in_dim1,in_dim2,channels,out_dim):
     return model
 
 
-def pretrained_inception_v3_parallel(in_dim1,in_dim2,channels,out_dim):
-    """
-    Loads a pretrained model from Keras (internet required).
-    Minimum input dimension: (139,139,3)
-    --Only three channels allowed!--
-    It is recommended to use the expert model in AIDeveloper to only train the dense layers
-    """
-    try:
-        pretrained_model  = keras_applications.inception_v3.InceptionV3(weights='imagenet',input_shape=(in_dim1,in_dim2,channels),include_top=False)
-    except:
-        pretrained_model  = keras.applications.inception_v3.InceptionV3(weights='imagenet',input_shape=(in_dim1,in_dim2,channels),include_top=False)
-
-    layers = pretrained_model.layers
-    layers[0].name = "inputTensor"
-    #The output of the pretrained network are the inputs to our Dense layers
-    x = GlobalAveragePooling2D()(pretrained_model.output)
-    x = Dense(2048, activation='relu')(x)
-    x = Dropout(0.3)(x)
-    x = BatchNormalization()(x)
-    x = Dense(1024, activation='relu')(x)
-    x = Dropout(0.3)(x)
-    x = Dense(out_dim)(x)
-    predictions = Activation('softmax',name="outputTensor")(x)
-    #combine pretrained models and our dense layers
-    model = Model(input = pretrained_model.input, output = predictions)
-    model = multi_gpu_model(model, gpus=3)
-    return model
-
 
 def pretrained_mobilenet(in_dim1,in_dim2,channels,out_dim):
     """
@@ -1177,7 +1113,7 @@ def pretrained_mobilenet(in_dim1,in_dim2,channels,out_dim):
     It is recommended to use the expert model in AIDeveloper to only train the dense layers
     """
     try:
-        pretrained_model  = keras_applications.mobilenet.MobileNet(weights='imagenet',input_shape=(in_dim1,in_dim2,channels),include_top=False)
+        pretrained_model  = keras_applications.mobilenet.MobileNet(weights='imagenet',input_shape=(in_dim1,in_dim2,channels),include_top=False,backend = keras.backend, layers = keras.layers, models = keras.models, utils = keras.utils)
     except:
         pretrained_model  = keras.applications.mobilenet.MobileNet(weights='imagenet',input_shape=(in_dim1,in_dim2,channels),include_top=False)
 
@@ -1208,7 +1144,7 @@ def pretrained_densenet(in_dim1,in_dim2,channels,out_dim):
     It is recommended to use the expert model in AIDeveloper to only train the dense layers
     """
     try:
-        pretrained_model  = keras_applications.densenet.DenseNet121(weights='imagenet',input_shape=(in_dim1,in_dim2,channels),include_top=False)
+        pretrained_model  = keras_applications.densenet.DenseNet121(weights='imagenet',input_shape=(in_dim1,in_dim2,channels),include_top=False,backend = keras.backend, layers = keras.layers, models = keras.models, utils = keras.utils)
     except:
         pretrained_model  = keras.applications.densenet.DenseNet121(weights='imagenet',input_shape=(in_dim1,in_dim2,channels),include_top=False)
 
@@ -1235,7 +1171,7 @@ def pretrained_nasnetlarge(in_dim1,in_dim2,channels,out_dim):
     It is recommended to use the expert model in AIDeveloper to only train the dense layers
     """
     try:
-        pretrained_model  = keras_applications.nasnet.NASNetLarge(weights='imagenet',input_shape=(in_dim1,in_dim2,channels),include_top=False)
+        pretrained_model  = keras_applications.nasnet.NASNetLarge(weights='imagenet',input_shape=(in_dim1,in_dim2,channels),include_top=False,backend = keras.backend, layers = keras.layers, models = keras.models, utils = keras.utils)
     except:
         pretrained_model  = keras.applications.nasnet.NASNetLarge(weights='imagenet',input_shape=(in_dim1,in_dim2,channels),include_top=False)
         
@@ -1263,7 +1199,7 @@ def pretrained_nasnetmobile(in_dim1,in_dim2,channels,out_dim):
     It is recommended to use the expert model in AIDeveloper to only train the dense layers
     """
     try:
-        pretrained_model  = keras_applications.nasnet.NASNetMobile(weights='imagenet',input_shape=(in_dim1,in_dim2,channels),include_top=False)
+        pretrained_model  = keras_applications.nasnet.NASNetMobile(weights='imagenet',input_shape=(in_dim1,in_dim2,channels),include_top=False,backend = keras.backend, layers = keras.layers, models = keras.models, utils = keras.utils)
     except:
         pretrained_model  = keras.applications.nasnet.NASNetMobile(weights='imagenet',input_shape=(in_dim1,in_dim2,channels),include_top=False)
 
@@ -1292,7 +1228,7 @@ def pretrained_mobilenet_v2(in_dim1,in_dim2,channels,out_dim):
     It is recommended to use the expert model in AIDeveloper to only train the dense layers
     """
     try:
-        pretrained_model  = keras_applications.mobilenet_v2.MobileNetV2(weights='imagenet',input_shape=(in_dim1,in_dim2,channels),include_top=False)
+        pretrained_model  = keras_applications.mobilenet_v2.MobileNetV2(weights='imagenet',input_shape=(in_dim1,in_dim2,channels),include_top=False,backend = keras.backend, layers = keras.layers, models = keras.models, utils = keras.utils)
     except:
         pretrained_model  = keras.applications.mobilenet_v2.MobileNetV2(weights='imagenet',input_shape=(in_dim1,in_dim2,channels),include_top=False)
 
@@ -1319,7 +1255,7 @@ def pretrained_resnet50(in_dim1,in_dim2,channels,out_dim):
     It is recommended to use the expert model in AIDeveloper to only train the dense layers
     """
     try:
-        pretrained_model  = keras_applications.resnet.ResNet50(weights='imagenet',input_shape=(in_dim1,in_dim2,channels),include_top=False)
+        pretrained_model  = keras_applications.resnet.ResNet50(weights='imagenet',input_shape=(in_dim1,in_dim2,channels),include_top=False,backend = keras.backend, layers = keras.layers, models = keras.models, utils = keras.utils)
     except:
         pretrained_model  = keras.applications.resnet.ResNet50(weights='imagenet',input_shape=(in_dim1,in_dim2,channels),include_top=False)
 
@@ -1346,7 +1282,7 @@ def pretrained_resnet101(in_dim1,in_dim2,channels,out_dim):
     It is recommended to use the expert model in AIDeveloper to only train the dense layers
     """
     try:
-        pretrained_model  = keras_applications.resnet.ResNet101(weights='imagenet',input_shape=(in_dim1,in_dim2,channels),include_top=False)
+        pretrained_model  = keras_applications.resnet.ResNet101(weights='imagenet',input_shape=(in_dim1,in_dim2,channels),include_top=False,backend = keras.backend, layers = keras.layers, models = keras.models, utils = keras.utils)
     except:
         pretrained_model  = keras.applications.resnet.ResNet101(weights='imagenet',input_shape=(in_dim1,in_dim2,channels),include_top=False)
     
@@ -1374,7 +1310,7 @@ def pretrained_resnet152(in_dim1,in_dim2,channels,out_dim):
     It is recommended to use the expert model in AIDeveloper to only train the dense layers
     """
     try:
-        pretrained_model  = keras_applications.resnet.ResNet152(weights='imagenet',input_shape=(in_dim1,in_dim2,channels),include_top=False)
+        pretrained_model  = keras_applications.resnet.ResNet152(weights='imagenet',input_shape=(in_dim1,in_dim2,channels),include_top=False,backend = keras.backend, layers = keras.layers, models = keras.models, utils = keras.utils)
     
     except:
         pretrained_model  = keras.applications.resnet.ResNet152(weights='imagenet',input_shape=(in_dim1,in_dim2,channels),include_top=False)
@@ -1403,7 +1339,7 @@ def pretrained_resnet50_v2(in_dim1,in_dim2,channels,out_dim):
     It is recommended to use the expert model in AIDeveloper to only train the dense layers
     """
     try:
-        pretrained_model  = keras_applications.resnet.ResNet50V2(weights='imagenet',input_shape=(in_dim1,in_dim2,channels),include_top=False)
+        pretrained_model  = keras_applications.resnet.ResNet50V2(weights='imagenet',input_shape=(in_dim1,in_dim2,channels),include_top=False,backend = keras.backend, layers = keras.layers, models = keras.models, utils = keras.utils)
     except:
         pretrained_model  = keras.applications.resnet.ResNet50V2(weights='imagenet',input_shape=(in_dim1,in_dim2,channels),include_top=False)
 
@@ -1430,7 +1366,7 @@ def pretrained_resnet101_v2(in_dim1,in_dim2,channels,out_dim):
     It is recommended to use the expert model in AIDeveloper to only train the dense layers
     """
     try:
-        pretrained_model  = keras_applications.resnet.ResNet101V2(weights='imagenet',input_shape=(in_dim1,in_dim2,channels),include_top=False)
+        pretrained_model  = keras_applications.resnet.ResNet101V2(weights='imagenet',input_shape=(in_dim1,in_dim2,channels),include_top=False,backend = keras.backend, layers = keras.layers, models = keras.models, utils = keras.utils)
     except:
         pretrained_model  = keras.applications.resnet.ResNet101V2(weights='imagenet',input_shape=(in_dim1,in_dim2,channels),include_top=False)
         
@@ -1457,7 +1393,7 @@ def pretrained_resnet152_v2(in_dim1,in_dim2,channels,out_dim):
     It is recommended to use the expert model in AIDeveloper to only train the dense layers
     """
     try:
-        pretrained_model  = keras_applications.resnet.ResNet152V2(weights='imagenet',input_shape=(in_dim1,in_dim2,channels),include_top=False)
+        pretrained_model  = keras_applications.resnet.ResNet152V2(weights='imagenet',input_shape=(in_dim1,in_dim2,channels),include_top=False,backend = keras.backend, layers = keras.layers, models = keras.models, utils = keras.utils)
     except:
         pretrained_model  = keras.applications.resnet.ResNet152V2(weights='imagenet',input_shape=(in_dim1,in_dim2,channels),include_top=False)
         
