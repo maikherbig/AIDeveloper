@@ -9,13 +9,13 @@ import os, shutil
 import numpy as np
 rand_state = np.random.RandomState(117) #to get the same random number on diff. PCs
 import tensorflow as tf
-from tensorflow.python.client import device_lib
-device_types = device_lib.list_local_devices()
-device_types = [device_types[i].device_type for i in range(len(device_types))]
-config_gpu = tf.ConfigProto()
-if device_types[0]=='GPU':
-    config_gpu.gpu_options.allow_growth = True
-    config_gpu.gpu_options.per_process_gpu_memory_fraction = 0.7
+#from tensorflow.python.client import device_lib
+#device_types = device_lib.list_local_devices()
+#device_types = [device_types[i].device_type for i in range(len(device_types))]
+#config_gpu = tf.ConfigProto()
+#if device_types[0]=='GPU':
+#    config_gpu.gpu_options.allow_growth = True
+#    config_gpu.gpu_options.per_process_gpu_memory_fraction = 0.7
 import keras
 import keras_metrics #side package for precision, recall etc during training
 global keras_metrics
@@ -470,3 +470,5 @@ def convert_kerastf_2_coreml(model_path):
     model = coremltools.converters.keras.convert(model_path, input_names=['inputTensor'],output_names=['outputTensor'],model_precision='float32',use_float_arraytype=True,predicted_probabilities_output="outputTensor")
     model.save(path_out)
     sess.close()
+
+
