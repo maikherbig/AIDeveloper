@@ -4,7 +4,7 @@ AIDeveloper
 ---------
 @author: maikherbig
 """
-import os,sys
+import os,sys,gc
 if not sys.platform.startswith("win"):
     from multiprocessing import freeze_support
     freeze_support()
@@ -54,7 +54,8 @@ from tensorflow.python.client import device_lib
 devices = device_lib.list_local_devices()
 device_types = [devices[i].device_type for i in range(len(devices))]
 
-#Get the number  of GPUs
+#Get the number  of CPU cores and GPUs
+cpu_nr = os.cpu_count()
 gpu_nr = device_types.count("GPU")
 print("Nr. of GPUs detected: "+str(gpu_nr))
 
@@ -113,7 +114,7 @@ import aid_img, aid_dl, aid_bin
 import aid_frontend
 from partial_trainability import partial_trainability
 
-VERSION = "0.0.8_dev5" #Python 3.5.6 Version
+VERSION = "0.0.9" #Python 3.5.6 Version
 model_zoo_version = model_zoo.__version__()
 print("AIDeveloper Version: "+VERSION)
 print("model_zoo.py Version: "+model_zoo.__version__())
@@ -953,7 +954,6 @@ class MainWindow(QtWidgets.QMainWindow):
         icon.addPixmap(QtGui.QPixmap(os.path.join(dir_root,"art",Default_dict["Icon theme"],"cpu.png")), QtGui.QIcon.Normal, QtGui.QIcon.Off)
         self.radioButton_cpu.setIcon(icon)
         self.radioButton_cpu.setEnabled(True)
-        self.radioButton_cpu.setChecked(True)
         icon = QtGui.QIcon()
         icon.addPixmap(QtGui.QPixmap(os.path.join(dir_root,"art",Default_dict["Icon theme"],"gpu.png")), QtGui.QIcon.Normal, QtGui.QIcon.Off)
         self.radioButton_gpu.setIcon(icon)
@@ -2322,7 +2322,7 @@ class MainWindow(QtWidgets.QMainWindow):
         ###########################Expert mode Tab################################
         self.spinBox_batchSize.setMinimum(1)       
         self.spinBox_batchSize.setMaximum(1E6)       
-        self.spinBox_batchSize.setValue(32)       
+        self.spinBox_batchSize.setValue(Default_dict["spinBox_batchSize"])       
         self.spinBox_epochs.setMinimum(1)       
         self.spinBox_epochs.setMaximum(1E6)       
         self.spinBox_epochs.setValue(1)       
@@ -2580,6 +2580,28 @@ class MainWindow(QtWidgets.QMainWindow):
         self.menuExport.setObjectName("menuExport")
         self.menuZoomOrder = QtWidgets.QMenu(self.menu_Options)
         self.menuZoomOrder.setObjectName("menuZoomOrder")
+        self.menuGPU_Options = QtWidgets.QMenu(self.menu_Options)
+        self.menuGPU_Options.setObjectName("menuGPU_Options")
+        if gpu_nr<2:
+            print("Disabled Multi-GPU Options (Menubar)")
+            self.menuGPU_Options.setEnabled(False)
+        
+        self.actioncpu_merge = QtWidgets.QAction(self)
+        self.actioncpu_merge.setCheckable(True)
+        self.actioncpu_merge.setChecked(True)
+        self.actioncpu_merge.setObjectName("actioncpu_merge")
+        self.actioncpu_relocation = QtWidgets.QAction(self)
+        self.actioncpu_relocation.setCheckable(True)
+        self.actioncpu_relocation.setChecked(False)
+        self.actioncpu_relocation.setObjectName("actioncpu_relocation")
+        self.actioncpu_weightmerge = QtWidgets.QAction(self)        
+        self.actioncpu_weightmerge.setCheckable(True)
+        self.actioncpu_weightmerge.setChecked(False)
+        self.actioncpu_weightmerge.setObjectName("actioncpu_weightmerge")
+
+
+
+
 
         self.menu_Help = QtWidgets.QMenu(self.menubar)
         self.menu_Help.setObjectName("menu_Help")
@@ -2639,7 +2661,10 @@ class MainWindow(QtWidgets.QMainWindow):
         self.actionSaveToPng = QtWidgets.QAction(self)
         self.actionSaveToPng.setObjectName(_fromUtf8("actionSaveToPng"))
         self.actionSaveToPng.triggered.connect(self.actionSaveToPng_function)
-        
+        self.actionClearMemory = QtWidgets.QAction(self)
+        self.actionClearMemory.setObjectName(_fromUtf8("actionSaveToPng"))
+        self.actionClearMemory.triggered.connect(aid_dl.reset_keras)
+
         self.actionGroup_Export = QtWidgets.QActionGroup(self,exclusive=True)
         self.actionExport_Off = QtWidgets.QAction(self)
         self.actionExport_Off.setCheckable(True)
@@ -2749,9 +2774,16 @@ class MainWindow(QtWidgets.QMainWindow):
         a = self.actionGroup_IconTheme.addAction(self.actionIconTheme_2)
         self.menuLayout.addAction(a)
 
+        self.menuGPU_Options.addAction(self.actioncpu_merge)
+        self.menuGPU_Options.addAction(self.actioncpu_relocation)
+        self.menuGPU_Options.addAction(self.actioncpu_weightmerge)
+
         self.menu_Options.addAction(self.menuLayout.menuAction())
         self.menu_Options.addAction(self.menuExport.menuAction())
         self.menu_Options.addAction(self.menuZoomOrder.menuAction())
+        self.menu_Options.addSeparator()
+        self.menu_Options.addAction(self.menuGPU_Options.menuAction())
+
 
         self.menuFile.addAction(self.actionLoadSession)
         self.menuFile.addSeparator()
@@ -2767,6 +2799,9 @@ class MainWindow(QtWidgets.QMainWindow):
 
         self.menuEdit.addSeparator()
         self.menuEdit.addAction(self.actionSaveToPng)
+
+        self.menuEdit.addSeparator()
+        self.menuEdit.addAction(self.actionClearMemory)
 
         self.menuEdit.addSeparator()
         self.menuEdit.addAction(self.actionVerbose)
@@ -2948,14 +2983,18 @@ class MainWindow(QtWidgets.QMainWindow):
             self.comboBox_gpu.addItem("")
             self.comboBox_gpu.setItemText(0, _translate("MainWindow", "None", None))
             self.radioButton_gpu.setEnabled(False)
+            self.radioButton_cpu.setChecked(True)
         elif gpu_nr==1:
             self.comboBox_gpu.addItem("")
             self.comboBox_gpu.setItemText(0, _translate("MainWindow", "Single-GPU", None))
+            self.radioButton_gpu.setChecked(True)#If GPU available, use it by default.
+
         else: #nr_gpu>1
             self.comboBox_gpu.addItem("")
             self.comboBox_gpu.addItem("")
             self.comboBox_gpu.setItemText(0, _translate("MainWindow", "Single-GPU", None))
             self.comboBox_gpu.setItemText(1, _translate("MainWindow", "Multi-GPU", None))
+            self.radioButton_gpu.setChecked(True)#If GPU available, use it by default.
 
 #            for i in range(len(devices_gpu)):
 #                self.comboBox_gpu.addItem("")
@@ -3341,8 +3380,9 @@ class MainWindow(QtWidgets.QMainWindow):
         self.menuLayout.setTitle(_translate("MainWindow", "Layout",None))
         self.menuExport.setTitle(_translate("MainWindow", "Export",None))
         self.menuZoomOrder.setTitle(_translate("MainWindow", "Zoom Order",None))
-        self.menu_Options.setToolTip(_translate("MainWindow", "<html><head/><body><p>menu_Options tooltip</p></body></html>", None))
+        self.menuGPU_Options.setTitle(_translate("MainWindow", "Multi-GPU",None))
 
+        self.menu_Options.setToolTip(_translate("MainWindow", "<html><head/><body><p>menu_Options tooltip</p></body></html>", None))
 
         self.menu_Help.setTitle(_translate("MainWindow", "Help",None))
         self.actionDocumentation.setText(_translate("MainWindow", "Documentation",None))
@@ -3361,6 +3401,8 @@ class MainWindow(QtWidgets.QMainWindow):
         self.actionDataToRamNow.setText(_translate("MainWindow", "Data to RAM now", None))
         self.actionRemoveSelected.setText(_translate("MainWindow", "Remove selected", None))
         self.actionSaveToPng.setText(_translate("MainWindow", "Export selected to .png/.jpg", None))
+        self.actionClearMemory.setText(_translate("MainWindow", "Clear memory (CPU/GPU)", None))
+        
         self.actionExport_Off.setText(_translate("MainWindow", "No exporting",None))
         self.actionExport_Original.setText(_translate("MainWindow", "Export Original Images",None))
         self.actionExport_Cropped.setText(_translate("MainWindow", "Export Cropped Images",None))
@@ -3375,6 +3417,13 @@ class MainWindow(QtWidgets.QMainWindow):
         self.actionOrder3.setText(_translate("MainWindow", "3 (cubic interp.)",None))
         self.actionOrder4.setText(_translate("MainWindow", "4",None))
         self.actionOrder5.setText(_translate("MainWindow", "5",None))
+
+        self.actioncpu_merge.setText(_translate("MainWindow", "cpu_merge",None))
+        self.actioncpu_merge.setToolTip(_translate("MainWindow", tooltips["actioncpu_merge"],None))
+        self.actioncpu_relocation.setText(_translate("MainWindow", "cpu_relocation",None))
+        self.actioncpu_relocation.setToolTip(_translate("MainWindow", tooltips["actioncpu_relocation"],None))
+        self.actioncpu_weightmerge.setText(_translate("MainWindow", "cpu_weight_merge",None))
+        self.actioncpu_weightmerge.setToolTip(_translate("MainWindow", tooltips["actioncpu_weightmerge"],None))
 
         self.actionTooltipOnOff.setText(_translate("MainWindow", "Show tooltips",None))
 
@@ -3881,7 +3930,6 @@ class MainWindow(QtWidgets.QMainWindow):
             self.expert_learningrate_off(0)
             self.checkBox_optimizer.setChecked(False)
             self.expert_optimizer_off(0)
-            self.expert_paddingMode_off(0)
 
     def expert_loss_off(self,on_or_off):
         if on_or_off==0: #switch off
@@ -6676,577 +6724,599 @@ class MainWindow(QtWidgets.QMainWindow):
         
                  
     def action_initialize_model(self,only_initialize=False):
-        sess = tf.InteractiveSession()
 
-        #Initialize the model
-        #######################Load and restart model##########################
-        if self.radioButton_LoadRestartModel.isChecked():
-            
-            load_modelname = str(self.lineEdit_LoadModelPath.text())
-            text0 = "Loaded model: "+load_modelname
-            #load the model and print summary
-            if load_modelname.endswith(".arch"):
-                json_file = open(load_modelname, 'r')
-                model_config = json_file.read()
-                json_file.close()
-                model_keras = model_from_json(model_config)
-                model_config = json.loads(model_config)
-                text1 = "\nArchitecture: loaded from .arch\nWeights: randomly initialized\n"
+        #Create config (define which device to use)
+        if self.radioButton_cpu.isChecked():
+            deviceSelected = str(self.comboBox_cpu.currentText())
+        elif self.radioButton_gpu.isChecked():
+            deviceSelected = str(self.comboBox_gpu.currentText())
+        gpu_memory = float(self.doubleSpinBox_memory.value())
+        config_gpu = aid_dl.get_config(cpu_nr,gpu_nr,deviceSelected,gpu_memory)
 
-            #Or a .model (FULL model with trained weights) , but for display only load the architecture        
-            elif load_modelname.endswith(".model"):
-                #Load the model config (this is the architecture)                  
-                model_full_h5 = h5py.File(load_modelname, 'r')
-                model_config = model_full_h5.attrs['model_config']
-                model_full_h5.close() #close the hdf5                
-                model_config = json.loads(str(model_config)[2:-1])
-                model_keras = model_from_config(model_config)
-                text1 = "\nArchitecture: loaded from .model\nWeights: randomly initialized\n"
-            else:
-                msg = QtWidgets.QMessageBox()
-                msg.setIcon(QtWidgets.QMessageBox.Information)       
-                msg.setText("No valid file was chosen. Please specify a file that was created using AIDeveloper or Keras")
-                msg.setWindowTitle("No valid file was chosen")
-                msg.setStandardButtons(QtWidgets.QMessageBox.Ok)
-                msg.exec_()
-                return
+#        try:
+#            K.clear_session()
+#        except:
+#            print("Could not clear_session (7)")
 
-            try:
-                metaname = load_modelname.rsplit('_',1)[0]+"_meta.xlsx"
-                if os.path.isfile(metaname):
-                    #open the metafile
-                    meta = pd.read_excel(metaname,sheet_name="Parameters")
-                    if "Chosen Model" in list(meta.keys()):
-                        chosen_model = meta["Chosen Model"].iloc[-1]
-            except:
-                chosen_model = str(self.comboBox_ModelSelection.currentText())
+        with tf.Session(graph = tf.Graph(), config=config_gpu) as sess:                
+            #Initialize the model
+            #######################Load and restart model##########################
+            if self.radioButton_LoadRestartModel.isChecked():
                 
-            #In both cases (restart or continue) the input dimensions have to fit
-            #The number of output classes should also fit but this is not essential  
-            #but most users certainly want the same number of classes (output)->Give Info
-
-            try: #Sequential Model
-                in_dim = model_config['config'][0]['config']['batch_input_shape']
-            except: #Functional Api
-                in_dim = model_config['config']["layers"][0]["config"]["batch_input_shape"]
-            try: #Sequential Model
-                out_dim = model_config['config'][-2]['config']['units']
-            except: #Functional Api
-                out_dim = model_config['config']["layers"][-2]["config"]["units"]
-
-#            in_dim = model_config['config'][0]['config']['batch_input_shape']
-#            out_dim = model_config['config'][-2]['config']['units']
-            channels = in_dim[-1] #TensorFlow: channels in last dimension
-
-            #Compile model (consider user-specific metrics)
-            metrics = self.get_metrics(out_dim)            
-            model_keras.compile(loss='categorical_crossentropy',optimizer='adam',metrics=metrics)#dont specify loss and optimizer yet...expert stuff will follow and model will be recompiled
-
-            if channels==1:
-                channel_text = "1 channel (Grayscale)"
-                if self.get_color_mode()!="Grayscale":
-                    #when model needs Grayscale, set the color mode in comboBox_GrayOrRGB to that
-                    index = self.comboBox_GrayOrRGB.findText("Grayscale", QtCore.Qt.MatchFixedString)
-                    if index >= 0:
-                        self.comboBox_GrayOrRGB.setCurrentIndex(index)                                        
-                    self.statusbar.showMessage("Color Mode set to Grayscale",5000)
-
-            elif channels==3:
-                channel_text = "3 channels (RGB)"
-                if self.get_color_mode()!="RGB":
-                    #when model needs RGB, set the color mode in the ui to that
-                    index = self.comboBox_GrayOrRGB.findText("RGB", QtCore.Qt.MatchFixedString)
-                    if index >= 0:
-                        self.comboBox_GrayOrRGB.setCurrentIndex(index)
-                    self.statusbar.showMessage("Color Mode set to RGB",5000)
-
-            text2 = "Model Input: "+str(in_dim[-3])+" x "+str(in_dim[-2]) + " pixel images and "+channel_text+"\n"
-
-            if int(self.spinBox_imagecrop.value())!=int(in_dim[-2]):
-                self.spinBox_imagecrop.setValue(in_dim[-2])
-                text2 = text2+ "'Input image size'  in GUI was changed accordingly\n"
-            
-            #check that the nr. of classes are equal to the model out put
-            SelectedFiles = self.items_clicked()
-            indices = [s["class"] for s in SelectedFiles]
-            nr_classes = len(set(indices))
-            if int(nr_classes)==int(out_dim):
-                text3 = "Output: "+str(out_dim)+" classes\n"
-            else:
-                text3 = "Model Output: The architecture you chose has "+(str(out_dim))+\
-                " output nodes (classes) but your selected data has "+str(nr_classes)+\
-                " classes. The model could theoretically have more outputs nodes than you have indices but the other way around is not defined\n"                
-
-        ###############Load and continue training the model####################
-        elif self.radioButton_LoadContinueModel.isChecked():
-            load_modelname = str(self.lineEdit_LoadModelPath.text())
-            text0 = "Loaded model: "+load_modelname
-            
-            K.clear_session() #On linux It happened that there was an error, if another fitting was run before                  
-
-            #User can only choose a .model (FULL model with trained weights) , but for display only load the architecture
-            if load_modelname.endswith(".model"):              
-                #Load the full model
-                try:
-                    model_keras = load_model(load_modelname,custom_objects=get_custom_metrics())
-                except: 
-                    model_keras = load_model(load_modelname,custom_objects=get_custom_metrics())
-                #model_config = model_keras.config() #Load the model config (this is the architecture)
-                #load_modelname = load_modelname.split(".model")[0]
-                text1 = "Architecture: loaded from .model\nWeights: pretrained weights loaded'\n"
-            else:
-                msg = QtWidgets.QMessageBox()
-                msg.setIcon(QtWidgets.QMessageBox.Information)       
-                msg.setText("No valid file was chosen. Please specify a file that was created using AIDeveloper or Keras")
-                msg.setWindowTitle("No valid file was chosen")
-                msg.setStandardButtons(QtWidgets.QMessageBox.Ok)
-                msg.exec_()
-                return
-                #raise ValueError("No valid file was chosen")
-
-            try:
-                metaname = load_modelname.rsplit('_',1)[0]+"_meta.xlsx"
-                if os.path.isfile(metaname):
-                    #open the metafile
-                    meta = pd.read_excel(metaname,sheet_name="Parameters")
-                    if "Chosen Model" in list(meta.keys()):
-                        chosen_model = meta["Chosen Model"].iloc[-1]
-                else:
-                    chosen_model = str(self.comboBox_ModelSelection.currentText())
-
-            except:
-                chosen_model = str(self.comboBox_ModelSelection.currentText())
-
-
-            #Check input dimensions
-            #The number of output classes should also fit but this is not essential  
-            #but most users certainly want the same number of classes (output)->Give Info
-#            in_dim = model_config['config'][0]['config']['batch_input_shape']
-#            out_dim = model_config['config'][-2]['config']['units']
-            in_dim = model_keras.get_input_shape_at(0)
-            out_dim = model_keras.get_output_shape_at(0)[1]
-            channels = in_dim[-1] #TensorFlow: channels in last dimension
-
-            if channels==1:
-                channel_text = "1 channel (Grayscale)"
-                if self.get_color_mode()!="Grayscale":
-                    #when model needs Grayscale, set the color mode in comboBox_GrayOrRGB to that
-                    index = self.comboBox_GrayOrRGB.findText("Grayscale", QtCore.Qt.MatchFixedString)
-                    if index >= 0:
-                        self.comboBox_GrayOrRGB.setCurrentIndex(index)                                        
-                    self.statusbar.showMessage("Color Mode set to Grayscale",5000)
-
-            elif channels==3:
-                channel_text = "3 channels (RGB)"
-                if self.get_color_mode()!="RGB":
-                    #when model needs RGB, set the color mode in the ui to that
-                    index = self.comboBox_GrayOrRGB.findText("RGB", QtCore.Qt.MatchFixedString)
-                    if index >= 0:
-                        self.comboBox_GrayOrRGB.setCurrentIndex(index)
-                    self.statusbar.showMessage("Color Mode set to RGB",5000)
-
-            text2 = "Model Input: "+str(in_dim[-3])+" x "+str(in_dim[-2]) + " pixel images and "+channel_text+"\n"
-            if int(self.spinBox_imagecrop.value())!=int(in_dim[-2]):
-                self.spinBox_imagecrop.setValue(in_dim[-2])
-                text2 = text2+ "'Input image size'  in GUI was changed accordingly\n"
-            
-            #check that the nr. of classes are equal to the model out put
-            SelectedFiles = self.items_clicked()
-            indices = [s["class"] for s in SelectedFiles]
-            nr_classes = len(set(indices))
-            if int(nr_classes)==int(out_dim):
-                text3 = "Output: "+str(out_dim)+" classes\n"
-            else:
-                text3 = "Model Output: The architecture you chose has "+(str(out_dim))+\
-                " output nodes (classes) but your selected data has "+str(nr_classes)+\
-                " classes. The model could theoretically have more outputs nodes than you have indices but the other way around is not defined\n"                
-
-        ###########################New model###################################
-        elif self.radioButton_NewModel.isChecked():
-            load_modelname = "" #No model is loaded
-            text0 = load_modelname
-            #Create a new model!
-            #Get what the user wants from the dropdown menu!
-            chosen_model = str(self.comboBox_ModelSelection.currentText())
-            if chosen_model==None:
-                msg = QtWidgets.QMessageBox()
-                msg.setIcon(QtWidgets.QMessageBox.Information)       
-                msg.setText("No model specified!")
-                msg.setWindowTitle("No model specified!")
-                msg.setStandardButtons(QtWidgets.QMessageBox.Ok)
-                msg.exec_()
-                return       
-                
-            in_dim = int(self.spinBox_imagecrop.value())
-            SelectedFiles = self.items_clicked()
-            #rtdc_ds = SelectedFiles[0]["rtdc_ds"]
-
-            if str(self.comboBox_GrayOrRGB.currentText())=="Grayscale":
-                channels=1
-            elif str(self.comboBox_GrayOrRGB.currentText())=="RGB":
-                channels=3
-                
-            indices = [s["class"] for s in SelectedFiles]
-            indices_unique = np.unique(np.array(indices))
-            if len(indices_unique)<2:
-                msg = QtWidgets.QMessageBox()
-                msg.setIcon(QtWidgets.QMessageBox.Information)       
-                msg.setText("Need at least two classes to fit. Please specify .rtdc files and corresponding indeces")
-                msg.setWindowTitle("No valid file was chosen")
-                msg.setStandardButtons(QtWidgets.QMessageBox.Ok)
-                msg.exec_()
-                return  
-            
-            if 0 in indices:
-                #out_dim = len(set(indices))
-                out_dim = np.max(indices)+1
-            else:
-                out_dim = np.max(indices)           
-            nr_classes = out_dim
-            
-            if chosen_model=="None":
-                msg = QtWidgets.QMessageBox()
-                msg.setIcon(QtWidgets.QMessageBox.Information)       
-                msg.setText("No model specified!")
-                msg.setWindowTitle("No model specified!")
-                msg.setStandardButtons(QtWidgets.QMessageBox.Ok)
-                msg.exec_()
-                return       
-            
-            try:                
-                model_keras = model_zoo.get_model(chosen_model,in_dim,channels,out_dim)
-            except Exception as e: 
-                #There is an issue building the model!
-                msg = QtWidgets.QMessageBox()
-                msg.setIcon(QtWidgets.QMessageBox.Critical)       
-                msg.setText(str(e))
-                msg.setWindowTitle("Error occured when building model:")
-                msg.setStandardButtons(QtWidgets.QMessageBox.Ok)
-                msg.exec_()
-                return       
-            
-            text1 = "Architecture: created "+chosen_model+" design\nWeights: Initialized random weights\n"
-            
-            if self.get_color_mode()=="Grayscale":
-                channels = 1
-                channel_text = "1 channel (Grayscale)"
-            elif self.get_color_mode()=="RGB":
-                channels = 3
-                channel_text = "3 channels (RGB)"
-                    
-            text2 = "Model Input: "+str(in_dim)+" x "+str(in_dim) + " pixel images and "+channel_text+"\n"
-
-            if int(nr_classes)==int(out_dim):
-                text3 = "Output: "+str(out_dim)+" classes\n"
-            else:
-                text3 = "Model Output: The architecture you chose has "+(str(out_dim))+\
-                " output nodes (classes) but your selected data has "+str(nr_classes)+\
-                " classes. The model could theoretically have more outputs nodes than you have indices but the other way around is not defined\n"                
-        
-        else:
-            #No radio-button was chosen
-            msg = QtWidgets.QMessageBox()
-            msg.setIcon(QtWidgets.QMessageBox.Information)       
-            msg.setText("Please use the radiobuttons to define the model")
-            msg.setWindowTitle("No model defined")
-            msg.setStandardButtons(QtWidgets.QMessageBox.Ok)
-            msg.exec_()
-            return
-
-        model_metrics = self.get_metrics(out_dim)
-        if "collection" in chosen_model.lower():
-            for m in model_keras[1]: #in a collection, model_keras[0] are the names of the models and model_keras[1] is a list of all models
-                m.compile(loss='categorical_crossentropy',optimizer='adam',metrics=self.get_metrics(nr_classes))#dont specify loss and optimizer yet...expert stuff will follow and model will be recompiled
-        if not "collection" in chosen_model.lower():
-            model_keras.compile(loss='categorical_crossentropy',optimizer='adam',metrics=model_metrics)#dont specify loss and optimizer yet...expert stuff will follow and model will be recompiled
-
-        #If expert mode is on, apply the requested options
-        #This affects learning rate, trainability of layers and dropout rate
-        expert_mode = bool(self.groupBox_expertMode.isChecked())
-        learning_rate_expert = float(self.doubleSpinBox_learningRate.value())
-        learning_rate_expert_on = bool(self.checkBox_learningRate.isChecked())   
-        train_last_layers = bool(self.checkBox_trainLastNOnly.isChecked())             
-        train_last_layers_n = int(self.spinBox_trainLastNOnly.value())              
-        train_dense_layers = bool(self.checkBox_trainDenseOnly.isChecked())             
-        dropout_expert_on = bool(self.checkBox_dropout.isChecked())
-        loss_expert_on = bool(self.checkBox_expt_loss.isChecked())
-        loss_expert = str(self.comboBox_expt_loss.currentText()).lower()
-        optimizer_expert_on = bool(self.checkBox_optimizer.isChecked())
-        optimizer_expert = str(self.comboBox_optimizer.currentText()).lower()
-        paddingMode = str(self.comboBox_paddingMode.currentText()).lower()
-
-        try:
-            dropout_expert = str(self.lineEdit_dropout.text()) #due to the validator, there are no squ.brackets
-            dropout_expert = "["+dropout_expert+"]"
-            dropout_expert = ast.literal_eval(dropout_expert)        
-        except:
-            dropout_expert = []             
-
-        if type(model_keras)==tuple:#when user chose a Collection of models, a tuple is returned by get_model
-            collection = True
-        else:
-            collection = False
-        
-        if collection==False: #if there is a single model:
-            #Original learning rate (before expert mode is switched on!)
-            try:
-                self.learning_rate_original = K.eval(model_keras.optimizer.lr)
-            except:
-                print("Session busy. Try again in fresh session...")
-                tf.reset_default_graph() #Make sure to start with a fresh session
-                sess = tf.InteractiveSession()
-                self.learning_rate_original = K.eval(model_keras.optimizer.lr)
-                
-            #Get initial trainability states of model
-            self.trainable_original, self.layer_names = aid_dl.model_get_trainable_list(model_keras)
-            trainable_original, layer_names = self.trainable_original, self.layer_names
-            self.do_list_original = aid_dl.get_dropout(model_keras)#Get a list of dropout values of the current model
-            do_list_original = self.do_list_original
-
-        if collection==True: #if there is a collection of models:
-            #Original learning rate (before expert mode is switched on!)
-            self.learning_rate_original = [K.eval(model_keras[1][i].optimizer.lr) for i in range(len(model_keras[1]))]
-            #Get initial trainability states of model
-            trainable_layerName = [aid_dl.model_get_trainable_list(model_keras[1][i]) for i in range(len(model_keras[1]))]
-            self.trainable_original = [trainable_layerName[i][0] for i in range(len(trainable_layerName))]
-            self.layer_names = [trainable_layerName[i][1] for i in range(len(trainable_layerName))]
-            trainable_original, layer_names = self.trainable_original, self.layer_names
-            self.do_list_original = [aid_dl.get_dropout(model_keras[1][i]) for i in range(len(model_keras[1]))]#Get a list of dropout values of the current model
-            do_list_original = self.do_list_original
-
-        #TODO add expert mode ability for collection of models. Maybe define self.model_keras as a list in general. So, fitting a single model is just a special case
-
-
-        if expert_mode==True:
-            #Apply the changes to trainable states:
-            if train_last_layers==True:#Train only the last n layers
-                print("Train only the last "+str(train_last_layers_n)+ " layer(s)")
-                trainable_new = (len(trainable_original)-train_last_layers_n)*[False]+train_last_layers_n*[True]
-                aid_dl.model_change_trainability(model_keras,trainable_new,model_metrics,out_dim,loss_expert,optimizer_expert,learning_rate_expert)
-
-            if train_dense_layers==True:#Train only dense layers
-                print("Train only dense layers")
-                layer_dense_ind = ["Dense" in x for x in layer_names]
-                layer_dense_ind = np.where(np.array(layer_dense_ind)==True)[0] #at which indices are dropout layers?
-                #create a list of trainable states
-                trainable_new = len(trainable_original)*[False]
-                for index in layer_dense_ind:
-                    trainable_new[index] = True
-                aid_dl.model_change_trainability(model_keras,trainable_new,model_metrics,out_dim,loss_expert,optimizer_expert,learning_rate_expert)
-
-            if dropout_expert_on==True:
-                #The user apparently want to change the dropout rates
-                do_list = aid_dl.get_dropout(model_keras)#Get a list of dropout values of the current model
-                #Compare the dropout values in the model to the dropout values requested by user
-                if len(dropout_expert)==1:#if the user gave a float
-                    dropout_expert_list=len(do_list)*dropout_expert #convert to list
-                elif len(dropout_expert)>1:
-                    dropout_expert_list = dropout_expert
-                    if not len(dropout_expert_list)==len(do_list):
-                        msg = QtWidgets.QMessageBox()
-                        msg.setIcon(QtWidgets.QMessageBox.Information)       
-                        msg.setText("Issue with dropout: you defined "+str(len(dropout_expert_list))+" dropout rates, but model has "+str(len(do_list))+" dropout layers")
-                        msg.setWindowTitle("Issue with Expert->Dropout")
-                        msg.setStandardButtons(QtWidgets.QMessageBox.Ok)
-                        msg.exec_()
-                        dropout_expert_list = []
-                        return
+                load_modelname = str(self.lineEdit_LoadModelPath.text())
+                text0 = "Loaded model: "+load_modelname
+                #load the model and print summary
+                if load_modelname.endswith(".arch"):
+                    json_file = open(load_modelname, 'r')
+                    model_config = json_file.read()
+                    json_file.close()
+                    model_keras = model_from_json(model_config)
+                    model_config = json.loads(model_config)
+                    text1 = "\nArchitecture: loaded from .arch\nWeights: randomly initialized\n"
+    
+                #Or a .model (FULL model with trained weights) , but for display only load the architecture        
+                elif load_modelname.endswith(".model"):
+                    #Load the model config (this is the architecture)                  
+                    model_full_h5 = h5py.File(load_modelname, 'r')
+                    model_config = model_full_h5.attrs['model_config']
+                    model_full_h5.close() #close the hdf5                
+                    model_config = json.loads(str(model_config)[2:-1])
+                    model_keras = model_from_config(model_config)
+                    text1 = "\nArchitecture: loaded from .model\nWeights: randomly initialized\n"
                 else:
                     msg = QtWidgets.QMessageBox()
                     msg.setIcon(QtWidgets.QMessageBox.Information)       
-                    msg.setText("Could not understand user input at Expert->Dropout")
-                    msg.setWindowTitle("Issue with Expert->Dropout")
+                    msg.setText("No valid file was chosen. Please specify a file that was created using AIDeveloper or Keras")
+                    msg.setWindowTitle("No valid file was chosen")
                     msg.setStandardButtons(QtWidgets.QMessageBox.Ok)
                     msg.exec_()
+                    return
+    
+                try:
+                    metaname = load_modelname.rsplit('_',1)[0]+"_meta.xlsx"
+                    if os.path.isfile(metaname):
+                        #open the metafile
+                        meta = pd.read_excel(metaname,sheet_name="Parameters")
+                        if "Chosen Model" in list(meta.keys()):
+                            chosen_model = meta["Chosen Model"].iloc[-1]
+                except:
+                    chosen_model = str(self.comboBox_ModelSelection.currentText())
                     
-                    dropout_expert_list = []
-                 
-                if len(dropout_expert_list)>0 and do_list!=dropout_expert_list:#if the dropout rates of the current model is not equal to the required do_list from user...
-                    do_changed = aid_dl.change_dropout(model_keras,dropout_expert_list,model_metrics,nr_classes,loss_expert,optimizer_expert,learning_rate_expert)
-                    if do_changed==1:
-                        text_do = "Dropout rate(s) in model was/were changed to: "+str(dropout_expert_list)
+                #In both cases (restart or continue) the input dimensions have to fit
+                #The number of output classes should also fit but this is not essential  
+                #but most users certainly want the same number of classes (output)->Give Info
+    
+                try: #Sequential Model
+                    in_dim = model_config['config'][0]['config']['batch_input_shape']
+                except: #Functional Api
+                    in_dim = model_config['config']["layers"][0]["config"]["batch_input_shape"]
+                try: #Sequential Model
+                    out_dim = model_config['config'][-2]['config']['units']
+                except: #Functional Api
+                    out_dim = model_config['config']["layers"][-2]["config"]["units"]
+    
+    #            in_dim = model_config['config'][0]['config']['batch_input_shape']
+    #            out_dim = model_config['config'][-2]['config']['units']
+                channels = in_dim[-1] #TensorFlow: channels in last dimension
+    
+                #Compile model (consider user-specific metrics)
+                metrics = self.get_metrics(out_dim)            
+                model_keras.compile(loss='categorical_crossentropy',optimizer='adam',metrics=metrics)#dont specify loss and optimizer yet...expert stuff will follow and model will be recompiled
+    
+                if channels==1:
+                    channel_text = "1 channel (Grayscale)"
+                    if self.get_color_mode()!="Grayscale":
+                        #when model needs Grayscale, set the color mode in comboBox_GrayOrRGB to that
+                        index = self.comboBox_GrayOrRGB.findText("Grayscale", QtCore.Qt.MatchFixedString)
+                        if index >= 0:
+                            self.comboBox_GrayOrRGB.setCurrentIndex(index)                                        
+                        self.statusbar.showMessage("Color Mode set to Grayscale",5000)
+    
+                elif channels==3:
+                    channel_text = "3 channels (RGB)"
+                    if self.get_color_mode()!="RGB":
+                        #when model needs RGB, set the color mode in the ui to that
+                        index = self.comboBox_GrayOrRGB.findText("RGB", QtCore.Qt.MatchFixedString)
+                        if index >= 0:
+                            self.comboBox_GrayOrRGB.setCurrentIndex(index)
+                        self.statusbar.showMessage("Color Mode set to RGB",5000)
+    
+                text2 = "Model Input: "+str(in_dim[-3])+" x "+str(in_dim[-2]) + " pixel images and "+channel_text+"\n"
+    
+                if int(self.spinBox_imagecrop.value())!=int(in_dim[-2]):
+                    self.spinBox_imagecrop.setValue(in_dim[-2])
+                    text2 = text2+ "'Input image size'  in GUI was changed accordingly\n"
+                
+                #check that the nr. of classes are equal to the model out put
+                SelectedFiles = self.items_clicked()
+                indices = [s["class"] for s in SelectedFiles]
+                nr_classes = len(set(indices))
+                if int(nr_classes)==int(out_dim):
+                    text3 = "Output: "+str(out_dim)+" classes\n"
+                else:
+                    text3 = "Model Output: The architecture you chose has "+(str(out_dim))+\
+                    " output nodes (classes) but your selected data has "+str(nr_classes)+\
+                    " classes. The model could theoretically have more outputs nodes than you have indices but the other way around is not defined\n"                
+    
+            ###############Load and continue training the model####################
+            elif self.radioButton_LoadContinueModel.isChecked():
+                load_modelname = str(self.lineEdit_LoadModelPath.text())
+                text0 = "Loaded model: "+load_modelname
+
+                #User can only choose a .model (FULL model with trained weights) , but for display only load the architecture
+                if load_modelname.endswith(".model"):              
+                    #Load the full model
+                    try:
+                        model_keras = load_model(load_modelname,custom_objects=get_custom_metrics())
+                    except:
+                        K.clear_session() #On linux It happened that there was an error, if another fitting run before
+                        model_keras = load_model(load_modelname,custom_objects=get_custom_metrics())
+                    #model_config = model_keras.config() #Load the model config (this is the architecture)
+                    #load_modelname = load_modelname.split(".model")[0]
+                    text1 = "Architecture: loaded from .model\nWeights: pretrained weights loaded'\n"
+                else:
+                    msg = QtWidgets.QMessageBox()
+                    msg.setIcon(QtWidgets.QMessageBox.Information)       
+                    msg.setText("No valid file was chosen. Please specify a file that was created using AIDeveloper or Keras")
+                    msg.setWindowTitle("No valid file was chosen")
+                    msg.setStandardButtons(QtWidgets.QMessageBox.Ok)
+                    msg.exec_()
+                    return
+                    #raise ValueError("No valid file was chosen")
+    
+                try:
+                    metaname = load_modelname.rsplit('_',1)[0]+"_meta.xlsx"
+                    if os.path.isfile(metaname):
+                        #open the metafile
+                        meta = pd.read_excel(metaname,sheet_name="Parameters")
+                        if "Chosen Model" in list(meta.keys()):
+                            chosen_model = meta["Chosen Model"].iloc[-1]
+                    else:
+                        chosen_model = str(self.comboBox_ModelSelection.currentText())
+    
+                except:
+                    chosen_model = str(self.comboBox_ModelSelection.currentText())
+    
+    
+                #Check input dimensions
+                #The number of output classes should also fit but this is not essential  
+                #but most users certainly want the same number of classes (output)->Give Info
+    #            in_dim = model_config['config'][0]['config']['batch_input_shape']
+    #            out_dim = model_config['config'][-2]['config']['units']
+                in_dim = model_keras.get_input_shape_at(0)
+                out_dim = model_keras.get_output_shape_at(0)[1]
+                channels = in_dim[-1] #TensorFlow: channels in last dimension
+    
+                if channels==1:
+                    channel_text = "1 channel (Grayscale)"
+                    if self.get_color_mode()!="Grayscale":
+                        #when model needs Grayscale, set the color mode in comboBox_GrayOrRGB to that
+                        index = self.comboBox_GrayOrRGB.findText("Grayscale", QtCore.Qt.MatchFixedString)
+                        if index >= 0:
+                            self.comboBox_GrayOrRGB.setCurrentIndex(index)                                        
+                        self.statusbar.showMessage("Color Mode set to Grayscale",5000)
+    
+                elif channels==3:
+                    channel_text = "3 channels (RGB)"
+                    if self.get_color_mode()!="RGB":
+                        #when model needs RGB, set the color mode in the ui to that
+                        index = self.comboBox_GrayOrRGB.findText("RGB", QtCore.Qt.MatchFixedString)
+                        if index >= 0:
+                            self.comboBox_GrayOrRGB.setCurrentIndex(index)
+                        self.statusbar.showMessage("Color Mode set to RGB",5000)
+    
+                text2 = "Model Input: "+str(in_dim[-3])+" x "+str(in_dim[-2]) + " pixel images and "+channel_text+"\n"
+                if int(self.spinBox_imagecrop.value())!=int(in_dim[-2]):
+                    self.spinBox_imagecrop.setValue(in_dim[-2])
+                    text2 = text2+ "'Input image size'  in GUI was changed accordingly\n"
+                
+                #check that the nr. of classes are equal to the model out put
+                SelectedFiles = self.items_clicked()
+                indices = [s["class"] for s in SelectedFiles]
+                nr_classes = len(set(indices))
+                if int(nr_classes)==int(out_dim):
+                    text3 = "Output: "+str(out_dim)+" classes\n"
+                else:
+                    text3 = "Model Output: The architecture you chose has "+(str(out_dim))+\
+                    " output nodes (classes) but your selected data has "+str(nr_classes)+\
+                    " classes. The model could theoretically have more outputs nodes than you have indices but the other way around is not defined\n"                
+    
+            ###########################New model###################################
+            elif self.radioButton_NewModel.isChecked():
+                load_modelname = "" #No model is loaded
+                text0 = load_modelname
+                #Create a new model!
+                #Get what the user wants from the dropdown menu!
+                chosen_model = str(self.comboBox_ModelSelection.currentText())
+                if chosen_model==None:
+                    msg = QtWidgets.QMessageBox()
+                    msg.setIcon(QtWidgets.QMessageBox.Information)       
+                    msg.setText("No model specified!")
+                    msg.setWindowTitle("No model specified!")
+                    msg.setStandardButtons(QtWidgets.QMessageBox.Ok)
+                    msg.exec_()
+                    return       
+                    
+                in_dim = int(self.spinBox_imagecrop.value())
+                SelectedFiles = self.items_clicked()
+                #rtdc_ds = SelectedFiles[0]["rtdc_ds"]
+    
+                if str(self.comboBox_GrayOrRGB.currentText())=="Grayscale":
+                    channels=1
+                elif str(self.comboBox_GrayOrRGB.currentText())=="RGB":
+                    channels=3
+                    
+                indices = [s["class"] for s in SelectedFiles]
+                indices_unique = np.unique(np.array(indices))
+                if len(indices_unique)<2:
+                    msg = QtWidgets.QMessageBox()
+                    msg.setIcon(QtWidgets.QMessageBox.Information)       
+                    msg.setText("Need at least two classes to fit. Please specify .rtdc files and corresponding indeces")
+                    msg.setWindowTitle("No valid file was chosen")
+                    msg.setStandardButtons(QtWidgets.QMessageBox.Ok)
+                    msg.exec_()
+                    return  
+                
+                if 0 in indices:
+                    #out_dim = len(set(indices))
+                    out_dim = np.max(indices)+1
+                else:
+                    out_dim = np.max(indices)           
+                nr_classes = out_dim
+                
+                if chosen_model=="None":
+                    msg = QtWidgets.QMessageBox()
+                    msg.setIcon(QtWidgets.QMessageBox.Information)       
+                    msg.setText("No model specified!")
+                    msg.setWindowTitle("No model specified!")
+                    msg.setStandardButtons(QtWidgets.QMessageBox.Ok)
+                    msg.exec_()
+                    return       
+                
+                try:                
+                    model_keras = model_zoo.get_model(chosen_model,in_dim,channels,out_dim)
+                except Exception as e: 
+                    #There is an issue building the model!
+                    msg = QtWidgets.QMessageBox()
+                    msg.setIcon(QtWidgets.QMessageBox.Critical)       
+                    msg.setText(str(e))
+                    msg.setWindowTitle("Error occured when building model:")
+                    msg.setStandardButtons(QtWidgets.QMessageBox.Ok)
+                    msg.exec_()
+                    return       
+                
+                text1 = "Architecture: created "+chosen_model+" design\nWeights: Initialized random weights\n"
+                
+                if self.get_color_mode()=="Grayscale":
+                    channels = 1
+                    channel_text = "1 channel (Grayscale)"
+                elif self.get_color_mode()=="RGB":
+                    channels = 3
+                    channel_text = "3 channels (RGB)"
+                        
+                text2 = "Model Input: "+str(in_dim)+" x "+str(in_dim) + " pixel images and "+channel_text+"\n"
+    
+                if int(nr_classes)==int(out_dim):
+                    text3 = "Output: "+str(out_dim)+" classes\n"
+                else:
+                    text3 = "Model Output: The architecture you chose has "+(str(out_dim))+\
+                    " output nodes (classes) but your selected data has "+str(nr_classes)+\
+                    " classes. The model could theoretically have more outputs nodes than you have indices but the other way around is not defined\n"                
+            
+            else:
+                #No radio-button was chosen
+                msg = QtWidgets.QMessageBox()
+                msg.setIcon(QtWidgets.QMessageBox.Information)       
+                msg.setText("Please use the radiobuttons to define the model")
+                msg.setWindowTitle("No model defined")
+                msg.setStandardButtons(QtWidgets.QMessageBox.Ok)
+                msg.exec_()
+                return
+    
+            model_metrics = self.get_metrics(out_dim)
+            if "collection" in chosen_model.lower():
+                for m in model_keras[1]: #in a collection, model_keras[0] are the names of the models and model_keras[1] is a list of all models
+                    m.compile(loss='categorical_crossentropy',optimizer='adam',metrics=self.get_metrics(nr_classes))#dont specify loss and optimizer yet...expert stuff will follow and model will be recompiled
+            if not "collection" in chosen_model.lower():
+                model_keras.compile(loss='categorical_crossentropy',optimizer='adam',metrics=model_metrics)#dont specify loss and optimizer yet...expert stuff will follow and model will be recompiled
+    
+            #If expert mode is on, apply the requested options
+            #This affects learning rate, trainability of layers and dropout rate
+            expert_mode = bool(self.groupBox_expertMode.isChecked())
+            learning_rate_expert = float(self.doubleSpinBox_learningRate.value())
+            learning_rate_expert_on = bool(self.checkBox_learningRate.isChecked())   
+            train_last_layers = bool(self.checkBox_trainLastNOnly.isChecked())             
+            train_last_layers_n = int(self.spinBox_trainLastNOnly.value())              
+            train_dense_layers = bool(self.checkBox_trainDenseOnly.isChecked())             
+            dropout_expert_on = bool(self.checkBox_dropout.isChecked())
+            loss_expert_on = bool(self.checkBox_expt_loss.isChecked())
+            loss_expert = str(self.comboBox_expt_loss.currentText()).lower()
+            optimizer_expert_on = bool(self.checkBox_optimizer.isChecked())
+            optimizer_expert = str(self.comboBox_optimizer.currentText()).lower()
+            paddingMode = str(self.comboBox_paddingMode.currentText()).lower()
+    
+            try:
+                dropout_expert = str(self.lineEdit_dropout.text()) #due to the validator, there are no squ.brackets
+                dropout_expert = "["+dropout_expert+"]"
+                dropout_expert = ast.literal_eval(dropout_expert)        
+            except:
+                dropout_expert = []             
+    
+            if type(model_keras)==tuple:#when user chose a Collection of models, a tuple is returned by get_model
+                collection = True
+            else:
+                collection = False
+            
+            if collection==False: #if there is a single model:
+                #Original learning rate (before expert mode is switched on!)
+                try:
+                    self.learning_rate_original = K.eval(model_keras.optimizer.lr)
+                except:
+                    print("Session busy. Try again in fresh session...")
+                    #tf.reset_default_graph() #Make sure to start with a fresh session
+                    K.clear_session()
+                    sess = tf.Session(graph = tf.Graph(), config=config_gpu)
+                    #K.set_session(sess)
+                    self.learning_rate_original = K.eval(model_keras.optimizer.lr)
+                    
+                #Get initial trainability states of model
+                self.trainable_original, self.layer_names = aid_dl.model_get_trainable_list(model_keras)
+                trainable_original, layer_names = self.trainable_original, self.layer_names
+                self.do_list_original = aid_dl.get_dropout(model_keras)#Get a list of dropout values of the current model
+                do_list_original = self.do_list_original
+    
+            if collection==True: #if there is a collection of models:
+                #Original learning rate (before expert mode is switched on!)
+                self.learning_rate_original = [K.eval(model_keras[1][i].optimizer.lr) for i in range(len(model_keras[1]))]
+                #Get initial trainability states of model
+                trainable_layerName = [aid_dl.model_get_trainable_list(model_keras[1][i]) for i in range(len(model_keras[1]))]
+                self.trainable_original = [trainable_layerName[i][0] for i in range(len(trainable_layerName))]
+                self.layer_names = [trainable_layerName[i][1] for i in range(len(trainable_layerName))]
+                trainable_original, layer_names = self.trainable_original, self.layer_names
+                self.do_list_original = [aid_dl.get_dropout(model_keras[1][i]) for i in range(len(model_keras[1]))]#Get a list of dropout values of the current model
+                do_list_original = self.do_list_original
+    
+            #TODO add expert mode ability for collection of models. Maybe define self.model_keras as a list in general. So, fitting a single model is just a special case
+    
+    
+            if expert_mode==True:
+                #Apply the changes to trainable states:
+                if train_last_layers==True:#Train only the last n layers
+                    print("Train only the last "+str(train_last_layers_n)+ " layer(s)")
+                    trainable_new = (len(trainable_original)-train_last_layers_n)*[False]+train_last_layers_n*[True]
+                    aid_dl.model_change_trainability(model_keras,trainable_new,model_metrics,out_dim,loss_expert,optimizer_expert,learning_rate_expert)
+    
+                if train_dense_layers==True:#Train only dense layers
+                    print("Train only dense layers")
+                    layer_dense_ind = ["Dense" in x for x in layer_names]
+                    layer_dense_ind = np.where(np.array(layer_dense_ind)==True)[0] #at which indices are dropout layers?
+                    #create a list of trainable states
+                    trainable_new = len(trainable_original)*[False]
+                    for index in layer_dense_ind:
+                        trainable_new[index] = True
+                    aid_dl.model_change_trainability(model_keras,trainable_new,model_metrics,out_dim,loss_expert,optimizer_expert,learning_rate_expert)
+    
+                if dropout_expert_on==True:
+                    #The user apparently want to change the dropout rates
+                    do_list = aid_dl.get_dropout(model_keras)#Get a list of dropout values of the current model
+                    #Compare the dropout values in the model to the dropout values requested by user
+                    if len(dropout_expert)==1:#if the user gave a float
+                        dropout_expert_list=len(do_list)*dropout_expert #convert to list
+                    elif len(dropout_expert)>1:
+                        dropout_expert_list = dropout_expert
+                        if not len(dropout_expert_list)==len(do_list):
+                            msg = QtWidgets.QMessageBox()
+                            msg.setIcon(QtWidgets.QMessageBox.Information)       
+                            msg.setText("Issue with dropout: you defined "+str(len(dropout_expert_list))+" dropout rates, but model has "+str(len(do_list))+" dropout layers")
+                            msg.setWindowTitle("Issue with Expert->Dropout")
+                            msg.setStandardButtons(QtWidgets.QMessageBox.Ok)
+                            msg.exec_()
+                            dropout_expert_list = []
+                            return
+                    else:
+                        msg = QtWidgets.QMessageBox()
+                        msg.setIcon(QtWidgets.QMessageBox.Information)       
+                        msg.setText("Could not understand user input at Expert->Dropout")
+                        msg.setWindowTitle("Issue with Expert->Dropout")
+                        msg.setStandardButtons(QtWidgets.QMessageBox.Ok)
+                        msg.exec_()
+                        
+                        dropout_expert_list = []
+                     
+                    if len(dropout_expert_list)>0 and do_list!=dropout_expert_list:#if the dropout rates of the current model is not equal to the required do_list from user...
+                        do_changed = aid_dl.change_dropout(model_keras,dropout_expert_list,model_metrics,nr_classes,loss_expert,optimizer_expert,learning_rate_expert)
+                        if do_changed==1:
+                            text_do = "Dropout rate(s) in model was/were changed to: "+str(dropout_expert_list)
+                        else:
+                            text_do = "Dropout rate(s) in model was/were not changed"
                     else:
                         text_do = "Dropout rate(s) in model was/were not changed"
-                else:
-                    text_do = "Dropout rate(s) in model was/were not changed"
-                print(text_do)
-
-                
-        text_updates = ""
-
-        #Compare current lr and the lr on expert tab:
-        if collection == False:
-            lr_current = K.eval(model_keras.optimizer.lr)
-        else:
-            lr_current = K.eval(model_keras[1][0].optimizer.lr)
-        print("Current learning rate: "+str(lr_current))
-        lr_diff = learning_rate_expert-lr_current
-        print("Current learning rate: "+str(lr_current))
-        if  abs(lr_diff) > 1e-6:
-            K.set_value(model_keras.optimizer.lr, learning_rate_expert)
-            text_updates +=  "Changed the learning rate to: "+ str(learning_rate_expert)+"\n"
-
-        recompile = False
-        #Compare current optimizer and the optimizer on expert tab:
-        if collection==False:
-            optimizer_current = aid_dl.get_optimizer_name(model_keras).lower()#get the current optimizer of the model
-        else:
-            optimizer_current = aid_dl.get_optimizer_name(model_keras[1][0]).lower()#get the current optimizer of the model
-
-        if optimizer_current!=optimizer_expert.lower():#if the current model has a different optimizer
-            recompile = True
-            text_updates+="Changed the optimizer to: "+optimizer_expert+"\n"
-        #Compare current loss function and the loss-function on expert tab:
-
-        if collection==False:
-            if model_keras.loss!=loss_expert:
-                recompile = True
-                text_updates+="Changed the loss function to: "+loss_expert+"\n"
-        if collection==True:
-            if model_keras[1][0].loss!=loss_expert:
-                recompile = True
-                text_updates+="Changed the loss function to: "+loss_expert+"\n"
-
-        if recompile==True:
+                    print(text_do)
+    
+                    
+            text_updates = ""
+    
+            #Compare current lr and the lr on expert tab:
+            if collection == False:
+                lr_current = K.eval(model_keras.optimizer.lr)
+            else:
+                lr_current = K.eval(model_keras[1][0].optimizer.lr)
+            print("Current learning rate: "+str(lr_current))
+            lr_diff = learning_rate_expert-lr_current
+            print("Current learning rate: "+str(lr_current))
+            if  abs(lr_diff) > 1e-6:
+                K.set_value(model_keras.optimizer.lr, learning_rate_expert)
+                text_updates +=  "Changed the learning rate to: "+ str(learning_rate_expert)+"\n"
+    
+            recompile = False
+            #Compare current optimizer and the optimizer on expert tab:
             if collection==False:
-                print("Recompiling...")
-                aid_dl.model_compile(model_keras,loss_expert,optimizer_expert,learning_rate_expert,model_metrics,nr_classes)
+                optimizer_current = aid_dl.get_optimizer_name(model_keras).lower()#get the current optimizer of the model
+            else:
+                optimizer_current = aid_dl.get_optimizer_name(model_keras[1][0]).lower()#get the current optimizer of the model
+    
+            if optimizer_current!=optimizer_expert.lower():#if the current model has a different optimizer
+                recompile = True
+                text_updates+="Changed the optimizer to: "+optimizer_expert+"\n"
+            #Compare current loss function and the loss-function on expert tab:
+    
+            if collection==False:
+                if model_keras.loss!=loss_expert:
+                    recompile = True
+                    text_updates+="Changed the loss function to: "+loss_expert+"\n"
             if collection==True:
-                for m in model_keras[1]:
+                if model_keras[1][0].loss!=loss_expert:
+                    recompile = True
+                    text_updates+="Changed the loss function to: "+loss_expert+"\n"
+    
+            if recompile==True:
+                if collection==False:
                     print("Recompiling...")
-                    aid_dl.model_compile(m,loss_expert,optimizer_expert,learning_rate_expert,model_metrics,nr_classes)
-        self.model_keras = model_keras #overwrite the model in self
-
-        if collection == False:
-            #Get user-specified filename for the new model
-            new_modelname = str(self.lineEdit_modelname.text())
-            if len(new_modelname)>0:
-                text_new_modelname = "Model will be saved as: "+new_modelname+"\n"
+                    aid_dl.model_compile(model_keras,loss_expert,optimizer_expert,learning_rate_expert,model_metrics,nr_classes)
+                if collection==True:
+                    for m in model_keras[1]:
+                        print("Recompiling...")
+                        aid_dl.model_compile(m,loss_expert,optimizer_expert,learning_rate_expert,model_metrics,nr_classes)
+            self.model_keras = model_keras #overwrite the model in self
+    
+            if collection == False:
+                #Get user-specified filename for the new model
+                new_modelname = str(self.lineEdit_modelname.text())
+                if len(new_modelname)>0:
+                    text_new_modelname = "Model will be saved as: "+new_modelname+"\n"
+                else:
+                    text_new_modelname = "Please specify a model path (name for the model to be fitted)\n"
+    
+            if collection == True:
+                new_modelname = str(self.lineEdit_modelname.text())
+                if len(new_modelname)>0:
+                    new_modelname = os.path.split(new_modelname)
+                    text_new_modelname = "Collection of Models will be saved into: "+new_modelname[0]+"\n"
+                else:
+                    text_new_modelname = "Please specify a model path (name for the model to be fitted)\n"
+    
+    
+            #Info about normalization method
+            norm = str(self.comboBox_Normalization.currentText())
+    
+            text4 = "Input image normalization method: "+norm+"\n"
+    
+            #Check if there are dropout layers:
+            #do_list = aid_dl.get_dropout(model_keras)#Get a list of dropout values of the current model
+            if len(do_list_original)>0:
+                text4 = text4+"Found "+str(len(do_list_original)) +" dropout layers with rates: "+str(do_list_original)+"\n"
             else:
-                text_new_modelname = "Please specify a model path (name for the model to be fitted)\n"
-
-        if collection == True:
-            new_modelname = str(self.lineEdit_modelname.text())
-            if len(new_modelname)>0:
-                new_modelname = os.path.split(new_modelname)
-                text_new_modelname = "Collection of Models will be saved into: "+new_modelname[0]+"\n"
-            else:
-                text_new_modelname = "Please specify a model path (name for the model to be fitted)\n"
-
-
-        #Info about normalization method
-        norm = str(self.comboBox_Normalization.currentText())
-
-        text4 = "Input image normalization method: "+norm+"\n"
-
-        #Check if there are dropout layers:
-        #do_list = aid_dl.get_dropout(model_keras)#Get a list of dropout values of the current model
-        if len(do_list_original)>0:
-            text4 = text4+"Found "+str(len(do_list_original)) +" dropout layers with rates: "+str(do_list_original)+"\n"
-        else:
-            text4 = text4+"Found no dropout layers\n"
-        
-        if expert_mode==True:
-            if dropout_expert_on:
-                text4 = text4+text_do+"\n"
-#            if learning_rate_expert_on==True:
-#                if K.eval(model_keras.optimizer.lr) != learning_rate_expert: #if the learning rate in UI is NOT equal to the lr of the model...
-#                    text_lr = "Changed the learning rate to: "+ str(learning_rate_expert)+"\n"
-#                    text4 = text4+text_lr
-
-        text5 = "Model summary:\n"
-        summary = []
-        if collection==False:
-            model_keras.summary(print_fn=summary.append)
-            summary = "\n".join(summary)
-            text = text_new_modelname+text0+text1+text2+text3+text4+text_updates+text5+summary
-            self.textBrowser_Info.setText(text)
-                
-            #Save the model architecture: serialize to JSON
-            model_json = model_keras.to_json()
-            with open(new_modelname.split(".model")[0]+".arch", "w") as json_file:
-                json_file.write(model_json)
-
-        elif collection==True:
-            if self.groupBox_expertMode.isChecked()==True:
-                self.groupBox_expertMode.setChecked(False)
-                print("Turned off expert mode. Not implemented yet for collections of models. This does not affect user-specified metrics (precision/recall/f1)")
-#            print("new_modelname")
-#            print(new_modelname)
+                text4 = text4+"Found no dropout layers\n"
             
-            self.model_keras_arch_path = [new_modelname[0]+os.sep+new_modelname[1].split(".model")[0]+"_"+model_keras[0][i]+".arch" for i in range(len(model_keras[0]))]                
-            for i in range(len(model_keras[1])):
-                model_keras[1][i].summary(print_fn=summary.append)
+            if expert_mode==True:
+                if dropout_expert_on:
+                    text4 = text4+text_do+"\n"
+    #            if learning_rate_expert_on==True:
+    #                if K.eval(model_keras.optimizer.lr) != learning_rate_expert: #if the learning rate in UI is NOT equal to the lr of the model...
+    #                    text_lr = "Changed the learning rate to: "+ str(learning_rate_expert)+"\n"
+    #                    text4 = text4+text_lr
+    
+            text5 = "Model summary:\n"
+            summary = []
+            if collection==False:
+                model_keras.summary(print_fn=summary.append)
+                summary = "\n".join(summary)
+                text = text_new_modelname+text0+text1+text2+text3+text4+text_updates+text5+summary
+                self.textBrowser_Info.setText(text)
                     
                 #Save the model architecture: serialize to JSON
-                model_json = model_keras[1][i].to_json()
-                with open(self.model_keras_arch_path[i], "w") as json_file:
+                model_json = model_keras.to_json()
+                with open(new_modelname.split(".model")[0]+".arch", "w") as json_file:
                     json_file.write(model_json)
-
-            summary = "\n".join(summary)
-            text = text_new_modelname+text0+text1+text2+text3+text4+text5+summary
-            self.textBrowser_Info.setText(text)
-
-        #Save the model to a variable on self
-        self.model_keras = model_keras
-
-        #Get the user-defined cropping size
-        crop = int(self.spinBox_imagecrop.value())          
-        #Make the cropsize a bit larger since the images will later be rotated
-        cropsize2 = np.sqrt(crop**2+crop**2)
-        cropsize2 = np.ceil(cropsize2 / 2.) * 2 #round to the next even number
-
-        #Estimate RAM needed
-        nr_imgs = np.sum([np.array(list(SelectedFiles)[i]["nr_images"]) for i in range(len(list(SelectedFiles)))])
-        ram_needed = np.round(nr_imgs * aid_bin.calc_ram_need(cropsize2),2)
- 
-        if only_initialize==True:#Stop here if the model just needs to be intialized (for expert mode->partial trainability)
-            return
-        
-        #Tell the user if the data is stored and read from ram or not
-        if self.actionDataToRam.isChecked():
-            color_mode = self.get_color_mode()
-            zoom_factors = [selectedfile["zoom_factor"] for selectedfile in SelectedFiles]
-            zoom_order = [self.actionOrder0.isChecked(),self.actionOrder1.isChecked(),self.actionOrder2.isChecked(),self.actionOrder3.isChecked(),self.actionOrder4.isChecked(),self.actionOrder5.isChecked()]
-            zoom_order = int(np.where(np.array(zoom_order)==True)[0])
-
-            msg = QtWidgets.QMessageBox()
-            msg.setIcon(QtWidgets.QMessageBox.Question)
-            text = "<html><head/><body><p>Should the model only be initialized,\
-            or do you want to start fitting right after? For fitting, data will\
-            be loaded to RAM (since Edit->Data to RAM is enabled), which will\
-            require "+str(ram_needed)+"MB of RAM.</p></body></html>"
-            msg.setText(text) 
-            msg.setWindowTitle("Initialize model or initialize and fit model?")
-            msg.addButton(QtGui.QPushButton('Stop after model initialization'), QtGui.QMessageBox.RejectRole)
-            msg.addButton(QtGui.QPushButton('Start fitting'), QtGui.QMessageBox.ApplyRole)
-            retval = msg.exec_()
-            if retval==0: #yes role: Only initialize model
+    
+            elif collection==True:
+                if self.groupBox_expertMode.isChecked()==True:
+                    self.groupBox_expertMode.setChecked(False)
+                    print("Turned off expert mode. Not implemented yet for collections of models. This does not affect user-specified metrics (precision/recall/f1)")
+    #            print("new_modelname")
+    #            print(new_modelname)
+                
+                self.model_keras_arch_path = [new_modelname[0]+os.sep+new_modelname[1].split(".model")[0]+"_"+model_keras[0][i]+".arch" for i in range(len(model_keras[0]))]                
+                for i in range(len(model_keras[1])):
+                    model_keras[1][i].summary(print_fn=summary.append)
+                        
+                    #Save the model architecture: serialize to JSON
+                    model_json = model_keras[1][i].to_json()
+                    with open(self.model_keras_arch_path[i], "w") as json_file:
+                        json_file.write(model_json)
+    
+                summary = "\n".join(summary)
+                text = text_new_modelname+text0+text1+text2+text3+text4+text5+summary
+                self.textBrowser_Info.setText(text)
+    
+            #Save the model to a variable on self
+            self.model_keras = model_keras
+    
+            #Get the user-defined cropping size
+            crop = int(self.spinBox_imagecrop.value())          
+            #Make the cropsize a bit larger since the images will later be rotated
+            cropsize2 = np.sqrt(crop**2+crop**2)
+            cropsize2 = np.ceil(cropsize2 / 2.) * 2 #round to the next even number
+    
+            #Estimate RAM needed
+            nr_imgs = np.sum([np.array(list(SelectedFiles)[i]["nr_images"]) for i in range(len(list(SelectedFiles)))])
+            ram_needed = np.round(nr_imgs * aid_bin.calc_ram_need(cropsize2),2)
+     
+            if only_initialize==True:#Stop here if the model just needs to be intialized (for expert mode->partial trainability)
                 return
-            elif retval == 1:
-                dic = aid_img.crop_imgs_to_ram(list(SelectedFiles),cropsize2,zoom_factors=zoom_factors,zoom_order=zoom_order,color_mode=color_mode)
-                self.ram = dic 
-                #Finally, activate the 'Fit model' button again
-                #self.pushButton_FitModel.setEnabled(True)
-                self.action_fit_model()
-        else:
-            msg = QtWidgets.QMessageBox()
-            msg.setIcon(QtWidgets.QMessageBox.Question)
-            text = "<html><head/><body><p>Should the model only be initialized,\
-            or do you want to start fitting right after? For fitting, data will\
-            be loaded to RAM (since Edit->Data to RAM is enabled), which will\
-            require "+str(ram_needed)+"MB of RAM.</p></body></html>"
-            msg.setText(text) 
-            msg.setWindowTitle("Initialize model or initialize and fit model?")
-            msg.addButton(QtGui.QPushButton('Stop after model initialization'), QtGui.QMessageBox.RejectRole)
-            msg.addButton(QtGui.QPushButton('Start fitting'), QtGui.QMessageBox.ApplyRole)
-            retval = msg.exec_()
-            if retval==0: #yes role: Only initialize model
-                return
-            elif retval == 1:
-                self.action_fit_model()
+            
+            #Tell the user if the data is stored and read from ram or not
+            if self.actionDataToRam.isChecked():
+                color_mode = self.get_color_mode()
+                zoom_factors = [selectedfile["zoom_factor"] for selectedfile in SelectedFiles]
+                zoom_order = [self.actionOrder0.isChecked(),self.actionOrder1.isChecked(),self.actionOrder2.isChecked(),self.actionOrder3.isChecked(),self.actionOrder4.isChecked(),self.actionOrder5.isChecked()]
+                zoom_order = int(np.where(np.array(zoom_order)==True)[0])
+    
+                msg = QtWidgets.QMessageBox()
+                msg.setIcon(QtWidgets.QMessageBox.Question)
+                text = "<html><head/><body><p>Should the model only be initialized,\
+                or do you want to start fitting right after? For fitting, data will\
+                be loaded to RAM (since Edit->Data to RAM is enabled), which will\
+                require "+str(ram_needed)+"MB of RAM.</p></body></html>"
+                msg.setText(text) 
+                msg.setWindowTitle("Initialize model or initialize and fit model?")
+                msg.addButton(QtGui.QPushButton('Stop after model initialization'), QtGui.QMessageBox.RejectRole)
+                msg.addButton(QtGui.QPushButton('Start fitting'), QtGui.QMessageBox.ApplyRole)
+                retval = msg.exec_()
+                if retval==0: #yes role: Only initialize model
+                    print("Closing session")
+                    del model_keras
+                    sess.close()
+                    return
+                
+                elif retval == 1:
+                    dic = aid_img.crop_imgs_to_ram(list(SelectedFiles),cropsize2,zoom_factors=zoom_factors,zoom_order=zoom_order,color_mode=color_mode)
+                    self.ram = dic 
+                    #Finally, activate the 'Fit model' button again
+                    #self.pushButton_FitModel.setEnabled(True)
+                    self.action_fit_model()
+            else:
+                msg = QtWidgets.QMessageBox()
+                msg.setIcon(QtWidgets.QMessageBox.Question)
+                text = "<html><head/><body><p>Should the model only be initialized,\
+                or do you want to start fitting right after? For fitting, data will\
+                be loaded to RAM (since Edit->Data to RAM is enabled), which will\
+                require "+str(ram_needed)+"MB of RAM.</p></body></html>"
+                msg.setText(text) 
+                msg.setWindowTitle("Initialize model or initialize and fit model?")
+                msg.addButton(QtGui.QPushButton('Stop after model initialization'), QtGui.QMessageBox.RejectRole)
+                msg.addButton(QtGui.QPushButton('Start fitting'), QtGui.QMessageBox.ApplyRole)
+                retval = msg.exec_()
+                if retval==0: #yes role: Only initialize model
+                    print("Closing session")
+                    del model_keras
+                    sess.close()
+    
+                    return
+                elif retval == 1:
+                    self.action_fit_model()
 
-        sess.close() 
+            del model_keras
 
     def action_fit_model_worker(self,progress_callback,history_callback):
         
@@ -7258,326 +7328,218 @@ class MainWindow(QtWidgets.QMainWindow):
             deviceSelected = str(self.comboBox_gpu.currentText())
         gpu_memory = float(self.doubleSpinBox_memory.value())
 
-        config_gpu = tf.ConfigProto()
-        #No GPU available, CPU selected:
-        if deviceSelected=="Default CPU":
-            print("Adjusted options for CPU usage")
+        #Retrieve more Multi-GPU Options from Menubar:
+        cpu_merge = bool(self.actioncpu_merge.isEnabled())
+        cpu_relocation = bool(self.actioncpu_relocation.isEnabled())
+        cpu_weight_merge = bool(self.actioncpu_weightmerge.isEnabled())    
 
-        #GPU available but user want to use CPU
-        elif gpu_nr>0 and deviceSelected=="Default CPU":
-            config_gpu.device_count = {'GPU': 0}
-            print("Adjusted options for CPU usage")
+        #Create config (define which device to use)
+        config_gpu = aid_dl.get_config(cpu_nr,gpu_nr,deviceSelected,gpu_memory)
         
-        #GPU selected
-        elif deviceSelected=="Single-GPU" or deviceSelected=="Multi-GPU":
-            config_gpu.gpu_options.allow_growth = True
-            config_gpu.gpu_options.per_process_gpu_memory_fraction = gpu_memory #set memory limit
-            config_gpu.allow_soft_placement=True
-            config_gpu.log_device_placement=True
-            if deviceSelected=="Single-GPU":
-                print("Adjusted GPU options for Single-GPU usage. Set memeory fraction to "+str(gpu_memory))
-            if deviceSelected=="Multi-GPU":
-                print("Adjusted GPU options for Multi-GPU usage. Set memeory fraction to "+str(gpu_memory))
-        
-#        if deviceSelected=="Multi-GPU":
-#            for device in gpu_devices:
-#                tf.config.experimental.set_memory_growth(device, True)
-#            config_gpu.gpu_options.per_process_gpu_memory_fraction = gpu_memory
-
-
-        #with tf.Session(graph = tf.Graph(), config=config_gpu) as sess: #Without this multithreading does not work in TensorFlow
-
-        #K.clear_session()
-        sess = tf.InteractiveSession(graph = tf.Graph(), config=config_gpu)        
-        
-        #get an index of the fitting popup
-        listindex = self.popupcounter-1
-        #Get user-specified filename for the new model
-        new_modelname = str(self.lineEdit_modelname.text())
-        model_keras_path = self.model_keras_path
-        
-        if type(model_keras_path)==list:
-            collection = True
-            #Take the initialized models
+        with tf.Session(graph = tf.Graph(), config=config_gpu) as sess:       
+            #K.set_session(sess)
+            
+            #get an index of the fitting popup
+            listindex = self.popupcounter-1
+            #Get user-specified filename for the new model
+            new_modelname = str(self.lineEdit_modelname.text())
             model_keras_path = self.model_keras_path
-            model_keras = [load_model(model_keras_path[i],custom_objects=get_custom_metrics()) for i in range(len(model_keras_path)) ]
-            model_architecture_names = self.model_keras[0]
-            print(model_architecture_names)    
-            self.model_keras = None
-
-        else:
-            collection = False
-            model_keras = load_model(model_keras_path,custom_objects=get_custom_metrics())
-            self.model_keras = None
-
-        #Multi-GPU
-        if deviceSelected=="Multi-GPU":
-            if collection==False:
-                print("Adjusting the model for Multi-GPU")
-                model_keras = multi_gpu_model(model_keras, gpus=gpu_nr)#indicate the numbers of gpus that you have
-
-            elif collection==True:
-                for m in model_keras:
+            
+            if type(model_keras_path)==list:
+                collection = True
+                #Take the initialized models
+                model_keras_path = self.model_keras_path
+                model_keras = [load_model(model_keras_path[i],custom_objects=get_custom_metrics()) for i in range(len(model_keras_path)) ]
+                model_architecture_names = self.model_keras[0]
+                print(model_architecture_names)    
+                self.model_keras = None
+    
+            else:
+                collection = False
+    
+                if deviceSelected=="Multi-GPU" and cpu_weight_merge==True:
+                    with tf.device("/cpu:0"):
+                        model_keras = load_model(model_keras_path,custom_objects=get_custom_metrics()) 
+                else:
+                    model_keras = load_model(model_keras_path,custom_objects=get_custom_metrics())
+    
+                self.model_keras = None
+                
+            #Initialize a variable for the parallel model
+            model_keras_p = None
+    
+            #Multi-GPU
+            if deviceSelected=="Multi-GPU":
+                if collection==False:
                     print("Adjusting the model for Multi-GPU")
-                    m = multi_gpu_model(m, gpus=gpu_nr)#indicate the numbers of gpus that you have
-
-        ##############Main function after hitting FIT MODEL####################
-        if self.radioButton_LoadRestartModel.isChecked():
-            load_modelname = str(self.lineEdit_LoadModelPath.text())
-        elif self.radioButton_LoadContinueModel.isChecked():
-            load_modelname = str(self.lineEdit_LoadModelPath.text())
-        elif self.radioButton_NewModel.isChecked():
-            load_modelname = "" #No model is loaded
-
-        if collection==False:    
-            #model_config = model_keras.get_config()#["layers"] 
-            nr_classes = int(model_keras.output.shape.dims[1])
-        if collection==True:
-            #model_config = model_keras.get_config()#["layers"] 
-            nr_classes = int(model_keras[0].output.shape.dims[1])
-        
-        #Metrics to be displayed during fitting (real-time)
-        model_metrics = self.get_metrics(nr_classes)
-
-        #Compile model
-        if collection==False:
-            model_keras.compile(loss='categorical_crossentropy',optimizer='adam',metrics=model_metrics)#dont specify loss and optimizer yet...expert stuff will follow and model will be recompiled
-        elif collection==True:
-            #Switch off the expert tab!
-            self.fittingpopups_ui[listindex].groupBox_expertMode_pop.setChecked(False)
-            self.fittingpopups_ui[listindex].groupBox_expertMode_pop.setEnabled(False)
-            for m in model_keras:
-                m.compile(loss='categorical_crossentropy',optimizer='adam',metrics=self.get_metrics(nr_classes))#dont specify loss and optimizer yet...expert stuff will follow and model will be recompiled
-                
-        #Original learning rate:
-        learning_rate_original = self.learning_rate_original#K.eval(model_keras.optimizer.lr)
-        #Original trainable states of layers with parameters
-        trainable_original, layer_names = self.trainable_original, self.layer_names
-        do_list_original = self.do_list_original
-        
-        #Collect all information about the fitting routine that was user
-        #defined
-        if self.actionVerbose.isChecked()==True:
-            verbose = 1
-        else:
-            verbose = 0
-
-        new_model = self.radioButton_NewModel.isChecked()
-        chosen_model = str(self.comboBox_ModelSelection.currentText())
-            
-        crop = int(self.spinBox_imagecrop.value())      
-        color_mode = str(self.comboBox_GrayOrRGB.currentText())
-        
-        loadrestart_model = self.radioButton_LoadRestartModel.isChecked()
-        loadcontinue_model = self.radioButton_LoadContinueModel.isChecked()
-
-        norm = str(self.comboBox_Normalization.currentText())
-
-        nr_epochs = int(self.spinBox_NrEpochs.value())
-        keras_refresh_nr_epochs = int(self.spinBox_RefreshAfterEpochs.value())
-        h_flip = bool(self.checkBox_HorizFlip.isChecked())
-        v_flip = bool(self.checkBox_VertFlip.isChecked())
-        rotation = float(self.lineEdit_Rotation.text())
- 
-        width_shift = float(self.lineEdit_widthShift.text())
-        height_shift = float(self.lineEdit_heightShift.text())
-        zoom = float(self.lineEdit_zoomRange.text())
-        shear = float(self.lineEdit_shearRange.text())
-        
-        brightness_refresh_nr_epochs = int(self.spinBox_RefreshAfterNrEpochs.value())
-        brightness_add_lower = float(self.spinBox_PlusLower.value())
-        brightness_add_upper = float(self.spinBox_PlusUpper.value())
-        brightness_mult_lower = float(self.doubleSpinBox_MultLower.value())
-        brightness_mult_upper = float(self.doubleSpinBox_MultUpper.value())
-        gaussnoise_mean = float(self.doubleSpinBox_GaussianNoiseMean.value())
-        gaussnoise_scale = float(self.doubleSpinBox_GaussianNoiseScale.value())
-
-        contrast_on = bool(self.checkBox_contrast.isChecked())        
-        contrast_lower = float(self.doubleSpinBox_contrastLower.value())
-        contrast_higher = float(self.doubleSpinBox_contrastHigher.value())
-        saturation_on = bool(self.checkBox_saturation.isChecked())        
-        saturation_lower = float(self.doubleSpinBox_saturationLower.value())
-        saturation_higher = float(self.doubleSpinBox_saturationHigher.value())
-        hue_on = bool(self.checkBox_hue.isChecked())        
-        hue_delta = float(self.doubleSpinBox_hueDelta.value())
-
-        avgBlur_on = bool(self.checkBox_avgBlur.isChecked())        
-        avgBlur_min = int(self.spinBox_avgBlurMin.value())
-        avgBlur_max = int(self.spinBox_avgBlurMax.value())
-        gaussBlur_on = bool(self.checkBox_gaussBlur.isChecked())        
-        gaussBlur_min = int(self.spinBox_gaussBlurMin.value())
-        gaussBlur_max = int(self.spinBox_gaussBlurMax.value())
-        motionBlur_on = bool(self.checkBox_motionBlur.isChecked())        
-        motionBlur_kernel = str(self.lineEdit_motionBlurKernel.text())
-        motionBlur_angle = str(self.lineEdit_motionBlurAngle.text())
-        motionBlur_kernel = tuple(ast.literal_eval(motionBlur_kernel)) #translate string in the lineEdits to a tuple
-        motionBlur_angle = tuple(ast.literal_eval(motionBlur_angle)) #translate string in the lineEdits to a tuple
-
-
-        if collection==False:
-            expert_mode = bool(self.groupBox_expertMode.isChecked())
-        elif collection==True:
-            expert_mode = self.groupBox_expertMode.setChecked(False)
-            print("Expert mode was switched off. Not implemented yet for collections")
-            expert_mode = False
-
-        batchSize_expert = int(self.spinBox_batchSize.value())
-        epochs_expert = int(self.spinBox_epochs.value())
-        learning_rate_expert = float(self.doubleSpinBox_learningRate.value())
-        learning_rate_expert_on = bool(self.checkBox_learningRate.isChecked()) 
-        loss_expert_on = bool(self.checkBox_expt_loss.isChecked())
-        loss_expert = str(self.comboBox_expt_loss.currentText()).lower()
-        optimizer_expert_on = bool(self.checkBox_optimizer.isChecked())
-        optimizer_expert = str(self.comboBox_optimizer.currentText()).lower()
-        paddingMode = str(self.comboBox_paddingMode.currentText()).lower()
-
-        train_last_layers = bool(self.checkBox_trainLastNOnly.isChecked())             
-        train_last_layers_n = int(self.spinBox_trainLastNOnly.value())              
-        train_dense_layers = bool(self.checkBox_trainDenseOnly.isChecked())             
-        dropout_expert_on = bool(self.checkBox_dropout.isChecked())             
-        try:
-            dropout_expert = str(self.lineEdit_dropout.text()) #due to the validator, there are no squ.brackets
-            dropout_expert = "["+dropout_expert+"]"
-            dropout_expert = ast.literal_eval(dropout_expert)        
-        except:
-            dropout_expert = []
-        lossW_expert_on = bool(self.checkBox_lossW.isChecked())             
-        lossW_expert = str(self.lineEdit_lossW.text())
-
-        #To get the class weights (loss), the SelectedFiles are required 
-        SelectedFiles = self.items_clicked()
-        self.fittingpopups_ui[listindex].SelectedFiles = SelectedFiles #save to self. to make it accessible for popup showing loss weights
-        #Get the class weights. This function runs now the first time in the fitting routine. 
-        #It is possible that the user chose Custom weights and then changed the classes. Hence first check if 
-        #there is a weight for each class available.
-        class_weight = self.get_class_weight(self.fittingpopups_ui[listindex].SelectedFiles,lossW_expert,custom_check_classes=True)
-        if type(class_weight)==list:
-            #There has been a mismatch between the classes described in class_weight and the classes available in SelectedFiles!
-            lossW_expert = class_weight[0] #overwrite 
-            class_weight = class_weight[1]
-            print(class_weight)
-            print("There has been a mismatch between the classes described in \
-                  Loss weights and the classes available in the selected files! \
-                  Hence, the Loss weights are set to Balanced")
-#                #Notify user
-#                msg = QtWidgets.QMessageBox()
-#                msg.setIcon(QtWidgets.QMessageBox.Information)       
-#                text = "<html><head/><body><p>There has been a mismatch between the classes described in Loss weights and the classes available in the selected files! Hence, the 'Loss weights' are set to 'Balanced'.</p></body></html>"
-#                msg.setText(text) 
-#                msg.setWindowTitle("Loss weights set to Balanced")
-#                msg.setStandardButtons(QtWidgets.QMessageBox.Ok)
-#                msg.exec_()
-            
-        if collection==False:    
-            #Create an excel file
-            writer = pd.ExcelWriter(new_modelname.split(".model")[0]+'_meta.xlsx', engine='openpyxl')
-            self.writer = writer
-            #Used files go to a separate sheet on the MetaFile.xlsx
-            SelectedFiles_df = pd.DataFrame(SelectedFiles)
-            pd.DataFrame().to_excel(writer,sheet_name='UsedData') #initialize empty Sheet
-            SelectedFiles_df.to_excel(writer,sheet_name='UsedData')
-            DataOverview_df = self.get_dataOverview()
-            DataOverview_df.to_excel(writer,sheet_name='DataOverview') #write data overview to separate sheet            
-            pd.DataFrame().to_excel(writer,sheet_name='Parameters') #initialize empty Sheet
-            pd.DataFrame().to_excel(writer,sheet_name='History') #initialize empty Sheet
+                    model_keras_p = multi_gpu_model(model_keras, gpus=gpu_nr, cpu_merge=cpu_merge, cpu_relocation=cpu_relocation)#indicate the numbers of gpus that you have
     
-            #create a dictionary for the metafiles (Parameters and History)
-            Para_dict = pd.DataFrame()
-            Para_dict["AIDeveloper_Version"]=VERSION,
-            Para_dict["model_zoo_version"]=model_zoo_version,
+                elif collection==True:
+                    print("Collection & Multi-GPU is not supported yet")
+                    return
+    #                model_keras_p = []
+    #                for m in model_keras_p:
+    #                    print("Adjusting the model for Multi-GPU")
+    #                    model_keras_p.append(multi_gpu_model(m, gpus=gpu_nr)) #indicate the numbers of gpus that you have
+    
+            ##############Main function after hitting FIT MODEL####################
+            if self.radioButton_LoadRestartModel.isChecked():
+                load_modelname = str(self.lineEdit_LoadModelPath.text())
+            elif self.radioButton_LoadContinueModel.isChecked():
+                load_modelname = str(self.lineEdit_LoadModelPath.text())
+            elif self.radioButton_NewModel.isChecked():
+                load_modelname = "" #No model is loaded
+    
+            if collection==False:    
+                #model_config = model_keras.get_config()#["layers"] 
+                nr_classes = int(model_keras.output.shape.dims[1])
+            if collection==True:
+                #model_config = model_keras.get_config()#["layers"] 
+                nr_classes = int(model_keras[0].output.shape.dims[1])
+            
+            #Metrics to be displayed during fitting (real-time)
+            model_metrics = self.get_metrics(nr_classes)
+    
+            #Compile model
+            if collection==False and deviceSelected=="Single-GPU":
+                model_keras.compile(loss='categorical_crossentropy',optimizer='adam',metrics=model_metrics)#dont specify loss and optimizer yet...expert stuff will follow and model will be recompiled
+            elif collection==False and deviceSelected=="Multi-GPU":
+                model_keras_p.compile(loss='categorical_crossentropy',optimizer='adam',metrics=model_metrics)#dont specify loss and optimizer yet...expert stuff will follow and model will be recompiled
+            elif collection==True and deviceSelected=="Single-GPU":
+                #Switch off the expert tab!
+                self.fittingpopups_ui[listindex].groupBox_expertMode_pop.setChecked(False)
+                self.fittingpopups_ui[listindex].groupBox_expertMode_pop.setEnabled(False)
+                for m in model_keras:
+                    m.compile(loss='categorical_crossentropy',optimizer='adam',metrics=self.get_metrics(nr_classes))#dont specify loss and optimizer yet...expert stuff will follow and model will be recompiled
+            elif collection==True and deviceSelected=="Multi-GPU":
+                print("Collection & Multi-GPU is not supported yet")
+                return
+            
+            #Original learning rate:
+            learning_rate_original = self.learning_rate_original#K.eval(model_keras.optimizer.lr)
+            #Original trainable states of layers with parameters
+            trainable_original, layer_names = self.trainable_original, self.layer_names
+            do_list_original = self.do_list_original
+            
+            #Collect all information about the fitting routine that was user
+            #defined
+            if self.actionVerbose.isChecked()==True:
+                verbose = 1
+            else:
+                verbose = 0
+    
+            new_model = self.radioButton_NewModel.isChecked()
+            chosen_model = str(self.comboBox_ModelSelection.currentText())
+                
+            crop = int(self.spinBox_imagecrop.value())      
+            color_mode = str(self.comboBox_GrayOrRGB.currentText())
+            
+            loadrestart_model = self.radioButton_LoadRestartModel.isChecked()
+            loadcontinue_model = self.radioButton_LoadContinueModel.isChecked()
+    
+            norm = str(self.comboBox_Normalization.currentText())
+    
+            nr_epochs = int(self.spinBox_NrEpochs.value())
+            keras_refresh_nr_epochs = int(self.spinBox_RefreshAfterEpochs.value())
+            h_flip = bool(self.checkBox_HorizFlip.isChecked())
+            v_flip = bool(self.checkBox_VertFlip.isChecked())
+            rotation = float(self.lineEdit_Rotation.text())
+     
+            width_shift = float(self.lineEdit_widthShift.text())
+            height_shift = float(self.lineEdit_heightShift.text())
+            zoom = float(self.lineEdit_zoomRange.text())
+            shear = float(self.lineEdit_shearRange.text())
+            
+            brightness_refresh_nr_epochs = int(self.spinBox_RefreshAfterNrEpochs.value())
+            brightness_add_lower = float(self.spinBox_PlusLower.value())
+            brightness_add_upper = float(self.spinBox_PlusUpper.value())
+            brightness_mult_lower = float(self.doubleSpinBox_MultLower.value())
+            brightness_mult_upper = float(self.doubleSpinBox_MultUpper.value())
+            gaussnoise_mean = float(self.doubleSpinBox_GaussianNoiseMean.value())
+            gaussnoise_scale = float(self.doubleSpinBox_GaussianNoiseScale.value())
+    
+            contrast_on = bool(self.checkBox_contrast.isChecked())        
+            contrast_lower = float(self.doubleSpinBox_contrastLower.value())
+            contrast_higher = float(self.doubleSpinBox_contrastHigher.value())
+            saturation_on = bool(self.checkBox_saturation.isChecked())        
+            saturation_lower = float(self.doubleSpinBox_saturationLower.value())
+            saturation_higher = float(self.doubleSpinBox_saturationHigher.value())
+            hue_on = bool(self.checkBox_hue.isChecked())        
+            hue_delta = float(self.doubleSpinBox_hueDelta.value())
+    
+            avgBlur_on = bool(self.checkBox_avgBlur.isChecked())        
+            avgBlur_min = int(self.spinBox_avgBlurMin.value())
+            avgBlur_max = int(self.spinBox_avgBlurMax.value())
+            gaussBlur_on = bool(self.checkBox_gaussBlur.isChecked())        
+            gaussBlur_min = int(self.spinBox_gaussBlurMin.value())
+            gaussBlur_max = int(self.spinBox_gaussBlurMax.value())
+            motionBlur_on = bool(self.checkBox_motionBlur.isChecked())        
+            motionBlur_kernel = str(self.lineEdit_motionBlurKernel.text())
+            motionBlur_angle = str(self.lineEdit_motionBlurAngle.text())
+            motionBlur_kernel = tuple(ast.literal_eval(motionBlur_kernel)) #translate string in the lineEdits to a tuple
+            motionBlur_angle = tuple(ast.literal_eval(motionBlur_angle)) #translate string in the lineEdits to a tuple
+    
+    
+            if collection==False:
+                expert_mode = bool(self.groupBox_expertMode.isChecked())
+            elif collection==True:
+                expert_mode = self.groupBox_expertMode.setChecked(False)
+                print("Expert mode was switched off. Not implemented yet for collections")
+                expert_mode = False
+    
+            batchSize_expert = int(self.spinBox_batchSize.value())
+            epochs_expert = int(self.spinBox_epochs.value())
+            learning_rate_expert = float(self.doubleSpinBox_learningRate.value())
+            learning_rate_expert_on = bool(self.checkBox_learningRate.isChecked()) 
+            loss_expert_on = bool(self.checkBox_expt_loss.isChecked())
+            loss_expert = str(self.comboBox_expt_loss.currentText()).lower()
+            optimizer_expert_on = bool(self.checkBox_optimizer.isChecked())
+            optimizer_expert = str(self.comboBox_optimizer.currentText()).lower()
+            paddingMode = str(self.comboBox_paddingMode.currentText()).lower()
+    
+            train_last_layers = bool(self.checkBox_trainLastNOnly.isChecked())             
+            train_last_layers_n = int(self.spinBox_trainLastNOnly.value())              
+            train_dense_layers = bool(self.checkBox_trainDenseOnly.isChecked())             
+            dropout_expert_on = bool(self.checkBox_dropout.isChecked())             
             try:
-                Para_dict["OS"]=platform.platform(),
-                Para_dict["CPU"]=platform.processor(),
+                dropout_expert = str(self.lineEdit_dropout.text()) #due to the validator, there are no squ.brackets
+                dropout_expert = "["+dropout_expert+"]"
+                dropout_expert = ast.literal_eval(dropout_expert)        
             except:
-                Para_dict["OS"]="Unknown",
-                Para_dict["CPU"]="Unknown",
+                dropout_expert = []
+            lossW_expert_on = bool(self.checkBox_lossW.isChecked())             
+            lossW_expert = str(self.lineEdit_lossW.text())
+    
+            #To get the class weights (loss), the SelectedFiles are required 
+            SelectedFiles = self.items_clicked()
+            self.fittingpopups_ui[listindex].SelectedFiles = SelectedFiles #save to self. to make it accessible for popup showing loss weights
+            #Get the class weights. This function runs now the first time in the fitting routine. 
+            #It is possible that the user chose Custom weights and then changed the classes. Hence first check if 
+            #there is a weight for each class available.
+            class_weight = self.get_class_weight(self.fittingpopups_ui[listindex].SelectedFiles,lossW_expert,custom_check_classes=True)
+            if type(class_weight)==list:
+                #There has been a mismatch between the classes described in class_weight and the classes available in SelectedFiles!
+                lossW_expert = class_weight[0] #overwrite 
+                class_weight = class_weight[1]
+                print(class_weight)
+                print("There has been a mismatch between the classes described in \
+                      Loss weights and the classes available in the selected files! \
+                      Hence, the Loss weights are set to Balanced")
+    #                #Notify user
+    #                msg = QtWidgets.QMessageBox()
+    #                msg.setIcon(QtWidgets.QMessageBox.Information)       
+    #                text = "<html><head/><body><p>There has been a mismatch between the classes described in Loss weights and the classes available in the selected files! Hence, the 'Loss weights' are set to 'Balanced'.</p></body></html>"
+    #                msg.setText(text) 
+    #                msg.setWindowTitle("Loss weights set to Balanced")
+    #                msg.setStandardButtons(QtWidgets.QMessageBox.Ok)
+    #                msg.exec_()
                 
-            Para_dict["Modelname"]=new_modelname,
-            Para_dict["Chosen Model"]=chosen_model,
-            Para_dict["Input image size"]=crop,
-            Para_dict["Color Mode"]=color_mode,
-            Para_dict["Device"]=deviceSelected,
-            Para_dict["gpu_used"]=gpu_used,
-            Para_dict["gpu_memory"]=gpu_memory,
-    
-            Para_dict["new_model"]=new_model,
-            Para_dict["loadrestart_model"]=loadrestart_model,
-            Para_dict["loadcontinue_model"]=loadcontinue_model,
-            Para_dict["Continued_Fitting_From"]=load_modelname,
-    
-            Para_dict["Output Nr. classes"]=nr_classes,
-    
-            Para_dict["Normalization"]=norm,
-            Para_dict["Nr. epochs"]=nr_epochs,
-            Para_dict["Keras refresh after nr. epochs"]=keras_refresh_nr_epochs,
-            Para_dict["Horz. flip"]=h_flip,
-            Para_dict["Vert. flip"]=v_flip,
-            Para_dict["rotation"]=rotation,
-            Para_dict["width_shift"]=width_shift,
-            Para_dict["height_shift"]=height_shift,
-            Para_dict["zoom"]=zoom,
-            Para_dict["shear"]=shear,
-            Para_dict["Brightness refresh after nr. epochs"]=brightness_refresh_nr_epochs,
-            Para_dict["Brightness add. lower"]=brightness_add_lower,
-            Para_dict["Brightness add. upper"]=brightness_add_upper,
-            Para_dict["Brightness mult. lower"]=brightness_mult_lower,  
-            Para_dict["Brightness mult. upper"]=brightness_mult_upper,
-            Para_dict["Gaussnoise Mean"]=gaussnoise_mean,
-            Para_dict["Gaussnoise Scale"]=gaussnoise_scale,
-            
-            Para_dict["Contrast on"]=contrast_on,                
-            Para_dict["Contrast Lower"]=contrast_lower,
-            Para_dict["Contrast Higher"]=contrast_higher,
-            Para_dict["Saturation on"]=saturation_on,
-            Para_dict["Saturation Lower"]=saturation_lower,
-            Para_dict["Saturation Higher"]=saturation_higher,
-            Para_dict["Hue on"]=hue_on,                
-            Para_dict["Hue delta"]=hue_delta,                
-
-            Para_dict["Average blur on"]=avgBlur_on,                
-            Para_dict["Average blur Lower"]=avgBlur_min,
-            Para_dict["Average blur Higher"]=avgBlur_max,
-            Para_dict["Gauss blur on"]=gaussBlur_on,                
-            Para_dict["Gauss blur Lower"]=gaussBlur_min,
-            Para_dict["Gauss blur Higher"]=gaussBlur_max,
-            Para_dict["Motion blur on"]=motionBlur_on,                
-            Para_dict["Motion blur Kernel"]=motionBlur_kernel,                
-            Para_dict["Motion blur Angle"]=motionBlur_angle,                
-
-            Para_dict["Epoch_Started_Using_These_Settings"]=0,
-
-            Para_dict["expert_mode"]=expert_mode,
-            Para_dict["batchSize_expert"]=batchSize_expert,
-            Para_dict["epochs_expert"]=epochs_expert,
-            Para_dict["learning_rate_expert"]=learning_rate_expert,
-            Para_dict["learning_rate_expert_on"]=learning_rate_expert_on,
-
-            Para_dict["loss_expert_on"]=loss_expert_on,
-            Para_dict["loss_expert"]=loss_expert,
-            Para_dict["optimizer_expert_on"]=optimizer_expert_on,
-            Para_dict["optimizer_expert"]=optimizer_expert,
-            Para_dict["paddingMode"]=paddingMode,
-
-            Para_dict["train_last_layers"]=train_last_layers,
-            Para_dict["train_last_layers_n"]=train_last_layers_n,
-            Para_dict["train_dense_layers"]=train_dense_layers,
-            Para_dict["dropout_expert_on"]=dropout_expert_on,
-            Para_dict["dropout_expert"]=dropout_expert,
-            Para_dict["lossW_expert_on"]=lossW_expert_on,
-            Para_dict["lossW_expert"]=lossW_expert,
-            Para_dict["class_weight"]=class_weight,
-            Para_dict["metrics"]=model_metrics,
-            
-        elif collection==True: 
-            SelectedFiles_df = pd.DataFrame(SelectedFiles)
-
-            Writers = []
-            #Create excel files
-            for i in range(len(model_keras_path)):
-                writer = pd.ExcelWriter(model_keras_path[i].split(".model")[0]+'_meta.xlsx', engine='openpyxl')
-                Writers.append(writer)
-            for writer in Writers:
+            if collection==False:    
+                #Create an excel file
+                writer = pd.ExcelWriter(new_modelname.split(".model")[0]+'_meta.xlsx', engine='openpyxl')
+                self.writer = writer
                 #Used files go to a separate sheet on the MetaFile.xlsx
+                SelectedFiles_df = pd.DataFrame(SelectedFiles)
                 pd.DataFrame().to_excel(writer,sheet_name='UsedData') #initialize empty Sheet
                 SelectedFiles_df.to_excel(writer,sheet_name='UsedData')
                 DataOverview_df = self.get_dataOverview()
@@ -7585,1185 +7547,1282 @@ class MainWindow(QtWidgets.QMainWindow):
                 pd.DataFrame().to_excel(writer,sheet_name='Parameters') #initialize empty Sheet
                 pd.DataFrame().to_excel(writer,sheet_name='History') #initialize empty Sheet
         
-            #create a dictionary for the metafiles (Parameters and History)
-            Para_dict = pd.DataFrame()
-            Para_dict["AIDeveloper_Version"]=VERSION,
-            Para_dict["model_zoo_version"]=model_zoo_version,
-            try:
-                Para_dict["OS"]=platform.platform(),
-                Para_dict["CPU"]=platform.processor(),
-            except:
-                Para_dict["OS"]="Unknown",
-                Para_dict["CPU"]="Unknown",
-            
-            Para_dict["Modelname"]=model_keras_path[i],
-            Para_dict["Chosen Model"]=model_architecture_names[i],
-            Para_dict["Input image size"]=crop,
-            Para_dict["Color Mode"]=color_mode,
-            Para_dict["Device"]=deviceSelected,
-            Para_dict["gpu_used"]=gpu_used,
-            Para_dict["gpu_memory"]=gpu_memory,
-    
-            Para_dict["new_model"]=new_model,
-            Para_dict["loadrestart_model"]=loadrestart_model,
-            Para_dict["loadcontinue_model"]=loadcontinue_model,
-            Para_dict["Continued_Fitting_From"]=load_modelname,
-    
-            Para_dict["Output Nr. classes"]=nr_classes,
-    
-            Para_dict["Normalization"]=norm,
-            Para_dict["Nr. epochs"]=nr_epochs,
-            Para_dict["Keras refresh after nr. epochs"]=keras_refresh_nr_epochs,
-            Para_dict["Horz. flip"]=h_flip,
-            Para_dict["Vert. flip"]=v_flip,
-            Para_dict["rotation"]=rotation,
-            Para_dict["width_shift"]=width_shift,
-            Para_dict["height_shift"]=height_shift,
-            Para_dict["zoom"]=zoom,
-            Para_dict["shear"]=shear,
-            Para_dict["Brightness refresh after nr. epochs"]=brightness_refresh_nr_epochs,
-            Para_dict["Brightness add. lower"]=brightness_add_lower,
-            Para_dict["Brightness add. upper"]=brightness_add_upper,
-            Para_dict["Brightness mult. lower"]=brightness_mult_lower,  
-            Para_dict["Brightness mult. upper"]=brightness_mult_upper,
-            Para_dict["Gaussnoise Mean"]=gaussnoise_mean,
-            Para_dict["Gaussnoise Scale"]=gaussnoise_scale,
-            
-            Para_dict["Contrast on"]=contrast_on,                
-            Para_dict["Contrast Lower"]=contrast_lower,
-            Para_dict["Contrast Higher"]=contrast_higher,
-            Para_dict["Saturation on"]=saturation_on,
-            Para_dict["Saturation Lower"]=saturation_lower,
-            Para_dict["Saturation Higher"]=saturation_higher,
-            Para_dict["Hue on"]=hue_on,                
-            Para_dict["Hue delta"]=hue_delta,                
-
-            Para_dict["Average blur on"]=avgBlur_on,                
-            Para_dict["Average blur Lower"]=avgBlur_min,
-            Para_dict["Average blur Higher"]=avgBlur_max,
-            Para_dict["Gauss blur on"]=gaussBlur_on,                
-            Para_dict["Gauss blur Lower"]=gaussBlur_min,
-            Para_dict["Gauss blur Higher"]=gaussBlur_max,
-            Para_dict["Motion blur on"]=motionBlur_on,                
-            Para_dict["Motion blur Kernel"]=motionBlur_kernel,                
-            Para_dict["Motion blur Angle"]=motionBlur_angle,                
-
-            Para_dict["Epoch_Started_Using_These_Settings"]=0,
-
-            Para_dict["expert_mode"]=expert_mode,
-            Para_dict["batchSize_expert"]=batchSize_expert,
-            Para_dict["epochs_expert"]=epochs_expert,
-            Para_dict["learning_rate_expert"]=learning_rate_expert,
-            Para_dict["learning_rate_expert_on"]=learning_rate_expert_on,
-            Para_dict["loss_expert_on"]=loss_expert_on,
-            Para_dict["loss_expert"]=loss_expert,
-            Para_dict["optimizer_expert_on"]=optimizer_expert_on,
-            Para_dict["optimizer_expert"]=optimizer_expert,
-            Para_dict["paddingMode"]=paddingMode,
-            
-            Para_dict["train_last_layers"]=train_last_layers,
-            Para_dict["train_last_layers_n"]=train_last_layers_n,
-            Para_dict["train_dense_layers"]=train_dense_layers,
-            Para_dict["dropout_expert_on"]=dropout_expert_on,
-            Para_dict["dropout_expert"]=dropout_expert,
-            Para_dict["lossW_expert_on"]=lossW_expert_on,
-            Para_dict["lossW_expert"]=lossW_expert,
-            Para_dict["class_weight"]=class_weight,
-            Para_dict["metrics"]=model_metrics,
-            
-        ###############################Expert Mode values##################
-        expert_mode_before = False #There was no expert mode used before.
-        if expert_mode==True:
-            #activate groupBox_expertMode_pop
-            self.fittingpopups_ui[listindex].groupBox_expertMode_pop.setChecked(True)
-            expert_mode_before = True
-        #Some settings only neet to be changed once, after user clicked apply at next epoch
+                #create a dictionary for the metafiles (Parameters and History)
+                Para_dict = pd.DataFrame()
+                Para_dict["AIDeveloper_Version"]=VERSION,
+                Para_dict["model_zoo_version"]=model_zoo_version,
+                try:
+                    Para_dict["OS"]=platform.platform(),
+                    Para_dict["CPU"]=platform.processor(),
+                except:
+                    Para_dict["OS"]="Unknown",
+                    Para_dict["CPU"]="Unknown",
                     
-            #Apply the changes to trainable states:
-            if train_last_layers==True:#Train only the last n layers
-                print("Train only the last "+str(train_last_layers_n)+ " layer(s)")
-                trainable_new = (len(trainable_original)-train_last_layers_n)*[False]+train_last_layers_n*[True]
-                summary = aid_dl.model_change_trainability(model_keras,trainable_new,model_metrics,nr_classes,loss_expert,optimizer_expert,learning_rate_expert)
-                text1 = "Expert mode: Request for custom trainability states: train only the last "+str(train_last_layers_n)+ " layer(s)\n"
-                #text2 = "\n--------------------\n"
-                self.fittingpopups_ui[listindex].textBrowser_FittingInfo_pop.append(text1+summary)
-            if train_dense_layers==True:#Train only dense layers
-                print("Train only dense layers")
-                layer_dense_ind = ["Dense" in x for x in layer_names]
-                layer_dense_ind = np.where(np.array(layer_dense_ind)==True)[0] #at which indices are dropout layers?
-                #create a list of trainable states
-                trainable_new = len(trainable_original)*[False]
-                for index in layer_dense_ind:
-                    trainable_new[index] = True
-                summary = aid_dl.model_change_trainability(model_keras,trainable_new,model_metrics,nr_classes,loss_expert,optimizer_expert,learning_rate_expert)                  
-                text1 = "Expert mode: Request for custom trainability states: train only dense layer(s)\n"
-                #text2 = "\n--------------------\n"
-                self.fittingpopups_ui[listindex].textBrowser_FittingInfo_pop.append(text1+summary)
-
-            if dropout_expert_on==True:
-                #The user apparently want to change the dropout rates
-                do_list = aid_dl.get_dropout(model_keras)#Get a list of dropout values of the current model
-                #Compare the dropout values in the model to the dropout values requested by user
-                if len(dropout_expert)==1:#if the user gave a single float
-                    dropout_expert_list = len(do_list)*dropout_expert #convert to list
-                elif len(dropout_expert)>1:
-                    dropout_expert_list = dropout_expert
-                    if not len(dropout_expert_list)==len(do_list):
-                        text = "Issue with dropout: you defined "+str(len(dropout_expert_list))+" dropout rates, but model has "+str(len(do_list))+" dropout layers"
+                Para_dict["Modelname"]=new_modelname,
+                Para_dict["Chosen Model"]=chosen_model,
+                Para_dict["Input image size"]=crop,
+                Para_dict["Color Mode"]=color_mode,
+                Para_dict["Device"]=deviceSelected,
+                Para_dict["gpu_used"]=gpu_used,
+                Para_dict["gpu_memory"]=gpu_memory,
+        
+                Para_dict["new_model"]=new_model,
+                Para_dict["loadrestart_model"]=loadrestart_model,
+                Para_dict["loadcontinue_model"]=loadcontinue_model,
+                Para_dict["Continued_Fitting_From"]=load_modelname,
+        
+                Para_dict["Output Nr. classes"]=nr_classes,
+        
+                Para_dict["Normalization"]=norm,
+                Para_dict["Nr. epochs"]=nr_epochs,
+                Para_dict["Keras refresh after nr. epochs"]=keras_refresh_nr_epochs,
+                Para_dict["Horz. flip"]=h_flip,
+                Para_dict["Vert. flip"]=v_flip,
+                Para_dict["rotation"]=rotation,
+                Para_dict["width_shift"]=width_shift,
+                Para_dict["height_shift"]=height_shift,
+                Para_dict["zoom"]=zoom,
+                Para_dict["shear"]=shear,
+                Para_dict["Brightness refresh after nr. epochs"]=brightness_refresh_nr_epochs,
+                Para_dict["Brightness add. lower"]=brightness_add_lower,
+                Para_dict["Brightness add. upper"]=brightness_add_upper,
+                Para_dict["Brightness mult. lower"]=brightness_mult_lower,  
+                Para_dict["Brightness mult. upper"]=brightness_mult_upper,
+                Para_dict["Gaussnoise Mean"]=gaussnoise_mean,
+                Para_dict["Gaussnoise Scale"]=gaussnoise_scale,
+                
+                Para_dict["Contrast on"]=contrast_on,                
+                Para_dict["Contrast Lower"]=contrast_lower,
+                Para_dict["Contrast Higher"]=contrast_higher,
+                Para_dict["Saturation on"]=saturation_on,
+                Para_dict["Saturation Lower"]=saturation_lower,
+                Para_dict["Saturation Higher"]=saturation_higher,
+                Para_dict["Hue on"]=hue_on,                
+                Para_dict["Hue delta"]=hue_delta,                
+    
+                Para_dict["Average blur on"]=avgBlur_on,                
+                Para_dict["Average blur Lower"]=avgBlur_min,
+                Para_dict["Average blur Higher"]=avgBlur_max,
+                Para_dict["Gauss blur on"]=gaussBlur_on,                
+                Para_dict["Gauss blur Lower"]=gaussBlur_min,
+                Para_dict["Gauss blur Higher"]=gaussBlur_max,
+                Para_dict["Motion blur on"]=motionBlur_on,                
+                Para_dict["Motion blur Kernel"]=motionBlur_kernel,                
+                Para_dict["Motion blur Angle"]=motionBlur_angle,                
+    
+                Para_dict["Epoch_Started_Using_These_Settings"]=0,
+    
+                Para_dict["expert_mode"]=expert_mode,
+                Para_dict["batchSize_expert"]=batchSize_expert,
+                Para_dict["epochs_expert"]=epochs_expert,
+                Para_dict["learning_rate_expert"]=learning_rate_expert,
+                Para_dict["learning_rate_expert_on"]=learning_rate_expert_on,
+    
+                Para_dict["loss_expert_on"]=loss_expert_on,
+                Para_dict["loss_expert"]=loss_expert,
+                Para_dict["optimizer_expert_on"]=optimizer_expert_on,
+                Para_dict["optimizer_expert"]=optimizer_expert,
+                Para_dict["paddingMode"]=paddingMode,
+    
+                Para_dict["train_last_layers"]=train_last_layers,
+                Para_dict["train_last_layers_n"]=train_last_layers_n,
+                Para_dict["train_dense_layers"]=train_dense_layers,
+                Para_dict["dropout_expert_on"]=dropout_expert_on,
+                Para_dict["dropout_expert"]=dropout_expert,
+                Para_dict["lossW_expert_on"]=lossW_expert_on,
+                Para_dict["lossW_expert"]=lossW_expert,
+                Para_dict["class_weight"]=class_weight,
+                Para_dict["metrics"]=model_metrics,
+                
+            elif collection==True: 
+                SelectedFiles_df = pd.DataFrame(SelectedFiles)
+    
+                Writers = []
+                #Create excel files
+                for i in range(len(model_keras_path)):
+                    writer = pd.ExcelWriter(model_keras_path[i].split(".model")[0]+'_meta.xlsx', engine='openpyxl')
+                    Writers.append(writer)
+                for writer in Writers:
+                    #Used files go to a separate sheet on the MetaFile.xlsx
+                    pd.DataFrame().to_excel(writer,sheet_name='UsedData') #initialize empty Sheet
+                    SelectedFiles_df.to_excel(writer,sheet_name='UsedData')
+                    DataOverview_df = self.get_dataOverview()
+                    DataOverview_df.to_excel(writer,sheet_name='DataOverview') #write data overview to separate sheet            
+                    pd.DataFrame().to_excel(writer,sheet_name='Parameters') #initialize empty Sheet
+                    pd.DataFrame().to_excel(writer,sheet_name='History') #initialize empty Sheet
+            
+                #create a dictionary for the metafiles (Parameters and History)
+                Para_dict = pd.DataFrame()
+                Para_dict["AIDeveloper_Version"]=VERSION,
+                Para_dict["model_zoo_version"]=model_zoo_version,
+                try:
+                    Para_dict["OS"]=platform.platform(),
+                    Para_dict["CPU"]=platform.processor(),
+                except:
+                    Para_dict["OS"]="Unknown",
+                    Para_dict["CPU"]="Unknown",
+                
+                Para_dict["Modelname"]=model_keras_path[i],
+                Para_dict["Chosen Model"]=model_architecture_names[i],
+                Para_dict["Input image size"]=crop,
+                Para_dict["Color Mode"]=color_mode,
+                Para_dict["Device"]=deviceSelected,
+                Para_dict["gpu_used"]=gpu_used,
+                Para_dict["gpu_memory"]=gpu_memory,
+        
+                Para_dict["new_model"]=new_model,
+                Para_dict["loadrestart_model"]=loadrestart_model,
+                Para_dict["loadcontinue_model"]=loadcontinue_model,
+                Para_dict["Continued_Fitting_From"]=load_modelname,
+        
+                Para_dict["Output Nr. classes"]=nr_classes,
+        
+                Para_dict["Normalization"]=norm,
+                Para_dict["Nr. epochs"]=nr_epochs,
+                Para_dict["Keras refresh after nr. epochs"]=keras_refresh_nr_epochs,
+                Para_dict["Horz. flip"]=h_flip,
+                Para_dict["Vert. flip"]=v_flip,
+                Para_dict["rotation"]=rotation,
+                Para_dict["width_shift"]=width_shift,
+                Para_dict["height_shift"]=height_shift,
+                Para_dict["zoom"]=zoom,
+                Para_dict["shear"]=shear,
+                Para_dict["Brightness refresh after nr. epochs"]=brightness_refresh_nr_epochs,
+                Para_dict["Brightness add. lower"]=brightness_add_lower,
+                Para_dict["Brightness add. upper"]=brightness_add_upper,
+                Para_dict["Brightness mult. lower"]=brightness_mult_lower,  
+                Para_dict["Brightness mult. upper"]=brightness_mult_upper,
+                Para_dict["Gaussnoise Mean"]=gaussnoise_mean,
+                Para_dict["Gaussnoise Scale"]=gaussnoise_scale,
+                
+                Para_dict["Contrast on"]=contrast_on,                
+                Para_dict["Contrast Lower"]=contrast_lower,
+                Para_dict["Contrast Higher"]=contrast_higher,
+                Para_dict["Saturation on"]=saturation_on,
+                Para_dict["Saturation Lower"]=saturation_lower,
+                Para_dict["Saturation Higher"]=saturation_higher,
+                Para_dict["Hue on"]=hue_on,                
+                Para_dict["Hue delta"]=hue_delta,                
+    
+                Para_dict["Average blur on"]=avgBlur_on,                
+                Para_dict["Average blur Lower"]=avgBlur_min,
+                Para_dict["Average blur Higher"]=avgBlur_max,
+                Para_dict["Gauss blur on"]=gaussBlur_on,                
+                Para_dict["Gauss blur Lower"]=gaussBlur_min,
+                Para_dict["Gauss blur Higher"]=gaussBlur_max,
+                Para_dict["Motion blur on"]=motionBlur_on,                
+                Para_dict["Motion blur Kernel"]=motionBlur_kernel,                
+                Para_dict["Motion blur Angle"]=motionBlur_angle,                
+    
+                Para_dict["Epoch_Started_Using_These_Settings"]=0,
+    
+                Para_dict["expert_mode"]=expert_mode,
+                Para_dict["batchSize_expert"]=batchSize_expert,
+                Para_dict["epochs_expert"]=epochs_expert,
+                Para_dict["learning_rate_expert"]=learning_rate_expert,
+                Para_dict["learning_rate_expert_on"]=learning_rate_expert_on,
+                Para_dict["loss_expert_on"]=loss_expert_on,
+                Para_dict["loss_expert"]=loss_expert,
+                Para_dict["optimizer_expert_on"]=optimizer_expert_on,
+                Para_dict["optimizer_expert"]=optimizer_expert,
+                Para_dict["paddingMode"]=paddingMode,
+                
+                Para_dict["train_last_layers"]=train_last_layers,
+                Para_dict["train_last_layers_n"]=train_last_layers_n,
+                Para_dict["train_dense_layers"]=train_dense_layers,
+                Para_dict["dropout_expert_on"]=dropout_expert_on,
+                Para_dict["dropout_expert"]=dropout_expert,
+                Para_dict["lossW_expert_on"]=lossW_expert_on,
+                Para_dict["lossW_expert"]=lossW_expert,
+                Para_dict["class_weight"]=class_weight,
+                Para_dict["metrics"]=model_metrics,
+                
+            ###############################Expert Mode values##################
+            expert_mode_before = False #There was no expert mode used before.
+            if expert_mode==True:
+                #activate groupBox_expertMode_pop
+                self.fittingpopups_ui[listindex].groupBox_expertMode_pop.setChecked(True)
+                expert_mode_before = True
+                #Some settings only need to be changed once, after user clicked apply at next epoch
+                        
+                #Apply the changes to trainable states:
+                if train_last_layers==True:#Train only the last n layers
+                    print("Train only the last "+str(train_last_layers_n)+ " layer(s)")
+                    trainable_new = (len(trainable_original)-train_last_layers_n)*[False]+train_last_layers_n*[True]
+                    summary = aid_dl.model_change_trainability(model_keras,trainable_new,model_metrics,nr_classes,loss_expert,optimizer_expert,learning_rate_expert)
+                    if model_keras_p!=None:#if this is NOT None, there exists a parallel model, which also needs to be re-compiled
+                        aid_dl.model_compile(model_keras_p,loss_expert,optimizer_expert,learning_rate_expert,model_metrics,nr_classes)
+                        print("Recompiled parallel model for train_last_layers==True")
+                    text1 = "Expert mode: Request for custom trainability states: train only the last "+str(train_last_layers_n)+ " layer(s)\n"
+                    #text2 = "\n--------------------\n"
+                    self.fittingpopups_ui[listindex].textBrowser_FittingInfo_pop.append(text1+summary)
+                if train_dense_layers==True:#Train only dense layers
+                    print("Train only dense layers")
+                    layer_dense_ind = ["Dense" in x for x in layer_names]
+                    layer_dense_ind = np.where(np.array(layer_dense_ind)==True)[0] #at which indices are dropout layers?
+                    #create a list of trainable states
+                    trainable_new = len(trainable_original)*[False]
+                    for index in layer_dense_ind:
+                        trainable_new[index] = True
+                    summary = aid_dl.model_change_trainability(model_keras,trainable_new,model_metrics,nr_classes,loss_expert,optimizer_expert,learning_rate_expert)                  
+                    if model_keras_p!=None:#if this is NOT None, there exists a parallel model, which also needs to be re-compiled
+                        aid_dl.model_compile(model_keras_p,loss_expert,optimizer_expert,learning_rate_expert,model_metrics,nr_classes)
+                        print("Recompiled parallel model for train_dense_layers==True")
+                    text1 = "Expert mode: Request for custom trainability states: train only dense layer(s)\n"
+                    #text2 = "\n--------------------\n"
+                    self.fittingpopups_ui[listindex].textBrowser_FittingInfo_pop.append(text1+summary)
+    
+                if dropout_expert_on==True:
+                    #The user apparently want to change the dropout rates
+                    do_list = aid_dl.get_dropout(model_keras)#Get a list of dropout values of the current model
+                    #Compare the dropout values in the model to the dropout values requested by user
+                    if len(dropout_expert)==1:#if the user gave a single float
+                        dropout_expert_list = len(do_list)*dropout_expert #convert to list
+                    elif len(dropout_expert)>1:
+                        dropout_expert_list = dropout_expert
+                        if not len(dropout_expert_list)==len(do_list):
+                            text = "Issue with dropout: you defined "+str(len(dropout_expert_list))+" dropout rates, but model has "+str(len(do_list))+" dropout layers"
+                            self.fittingpopups_ui[listindex].textBrowser_FittingInfo_pop.append(text)
+                    else:
+                        text = "Could not understand user input at Expert->Dropout"
                         self.fittingpopups_ui[listindex].textBrowser_FittingInfo_pop.append(text)
-                else:
-                    text = "Could not understand user input at Expert->Dropout"
-                    self.fittingpopups_ui[listindex].textBrowser_FittingInfo_pop.append(text)
-                    dropout_expert_list = []
-                if len(dropout_expert_list)>0 and do_list!=dropout_expert_list:#if the dropout rates of the current model is not equal to the required do_list from user...
-                    do_changed = aid_dl.change_dropout(model_keras,dropout_expert_list,model_metrics,nr_classes,loss_expert,optimizer_expert,learning_rate_expert)
-                    if do_changed==1:
-                        text_do = "Dropout rate(s) in model was/were changed to: "+str(dropout_expert_list)
+                        dropout_expert_list = []
+                    if len(dropout_expert_list)>0 and do_list!=dropout_expert_list:#if the dropout rates of the current model is not equal to the required do_list from user...
+                        do_changed = aid_dl.change_dropout(model_keras,dropout_expert_list,model_metrics,nr_classes,loss_expert,optimizer_expert,learning_rate_expert)
+                        if model_keras_p!=None:#if this is NOT None, there exists a parallel model, which also needs to be re-compiled
+                            aid_dl.model_compile(model_keras_p,loss_expert,optimizer_expert,learning_rate_expert,model_metrics,nr_classes)
+                            print("Recompiled parallel model to change dropout. I'm not sure if this works already!")
+                        if do_changed==1:
+                            text_do = "Dropout rate(s) in model was/were changed to: "+str(dropout_expert_list)
+                        else:
+                            text_do = "Dropout rate(s) in model was/were not changed"
                     else:
                         text_do = "Dropout rate(s) in model was/were not changed"
-                else:
-                    text_do = "Dropout rate(s) in model was/were not changed"
-                print(text_do)
-                self.fittingpopups_ui[listindex].textBrowser_FittingInfo_pop.append(text_do)
-
-
-        text_updates = ""
-        #Compare current lr and the lr on expert tab:
-        if collection == False:
-            lr_current = K.eval(model_keras.optimizer.lr)
-        else:
-            lr_current = K.eval(model_keras[0].optimizer.lr)
-
-        lr_diff = learning_rate_expert-lr_current
-        if  abs(lr_diff) > 1e-6:
+                    print(text_do)
+                    self.fittingpopups_ui[listindex].textBrowser_FittingInfo_pop.append(text_do)
+    
+    
+            text_updates = ""
+            #Compare current lr and the lr on expert tab:
             if collection == False:
-                K.set_value(model_keras.optimizer.lr, learning_rate_expert)
-            if collection == True:
-                for m in model_keras:
-                    K.set_value(m.optimizer.lr, learning_rate_expert)
-            text_updates +=  "Changed the learning rate to "+ str(learning_rate_expert)+"\n"
-        recompile = False
-        #Compare current optimizer and the optimizer on expert tab:
-        if collection==False:
-            optimizer_current = aid_dl.get_optimizer_name(model_keras).lower()#get the current optimizer of the model
-        if collection==True:
-            optimizer_current = aid_dl.get_optimizer_name(model_keras[0]).lower()#get the current optimizer of the model
-
-        if optimizer_current!=optimizer_expert.lower():#if the current model has a different optimizer
-            recompile = True
-            text_updates+="Changed the optimizer to "+optimizer_expert+"\n"
-
-        #Compare current loss function and the loss-function on expert tab:
-        if collection==False:
-            if model_keras.loss!=loss_expert:
-                recompile = True
-                text_updates+="Changed the loss function to "+loss_expert+"\n"
-        if collection==True:
-            if model_keras[0].loss!=loss_expert:
-                recompile = True
-                text_updates+="Changed the loss function to "+loss_expert+"\n"
-
-
-        if recompile==True:
-            print("Recompiling...")
+                lr_current = K.eval(model_keras.optimizer.lr)
+            else:
+                lr_current = K.eval(model_keras[0].optimizer.lr)
+    
+            lr_diff = learning_rate_expert-lr_current
+            if  abs(lr_diff) > 1e-6:
+                if collection == False:
+                    K.set_value(model_keras.optimizer.lr, learning_rate_expert)
+                if collection == True:
+                    for m in model_keras:
+                        K.set_value(m.optimizer.lr, learning_rate_expert)
+                text_updates +=  "Changed the learning rate to "+ str(learning_rate_expert)+"\n"
+            recompile = False
+            #Compare current optimizer and the optimizer on expert tab:
             if collection==False:
-                aid_dl.model_compile(model_keras,loss_expert,optimizer_expert,learning_rate_expert,model_metrics,nr_classes)
+                optimizer_current = aid_dl.get_optimizer_name(model_keras).lower()#get the current optimizer of the model
             if collection==True:
-                for m in model_keras[1]:
-                    aid_dl.model_compile(m, loss_expert, optimizer_expert, learning_rate_expert,model_metrics, nr_classes)
-
-        self.fittingpopups_ui[listindex].textBrowser_FittingInfo_pop.append(text_updates)
-
-        self.model_keras = model_keras #overwrite the model on self
-
-        ######################Load the Training Data################################
-        ind = [selectedfile["TrainOrValid"] == "Train" for selectedfile in SelectedFiles]
-        ind = np.where(np.array(ind)==True)[0]
-        SelectedFiles_train = np.array(SelectedFiles)[ind]
-        SelectedFiles_train = list(SelectedFiles_train)
-        indices_train = [selectedfile["class"] for selectedfile in SelectedFiles_train]
-        nr_events_epoch_train = [selectedfile["nr_events_epoch"] for selectedfile in SelectedFiles_train]
-        rtdc_path_train = [selectedfile["rtdc_path"] for selectedfile in SelectedFiles_train]
-        zoom_factors_train = [selectedfile["zoom_factor"] for selectedfile in SelectedFiles_train]
-        zoom_order = [self.actionOrder0.isChecked(),self.actionOrder1.isChecked(),self.actionOrder2.isChecked(),self.actionOrder3.isChecked(),self.actionOrder4.isChecked(),self.actionOrder5.isChecked()]
-        zoom_order = int(np.where(np.array(zoom_order)==True)[0])
-        shuffle_train = [selectedfile["shuffle"] for selectedfile in SelectedFiles_train]
-        
-        #read self.ram to new variable ; next clear ram. This is required for multitasking (training multiple models with maybe different data)
-        DATA = self.ram
-        if verbose==1:
-            print("Length of DATA (in RAM) = "+str(len(DATA)))
-        #clear the ram again 
-        self.ram = dict()
-        #If the scaling method is "divide by mean and std of the whole training set":
-        if norm == "StdScaling using mean and std of all training data":
-            mean_trainingdata,std_trainingdata = [],[]
-            for i in range(len(SelectedFiles_train)):
-                #if Data_to_RAM was not enabled:
-                #if not self.actionDataToRam.isChecked():
-                if len(DATA)==0: #Here, the entire training set needs to be used! Not only random images!
-                    #Replace true means that individual cells could occur several times
-                    gen_train = aid_img.gen_crop_img(crop,rtdc_path_train[i],random_images=False,zoom_factor=zoom_factors_train[i],zoom_order=zoom_order,color_mode=self.get_color_mode(),padding_mode=paddingMode) 
-#                    else: #get a similar generator, using the ram-data
-#                        if len(DATA)==0:
-#                            gen_train = aid_img.gen_crop_img(crop,rtdc_path_train[i],random_images=False) #Replace true means that individual cells could occur several times
-                else:
-                    gen_train = aid_img.gen_crop_img_ram(DATA,rtdc_path_train[i],random_images=False) #Replace true means that individual cells could occur several times
-                    if self.actionVerbose.isChecked():
-                        print("Loaded data from RAM")
-                    
-                images = next(gen_train)[0]
-                mean_trainingdata.append(np.mean(images))
-                std_trainingdata.append(np.std(images))
-            mean_trainingdata = np.mean(np.array(mean_trainingdata))
-            std_trainingdata = np.mean(np.array(std_trainingdata))
+                optimizer_current = aid_dl.get_optimizer_name(model_keras[0]).lower()#get the current optimizer of the model
+    
+            if optimizer_current!=optimizer_expert.lower():#if the current model has a different optimizer
+                recompile = True
+                text_updates+="Changed the optimizer to "+optimizer_expert+"\n"
+    
+            #Compare current loss function and the loss-function on expert tab:
+            if collection==False:
+                if model_keras.loss!=loss_expert:
+                    recompile = True
+                    text_updates+="Changed the loss function to "+loss_expert+"\n"
+            if collection==True:
+                if model_keras[0].loss!=loss_expert:
+                    recompile = True
+                    text_updates+="Changed the loss function to "+loss_expert+"\n"
+    
+    
+            if recompile==True:
+                print("Recompiling...")
+                if collection==False:
+                    aid_dl.model_compile(model_keras,loss_expert,optimizer_expert,learning_rate_expert,model_metrics,nr_classes)
+                if collection==True:
+                    for m in model_keras[1]:
+                        aid_dl.model_compile(m, loss_expert, optimizer_expert, learning_rate_expert,model_metrics, nr_classes)
+                if model_keras_p!=None:#if this is NOT None, there exists a parallel model, which also needs to be re-compiled
+                    aid_dl.model_compile(model_keras_p,loss_expert,optimizer_expert,learning_rate_expert,model_metrics,nr_classes)
+                    print("Recompiled parallel model to adjust learning rate, loss, optimizer")
+    
+            self.fittingpopups_ui[listindex].textBrowser_FittingInfo_pop.append(text_updates)
+    
+            self.model_keras = model_keras #overwrite the model on self
+    
+            ######################Load the Training Data################################
+            ind = [selectedfile["TrainOrValid"] == "Train" for selectedfile in SelectedFiles]
+            ind = np.where(np.array(ind)==True)[0]
+            SelectedFiles_train = np.array(SelectedFiles)[ind]
+            SelectedFiles_train = list(SelectedFiles_train)
+            indices_train = [selectedfile["class"] for selectedfile in SelectedFiles_train]
+            nr_events_epoch_train = [selectedfile["nr_events_epoch"] for selectedfile in SelectedFiles_train]
+            rtdc_path_train = [selectedfile["rtdc_path"] for selectedfile in SelectedFiles_train]
+            zoom_factors_train = [selectedfile["zoom_factor"] for selectedfile in SelectedFiles_train]
+            zoom_order = [self.actionOrder0.isChecked(),self.actionOrder1.isChecked(),self.actionOrder2.isChecked(),self.actionOrder3.isChecked(),self.actionOrder4.isChecked(),self.actionOrder5.isChecked()]
+            zoom_order = int(np.where(np.array(zoom_order)==True)[0])
+            shuffle_train = [selectedfile["shuffle"] for selectedfile in SelectedFiles_train]
             
-            if np.allclose(std_trainingdata,0):
-                std_trainingdata = 0.0001
-
-                msg = QtWidgets.QMessageBox()
-                msg.setIcon(QtWidgets.QMessageBox.Information)       
-                text = "<html><head/><body><p>The standard deviation of your training data is zero! This would lead to division by zero. To avoid this, I will divide by 0.0001 instead.</p></body></html>"
-                msg.setText(text) 
-                msg.setWindowTitle("Std. is zero")
-                msg.setStandardButtons(QtWidgets.QMessageBox.Ok)
-                msg.exec_()
-
-            #This needs to be saved into Para_dict since it will be required for inference
-            Para_dict["Mean of training data used for scaling"]=mean_trainingdata,
-            Para_dict["Std of training data used for scaling"]=std_trainingdata,
-        if collection==False:
-            Para_dict.to_excel(writer,sheet_name='Parameters')
-            #self.model_meta = writer
-            if os.path.isfile(new_modelname.split(".model")[0]+'_meta.xlsx'):
-                os.chmod(new_modelname.split(".model")[0]+'_meta.xlsx', S_IREAD|S_IRGRP|S_IROTH|S_IWRITE|S_IWGRP|S_IWOTH)#change to writable
-            writer.save()
-            os.chmod(new_modelname.split(".model")[0]+'_meta.xlsx', S_IREAD|S_IRGRP|S_IROTH)#change to readable, non-writable
-        if collection==True:
-            for i in range(len(Writers)):
-                Para_dict.to_excel(Writers[i],sheet_name='Parameters')
-                #self.model_meta = writer
-                if os.path.isfile(model_keras_path[i].split(".model")[0]+'_meta.xlsx'):
-                    os.chmod(model_keras_path[i].split(".model")[0]+'_meta.xlsx', S_IREAD|S_IRGRP|S_IROTH|S_IWRITE|S_IWGRP|S_IWOTH)
-                Writers[i].save()
-                os.chmod(model_keras_path[i].split(".model")[0]+'_meta.xlsx', S_IREAD|S_IRGRP|S_IROTH)
-
-        def update_para_dict():
-            norm = str(self.fittingpopups_ui[listindex].comboBox_Normalization_pop.currentText())
-            nr_epochs = int(self.fittingpopups_ui[listindex].spinBox_NrEpochs_pop.value())
-            keras_refresh_nr_epochs = int(self.fittingpopups_ui[listindex].spinBox_RefreshAfterEpochs_pop.value())
-            h_flip = bool(self.fittingpopups_ui[listindex].checkBox_HorizFlip_pop.isChecked())
-            v_flip = bool(self.fittingpopups_ui[listindex].checkBox_VertFlip_pop.isChecked())
-            rotation = float(self.fittingpopups_ui[listindex].lineEdit_Rotation_pop.text())
-     
-            width_shift = float(self.fittingpopups_ui[listindex].lineEdit_widthShift_pop.text())
-            height_shift = float(self.fittingpopups_ui[listindex].lineEdit_heightShift_pop.text())
-            zoom = float(self.fittingpopups_ui[listindex].lineEdit_zoomRange_pop.text())
-            shear = float(self.fittingpopups_ui[listindex].lineEdit_shearRange_pop.text())
-            
-            brightness_refresh_nr_epochs = int(self.fittingpopups_ui[listindex].spinBox_RefreshAfterNrEpochs_pop.value())
-            brightness_add_lower = float(self.fittingpopups_ui[listindex].spinBox_PlusLower_pop.value())
-            brightness_add_upper = float(self.fittingpopups_ui[listindex].spinBox_PlusUpper_pop.value())
-            brightness_mult_lower = float(self.fittingpopups_ui[listindex].doubleSpinBox_MultLower_pop.value())
-            brightness_mult_upper = float(self.fittingpopups_ui[listindex].doubleSpinBox_MultUpper_pop.value())
-            gaussnoise_mean = float(self.fittingpopups_ui[listindex].doubleSpinBox_GaussianNoiseMean_pop.value())
-            gaussnoise_scale = float(self.fittingpopups_ui[listindex].doubleSpinBox_GaussianNoiseScale_pop.value())
-
-            contrast_on = bool(self.fittingpopups_ui[listindex].checkBox_contrast_pop.isChecked())
-            contrast_lower = float(self.fittingpopups_ui[listindex].doubleSpinBox_contrastLower_pop.value())
-            contrast_higher = float(self.fittingpopups_ui[listindex].doubleSpinBox_contrastHigher_pop.value())
-            saturation_on = bool(self.fittingpopups_ui[listindex].checkBox_saturation_pop.isChecked())
-            saturation_lower = float(self.fittingpopups_ui[listindex].doubleSpinBox_saturationLower_pop.value())
-            saturation_higher = float(self.fittingpopups_ui[listindex].doubleSpinBox_saturationHigher_pop.value())
-            hue_on = bool(self.fittingpopups_ui[listindex].checkBox_hue_pop.isChecked())
-            hue_delta = float(self.fittingpopups_ui[listindex].doubleSpinBox_hueDelta_pop.value())
-
-            avgBlur_on = bool(self.fittingpopups_ui[listindex].checkBox_avgBlur_pop.isChecked())        
-            avgBlur_min = int(self.fittingpopups_ui[listindex].spinBox_avgBlurMin_pop.value())
-            avgBlur_max = int(self.fittingpopups_ui[listindex].spinBox_avgBlurMax_pop.value())
-            gaussBlur_on = bool(self.fittingpopups_ui[listindex].checkBox_gaussBlur_pop.isChecked())        
-            gaussBlur_min = int(self.fittingpopups_ui[listindex].spinBox_gaussBlurMin_pop.value())
-            gaussBlur_max = int(self.fittingpopups_ui[listindex].spinBox_gaussBlurMax_pop.value())
-            motionBlur_on = bool(self.fittingpopups_ui[listindex].checkBox_motionBlur_pop.isChecked())        
-            motionBlur_kernel = str(self.fittingpopups_ui[listindex].lineEdit_motionBlurKernel_pop.text())
-            motionBlur_angle = str(self.fittingpopups_ui[listindex].lineEdit_motionBlurAngle_pop.text())
-            motionBlur_kernel = tuple(ast.literal_eval(motionBlur_kernel)) #translate string in the lineEdits to a tuple
-            motionBlur_angle = tuple(ast.literal_eval(motionBlur_angle)) #translate string in the lineEdits to a tuple
-
-            expert_mode = bool(self.fittingpopups_ui[listindex].groupBox_expertMode_pop.isChecked())
-            batchSize_expert = int(self.fittingpopups_ui[listindex].spinBox_batchSize_pop.value())
-            epochs_expert = int(self.fittingpopups_ui[listindex].spinBox_epochs_pop.value())
-            learning_rate_expert = float(self.fittingpopups_ui[listindex].doubleSpinBox_learningRate_pop.value())
-            
-            learning_rate_expert_on = bool(self.fittingpopups_ui[listindex].checkBox_learningRate_pop.isChecked())
-            loss_expert_on = bool(self.fittingpopups_ui[listindex].checkBox_expt_loss_pop.isChecked())
-            loss_expert = str(self.fittingpopups_ui[listindex].comboBox_expt_loss_pop.currentText())
-            optimizer_expert_on = bool(self.fittingpopups_ui[listindex].checkBox_optimizer_pop.isChecked())
-            optimizer_expert = str(self.fittingpopups_ui[listindex].comboBox_optimizer_pop.currentText())
-
-            paddingMode = str(self.fittingpopups_ui[listindex].comboBox_paddingMode_pop.currentText())
-
-            train_last_layers = bool(self.fittingpopups_ui[listindex].checkBox_trainLastNOnly_pop.isChecked())             
-            train_last_layers_n = int(self.fittingpopups_ui[listindex].spinBox_trainLastNOnly_pop.value())              
-            train_dense_layers = bool(self.fittingpopups_ui[listindex].checkBox_trainDenseOnly_pop.isChecked())             
-            dropout_expert_on = bool(self.fittingpopups_ui[listindex].checkBox_dropout_pop.isChecked())             
-            try:
-                dropout_expert = str(self.fittingpopups_ui[listindex].lineEdit_dropout_pop.text()) #due to the validator, there are no squ.brackets
-                dropout_expert = "["+dropout_expert+"]"
-                dropout_expert = ast.literal_eval(dropout_expert)
-            except:
-                dropout_expert = []
-            #Issue here! This toggles call of lossweights_popup! Can this be prevented?
-            lossW_expert_on = bool(self.fittingpopups_ui[listindex].checkBox_lossW.isChecked())             
-            lossW_expert = str(self.fittingpopups_ui[listindex].lineEdit_lossW.text())             
-            class_weight = self.get_class_weight(self.fittingpopups_ui[listindex].SelectedFiles,lossW_expert)
-            
-            #Document this change in the meta-file
-            Para_dict["AIDeveloper_Version"]=VERSION,
-            Para_dict["model_zoo_version"]=model_zoo_version,
-            try:
-                Para_dict["OS"]=platform.platform(),
-                Para_dict["CPU"]=platform.processor(),
-            except:
-                Para_dict["OS"]="Unknown",
-                Para_dict["CPU"]="Unknown",
-
-            Para_dict["Modelname"]=new_modelname,
-            Para_dict["Chosen Model"]=chosen_model,
-            Para_dict["new_model"]=new_model,
-            Para_dict["loadrestart_model"]=loadrestart_model,
-            Para_dict["loadcontinue_model"]=loadcontinue_model,
-            Para_dict["Continued_Fitting_From"]=load_modelname,                        
-            Para_dict["Input image size"]=crop,
-            Para_dict["Color Mode"]=color_mode,
-            Para_dict["Device"]=deviceSelected,
-            Para_dict["gpu_used"]=gpu_used,
-            Para_dict["gpu_memory"]=gpu_memory,
-            Para_dict["Output Nr. classes"]=nr_classes,
-            Para_dict["Normalization"]=norm,
-            Para_dict["Nr. epochs"]=nr_epochs,
-            Para_dict["Keras refresh after nr. epochs"]=keras_refresh_nr_epochs,
-            Para_dict["Horz. flip"]=h_flip,
-            Para_dict["Vert. flip"]=v_flip,
-            Para_dict["rotation"]=rotation,
-            Para_dict["width_shift"]=width_shift,
-            Para_dict["height_shift"]=height_shift,
-            Para_dict["zoom"]=zoom,
-            Para_dict["shear"]=shear,
-            Para_dict["Brightness refresh after nr. epochs"]=brightness_refresh_nr_epochs,
-            Para_dict["Brightness add. lower"]=brightness_add_lower,
-            Para_dict["Brightness add. upper"]=brightness_add_upper,
-            Para_dict["Brightness mult. lower"]=brightness_mult_lower,  
-            Para_dict["Brightness mult. upper"]=brightness_mult_upper,
-            Para_dict["Gaussnoise Mean"]=gaussnoise_mean,
-            Para_dict["Gaussnoise Scale"]=gaussnoise_scale,
-
-            Para_dict["Contrast on"]=contrast_on,                
-            Para_dict["Contrast Lower"]=contrast_lower,
-            Para_dict["Contrast Higher"]=contrast_higher,
-            Para_dict["Saturation on"]=saturation_on,
-            Para_dict["Saturation Lower"]=saturation_lower,
-            Para_dict["Saturation Higher"]=saturation_higher,
-            Para_dict["Hue on"]=hue_on,                
-            Para_dict["Hue delta"]=hue_delta,                
-
-            Para_dict["Average blur on"]=avgBlur_on,                
-            Para_dict["Average blur Lower"]=avgBlur_min,
-            Para_dict["Average blur Higher"]=avgBlur_max,
-            Para_dict["Gauss blur on"]=gaussBlur_on,                
-            Para_dict["Gauss blur Lower"]=gaussBlur_min,
-            Para_dict["Gauss blur Higher"]=gaussBlur_max,
-            Para_dict["Motion blur on"]=motionBlur_on,                
-            Para_dict["Motion blur Kernel"]=motionBlur_kernel,                
-            Para_dict["Motion blur Angle"]=motionBlur_angle,                
-       
-            Para_dict["Epoch_Started_Using_These_Settings"]=counter,
-
-            Para_dict["expert_mode"]=expert_mode,
-            Para_dict["batchSize_expert"]=batchSize_expert,
-            Para_dict["epochs_expert"]=epochs_expert,
-            
-            Para_dict["learning_rate_expert"]=learning_rate_expert,
-            Para_dict["learning_rate_expert_on"]=learning_rate_expert_on,
-            Para_dict["loss_expert_on"]=loss_expert_on,
-            Para_dict["loss_expert"]=loss_expert,
-            Para_dict["optimizer_expert_on"]=optimizer_expert_on,
-            Para_dict["optimizer_expert"]=optimizer_expert,                
-
-            Para_dict["paddingMode"]=paddingMode,                
-            
-            Para_dict["train_last_layers"]=train_last_layers,
-            Para_dict["train_last_layers_n"]=train_last_layers_n,
-            Para_dict["train_dense_layers"]=train_dense_layers,
-            Para_dict["dropout_expert_on"]=dropout_expert_on,
-            Para_dict["dropout_expert"]=dropout_expert,
-            Para_dict["lossW_expert_on"]=lossW_expert_on,
-            Para_dict["lossW_expert"]=lossW_expert,
-            Para_dict["class_weight"]=class_weight,
-            Para_dict["metrics"]=model_metrics,
-            
-            #training data cannot be changed during training
-            if norm == "StdScaling using mean and std of all training data":                                
+            #read self.ram to new variable ; next clear ram. This is required for multitasking (training multiple models with maybe different data)
+            DATA = self.ram
+            if verbose==1:
+                print("Length of DATA (in RAM) = "+str(len(DATA)))
+            #clear the ram again 
+            self.ram = dict()
+            #If the scaling method is "divide by mean and std of the whole training set":
+            if norm == "StdScaling using mean and std of all training data":
+                mean_trainingdata,std_trainingdata = [],[]
+                for i in range(len(SelectedFiles_train)):
+                    #if Data_to_RAM was not enabled:
+                    #if not self.actionDataToRam.isChecked():
+                    if len(DATA)==0: #Here, the entire training set needs to be used! Not only random images!
+                        #Replace true means that individual cells could occur several times
+                        gen_train = aid_img.gen_crop_img(crop,rtdc_path_train[i],random_images=False,zoom_factor=zoom_factors_train[i],zoom_order=zoom_order,color_mode=self.get_color_mode(),padding_mode=paddingMode) 
+    #                    else: #get a similar generator, using the ram-data
+    #                        if len(DATA)==0:
+    #                            gen_train = aid_img.gen_crop_img(crop,rtdc_path_train[i],random_images=False) #Replace true means that individual cells could occur several times
+                    else:
+                        gen_train = aid_img.gen_crop_img_ram(DATA,rtdc_path_train[i],random_images=False) #Replace true means that individual cells could occur several times
+                        if self.actionVerbose.isChecked():
+                            print("Loaded data from RAM")
+                        
+                    images = next(gen_train)[0]
+                    mean_trainingdata.append(np.mean(images))
+                    std_trainingdata.append(np.std(images))
+                mean_trainingdata = np.mean(np.array(mean_trainingdata))
+                std_trainingdata = np.mean(np.array(std_trainingdata))
+                
+                if np.allclose(std_trainingdata,0):
+                    std_trainingdata = 0.0001
+    
+                    msg = QtWidgets.QMessageBox()
+                    msg.setIcon(QtWidgets.QMessageBox.Information)       
+                    text = "<html><head/><body><p>The standard deviation of your training data is zero! This would lead to division by zero. To avoid this, I will divide by 0.0001 instead.</p></body></html>"
+                    msg.setText(text) 
+                    msg.setWindowTitle("Std. is zero")
+                    msg.setStandardButtons(QtWidgets.QMessageBox.Ok)
+                    msg.exec_()
+    
                 #This needs to be saved into Para_dict since it will be required for inference
                 Para_dict["Mean of training data used for scaling"]=mean_trainingdata,
                 Para_dict["Std of training data used for scaling"]=std_trainingdata,
-
             if collection==False:
-                Para_dict.to_excel(self.writer,sheet_name='Parameters',startrow=self.writer.sheets['Parameters'].max_row,header= False)
+                Para_dict.to_excel(writer,sheet_name='Parameters')
                 #self.model_meta = writer
                 if os.path.isfile(new_modelname.split(".model")[0]+'_meta.xlsx'):
-                    os.chmod(new_modelname.split(".model")[0]+'_meta.xlsx', S_IREAD|S_IRGRP|S_IROTH|S_IWRITE|S_IWGRP|S_IWOTH)#change to read/write
-                try:
-                    self.writer.save()
-                except:
-                    pass
-                os.chmod(new_modelname.split(".model")[0]+'_meta.xlsx', S_IREAD|S_IRGRP|S_IROTH)#change to only readable
-
+                    os.chmod(new_modelname.split(".model")[0]+'_meta.xlsx', S_IREAD|S_IRGRP|S_IROTH|S_IWRITE|S_IWGRP|S_IWOTH)#change to writable
+                writer.save()
+                os.chmod(new_modelname.split(".model")[0]+'_meta.xlsx', S_IREAD|S_IRGRP|S_IROTH)#change to readable, non-writable
             if collection==True:
                 for i in range(len(Writers)):
-                    Para_dict["Chosen Model"]=model_architecture_names[i],
-                    writer = Writers[i]
-                    Para_dict.to_excel(writer,sheet_name='Parameters',startrow=writer.sheets['Parameters'].max_row,header= False)
+                    Para_dict.to_excel(Writers[i],sheet_name='Parameters')
                     #self.model_meta = writer
                     if os.path.isfile(model_keras_path[i].split(".model")[0]+'_meta.xlsx'):
-                        os.chmod(model_keras_path[i].split(".model")[0]+'_meta.xlsx', S_IREAD|S_IRGRP|S_IROTH|S_IWRITE|S_IWGRP|S_IWOTH) #read/write
+                        os.chmod(model_keras_path[i].split(".model")[0]+'_meta.xlsx', S_IREAD|S_IRGRP|S_IROTH|S_IWRITE|S_IWGRP|S_IWOTH)
+                    Writers[i].save()
+                    os.chmod(model_keras_path[i].split(".model")[0]+'_meta.xlsx', S_IREAD|S_IRGRP|S_IROTH)
+    
+            def update_para_dict():
+                norm = str(self.fittingpopups_ui[listindex].comboBox_Normalization_pop.currentText())
+                nr_epochs = int(self.fittingpopups_ui[listindex].spinBox_NrEpochs_pop.value())
+                keras_refresh_nr_epochs = int(self.fittingpopups_ui[listindex].spinBox_RefreshAfterEpochs_pop.value())
+                h_flip = bool(self.fittingpopups_ui[listindex].checkBox_HorizFlip_pop.isChecked())
+                v_flip = bool(self.fittingpopups_ui[listindex].checkBox_VertFlip_pop.isChecked())
+                rotation = float(self.fittingpopups_ui[listindex].lineEdit_Rotation_pop.text())
+         
+                width_shift = float(self.fittingpopups_ui[listindex].lineEdit_widthShift_pop.text())
+                height_shift = float(self.fittingpopups_ui[listindex].lineEdit_heightShift_pop.text())
+                zoom = float(self.fittingpopups_ui[listindex].lineEdit_zoomRange_pop.text())
+                shear = float(self.fittingpopups_ui[listindex].lineEdit_shearRange_pop.text())
+                
+                brightness_refresh_nr_epochs = int(self.fittingpopups_ui[listindex].spinBox_RefreshAfterNrEpochs_pop.value())
+                brightness_add_lower = float(self.fittingpopups_ui[listindex].spinBox_PlusLower_pop.value())
+                brightness_add_upper = float(self.fittingpopups_ui[listindex].spinBox_PlusUpper_pop.value())
+                brightness_mult_lower = float(self.fittingpopups_ui[listindex].doubleSpinBox_MultLower_pop.value())
+                brightness_mult_upper = float(self.fittingpopups_ui[listindex].doubleSpinBox_MultUpper_pop.value())
+                gaussnoise_mean = float(self.fittingpopups_ui[listindex].doubleSpinBox_GaussianNoiseMean_pop.value())
+                gaussnoise_scale = float(self.fittingpopups_ui[listindex].doubleSpinBox_GaussianNoiseScale_pop.value())
+    
+                contrast_on = bool(self.fittingpopups_ui[listindex].checkBox_contrast_pop.isChecked())
+                contrast_lower = float(self.fittingpopups_ui[listindex].doubleSpinBox_contrastLower_pop.value())
+                contrast_higher = float(self.fittingpopups_ui[listindex].doubleSpinBox_contrastHigher_pop.value())
+                saturation_on = bool(self.fittingpopups_ui[listindex].checkBox_saturation_pop.isChecked())
+                saturation_lower = float(self.fittingpopups_ui[listindex].doubleSpinBox_saturationLower_pop.value())
+                saturation_higher = float(self.fittingpopups_ui[listindex].doubleSpinBox_saturationHigher_pop.value())
+                hue_on = bool(self.fittingpopups_ui[listindex].checkBox_hue_pop.isChecked())
+                hue_delta = float(self.fittingpopups_ui[listindex].doubleSpinBox_hueDelta_pop.value())
+    
+                avgBlur_on = bool(self.fittingpopups_ui[listindex].checkBox_avgBlur_pop.isChecked())        
+                avgBlur_min = int(self.fittingpopups_ui[listindex].spinBox_avgBlurMin_pop.value())
+                avgBlur_max = int(self.fittingpopups_ui[listindex].spinBox_avgBlurMax_pop.value())
+                gaussBlur_on = bool(self.fittingpopups_ui[listindex].checkBox_gaussBlur_pop.isChecked())        
+                gaussBlur_min = int(self.fittingpopups_ui[listindex].spinBox_gaussBlurMin_pop.value())
+                gaussBlur_max = int(self.fittingpopups_ui[listindex].spinBox_gaussBlurMax_pop.value())
+                motionBlur_on = bool(self.fittingpopups_ui[listindex].checkBox_motionBlur_pop.isChecked())        
+                motionBlur_kernel = str(self.fittingpopups_ui[listindex].lineEdit_motionBlurKernel_pop.text())
+                motionBlur_angle = str(self.fittingpopups_ui[listindex].lineEdit_motionBlurAngle_pop.text())
+                motionBlur_kernel = tuple(ast.literal_eval(motionBlur_kernel)) #translate string in the lineEdits to a tuple
+                motionBlur_angle = tuple(ast.literal_eval(motionBlur_angle)) #translate string in the lineEdits to a tuple
+    
+                expert_mode = bool(self.fittingpopups_ui[listindex].groupBox_expertMode_pop.isChecked())
+                batchSize_expert = int(self.fittingpopups_ui[listindex].spinBox_batchSize_pop.value())
+                epochs_expert = int(self.fittingpopups_ui[listindex].spinBox_epochs_pop.value())
+                learning_rate_expert = float(self.fittingpopups_ui[listindex].doubleSpinBox_learningRate_pop.value())
+                
+                learning_rate_expert_on = bool(self.fittingpopups_ui[listindex].checkBox_learningRate_pop.isChecked())
+                loss_expert_on = bool(self.fittingpopups_ui[listindex].checkBox_expt_loss_pop.isChecked())
+                loss_expert = str(self.fittingpopups_ui[listindex].comboBox_expt_loss_pop.currentText())
+                optimizer_expert_on = bool(self.fittingpopups_ui[listindex].checkBox_optimizer_pop.isChecked())
+                optimizer_expert = str(self.fittingpopups_ui[listindex].comboBox_optimizer_pop.currentText())
+    
+                paddingMode = str(self.fittingpopups_ui[listindex].comboBox_paddingMode_pop.currentText())
+    
+                train_last_layers = bool(self.fittingpopups_ui[listindex].checkBox_trainLastNOnly_pop.isChecked())             
+                train_last_layers_n = int(self.fittingpopups_ui[listindex].spinBox_trainLastNOnly_pop.value())              
+                train_dense_layers = bool(self.fittingpopups_ui[listindex].checkBox_trainDenseOnly_pop.isChecked())             
+                dropout_expert_on = bool(self.fittingpopups_ui[listindex].checkBox_dropout_pop.isChecked())             
+                try:
+                    dropout_expert = str(self.fittingpopups_ui[listindex].lineEdit_dropout_pop.text()) #due to the validator, there are no squ.brackets
+                    dropout_expert = "["+dropout_expert+"]"
+                    dropout_expert = ast.literal_eval(dropout_expert)
+                except:
+                    dropout_expert = []
+                #Issue here! This toggles call of lossweights_popup! Can this be prevented?
+                lossW_expert_on = bool(self.fittingpopups_ui[listindex].checkBox_lossW.isChecked())             
+                lossW_expert = str(self.fittingpopups_ui[listindex].lineEdit_lossW.text())             
+                class_weight = self.get_class_weight(self.fittingpopups_ui[listindex].SelectedFiles,lossW_expert)
+                
+                #Document this change in the meta-file
+                Para_dict["AIDeveloper_Version"]=VERSION,
+                Para_dict["model_zoo_version"]=model_zoo_version,
+                try:
+                    Para_dict["OS"]=platform.platform(),
+                    Para_dict["CPU"]=platform.processor(),
+                except:
+                    Para_dict["OS"]="Unknown",
+                    Para_dict["CPU"]="Unknown",
+    
+                Para_dict["Modelname"]=new_modelname,
+                Para_dict["Chosen Model"]=chosen_model,
+                Para_dict["new_model"]=new_model,
+                Para_dict["loadrestart_model"]=loadrestart_model,
+                Para_dict["loadcontinue_model"]=loadcontinue_model,
+                Para_dict["Continued_Fitting_From"]=load_modelname,                        
+                Para_dict["Input image size"]=crop,
+                Para_dict["Color Mode"]=color_mode,
+                Para_dict["Device"]=deviceSelected,
+                Para_dict["gpu_used"]=gpu_used,
+                Para_dict["gpu_memory"]=gpu_memory,
+                Para_dict["Output Nr. classes"]=nr_classes,
+                Para_dict["Normalization"]=norm,
+                Para_dict["Nr. epochs"]=nr_epochs,
+                Para_dict["Keras refresh after nr. epochs"]=keras_refresh_nr_epochs,
+                Para_dict["Horz. flip"]=h_flip,
+                Para_dict["Vert. flip"]=v_flip,
+                Para_dict["rotation"]=rotation,
+                Para_dict["width_shift"]=width_shift,
+                Para_dict["height_shift"]=height_shift,
+                Para_dict["zoom"]=zoom,
+                Para_dict["shear"]=shear,
+                Para_dict["Brightness refresh after nr. epochs"]=brightness_refresh_nr_epochs,
+                Para_dict["Brightness add. lower"]=brightness_add_lower,
+                Para_dict["Brightness add. upper"]=brightness_add_upper,
+                Para_dict["Brightness mult. lower"]=brightness_mult_lower,  
+                Para_dict["Brightness mult. upper"]=brightness_mult_upper,
+                Para_dict["Gaussnoise Mean"]=gaussnoise_mean,
+                Para_dict["Gaussnoise Scale"]=gaussnoise_scale,
+    
+                Para_dict["Contrast on"]=contrast_on,                
+                Para_dict["Contrast Lower"]=contrast_lower,
+                Para_dict["Contrast Higher"]=contrast_higher,
+                Para_dict["Saturation on"]=saturation_on,
+                Para_dict["Saturation Lower"]=saturation_lower,
+                Para_dict["Saturation Higher"]=saturation_higher,
+                Para_dict["Hue on"]=hue_on,                
+                Para_dict["Hue delta"]=hue_delta,                
+    
+                Para_dict["Average blur on"]=avgBlur_on,                
+                Para_dict["Average blur Lower"]=avgBlur_min,
+                Para_dict["Average blur Higher"]=avgBlur_max,
+                Para_dict["Gauss blur on"]=gaussBlur_on,                
+                Para_dict["Gauss blur Lower"]=gaussBlur_min,
+                Para_dict["Gauss blur Higher"]=gaussBlur_max,
+                Para_dict["Motion blur on"]=motionBlur_on,                
+                Para_dict["Motion blur Kernel"]=motionBlur_kernel,                
+                Para_dict["Motion blur Angle"]=motionBlur_angle,                
+           
+                Para_dict["Epoch_Started_Using_These_Settings"]=counter,
+    
+                Para_dict["expert_mode"]=expert_mode,
+                Para_dict["batchSize_expert"]=batchSize_expert,
+                Para_dict["epochs_expert"]=epochs_expert,
+                
+                Para_dict["learning_rate_expert"]=learning_rate_expert,
+                Para_dict["learning_rate_expert_on"]=learning_rate_expert_on,
+                Para_dict["loss_expert_on"]=loss_expert_on,
+                Para_dict["loss_expert"]=loss_expert,
+                Para_dict["optimizer_expert_on"]=optimizer_expert_on,
+                Para_dict["optimizer_expert"]=optimizer_expert,                
+    
+                Para_dict["paddingMode"]=paddingMode,                
+                
+                Para_dict["train_last_layers"]=train_last_layers,
+                Para_dict["train_last_layers_n"]=train_last_layers_n,
+                Para_dict["train_dense_layers"]=train_dense_layers,
+                Para_dict["dropout_expert_on"]=dropout_expert_on,
+                Para_dict["dropout_expert"]=dropout_expert,
+                Para_dict["lossW_expert_on"]=lossW_expert_on,
+                Para_dict["lossW_expert"]=lossW_expert,
+                Para_dict["class_weight"]=class_weight,
+                Para_dict["metrics"]=model_metrics,
+                
+                #training data cannot be changed during training
+                if norm == "StdScaling using mean and std of all training data":                                
+                    #This needs to be saved into Para_dict since it will be required for inference
+                    Para_dict["Mean of training data used for scaling"]=mean_trainingdata,
+                    Para_dict["Std of training data used for scaling"]=std_trainingdata,
+    
+                if collection==False:
+                    Para_dict.to_excel(self.writer,sheet_name='Parameters',startrow=self.writer.sheets['Parameters'].max_row,header= False)
+                    #self.model_meta = writer
+                    if os.path.isfile(new_modelname.split(".model")[0]+'_meta.xlsx'):
+                        os.chmod(new_modelname.split(".model")[0]+'_meta.xlsx', S_IREAD|S_IRGRP|S_IROTH|S_IWRITE|S_IWGRP|S_IWOTH)#change to read/write
                     try:
-                        writer.save()
+                        self.writer.save()
                     except:
                         pass
-                    os.chmod(model_keras_path[i].split(".model")[0]+'_meta.xlsx', S_IREAD|S_IRGRP|S_IROTH) #read only
-
-
-
-        ######################Load the Validation Data################################
-        ind = [selectedfile["TrainOrValid"] == "Valid" for selectedfile in SelectedFiles]
-        ind = np.where(np.array(ind)==True)[0]
-        SelectedFiles_valid = np.array(SelectedFiles)[ind]
-        SelectedFiles_valid = list(SelectedFiles_valid)
-        indices_valid = [selectedfile["class"] for selectedfile in SelectedFiles_valid]
-        nr_events_epoch_valid = [selectedfile["nr_events_epoch"] for selectedfile in SelectedFiles_valid]
-        rtdc_path_valid = [selectedfile["rtdc_path"] for selectedfile in SelectedFiles_valid]
-        zoom_factors_valid = [selectedfile["zoom_factor"] for selectedfile in SelectedFiles_valid]
-        zoom_order = [self.actionOrder0.isChecked(),self.actionOrder1.isChecked(),self.actionOrder2.isChecked(),self.actionOrder3.isChecked(),self.actionOrder4.isChecked(),self.actionOrder5.isChecked()]
-        zoom_order = int(np.where(np.array(zoom_order)==True)[0])
-        shuffle_valid = [selectedfile["shuffle"] for selectedfile in SelectedFiles_valid]
+                    os.chmod(new_modelname.split(".model")[0]+'_meta.xlsx', S_IREAD|S_IRGRP|S_IROTH)#change to only readable
     
-        ############Cropping#####################
-        X_valid,y_valid,Indices = [],[],[]
-        for i in range(len(SelectedFiles_valid)):
-            if not self.actionDataToRam.isChecked():
-                #Replace true means that individual cells could occur several times
-                gen_valid = aid_img.gen_crop_img(crop,rtdc_path_valid[i],nr_events_epoch_valid[i],random_images=shuffle_valid[i],replace=True,zoom_factor=zoom_factors_valid[i],zoom_order=zoom_order,color_mode=self.get_color_mode(),padding_mode=paddingMode)
-            else: #get a similar generator, using the ram-data
-                if len(DATA)==0:
+                if collection==True:
+                    for i in range(len(Writers)):
+                        Para_dict["Chosen Model"]=model_architecture_names[i],
+                        writer = Writers[i]
+                        Para_dict.to_excel(writer,sheet_name='Parameters',startrow=writer.sheets['Parameters'].max_row,header= False)
+                        #self.model_meta = writer
+                        if os.path.isfile(model_keras_path[i].split(".model")[0]+'_meta.xlsx'):
+                            os.chmod(model_keras_path[i].split(".model")[0]+'_meta.xlsx', S_IREAD|S_IRGRP|S_IROTH|S_IWRITE|S_IWGRP|S_IWOTH) #read/write
+                        try:
+                            writer.save()
+                        except:
+                            pass
+                        os.chmod(model_keras_path[i].split(".model")[0]+'_meta.xlsx', S_IREAD|S_IRGRP|S_IROTH) #read only
+    
+    
+    
+            ######################Load the Validation Data################################
+            ind = [selectedfile["TrainOrValid"] == "Valid" for selectedfile in SelectedFiles]
+            ind = np.where(np.array(ind)==True)[0]
+            SelectedFiles_valid = np.array(SelectedFiles)[ind]
+            SelectedFiles_valid = list(SelectedFiles_valid)
+            indices_valid = [selectedfile["class"] for selectedfile in SelectedFiles_valid]
+            nr_events_epoch_valid = [selectedfile["nr_events_epoch"] for selectedfile in SelectedFiles_valid]
+            rtdc_path_valid = [selectedfile["rtdc_path"] for selectedfile in SelectedFiles_valid]
+            zoom_factors_valid = [selectedfile["zoom_factor"] for selectedfile in SelectedFiles_valid]
+            zoom_order = [self.actionOrder0.isChecked(),self.actionOrder1.isChecked(),self.actionOrder2.isChecked(),self.actionOrder3.isChecked(),self.actionOrder4.isChecked(),self.actionOrder5.isChecked()]
+            zoom_order = int(np.where(np.array(zoom_order)==True)[0])
+            shuffle_valid = [selectedfile["shuffle"] for selectedfile in SelectedFiles_valid]
+        
+            ############Cropping#####################
+            X_valid,y_valid,Indices = [],[],[]
+            for i in range(len(SelectedFiles_valid)):
+                if not self.actionDataToRam.isChecked():
                     #Replace true means that individual cells could occur several times
                     gen_valid = aid_img.gen_crop_img(crop,rtdc_path_valid[i],nr_events_epoch_valid[i],random_images=shuffle_valid[i],replace=True,zoom_factor=zoom_factors_valid[i],zoom_order=zoom_order,color_mode=self.get_color_mode(),padding_mode=paddingMode)
-                else:
-                    gen_valid = aid_img.gen_crop_img_ram(DATA,rtdc_path_valid[i],nr_events_epoch_valid[i],random_images=shuffle_valid[i],replace=True) #Replace true means that individual cells could occur several times
-                    if self.actionVerbose.isChecked():
-                        print("Loaded data from RAM")
-            generator_cropped_out = next(gen_valid)
-            X_valid.append(generator_cropped_out[0])
-            #y_valid.append(np.repeat(indices_valid[i],nr_events_epoch_valid[i]))
-            y_valid.append(np.repeat(indices_valid[i],X_valid[-1].shape[0]))
-            Indices.append(generator_cropped_out[1])
-            del generator_cropped_out
-        #Save the validation set (BEFORE normalization!)
-        #Write to.rtdc files
-        if bool(self.actionExport_Original.isChecked())==True:
-            print("Export original images")
-            save_cropped = False
-            aid_bin.write_rtdc(new_modelname.split(".model")[0]+'_Valid_Data.rtdc',rtdc_path_valid,X_valid,Indices,cropped=save_cropped,color_mode=self.get_color_mode())
-
-        elif bool(self.actionExport_Cropped.isChecked())==True:
-            print("Export cropped images")
-            save_cropped = True
-            aid_bin.write_rtdc(new_modelname.split(".model")[0]+'_Valid_Data.rtdc',rtdc_path_valid,X_valid,Indices,cropped=save_cropped,color_mode=self.get_color_mode())
-
-        elif bool(self.actionExport_Off.isChecked())==True:
-            print("Exporting is turned off")
-#                msg = QtWidgets.QMessageBox()
-#                msg.setIcon(QtWidgets.QMessageBox.Information)       
-#                msg.setText("Use a different Exporting option in ->Edit if you want to export the data")
-#                msg.setWindowTitle("Export is turned off!")
-#                msg.setStandardButtons(QtWidgets.QMessageBox.Ok)
-#                msg.exec_()
-            
-        X_valid = np.concatenate(X_valid)
-        y_valid = np.concatenate(y_valid)
-        Y_valid = np_utils.to_categorical(y_valid, nr_classes)# * 2 - 1
-
-        if not bool(self.actionExport_Off.isChecked())==True:
-            #Save the labels
-            np.savetxt(new_modelname.split(".model")[0]+'_Valid_Labels.txt',y_valid.astype(int),fmt='%i')            
-
-        if len(X_valid.shape)==4:
-            channels=3
-        elif len(X_valid.shape)==3:
-            channels=1
-        else:
-            print("Invalid data dimension:" +str(X_valid.shape))
-        if channels==1:
-            #Add the "channels" dimension
-            X_valid = np.expand_dims(X_valid,3)
-
-        #get it to theano image format (channels first)
-        #X_valid = X_valid.swapaxes(-1,-2).swapaxes(-2,-3)
-        if norm == "StdScaling using mean and std of all training data":
-            X_valid = aid_img.norm_imgs(X_valid,norm,mean_trainingdata,std_trainingdata)
-        else:
-            X_valid = aid_img.norm_imgs(X_valid,norm)
-
-        #Validation data can be cropped to final size already since no augmentation
-        #will happen on this data set
-        dim_val = X_valid.shape
-        print("Current dim. of validation set (pixels x pixels)="+str(dim_val[2]))
-        if dim_val[2]!=crop:
-            print("Change dim. (pixels x pixels) of validation set to ="+str(crop))
-            remove = int(dim_val[2]/2.0 - crop/2.0)
-            X_valid = X_valid[:,remove:remove+crop,remove:remove+crop,:] #crop to crop x crop pixels #TensorFlow
-
-
-        ####################Update the PopupFitting########################
-        self.fittingpopups_ui[listindex].lineEdit_modelname_pop.setText(new_modelname) #set the progress bar to zero
-        self.fittingpopups_ui[listindex].spinBox_imagecrop_pop.setValue(crop)
-        self.fittingpopups_ui[listindex].spinBox_NrEpochs_pop.setValue(nr_epochs)
-        self.fittingpopups_ui[listindex].comboBox_ModelSelection_pop.addItems(self.predefined_models)
-        chosen_model = str(self.comboBox_ModelSelection.currentText())
-        index = self.fittingpopups_ui[listindex].comboBox_ModelSelection_pop.findText(chosen_model, QtCore.Qt.MatchFixedString)
-        if index >= 0:
-            self.fittingpopups_ui[listindex].comboBox_ModelSelection_pop.setCurrentIndex(index)
-        self.fittingpopups_ui[listindex].comboBox_Normalization_pop.addItems(self.norm_methods)            
-        index = self.fittingpopups_ui[listindex].comboBox_Normalization_pop.findText(norm, QtCore.Qt.MatchFixedString)
-        if index >= 0:
-            self.fittingpopups_ui[listindex].comboBox_Normalization_pop.setCurrentIndex(index)
-        #padding
-        index = self.fittingpopups_ui[listindex].comboBox_paddingMode_pop.findText(paddingMode, QtCore.Qt.MatchFixedString)
-        if index >= 0:
-            self.fittingpopups_ui[listindex].comboBox_paddingMode_pop.setCurrentIndex(index)
-        #CPU setting
-        self.fittingpopups_ui[listindex].comboBox_cpu_pop.addItem("Default CPU")        
-        if gpu_used==False:
-            self.fittingpopups_ui[listindex].radioButton_cpu_pop.setChecked(True)
-            self.fittingpopups_ui[listindex].doubleSpinBox_memory_pop.setValue(gpu_memory)        
-        #GPU setting
-        if gpu_used==True:
-            self.fittingpopups_ui[listindex].radioButton_gpu_pop.setChecked(True)
-            self.fittingpopups_ui[listindex].comboBox_gpu_pop.addItem(deviceSelected)        
-            self.fittingpopups_ui[listindex].doubleSpinBox_memory_pop.setValue(gpu_memory)        
-
-        self.fittingpopups_ui[listindex].spinBox_RefreshAfterEpochs_pop.setValue(keras_refresh_nr_epochs)
-        self.fittingpopups_ui[listindex].checkBox_HorizFlip_pop.setChecked(h_flip)
-        self.fittingpopups_ui[listindex].checkBox_VertFlip_pop.setChecked(v_flip)
-        self.fittingpopups_ui[listindex].lineEdit_Rotation_pop.setText(str(rotation))
-        self.fittingpopups_ui[listindex].lineEdit_widthShift_pop.setText(str(width_shift))
-        self.fittingpopups_ui[listindex].lineEdit_heightShift_pop.setText(str(height_shift))
-        self.fittingpopups_ui[listindex].lineEdit_zoomRange_pop.setText(str(zoom))
-        self.fittingpopups_ui[listindex].lineEdit_shearRange_pop.setText(str(shear))
-        self.fittingpopups_ui[listindex].spinBox_RefreshAfterNrEpochs_pop.setValue(brightness_refresh_nr_epochs)
-        self.fittingpopups_ui[listindex].spinBox_PlusLower_pop.setValue(brightness_add_lower)
-        self.fittingpopups_ui[listindex].spinBox_PlusUpper_pop.setValue(brightness_add_upper)
-        self.fittingpopups_ui[listindex].doubleSpinBox_MultLower_pop.setValue(brightness_mult_lower)
-        self.fittingpopups_ui[listindex].doubleSpinBox_MultUpper_pop.setValue(brightness_mult_upper)
-        self.fittingpopups_ui[listindex].doubleSpinBox_GaussianNoiseMean_pop.setValue(gaussnoise_mean)
-        self.fittingpopups_ui[listindex].doubleSpinBox_GaussianNoiseScale_pop.setValue(gaussnoise_scale) 
-
-        self.fittingpopups_ui[listindex].checkBox_contrast_pop.setChecked(contrast_on) 
-        self.fittingpopups_ui[listindex].doubleSpinBox_contrastLower_pop.setValue(contrast_lower) 
-        self.fittingpopups_ui[listindex].doubleSpinBox_contrastHigher_pop.setValue(contrast_higher) 
-        self.fittingpopups_ui[listindex].checkBox_saturation_pop.setChecked(saturation_on) 
-        self.fittingpopups_ui[listindex].doubleSpinBox_saturationLower_pop.setValue(saturation_lower) 
-        self.fittingpopups_ui[listindex].doubleSpinBox_saturationHigher_pop.setValue(saturation_higher) 
-        self.fittingpopups_ui[listindex].checkBox_hue_pop.setChecked(hue_on) 
-        self.fittingpopups_ui[listindex].doubleSpinBox_hueDelta_pop.setValue(hue_delta) 
-        #Special for saturation and hue. Only enabled for RGB:
-        saturation_enabled = bool(self.checkBox_saturation.isEnabled())
-        self.fittingpopups_ui[listindex].checkBox_saturation_pop.setEnabled(saturation_enabled)
-        self.fittingpopups_ui[listindex].doubleSpinBox_saturationLower_pop.setEnabled(saturation_enabled)
-        self.fittingpopups_ui[listindex].doubleSpinBox_saturationHigher_pop.setEnabled(saturation_enabled)
-            
-        hue_enabled = bool(self.checkBox_hue.isEnabled())
-        self.fittingpopups_ui[listindex].checkBox_hue_pop.setEnabled(hue_enabled) 
-        self.fittingpopups_ui[listindex].doubleSpinBox_hueDelta_pop.setEnabled(hue_enabled)
-
-
-        self.fittingpopups_ui[listindex].checkBox_avgBlur_pop.setChecked(avgBlur_on)
-        self.fittingpopups_ui[listindex].spinBox_avgBlurMin_pop.setEnabled(avgBlur_on)
-        self.fittingpopups_ui[listindex].label_avgBlurMin_pop.setEnabled(avgBlur_on)
-        self.fittingpopups_ui[listindex].spinBox_avgBlurMin_pop.setValue(avgBlur_min) 
-        self.fittingpopups_ui[listindex].spinBox_avgBlurMax_pop.setEnabled(avgBlur_on)
-        self.fittingpopups_ui[listindex].label_avgBlurMax_pop.setEnabled(avgBlur_on)
-        self.fittingpopups_ui[listindex].spinBox_avgBlurMax_pop.setValue(avgBlur_max) 
-
-        self.fittingpopups_ui[listindex].checkBox_gaussBlur_pop.setChecked(gaussBlur_on)
-        self.fittingpopups_ui[listindex].spinBox_gaussBlurMin_pop.setEnabled(gaussBlur_on)
-        self.fittingpopups_ui[listindex].label_gaussBlurMin_pop.setEnabled(gaussBlur_on)
-        self.fittingpopups_ui[listindex].spinBox_gaussBlurMin_pop.setValue(gaussBlur_min) 
-        self.fittingpopups_ui[listindex].spinBox_gaussBlurMax_pop.setEnabled(gaussBlur_on)
-        self.fittingpopups_ui[listindex].label_gaussBlurMax_pop.setEnabled(gaussBlur_on)
-        self.fittingpopups_ui[listindex].spinBox_gaussBlurMax_pop.setValue(gaussBlur_max) 
-
-        self.fittingpopups_ui[listindex].checkBox_motionBlur_pop.setChecked(motionBlur_on)
-        self.fittingpopups_ui[listindex].label_motionBlurKernel_pop.setEnabled(motionBlur_on)
-        self.fittingpopups_ui[listindex].lineEdit_motionBlurKernel_pop.setEnabled(motionBlur_on)
-        self.fittingpopups_ui[listindex].label_motionBlurAngle_pop.setEnabled(motionBlur_on)
-        self.fittingpopups_ui[listindex].lineEdit_motionBlurAngle_pop.setEnabled(motionBlur_on)
-        if len(motionBlur_kernel)==1:
-            self.fittingpopups_ui[listindex].lineEdit_motionBlurKernel_pop.setText(str(motionBlur_kernel[0]))
-        if len(motionBlur_kernel)==2:
-            self.fittingpopups_ui[listindex].lineEdit_motionBlurKernel_pop.setText(str(motionBlur_kernel[0])+","+str(motionBlur_kernel[1]))
-        if len(motionBlur_angle)==1:
-            self.fittingpopups_ui[listindex].lineEdit_motionBlurAngle_pop.setText(str(motionBlur_angle[0]))
-        if len(motionBlur_kernel)==2:
-            self.fittingpopups_ui[listindex].lineEdit_motionBlurAngle_pop.setText(str(motionBlur_angle[0])+","+str(motionBlur_angle[1]))
-
-        self.fittingpopups_ui[listindex].groupBox_expertMode_pop.setChecked(expert_mode)
-        self.fittingpopups_ui[listindex].spinBox_batchSize_pop.setValue(batchSize_expert)
-        self.fittingpopups_ui[listindex].spinBox_epochs_pop.setValue(epochs_expert)
-
-        self.fittingpopups_ui[listindex].checkBox_learningRate_pop.setChecked(learning_rate_expert_on)
-        self.fittingpopups_ui[listindex].checkBox_expt_loss_pop.setChecked(loss_expert_on)
-        index = self.fittingpopups_ui[listindex].comboBox_expt_loss_pop.findText(loss_expert, QtCore.Qt.MatchFixedString)
-        if index >= 0:
-            self.fittingpopups_ui[listindex].comboBox_expt_loss_pop.setCurrentIndex(index)
-        self.fittingpopups_ui[listindex].checkBox_optimizer_pop.setChecked(optimizer_expert_on)
-        index = self.fittingpopups_ui[listindex].comboBox_optimizer_pop.findText(optimizer_expert, QtCore.Qt.MatchFixedString)
-        if index >= 0:
-            self.fittingpopups_ui[listindex].comboBox_optimizer_pop.setCurrentIndex(index)
-        self.fittingpopups_ui[listindex].doubleSpinBox_learningRate_pop.setValue(learning_rate_expert)
-
-        index = self.fittingpopups_ui[listindex].comboBox_paddingMode_pop.findText(paddingMode, QtCore.Qt.MatchFixedString)
-        if index >= 0:
-            self.fittingpopups_ui[listindex].comboBox_paddingMode_pop.setCurrentIndex(index)
-
-        self.fittingpopups_ui[listindex].checkBox_trainLastNOnly_pop.setChecked(train_last_layers)
-        self.fittingpopups_ui[listindex].spinBox_trainLastNOnly_pop.setValue(train_last_layers_n)
-        self.fittingpopups_ui[listindex].checkBox_trainDenseOnly_pop.setChecked(train_dense_layers)
-        self.fittingpopups_ui[listindex].checkBox_dropout_pop.setChecked(dropout_expert_on)
-        do_text = [str(do_i) for do_i in dropout_expert]
-        self.fittingpopups_ui[listindex].lineEdit_dropout_pop.setText((', '.join(do_text)))
-        self.fittingpopups_ui[listindex].checkBox_lossW.setChecked(lossW_expert_on)
-        self.fittingpopups_ui[listindex].pushButton_lossW.setEnabled(lossW_expert_on)
-        self.fittingpopups_ui[listindex].lineEdit_lossW.setText(str(lossW_expert))
-
-        if channels==1:
-            channel_text = "Grayscale"
-        elif channels==3:
-            channel_text = "RGB"
-        self.fittingpopups_ui[listindex].comboBox_colorMode_pop.addItems([channel_text])
-
-        ###############Continue with training data:augmentation############
-        #Rotating could create edge effects. Avoid this by making crop a bit larger for now
-        #Worst case would be a 45degree rotation:
-        cropsize2 = np.sqrt(crop**2+crop**2)
-        cropsize2 = np.ceil(cropsize2 / 2.) * 2 #round to the next even number
-    
-        #Dictionary defining affine image augmentation options:
-        aug_paras = {"v_flip":v_flip,"h_flip":h_flip,"rotation":rotation,"width_shift":width_shift,"height_shift":height_shift,"zoom":zoom,"shear":shear}
-                     
-        Histories,Index,Saved,Stopwatch = [],[],[],[]
-        if collection==True:
-           HISTORIES = [ [] for model in model_keras]
-           SAVED = [ [] for model in model_keras]
-
-        counter = 0
-#            thresh_acc = 0
-#            thresh_loss = 9E20
-        
-        model_metrics_names = []
-        for met in model_metrics:
-            if type(met)==str:
-                model_metrics_names.append(met) 
-            else:
-                metname = met.name
-                metlabel = met.label
-                if metlabel>0:
-                    metname = metname+"_"+str(metlabel)
-                model_metrics_names.append(metname) 
-        
-        #Dictionary for records in metrics
-        model_metrics_records = {}
-        model_metrics_records["acc"] = 0 #accuracy  starts at zero and approaches 1 during training         
-        model_metrics_records["val_acc"] = 0 #accuracy  starts at zero and approaches 1 during training         
-        model_metrics_records["loss"] = 9E20 ##loss starts very high and approaches 0 during training         
-        model_metrics_records["val_loss"] = 9E20 ##loss starts very high and approaches 0 during training         
-        for key in model_metrics_names:
-            if 'precision' in key or 'recall' in key or 'f1_score' in key:
-                model_metrics_records[key] = 0 #those metrics start at zero and approach 1         
-                model_metrics_records["val_"+key] = 0 #those metrics start at zero and approach 1         
-
-        
-        time_start = time.time()
-        t1 = time.time() #Initialize a timer; this is used to save the meta file every few seconds
-        t2 =  time.time() #Initialize a timer; this is used update the fitting parameters
-        while counter < nr_epochs:#nr_epochs: #resample nr_epochs times
-            #Only keep fitting if the respective window is open:
-            isVisible = self.fittingpopups[listindex].isVisible()
-            if isVisible:                    
-                ############Keras image augmentation#####################
-                #Start the first iteration:                
-                X_train,y_train = [],[]
-                t3 = time.time()
-                for i in range(len(SelectedFiles_train)):
-#                        if not self.actionDataToRam.isChecked():
+                else: #get a similar generator, using the ram-data
                     if len(DATA)==0:
                         #Replace true means that individual cells could occur several times
-                        gen_train = aid_img.gen_crop_img(cropsize2,rtdc_path_train[i],nr_events_epoch_train[i],random_images=shuffle_train[i],replace=True,zoom_factor=zoom_factors_train[i],zoom_order=zoom_order,color_mode=self.get_color_mode(),padding_mode=paddingMode) 
-#                        else:
-#                            if len(DATA)==0:
-#                                gen_train = aid_img.gen_crop_img(cropsize2,rtdc_path_train[i],nr_events_epoch_train[i],replace=True) #Replace true means that individual cells could occur several times
+                        gen_valid = aid_img.gen_crop_img(crop,rtdc_path_valid[i],nr_events_epoch_valid[i],random_images=shuffle_valid[i],replace=True,zoom_factor=zoom_factors_valid[i],zoom_order=zoom_order,color_mode=self.get_color_mode(),padding_mode=paddingMode)
                     else:
-                        gen_train = aid_img.gen_crop_img_ram(DATA,rtdc_path_train[i],nr_events_epoch_train[i],random_images=shuffle_train[i],replace=True) #Replace true means that individual cells could occur several times
+                        gen_valid = aid_img.gen_crop_img_ram(DATA,rtdc_path_valid[i],nr_events_epoch_valid[i],random_images=shuffle_valid[i],replace=True) #Replace true means that individual cells could occur several times
                         if self.actionVerbose.isChecked():
                             print("Loaded data from RAM")
-                    X_train.append(next(gen_train)[0])
-                    #y_train.append(np.repeat(indices_train[i],nr_events_epoch_train[i])) #This does not work if shuffle=False, because actually not all images can be used (the given number in the table (Cells/Epoch) is actually wrong!)
-                    y_train.append(np.repeat(indices_train[i],X_train[-1].shape[0]))
-
-                X_train = np.concatenate(X_train)
-                X_train = X_train.astype(np.uint8)
-                    
-                y_train = np.concatenate(y_train)
-                t4 = time.time()
-                if verbose == 1:
-                    print("Time to load data (from .rtdc or RAM) and crop="+str(t4-t3))
+                generator_cropped_out = next(gen_valid)
+                X_valid.append(generator_cropped_out[0])
+                #y_valid.append(np.repeat(indices_valid[i],nr_events_epoch_valid[i]))
+                y_valid.append(np.repeat(indices_valid[i],X_valid[-1].shape[0]))
+                Indices.append(generator_cropped_out[1])
+                del generator_cropped_out
+            #Save the validation set (BEFORE normalization!)
+            #Write to.rtdc files
+            if bool(self.actionExport_Original.isChecked())==True:
+                print("Export original images")
+                save_cropped = False
+                aid_bin.write_rtdc(new_modelname.split(".model")[0]+'_Valid_Data.rtdc',rtdc_path_valid,X_valid,Indices,cropped=save_cropped,color_mode=self.get_color_mode())
+    
+            elif bool(self.actionExport_Cropped.isChecked())==True:
+                print("Export cropped images")
+                save_cropped = True
+                aid_bin.write_rtdc(new_modelname.split(".model")[0]+'_Valid_Data.rtdc',rtdc_path_valid,X_valid,Indices,cropped=save_cropped,color_mode=self.get_color_mode())
+    
+            elif bool(self.actionExport_Off.isChecked())==True:
+                print("Exporting is turned off")
+    #                msg = QtWidgets.QMessageBox()
+    #                msg.setIcon(QtWidgets.QMessageBox.Information)       
+    #                msg.setText("Use a different Exporting option in ->Edit if you want to export the data")
+    #                msg.setWindowTitle("Export is turned off!")
+    #                msg.setStandardButtons(QtWidgets.QMessageBox.Ok)
+    #                msg.exec_()
                 
-                if len(X_train.shape)==4:
-                    channels=3
-                elif len(X_train.shape)==3:
-                    channels=1
+            X_valid = np.concatenate(X_valid)
+            y_valid = np.concatenate(y_valid)
+            Y_valid = np_utils.to_categorical(y_valid, nr_classes)# * 2 - 1
+    
+            if not bool(self.actionExport_Off.isChecked())==True:
+                #Save the labels
+                np.savetxt(new_modelname.split(".model")[0]+'_Valid_Labels.txt',y_valid.astype(int),fmt='%i')            
+    
+            if len(X_valid.shape)==4:
+                channels=3
+            elif len(X_valid.shape)==3:
+                channels=1
+            else:
+                print("Invalid data dimension:" +str(X_valid.shape))
+            if channels==1:
+                #Add the "channels" dimension
+                X_valid = np.expand_dims(X_valid,3)
+    
+            #get it to theano image format (channels first)
+            #X_valid = X_valid.swapaxes(-1,-2).swapaxes(-2,-3)
+            if norm == "StdScaling using mean and std of all training data":
+                X_valid = aid_img.norm_imgs(X_valid,norm,mean_trainingdata,std_trainingdata)
+            else:
+                X_valid = aid_img.norm_imgs(X_valid,norm)
+    
+            #Validation data can be cropped to final size already since no augmentation
+            #will happen on this data set
+            dim_val = X_valid.shape
+            print("Current dim. of validation set (pixels x pixels)="+str(dim_val[2]))
+            if dim_val[2]!=crop:
+                print("Change dim. (pixels x pixels) of validation set to ="+str(crop))
+                remove = int(dim_val[2]/2.0 - crop/2.0)
+                X_valid = X_valid[:,remove:remove+crop,remove:remove+crop,:] #crop to crop x crop pixels #TensorFlow
+    
+    
+            ####################Update the PopupFitting########################
+            self.fittingpopups_ui[listindex].lineEdit_modelname_pop.setText(new_modelname) #set the progress bar to zero
+            self.fittingpopups_ui[listindex].spinBox_imagecrop_pop.setValue(crop)
+            self.fittingpopups_ui[listindex].spinBox_NrEpochs_pop.setValue(nr_epochs)
+            self.fittingpopups_ui[listindex].comboBox_ModelSelection_pop.addItems(self.predefined_models)
+            chosen_model = str(self.comboBox_ModelSelection.currentText())
+            index = self.fittingpopups_ui[listindex].comboBox_ModelSelection_pop.findText(chosen_model, QtCore.Qt.MatchFixedString)
+            if index >= 0:
+                self.fittingpopups_ui[listindex].comboBox_ModelSelection_pop.setCurrentIndex(index)
+            self.fittingpopups_ui[listindex].comboBox_Normalization_pop.addItems(self.norm_methods)            
+            index = self.fittingpopups_ui[listindex].comboBox_Normalization_pop.findText(norm, QtCore.Qt.MatchFixedString)
+            if index >= 0:
+                self.fittingpopups_ui[listindex].comboBox_Normalization_pop.setCurrentIndex(index)
+            #padding
+            index = self.fittingpopups_ui[listindex].comboBox_paddingMode_pop.findText(paddingMode, QtCore.Qt.MatchFixedString)
+            if index >= 0:
+                self.fittingpopups_ui[listindex].comboBox_paddingMode_pop.setCurrentIndex(index)
+            #CPU setting
+            self.fittingpopups_ui[listindex].comboBox_cpu_pop.addItem("Default CPU")        
+            if gpu_used==False:
+                self.fittingpopups_ui[listindex].radioButton_cpu_pop.setChecked(True)
+                self.fittingpopups_ui[listindex].doubleSpinBox_memory_pop.setValue(gpu_memory)        
+            #GPU setting
+            if gpu_used==True:
+                self.fittingpopups_ui[listindex].radioButton_gpu_pop.setChecked(True)
+                self.fittingpopups_ui[listindex].comboBox_gpu_pop.addItem(deviceSelected)        
+                self.fittingpopups_ui[listindex].doubleSpinBox_memory_pop.setValue(gpu_memory)        
+    
+            self.fittingpopups_ui[listindex].spinBox_RefreshAfterEpochs_pop.setValue(keras_refresh_nr_epochs)
+            self.fittingpopups_ui[listindex].checkBox_HorizFlip_pop.setChecked(h_flip)
+            self.fittingpopups_ui[listindex].checkBox_VertFlip_pop.setChecked(v_flip)
+            self.fittingpopups_ui[listindex].lineEdit_Rotation_pop.setText(str(rotation))
+            self.fittingpopups_ui[listindex].lineEdit_widthShift_pop.setText(str(width_shift))
+            self.fittingpopups_ui[listindex].lineEdit_heightShift_pop.setText(str(height_shift))
+            self.fittingpopups_ui[listindex].lineEdit_zoomRange_pop.setText(str(zoom))
+            self.fittingpopups_ui[listindex].lineEdit_shearRange_pop.setText(str(shear))
+            self.fittingpopups_ui[listindex].spinBox_RefreshAfterNrEpochs_pop.setValue(brightness_refresh_nr_epochs)
+            self.fittingpopups_ui[listindex].spinBox_PlusLower_pop.setValue(brightness_add_lower)
+            self.fittingpopups_ui[listindex].spinBox_PlusUpper_pop.setValue(brightness_add_upper)
+            self.fittingpopups_ui[listindex].doubleSpinBox_MultLower_pop.setValue(brightness_mult_lower)
+            self.fittingpopups_ui[listindex].doubleSpinBox_MultUpper_pop.setValue(brightness_mult_upper)
+            self.fittingpopups_ui[listindex].doubleSpinBox_GaussianNoiseMean_pop.setValue(gaussnoise_mean)
+            self.fittingpopups_ui[listindex].doubleSpinBox_GaussianNoiseScale_pop.setValue(gaussnoise_scale) 
+    
+            self.fittingpopups_ui[listindex].checkBox_contrast_pop.setChecked(contrast_on) 
+            self.fittingpopups_ui[listindex].doubleSpinBox_contrastLower_pop.setValue(contrast_lower) 
+            self.fittingpopups_ui[listindex].doubleSpinBox_contrastHigher_pop.setValue(contrast_higher) 
+            self.fittingpopups_ui[listindex].checkBox_saturation_pop.setChecked(saturation_on) 
+            self.fittingpopups_ui[listindex].doubleSpinBox_saturationLower_pop.setValue(saturation_lower) 
+            self.fittingpopups_ui[listindex].doubleSpinBox_saturationHigher_pop.setValue(saturation_higher) 
+            self.fittingpopups_ui[listindex].checkBox_hue_pop.setChecked(hue_on) 
+            self.fittingpopups_ui[listindex].doubleSpinBox_hueDelta_pop.setValue(hue_delta) 
+            #Special for saturation and hue. Only enabled for RGB:
+            saturation_enabled = bool(self.checkBox_saturation.isEnabled())
+            self.fittingpopups_ui[listindex].checkBox_saturation_pop.setEnabled(saturation_enabled)
+            self.fittingpopups_ui[listindex].doubleSpinBox_saturationLower_pop.setEnabled(saturation_enabled)
+            self.fittingpopups_ui[listindex].doubleSpinBox_saturationHigher_pop.setEnabled(saturation_enabled)
+                
+            hue_enabled = bool(self.checkBox_hue.isEnabled())
+            self.fittingpopups_ui[listindex].checkBox_hue_pop.setEnabled(hue_enabled) 
+            self.fittingpopups_ui[listindex].doubleSpinBox_hueDelta_pop.setEnabled(hue_enabled)
+    
+    
+            self.fittingpopups_ui[listindex].checkBox_avgBlur_pop.setChecked(avgBlur_on)
+            self.fittingpopups_ui[listindex].spinBox_avgBlurMin_pop.setEnabled(avgBlur_on)
+            self.fittingpopups_ui[listindex].label_avgBlurMin_pop.setEnabled(avgBlur_on)
+            self.fittingpopups_ui[listindex].spinBox_avgBlurMin_pop.setValue(avgBlur_min) 
+            self.fittingpopups_ui[listindex].spinBox_avgBlurMax_pop.setEnabled(avgBlur_on)
+            self.fittingpopups_ui[listindex].label_avgBlurMax_pop.setEnabled(avgBlur_on)
+            self.fittingpopups_ui[listindex].spinBox_avgBlurMax_pop.setValue(avgBlur_max) 
+    
+            self.fittingpopups_ui[listindex].checkBox_gaussBlur_pop.setChecked(gaussBlur_on)
+            self.fittingpopups_ui[listindex].spinBox_gaussBlurMin_pop.setEnabled(gaussBlur_on)
+            self.fittingpopups_ui[listindex].label_gaussBlurMin_pop.setEnabled(gaussBlur_on)
+            self.fittingpopups_ui[listindex].spinBox_gaussBlurMin_pop.setValue(gaussBlur_min) 
+            self.fittingpopups_ui[listindex].spinBox_gaussBlurMax_pop.setEnabled(gaussBlur_on)
+            self.fittingpopups_ui[listindex].label_gaussBlurMax_pop.setEnabled(gaussBlur_on)
+            self.fittingpopups_ui[listindex].spinBox_gaussBlurMax_pop.setValue(gaussBlur_max) 
+    
+            self.fittingpopups_ui[listindex].checkBox_motionBlur_pop.setChecked(motionBlur_on)
+            self.fittingpopups_ui[listindex].label_motionBlurKernel_pop.setEnabled(motionBlur_on)
+            self.fittingpopups_ui[listindex].lineEdit_motionBlurKernel_pop.setEnabled(motionBlur_on)
+            self.fittingpopups_ui[listindex].label_motionBlurAngle_pop.setEnabled(motionBlur_on)
+            self.fittingpopups_ui[listindex].lineEdit_motionBlurAngle_pop.setEnabled(motionBlur_on)
+            if len(motionBlur_kernel)==1:
+                self.fittingpopups_ui[listindex].lineEdit_motionBlurKernel_pop.setText(str(motionBlur_kernel[0]))
+            if len(motionBlur_kernel)==2:
+                self.fittingpopups_ui[listindex].lineEdit_motionBlurKernel_pop.setText(str(motionBlur_kernel[0])+","+str(motionBlur_kernel[1]))
+            if len(motionBlur_angle)==1:
+                self.fittingpopups_ui[listindex].lineEdit_motionBlurAngle_pop.setText(str(motionBlur_angle[0]))
+            if len(motionBlur_kernel)==2:
+                self.fittingpopups_ui[listindex].lineEdit_motionBlurAngle_pop.setText(str(motionBlur_angle[0])+","+str(motionBlur_angle[1]))
+    
+            self.fittingpopups_ui[listindex].groupBox_expertMode_pop.setChecked(expert_mode)
+            self.fittingpopups_ui[listindex].spinBox_batchSize_pop.setValue(batchSize_expert)
+            self.fittingpopups_ui[listindex].spinBox_epochs_pop.setValue(epochs_expert)
+    
+            self.fittingpopups_ui[listindex].checkBox_learningRate_pop.setChecked(learning_rate_expert_on)
+            self.fittingpopups_ui[listindex].checkBox_expt_loss_pop.setChecked(loss_expert_on)
+            index = self.fittingpopups_ui[listindex].comboBox_expt_loss_pop.findText(loss_expert, QtCore.Qt.MatchFixedString)
+            if index >= 0:
+                self.fittingpopups_ui[listindex].comboBox_expt_loss_pop.setCurrentIndex(index)
+            self.fittingpopups_ui[listindex].checkBox_optimizer_pop.setChecked(optimizer_expert_on)
+            index = self.fittingpopups_ui[listindex].comboBox_optimizer_pop.findText(optimizer_expert, QtCore.Qt.MatchFixedString)
+            if index >= 0:
+                self.fittingpopups_ui[listindex].comboBox_optimizer_pop.setCurrentIndex(index)
+            self.fittingpopups_ui[listindex].doubleSpinBox_learningRate_pop.setValue(learning_rate_expert)
+    
+            index = self.fittingpopups_ui[listindex].comboBox_paddingMode_pop.findText(paddingMode, QtCore.Qt.MatchFixedString)
+            if index >= 0:
+                self.fittingpopups_ui[listindex].comboBox_paddingMode_pop.setCurrentIndex(index)
+    
+            self.fittingpopups_ui[listindex].checkBox_trainLastNOnly_pop.setChecked(train_last_layers)
+            self.fittingpopups_ui[listindex].spinBox_trainLastNOnly_pop.setValue(train_last_layers_n)
+            self.fittingpopups_ui[listindex].checkBox_trainDenseOnly_pop.setChecked(train_dense_layers)
+            self.fittingpopups_ui[listindex].checkBox_dropout_pop.setChecked(dropout_expert_on)
+            do_text = [str(do_i) for do_i in dropout_expert]
+            self.fittingpopups_ui[listindex].lineEdit_dropout_pop.setText((', '.join(do_text)))
+            self.fittingpopups_ui[listindex].checkBox_lossW.setChecked(lossW_expert_on)
+            self.fittingpopups_ui[listindex].pushButton_lossW.setEnabled(lossW_expert_on)
+            self.fittingpopups_ui[listindex].lineEdit_lossW.setText(str(lossW_expert))
+    
+            if channels==1:
+                channel_text = "Grayscale"
+            elif channels==3:
+                channel_text = "RGB"
+            self.fittingpopups_ui[listindex].comboBox_colorMode_pop.addItems([channel_text])
+    
+            ###############Continue with training data:augmentation############
+            #Rotating could create edge effects. Avoid this by making crop a bit larger for now
+            #Worst case would be a 45degree rotation:
+            cropsize2 = np.sqrt(crop**2+crop**2)
+            cropsize2 = np.ceil(cropsize2 / 2.) * 2 #round to the next even number
+        
+            #Dictionary defining affine image augmentation options:
+            aug_paras = {"v_flip":v_flip,"h_flip":h_flip,"rotation":rotation,"width_shift":width_shift,"height_shift":height_shift,"zoom":zoom,"shear":shear}
+                         
+            Histories,Index,Saved,Stopwatch = [],[],[],[]
+            if collection==True:
+               HISTORIES = [ [] for model in model_keras]
+               SAVED = [ [] for model in model_keras]
+    
+            counter = 0
+    #            thresh_acc = 0
+    #            thresh_loss = 9E20
+            
+            model_metrics_names = []
+            for met in model_metrics:
+                if type(met)==str:
+                    model_metrics_names.append(met) 
                 else:
-                    print("Invalid data dimension:" +str(X_valid.shape))
-                if channels==1:
-                    #Add the "channels" dimension
-                    X_train = np.expand_dims(X_train,3)
-
-                t3 = time.time()
-                #Some parallellization: use nr_threads (number of CPUs)
-                nr_threads = 1 #Somehow for MNIST and CIFAR, processing always takes longer. I tried nr_threads=2,4,8,16,24
-                if nr_threads == 1:
-                    X_batch = aid_img.affine_augm(X_train,v_flip,h_flip,rotation,width_shift,height_shift,zoom,shear) #Affine image augmentation
-                    y_batch = np.copy(y_train)
-                else:
-                    #Divde data in 4 batches
-                    X_train = np.array_split(X_train,nr_threads)
-                    y_train = np.array_split(y_train,nr_threads)
-
-                    self.X_batch = [False] * nr_threads
-                    self.y_batch = [False] * nr_threads
-                    self.counter_aug = 0
-                    self.Workers_augm = []
-                    
-                    def imgaug_worker(aug_paras,progress_callback,history_callback):
-                        i = aug_paras["i"]
-                        self.X_batch[i] = aid_img.affine_augm(aug_paras["X_train"],v_flip,h_flip,rotation,width_shift,height_shift,zoom,shear)
-                        self.y_batch[i] = aug_paras["y_train"]
-                        self.counter_aug+=1
-
-                    t3_a = time.time()
-                    for i in range(nr_threads):
-                        aug_paras_ = copy.deepcopy(aug_paras)
-                        aug_paras_["i"] = i
-                        aug_paras_["X_train"]=X_train[i]#augparas contains rotation and so on. X_train and y_train are overwritten in each iteration (for each worker new X_train)
-                        aug_paras_["y_train"]=y_train[i]
+                    metname = met.name
+                    metlabel = met.label
+                    if metlabel>0:
+                        metname = metname+"_"+str(metlabel)
+                    model_metrics_names.append(metname) 
+            
+            #Dictionary for records in metrics
+            model_metrics_records = {}
+            model_metrics_records["acc"] = 0 #accuracy  starts at zero and approaches 1 during training         
+            model_metrics_records["val_acc"] = 0 #accuracy  starts at zero and approaches 1 during training         
+            model_metrics_records["loss"] = 9E20 ##loss starts very high and approaches 0 during training         
+            model_metrics_records["val_loss"] = 9E20 ##loss starts very high and approaches 0 during training         
+            for key in model_metrics_names:
+                if 'precision' in key or 'recall' in key or 'f1_score' in key:
+                    model_metrics_records[key] = 0 #those metrics start at zero and approach 1         
+                    model_metrics_records["val_"+key] = 0 #those metrics start at zero and approach 1         
+    
+            
+            time_start = time.time()
+            t1 = time.time() #Initialize a timer; this is used to save the meta file every few seconds
+            t2 =  time.time() #Initialize a timer; this is used update the fitting parameters
+            while counter < nr_epochs:#nr_epochs: #resample nr_epochs times
+                #Only keep fitting if the respective window is open:
+                isVisible = self.fittingpopups[listindex].isVisible()
+                if isVisible:                    
+                    ############Keras image augmentation#####################
+                    #Start the first iteration:                
+                    X_train,y_train = [],[]
+                    t3 = time.time()
+                    for i in range(len(SelectedFiles_train)):
+    #                        if not self.actionDataToRam.isChecked():
+                        if len(DATA)==0:
+                            #Replace true means that individual cells could occur several times
+                            gen_train = aid_img.gen_crop_img(cropsize2,rtdc_path_train[i],nr_events_epoch_train[i],random_images=shuffle_train[i],replace=True,zoom_factor=zoom_factors_train[i],zoom_order=zoom_order,color_mode=self.get_color_mode(),padding_mode=paddingMode) 
+    #                        else:
+    #                            if len(DATA)==0:
+    #                                gen_train = aid_img.gen_crop_img(cropsize2,rtdc_path_train[i],nr_events_epoch_train[i],replace=True) #Replace true means that individual cells could occur several times
+                        else:
+                            gen_train = aid_img.gen_crop_img_ram(DATA,rtdc_path_train[i],nr_events_epoch_train[i],random_images=shuffle_train[i],replace=True) #Replace true means that individual cells could occur several times
+                            if self.actionVerbose.isChecked():
+                                print("Loaded data from RAM")
+                        X_train.append(next(gen_train)[0])
+                        #y_train.append(np.repeat(indices_train[i],nr_events_epoch_train[i])) #This does not work if shuffle=False, because actually not all images can be used (the given number in the table (Cells/Epoch) is actually wrong!)
+                        y_train.append(np.repeat(indices_train[i],X_train[-1].shape[0]))
+    
+                    X_train = np.concatenate(X_train)
+                    X_train = X_train.astype(np.uint8)
                         
-                        self.Workers_augm.append(Worker(imgaug_worker,aug_paras_))                            
-                        self.threadpool.start(self.Workers_augm[i])
-                        
-                    while self.counter_aug < nr_threads:
-                        time.sleep(0.01)#Wait 0.1s, then check the len again
-                    t3_b = time.time()
+                    y_train = np.concatenate(y_train)
+                    t4 = time.time()
                     if verbose == 1:
-                        print("Time to perform affine augmentation_internal ="+str(t3_b-t3_a))
-
-                    X_batch = np.concatenate(self.X_batch)
-                    y_batch = np.concatenate(self.y_batch)
-   
-                Y_batch = np_utils.to_categorical(y_batch, nr_classes)# * 2 - 1
-                t4 = time.time()
-                if verbose == 1:
-                    print("Time to perform affine augmentation ="+str(t4-t3))
-                        
-                t3 = time.time()            
-                #Now do the final cropping to the actual size that was set by user
-                dim = X_batch.shape
-                if dim[2]!=crop:
-                    remove = int(dim[2]/2.0 - crop/2.0)
-                    X_batch = X_batch[:,remove:remove+crop,remove:remove+crop,:] #crop to crop x crop pixels #TensorFlow
-                t4 = time.time()
-#                    if verbose == 1:
-#                        print("Time to crop to final size="+str(t4-t3))
-
-                X_batch_orig = np.copy(X_batch) #save into new array and do some iterations with varying noise/brightness
-                #reuse this X_batch_orig a few times since this augmentation was costly
-                keras_iter_counter = 0
-                while keras_iter_counter < keras_refresh_nr_epochs and counter < nr_epochs:
-                    keras_iter_counter+=1
-                    #if t2-t1>5: #check for changed settings every 5 seconds
-                    if self.actionVerbose.isChecked()==True:
-                        verbose = 1
-                    else:
-                        verbose = 0                            
-                                            
-#                        X_batch = np.copy(X_batch_orig)#copy from X_batch_orig, X_batch will be altered without altering X_batch_orig            
-#                        X_batch = X_batch.astype(float)
+                        print("Time to load data (from .rtdc or RAM) and crop="+str(t4-t3))
                     
-                    #Another while loop if the user wants to reuse the keras-augmented data
-                    #several times and only apply brightness augmentation:
-                    brightnesss_iter_counter = 0
-                    while brightnesss_iter_counter < brightness_refresh_nr_epochs and counter < nr_epochs:
-                        #In each iteration, start with non-augmented data
-                        X_batch = np.copy(X_batch_orig)#copy from X_batch_orig, X_batch will be altered without altering X_batch_orig            
-                        X_batch = X_batch.astype(np.uint8)                            
+                    if len(X_train.shape)==4:
+                        channels=3
+                    elif len(X_train.shape)==3:
+                        channels=1
+                    else:
+                        print("Invalid data dimension:" +str(X_valid.shape))
+                    if channels==1:
+                        #Add the "channels" dimension
+                        X_train = np.expand_dims(X_train,3)
+    
+                    t3 = time.time()
+                    #Some parallellization: use nr_threads (number of CPUs)
+                    nr_threads = 1 #Somehow for MNIST and CIFAR, processing always takes longer. I tried nr_threads=2,4,8,16,24
+                    if nr_threads == 1:
+                        X_batch = aid_img.affine_augm(X_train,v_flip,h_flip,rotation,width_shift,height_shift,zoom,shear) #Affine image augmentation
+                        y_batch = np.copy(y_train)
+                    else:
+                        #Divde data in 4 batches
+                        X_train = np.array_split(X_train,nr_threads)
+                        y_train = np.array_split(y_train,nr_threads)
+    
+                        self.X_batch = [False] * nr_threads
+                        self.y_batch = [False] * nr_threads
+                        self.counter_aug = 0
+                        self.Workers_augm = []
                         
-                        #########X_batch = X_batch.astype(float)########## No floating yet :) !!!
-                        
-                        brightnesss_iter_counter += 1
+                        def imgaug_worker(aug_paras,progress_callback,history_callback):
+                            i = aug_paras["i"]
+                            self.X_batch[i] = aid_img.affine_augm(aug_paras["X_train"],v_flip,h_flip,rotation,width_shift,height_shift,zoom,shear)
+                            self.y_batch[i] = aug_paras["y_train"]
+                            self.counter_aug+=1
+    
+                        t3_a = time.time()
+                        for i in range(nr_threads):
+                            aug_paras_ = copy.deepcopy(aug_paras)
+                            aug_paras_["i"] = i
+                            aug_paras_["X_train"]=X_train[i]#augparas contains rotation and so on. X_train and y_train are overwritten in each iteration (for each worker new X_train)
+                            aug_paras_["y_train"]=y_train[i]
+                            
+                            self.Workers_augm.append(Worker(imgaug_worker,aug_paras_))                            
+                            self.threadpool.start(self.Workers_augm[i])
+                            
+                        while self.counter_aug < nr_threads:
+                            time.sleep(0.01)#Wait 0.1s, then check the len again
+                        t3_b = time.time()
+                        if verbose == 1:
+                            print("Time to perform affine augmentation_internal ="+str(t3_b-t3_a))
+    
+                        X_batch = np.concatenate(self.X_batch)
+                        y_batch = np.concatenate(self.y_batch)
+       
+                    Y_batch = np_utils.to_categorical(y_batch, nr_classes)# * 2 - 1
+                    t4 = time.time()
+                    if verbose == 1:
+                        print("Time to perform affine augmentation ="+str(t4-t3))
+                            
+                    t3 = time.time()            
+                    #Now do the final cropping to the actual size that was set by user
+                    dim = X_batch.shape
+                    if dim[2]!=crop:
+                        remove = int(dim[2]/2.0 - crop/2.0)
+                        X_batch = X_batch[:,remove:remove+crop,remove:remove+crop,:] #crop to crop x crop pixels #TensorFlow
+                    t4 = time.time()
+    #                    if verbose == 1:
+    #                        print("Time to crop to final size="+str(t4-t3))
+    
+                    X_batch_orig = np.copy(X_batch) #save into new array and do some iterations with varying noise/brightness
+                    #reuse this X_batch_orig a few times since this augmentation was costly
+                    keras_iter_counter = 0
+                    while keras_iter_counter < keras_refresh_nr_epochs and counter < nr_epochs:
+                        keras_iter_counter+=1
+                        #if t2-t1>5: #check for changed settings every 5 seconds
                         if self.actionVerbose.isChecked()==True:
                             verbose = 1
                         else:
                             verbose = 0                            
-
-                        if self.fittingpopups_ui[listindex].checkBox_ApplyNextEpoch.isChecked():
-                            nr_epochs = int(self.fittingpopups_ui[listindex].spinBox_NrEpochs_pop.value())
-                            #Keras stuff
-                            keras_refresh_nr_epochs = int(self.fittingpopups_ui[listindex].spinBox_RefreshAfterEpochs_pop.value())                                
-                            h_flip = bool(self.fittingpopups_ui[listindex].checkBox_HorizFlip_pop.isChecked())
-                            v_flip = bool(self.fittingpopups_ui[listindex].checkBox_VertFlip_pop.isChecked())
-                            rotation = float(self.fittingpopups_ui[listindex].lineEdit_Rotation_pop.text())
-                            width_shift = float(self.fittingpopups_ui[listindex].lineEdit_widthShift_pop.text())
-                            height_shift = float(self.fittingpopups_ui[listindex].lineEdit_heightShift_pop.text())
-                            zoom = float(self.fittingpopups_ui[listindex].lineEdit_zoomRange_pop.text())
-                            shear = float(self.fittingpopups_ui[listindex].lineEdit_shearRange_pop.text())
-                            #Brightness stuff
-                            brightness_refresh_nr_epochs = int(self.fittingpopups_ui[listindex].spinBox_RefreshAfterNrEpochs_pop.value())
-                            brightness_add_lower = float(self.fittingpopups_ui[listindex].spinBox_PlusLower_pop.value())
-                            brightness_add_upper = float(self.fittingpopups_ui[listindex].spinBox_PlusUpper_pop.value())
-                            brightness_mult_lower = float(self.fittingpopups_ui[listindex].doubleSpinBox_MultLower_pop.value())
-                            brightness_mult_upper = float(self.fittingpopups_ui[listindex].doubleSpinBox_MultUpper_pop.value())
-                            gaussnoise_mean = float(self.fittingpopups_ui[listindex].doubleSpinBox_GaussianNoiseMean_pop.value())
-                            gaussnoise_scale = float(self.fittingpopups_ui[listindex].doubleSpinBox_GaussianNoiseScale_pop.value())
-
-                            contrast_on = bool(self.fittingpopups_ui[listindex].checkBox_contrast_pop.isChecked())
-                            contrast_lower = float(self.fittingpopups_ui[listindex].doubleSpinBox_contrastLower_pop.value())
-                            contrast_higher = float(self.fittingpopups_ui[listindex].doubleSpinBox_contrastHigher_pop.value())
-                            saturation_on = bool(self.fittingpopups_ui[listindex].checkBox_saturation_pop.isChecked())
-                            saturation_lower = float(self.fittingpopups_ui[listindex].doubleSpinBox_saturationLower_pop.value())
-                            saturation_higher = float(self.fittingpopups_ui[listindex].doubleSpinBox_saturationHigher_pop.value())
-                            hue_on = bool(self.fittingpopups_ui[listindex].checkBox_hue_pop.isChecked())
-                            hue_delta = float(self.fittingpopups_ui[listindex].doubleSpinBox_hueDelta_pop.value())
-
-                            avgBlur_on = bool(self.fittingpopups_ui[listindex].checkBox_avgBlur_pop.isChecked())        
-                            avgBlur_min = int(self.fittingpopups_ui[listindex].spinBox_avgBlurMin_pop.value())
-                            avgBlur_max = int(self.fittingpopups_ui[listindex].spinBox_avgBlurMax_pop.value())
-                
-                            gaussBlur_on = bool(self.fittingpopups_ui[listindex].checkBox_gaussBlur_pop.isChecked())        
-                            gaussBlur_min = int(self.fittingpopups_ui[listindex].spinBox_gaussBlurMin_pop.value())
-                            gaussBlur_max = int(self.fittingpopups_ui[listindex].spinBox_gaussBlurMax_pop.value())
-                
-                            motionBlur_on = bool(self.fittingpopups_ui[listindex].checkBox_motionBlur_pop.isChecked())        
-                            motionBlur_kernel = str(self.fittingpopups_ui[listindex].lineEdit_motionBlurKernel_pop.text())
-                            motionBlur_angle = str(self.fittingpopups_ui[listindex].lineEdit_motionBlurAngle_pop.text())
+                                                
+    #                        X_batch = np.copy(X_batch_orig)#copy from X_batch_orig, X_batch will be altered without altering X_batch_orig            
+    #                        X_batch = X_batch.astype(float)
+                        
+                        #Another while loop if the user wants to reuse the keras-augmented data
+                        #several times and only apply brightness augmentation:
+                        brightnesss_iter_counter = 0
+                        while brightnesss_iter_counter < brightness_refresh_nr_epochs and counter < nr_epochs:
+                            #In each iteration, start with non-augmented data
+                            X_batch = np.copy(X_batch_orig)#copy from X_batch_orig, X_batch will be altered without altering X_batch_orig            
+                            X_batch = X_batch.astype(np.uint8)                            
                             
-                            motionBlur_kernel = tuple(ast.literal_eval(motionBlur_kernel)) #translate string in the lineEdits to a tuple
-                            motionBlur_angle = tuple(ast.literal_eval(motionBlur_angle)) #translate string in the lineEdits to a tuple
-
-
-                            #Expert mode stuff
-                            expert_mode = bool(self.fittingpopups_ui[listindex].groupBox_expertMode_pop.isChecked())
-                            batchSize_expert = int(self.fittingpopups_ui[listindex].spinBox_batchSize_pop.value())
-                            epochs_expert = int(self.fittingpopups_ui[listindex].spinBox_epochs_pop.value())
+                            #########X_batch = X_batch.astype(float)########## No floating yet :) !!!
                             
-                            learning_rate_expert_on = bool(self.fittingpopups_ui[listindex].checkBox_learningRate_pop.isChecked())
-                            learning_rate_expert = float(self.fittingpopups_ui[listindex].doubleSpinBox_learningRate_pop.value())
-                            loss_expert_on = bool(self.fittingpopups_ui[listindex].checkBox_expt_loss_pop.isChecked())
-                            loss_expert = str(self.fittingpopups_ui[listindex].comboBox_expt_loss_pop.currentText())
-                            optimizer_expert_on = bool(self.fittingpopups_ui[listindex].checkBox_optimizer_pop.isChecked())
-                            optimizer_expert = str(self.fittingpopups_ui[listindex].comboBox_optimizer_pop.currentText())
-                            paddingMode = str(self.fittingpopups_ui[listindex].comboBox_paddingMode_pop.currentText())
-
-                            train_last_layers = bool(self.fittingpopups_ui[listindex].checkBox_trainLastNOnly_pop.isChecked())             
-                            train_last_layers_n = int(self.fittingpopups_ui[listindex].spinBox_trainLastNOnly_pop.value())              
-                            train_dense_layers = bool(self.fittingpopups_ui[listindex].checkBox_trainDenseOnly_pop.isChecked())             
-                            dropout_expert_on = bool(self.fittingpopups_ui[listindex].checkBox_dropout_pop.isChecked())             
-                            try:
-                                dropout_expert = str(self.fittingpopups_ui[listindex].lineEdit_dropout_pop.text()) #due to the validator, there are no squ.brackets
-                                dropout_expert = "["+dropout_expert+"]"
-                                dropout_expert = ast.literal_eval(dropout_expert)
-                            except:
-                                dropout_expert = []
-                            lossW_expert_on = bool(self.fittingpopups_ui[listindex].checkBox_lossW.isChecked())             
-                            lossW_expert = str(self.fittingpopups_ui[listindex].lineEdit_lossW.text())             
-                            class_weight = self.get_class_weight(self.fittingpopups_ui[listindex].SelectedFiles,lossW_expert) #
-                            
-                            print("Updating parameter file (meta.xlsx)!")
-                            update_para_dict()
-
-                            #Changes in expert mode can affect the model: apply changed now:
-                            if expert_mode==True:
-                                if collection==False: #Expert mode is currently not supported for Collections
-                                    expert_mode_before = True
-
-                                    #Apply changes to the trainable states:
-                                    if train_last_layers==True:#Train only the last n layers
-                                        if verbose:
-                                            print("Train only the last "+str(train_last_layers_n)+ " layer(s)")
-                                        trainable_new = (len(trainable_original)-train_last_layers_n)*[False]+train_last_layers_n*[True]
-                                        #Change the trainability states. Model compilation is done inside model_change_trainability
-                                        summary = aid_dl.model_change_trainability(model_keras,trainable_new,model_metrics,nr_classes,loss_expert,optimizer_expert,learning_rate_expert)
-                                        text1 = "Expert mode: Request for custom trainability states: train only the last "+str(train_last_layers_n)+ " layer(s)\n"
-                                        #text2 = "\n--------------------\n"
-                                        self.fittingpopups_ui[listindex].textBrowser_FittingInfo_pop.append(text1+summary)
-                                    if train_dense_layers==True:#Train only dense layers
-                                        if verbose:
-                                            print("Train only dense layers")
-                                        layer_dense_ind = ["Dense" in x for x in layer_names]
-                                        layer_dense_ind = np.where(np.array(layer_dense_ind)==True)[0] #at which indices are dropout layers?
-                                        #create a list of trainable states
-                                        trainable_new = len(trainable_original)*[False]
-                                        for index in layer_dense_ind:
-                                            trainable_new[index] = True
-                                        #Change the trainability states. Model compilation is done inside model_change_trainability
-                                        summary = aid_dl.model_change_trainability(model_keras,trainable_new,model_metrics,nr_classes,loss_expert,optimizer_expert,learning_rate_expert)                 
-                                        text1 = "Expert mode: Request for custom trainability states: train only dense layer(s)\n"
-                                        #text2 = "\n--------------------\n"
-                                        self.fittingpopups_ui[listindex].textBrowser_FittingInfo_pop.append(text1+summary)
-
-                                    if dropout_expert_on==True:
-                                        #The user apparently want to change the dropout rates
-                                        do_list = aid_dl.get_dropout(model_keras)#Get a list of dropout values of the current model
-                                        #Compare the dropout values in the model to the dropout values requested by user
-                                        if len(dropout_expert)==1:#if the user gave a float
-                                            dropout_expert_list = len(do_list)*dropout_expert #convert to list
-                                        elif len(dropout_expert)>1:
-                                            dropout_expert_list = dropout_expert
-                                            if not len(dropout_expert_list)==len(do_list):
-                                                text = "Issue with dropout: you defined "+str(len(dropout_expert_list))+" dropout rates, but model has "+str(len(do_list))+" dropout layers"
+                            brightnesss_iter_counter += 1
+                            if self.actionVerbose.isChecked()==True:
+                                verbose = 1
+                            else:
+                                verbose = 0                            
+    
+                            if self.fittingpopups_ui[listindex].checkBox_ApplyNextEpoch.isChecked():
+                                nr_epochs = int(self.fittingpopups_ui[listindex].spinBox_NrEpochs_pop.value())
+                                #Keras stuff
+                                keras_refresh_nr_epochs = int(self.fittingpopups_ui[listindex].spinBox_RefreshAfterEpochs_pop.value())                                
+                                h_flip = bool(self.fittingpopups_ui[listindex].checkBox_HorizFlip_pop.isChecked())
+                                v_flip = bool(self.fittingpopups_ui[listindex].checkBox_VertFlip_pop.isChecked())
+                                rotation = float(self.fittingpopups_ui[listindex].lineEdit_Rotation_pop.text())
+                                width_shift = float(self.fittingpopups_ui[listindex].lineEdit_widthShift_pop.text())
+                                height_shift = float(self.fittingpopups_ui[listindex].lineEdit_heightShift_pop.text())
+                                zoom = float(self.fittingpopups_ui[listindex].lineEdit_zoomRange_pop.text())
+                                shear = float(self.fittingpopups_ui[listindex].lineEdit_shearRange_pop.text())
+                                #Brightness stuff
+                                brightness_refresh_nr_epochs = int(self.fittingpopups_ui[listindex].spinBox_RefreshAfterNrEpochs_pop.value())
+                                brightness_add_lower = float(self.fittingpopups_ui[listindex].spinBox_PlusLower_pop.value())
+                                brightness_add_upper = float(self.fittingpopups_ui[listindex].spinBox_PlusUpper_pop.value())
+                                brightness_mult_lower = float(self.fittingpopups_ui[listindex].doubleSpinBox_MultLower_pop.value())
+                                brightness_mult_upper = float(self.fittingpopups_ui[listindex].doubleSpinBox_MultUpper_pop.value())
+                                gaussnoise_mean = float(self.fittingpopups_ui[listindex].doubleSpinBox_GaussianNoiseMean_pop.value())
+                                gaussnoise_scale = float(self.fittingpopups_ui[listindex].doubleSpinBox_GaussianNoiseScale_pop.value())
+    
+                                contrast_on = bool(self.fittingpopups_ui[listindex].checkBox_contrast_pop.isChecked())
+                                contrast_lower = float(self.fittingpopups_ui[listindex].doubleSpinBox_contrastLower_pop.value())
+                                contrast_higher = float(self.fittingpopups_ui[listindex].doubleSpinBox_contrastHigher_pop.value())
+                                saturation_on = bool(self.fittingpopups_ui[listindex].checkBox_saturation_pop.isChecked())
+                                saturation_lower = float(self.fittingpopups_ui[listindex].doubleSpinBox_saturationLower_pop.value())
+                                saturation_higher = float(self.fittingpopups_ui[listindex].doubleSpinBox_saturationHigher_pop.value())
+                                hue_on = bool(self.fittingpopups_ui[listindex].checkBox_hue_pop.isChecked())
+                                hue_delta = float(self.fittingpopups_ui[listindex].doubleSpinBox_hueDelta_pop.value())
+    
+                                avgBlur_on = bool(self.fittingpopups_ui[listindex].checkBox_avgBlur_pop.isChecked())        
+                                avgBlur_min = int(self.fittingpopups_ui[listindex].spinBox_avgBlurMin_pop.value())
+                                avgBlur_max = int(self.fittingpopups_ui[listindex].spinBox_avgBlurMax_pop.value())
+                    
+                                gaussBlur_on = bool(self.fittingpopups_ui[listindex].checkBox_gaussBlur_pop.isChecked())        
+                                gaussBlur_min = int(self.fittingpopups_ui[listindex].spinBox_gaussBlurMin_pop.value())
+                                gaussBlur_max = int(self.fittingpopups_ui[listindex].spinBox_gaussBlurMax_pop.value())
+                    
+                                motionBlur_on = bool(self.fittingpopups_ui[listindex].checkBox_motionBlur_pop.isChecked())        
+                                motionBlur_kernel = str(self.fittingpopups_ui[listindex].lineEdit_motionBlurKernel_pop.text())
+                                motionBlur_angle = str(self.fittingpopups_ui[listindex].lineEdit_motionBlurAngle_pop.text())
+                                
+                                motionBlur_kernel = tuple(ast.literal_eval(motionBlur_kernel)) #translate string in the lineEdits to a tuple
+                                motionBlur_angle = tuple(ast.literal_eval(motionBlur_angle)) #translate string in the lineEdits to a tuple
+    
+    
+                                #Expert mode stuff
+                                expert_mode = bool(self.fittingpopups_ui[listindex].groupBox_expertMode_pop.isChecked())
+                                batchSize_expert = int(self.fittingpopups_ui[listindex].spinBox_batchSize_pop.value())
+                                epochs_expert = int(self.fittingpopups_ui[listindex].spinBox_epochs_pop.value())
+                                
+                                learning_rate_expert_on = bool(self.fittingpopups_ui[listindex].checkBox_learningRate_pop.isChecked())
+                                learning_rate_expert = float(self.fittingpopups_ui[listindex].doubleSpinBox_learningRate_pop.value())
+                                loss_expert_on = bool(self.fittingpopups_ui[listindex].checkBox_expt_loss_pop.isChecked())
+                                loss_expert = str(self.fittingpopups_ui[listindex].comboBox_expt_loss_pop.currentText())
+                                optimizer_expert_on = bool(self.fittingpopups_ui[listindex].checkBox_optimizer_pop.isChecked())
+                                optimizer_expert = str(self.fittingpopups_ui[listindex].comboBox_optimizer_pop.currentText())
+                                paddingMode = str(self.fittingpopups_ui[listindex].comboBox_paddingMode_pop.currentText())
+    
+                                train_last_layers = bool(self.fittingpopups_ui[listindex].checkBox_trainLastNOnly_pop.isChecked())             
+                                train_last_layers_n = int(self.fittingpopups_ui[listindex].spinBox_trainLastNOnly_pop.value())              
+                                train_dense_layers = bool(self.fittingpopups_ui[listindex].checkBox_trainDenseOnly_pop.isChecked())             
+                                dropout_expert_on = bool(self.fittingpopups_ui[listindex].checkBox_dropout_pop.isChecked())             
+                                try:
+                                    dropout_expert = str(self.fittingpopups_ui[listindex].lineEdit_dropout_pop.text()) #due to the validator, there are no squ.brackets
+                                    dropout_expert = "["+dropout_expert+"]"
+                                    dropout_expert = ast.literal_eval(dropout_expert)
+                                except:
+                                    dropout_expert = []
+                                lossW_expert_on = bool(self.fittingpopups_ui[listindex].checkBox_lossW.isChecked())             
+                                lossW_expert = str(self.fittingpopups_ui[listindex].lineEdit_lossW.text())             
+                                class_weight = self.get_class_weight(self.fittingpopups_ui[listindex].SelectedFiles,lossW_expert) #
+                                
+                                print("Updating parameter file (meta.xlsx)!")
+                                update_para_dict()
+    
+                                #Changes in expert mode can affect the model: apply changed now:
+                                if expert_mode==True:
+                                    if collection==False: #Expert mode is currently not supported for Collections
+                                        expert_mode_before = True
+    
+                                        #Apply changes to the trainable states:
+                                        if train_last_layers==True:#Train only the last n layers
+                                            if verbose:
+                                                print("Train only the last "+str(train_last_layers_n)+ " layer(s)")
+                                            trainable_new = (len(trainable_original)-train_last_layers_n)*[False]+train_last_layers_n*[True]
+                                            #Change the trainability states. Model compilation is done inside model_change_trainability
+                                            summary = aid_dl.model_change_trainability(model_keras,trainable_new,model_metrics,nr_classes,loss_expert,optimizer_expert,learning_rate_expert)
+                                            if model_keras_p!=None:#if this is NOT None, there exists a parallel model, which also needs to be re-compiled
+                                                aid_dl.model_compile(model_keras_p,loss_expert,optimizer_expert,learning_rate_expert,model_metrics,nr_classes)
+                                                print("Recompiled parallel model due to train_last_layers==True")
+                                            text1 = "Expert mode: Request for custom trainability states: train only the last "+str(train_last_layers_n)+ " layer(s)\n"
+                                            #text2 = "\n--------------------\n"
+                                            self.fittingpopups_ui[listindex].textBrowser_FittingInfo_pop.append(text1+summary)
+                                        if train_dense_layers==True:#Train only dense layers
+                                            if verbose:
+                                                print("Train only dense layers")
+                                            layer_dense_ind = ["Dense" in x for x in layer_names]
+                                            layer_dense_ind = np.where(np.array(layer_dense_ind)==True)[0] #at which indices are dropout layers?
+                                            #create a list of trainable states
+                                            trainable_new = len(trainable_original)*[False]
+                                            for index in layer_dense_ind:
+                                                trainable_new[index] = True
+                                            #Change the trainability states. Model compilation is done inside model_change_trainability
+                                            summary = aid_dl.model_change_trainability(model_keras,trainable_new,model_metrics,nr_classes,loss_expert,optimizer_expert,learning_rate_expert)                 
+                                            if model_keras_p!=None:#if this is NOT None, there exists a parallel model, which also needs to be re-compiled
+                                                aid_dl.model_compile(model_keras_p,loss_expert,optimizer_expert,learning_rate_expert,model_metrics,nr_classes)
+                                                print("Recompiled parallel model due to train_dense_layers==True")
+                                            text1 = "Expert mode: Request for custom trainability states: train only dense layer(s)\n"
+                                            #text2 = "\n--------------------\n"
+                                            self.fittingpopups_ui[listindex].textBrowser_FittingInfo_pop.append(text1+summary)
+    
+                                        if dropout_expert_on==True:
+                                            #The user apparently want to change the dropout rates
+                                            do_list = aid_dl.get_dropout(model_keras)#Get a list of dropout values of the current model
+                                            #Compare the dropout values in the model to the dropout values requested by user
+                                            if len(dropout_expert)==1:#if the user gave a float
+                                                dropout_expert_list = len(do_list)*dropout_expert #convert to list
+                                            elif len(dropout_expert)>1:
+                                                dropout_expert_list = dropout_expert
+                                                if not len(dropout_expert_list)==len(do_list):
+                                                    text = "Issue with dropout: you defined "+str(len(dropout_expert_list))+" dropout rates, but model has "+str(len(do_list))+" dropout layers"
+                                                    self.fittingpopups_ui[listindex].textBrowser_FittingInfo_pop.append(text)
+                                            else:
+                                                text = "Could not understand user input at Expert->Dropout"
                                                 self.fittingpopups_ui[listindex].textBrowser_FittingInfo_pop.append(text)
-                                        else:
-                                            text = "Could not understand user input at Expert->Dropout"
-                                            self.fittingpopups_ui[listindex].textBrowser_FittingInfo_pop.append(text)
-                                            dropout_expert_list = []
-
-                                        if len(dropout_expert_list)>0 and do_list!=dropout_expert_list:#if the dropout rates of the current model is not equal to the required do_list from user...
-                                            #Change dropout. Model .compile happens inside change_dropout function
-                                            do_changed = aid_dl.change_dropout(model_keras,dropout_expert_list,model_metrics,nr_classes,loss_expert,optimizer_expert,learning_rate_expert)
-
-                                            if do_changed==1:
-                                                text_do = "Dropout rate(s) in model was/were changed to: "+str(dropout_expert_list)
+                                                dropout_expert_list = []
+    
+                                            if len(dropout_expert_list)>0 and do_list!=dropout_expert_list:#if the dropout rates of the current model is not equal to the required do_list from user...
+                                                #Change dropout. Model .compile happens inside change_dropout function
+                                                do_changed = aid_dl.change_dropout(model_keras,dropout_expert_list,model_metrics,nr_classes,loss_expert,optimizer_expert,learning_rate_expert)
+                                                if model_keras_p!=None:#if model_keras_p is NOT None, there exists a parallel model, which also needs to be re-compiled
+                                                    aid_dl.model_compile(model_keras_p,loss_expert,optimizer_expert,learning_rate_expert,model_metrics,nr_classes)
+                                                    print("Recompiled parallel model due to changed dropout. I'm not sure if this works already!")
+    
+                                                if do_changed==1:
+                                                    text_do = "Dropout rate(s) in model was/were changed to: "+str(dropout_expert_list)
+                                                else:
+                                                    text_do = "Dropout rate(s) in model was/were not changed"
                                             else:
                                                 text_do = "Dropout rate(s) in model was/were not changed"
+                                            if verbose:
+                                                print(text_do)
+                                            self.fittingpopups_ui[listindex].textBrowser_FittingInfo_pop.append(text_do)
+    
+    
+                                ############################Invert 'expert' settings#########################
+                                if expert_mode==False and expert_mode_before==True: #if the expert mode was selected before, change the parameters back to original vlaues
+                                    if verbose:
+                                        print("Expert mode was used before and settings are now inverted")
+    
+                                    #Re-set trainable states back to original state                                    
+                                    if verbose:
+                                        print("Change 'trainable' layers back to original state")
+                                    summary = aid_dl.model_change_trainability(model_keras,trainable_original,model_metrics,nr_classes,loss_expert,optimizer_expert,learning_rate_expert)                 
+                                    if model_keras_p!=None:#if model_keras_p is NOT None, there exists a parallel model, which also needs to be re-compiled
+                                        aid_dl.model_compile(model_keras_p,loss_expert,optimizer_expert,learning_rate_expert,model_metrics,nr_classes)
+                                        print("Recompiled parallel model to change 'trainable' layers back to original state")
+    
+                                    text1 = "Expert mode turns off: Request for orignal trainability states:\n"
+                                    #text2 = "\n--------------------\n"
+                                    self.fittingpopups_ui[listindex].textBrowser_FittingInfo_pop.append(text1+summary)
+                                    if verbose:
+                                        print("Change dropout rates in dropout layers back to original values")
+                                    if len(do_list_original)>0:
+                                        do_changed = aid_dl.change_dropout(model_keras,do_list_original,model_metrics,nr_classes,loss_expert,optimizer_expert,learning_rate_expert)
+                                        if model_keras_p!=None:#if model_keras_p is NOT None, there exists a parallel model, which also needs to be re-compiled
+                                            aid_dl.model_compile(model_keras_p,loss_expert,optimizer_expert,learning_rate_expert,model_metrics,nr_classes)
+                                            print("Recompiled parallel model to change dropout values back to original state. I'm not sure if this works!")
+    
+                                        if do_changed==1:
+                                            text_do = "Dropout rate(s) in model was/were changed to original values: "+str(do_list_original)
                                         else:
-                                            text_do = "Dropout rate(s) in model was/were not changed"
-                                        if verbose:
-                                            print(text_do)
-                                        self.fittingpopups_ui[listindex].textBrowser_FittingInfo_pop.append(text_do)
-
-
-                            ############################Invert 'expert' settings#########################
-                            if expert_mode==False and expert_mode_before==True: #if the expert mode was selected before, change the parameters back to original vlaues
-                                if verbose:
-                                    print("Expert mode was used before and settings are now inverted")
-
-                                #Re-set trainable states back to original state                                    
-                                if verbose:
-                                    print("Change 'trainable' layers back to original state")
-                                summary = aid_dl.model_change_trainability(model_keras,trainable_original,model_metrics,nr_classes,loss_expert,optimizer_expert,learning_rate_expert)                 
-                                text1 = "Expert mode turns off: Request for orignal trainability states:\n"
-                                #text2 = "\n--------------------\n"
-                                self.fittingpopups_ui[listindex].textBrowser_FittingInfo_pop.append(text1+summary)
-                                if verbose:
-                                    print("Change dropout rates in dropout layers back to original values")
-                                if len(do_list_original)>0:
-                                    do_changed = aid_dl.change_dropout(model_keras,do_list_original,model_metrics,nr_classes,loss_expert,optimizer_expert,learning_rate_expert)
-                                    if do_changed==1:
-                                        text_do = "Dropout rate(s) in model was/were changed to original values: "+str(do_list_original)
-                                    else:
-                                        text_do = "Dropout rate(s) in model was/were not changed"                                        
-                                    self.fittingpopups_ui[listindex].textBrowser_FittingInfo_pop.append(text_do+"\n")
-
-
-                            text_updates = ""
-                            #Compare current lr and the lr on expert tab:
-                            if collection==False:
-                                lr_current = K.eval(model_keras.optimizer.lr)
-                            else:
-                                lr_current = K.eval(model_keras[0].optimizer.lr)
-
-                            lr_diff = learning_rate_expert-lr_current
-                            if  abs(lr_diff) > 1e-6:
+                                            text_do = "Dropout rate(s) in model was/were not changed"                                        
+                                        self.fittingpopups_ui[listindex].textBrowser_FittingInfo_pop.append(text_do+"\n")
+    
+    
+                                text_updates = ""
+                                #Compare current lr and the lr on expert tab:
                                 if collection==False:
-                                    K.set_value(model_keras.optimizer.lr, learning_rate_expert)
+                                    lr_current = K.eval(model_keras.optimizer.lr)
                                 else:
-                                    K.set_value(model_keras[0].optimizer.lr, learning_rate_expert)
-
-                                text_updates +=  "Changed the learning rate to "+ str(learning_rate_expert)+"\n"
-                            recompile = False
-                            #Compare current optimizer and the optimizer on expert tab:
-                            if collection==False:
-                                optimizer_current = aid_dl.get_optimizer_name(model_keras).lower()#get the current optimizer of the model
-                            else:
-                                optimizer_current = aid_dl.get_optimizer_name(model_keras[0]).lower()#get the current optimizer of the model
-
-                            if optimizer_current!=optimizer_expert.lower():#if the current model has a different optimizer
-                                recompile = True
-                                text_updates+="Changed the optimizer to "+optimizer_expert+"\n"
-
-                            #Compare current loss function and the loss-function on expert tab:
-                            if collection==False:
-                                loss_ = model_keras.loss
-                            else:
-                                loss_ = model_keras[0].loss
-                            if loss_!=loss_expert:
-                                recompile = True
-                                model_metrics_records["loss"] = 9E20 #Reset the record for loss because new loss function could converge to a different min. value
-                                model_metrics_records["val_loss"] = 9E20 #Reset the record for loss because new loss function could converge to a different min. value
-                                text_updates+="Changed the loss function to "+loss_expert+"\n"
-
-                            if recompile==True and collection==False:
-                                print("Recompiling...")
-                                aid_dl.model_compile(model_keras,loss_expert,optimizer_expert,learning_rate_expert,model_metrics,nr_classes)
-                            elif recompile==True and collection==True:
-                                print("Recompiling...")
-                                for m in model_keras:
-                                    aid_dl.model_compile(m,loss_expert,optimizer_expert,learning_rate_expert,model_metrics,nr_classes)
-
-                            self.fittingpopups_ui[listindex].textBrowser_FittingInfo_pop.append(text_updates)
-
-                            self.model_keras = model_keras #overwrite the model in self
-                            self.fittingpopups_ui[listindex].checkBox_ApplyNextEpoch.setChecked(False)
-
-
-                        ##########Contrast/Saturation/Hue augmentation#########
-                        #is there any of contrast/saturation/hue augmentation to do?
-                        X_batch = X_batch.astype(np.uint8)
-                        t5 = time.time()
-                        if contrast_on:
-                            t_con_aug_1 = time.time()
-                            X_batch = aid_img.contrast_augm_cv2(X_batch,contrast_lower,contrast_higher) #this function is almost 15 times faster than random_contrast from tf!
-                            t_con_aug_2 = time.time()
-                            if verbose == 1:
-                                print("Time to augment contrast="+str(t_con_aug_2-t_con_aug_1))
-
-                        if saturation_on or hue_on:
-                            t_sat_aug_1 = time.time()
-                            X_batch = aid_img.satur_hue_augm_cv2(X_batch.astype(np.uint8),saturation_on,saturation_lower,saturation_higher,hue_on,hue_delta) #Gray and RGB; both values >0!
-                            t_sat_aug_2 = time.time()
-                            if verbose == 1:
-                                print("Time to augment saturation/hue="+str(t_sat_aug_2-t_sat_aug_1))
-
-                        ##########Average/Gauss/Motion blurring#########
-                        #is there any of blurring to do?
-                        
-                        if avgBlur_on:
-                            t_avgBlur_1 = time.time()
-                            X_batch = aid_img.avg_blur_cv2(X_batch,avgBlur_min,avgBlur_max)
-                            t_avgBlur_2 = time.time()
-                            if verbose == 1:
-                                print("Time to perform average blurring="+str(t_avgBlur_2-t_avgBlur_1))
-
-                        if gaussBlur_on:
-                            t_gaussBlur_1 = time.time()
-                            X_batch = aid_img.gauss_blur_cv(X_batch,gaussBlur_min,gaussBlur_max)
-                            t_gaussBlur_2 = time.time()
-                            if verbose == 1:
-                                print("Time to perform gaussian blurring="+str(t_gaussBlur_2-t_gaussBlur_1))
-
-                        if motionBlur_on:
-                            t_motionBlur_1 = time.time()
-                            X_batch = aid_img.motion_blur_cv(X_batch,motionBlur_kernel,motionBlur_angle)
-                            t_motionBlur_2 = time.time()
-                            if verbose == 1:
-                                print("Time to perform motion blurring="+str(t_motionBlur_2-t_motionBlur_1))
-
-                        ##########Brightness noise#########
-                        t3 = time.time()
-                        X_batch = aid_img.brightn_noise_augm_cv2(X_batch,brightness_add_lower,brightness_add_upper,brightness_mult_lower,brightness_mult_upper,gaussnoise_mean,gaussnoise_scale)
-                        t4 = time.time()
-                        if verbose == 1:
-                            print("Time to augment brightness="+str(t4-t3))
-
-                        t3 = time.time()
-                        if norm == "StdScaling using mean and std of all training data":
-                            X_batch = aid_img.norm_imgs(X_batch,norm,mean_trainingdata,std_trainingdata)
-                        else:
-                            X_batch = aid_img.norm_imgs(X_batch,norm)
-                        t4 = time.time()
-                        if verbose == 1:
-                            print("Time to apply normalization="+str(t4-t3))
-                        
-                        #Fitting can be paused
-                        while str(self.fittingpopups_ui[listindex].pushButton_Pause_pop.text())=="":
-                            time.sleep(2) #wait 2 seconds and then check the text on the button again
-
-                        if verbose == 1: 
-                            print("X_batch.shape")
-                            print(X_batch.shape)
-                            print("X_valid.shape")
-                            print(X_valid.shape)
-
-                        ###################################################
-                        ###############Actual fitting######################
-                        ###################################################
-
-                        if collection==False:
-                            if expert_mode == False:
-                                history = model_keras.fit(X_batch, Y_batch, batch_size=32, epochs=1,verbose=verbose, validation_data=(X_valid, Y_valid),class_weight=None)
-                            elif expert_mode==True:
-                                #Here the user can determine batch size epochs and learning rate of the model
-                                #Fit model in with 'expert'-settings
-                                history = model_keras.fit(X_batch, Y_batch, batch_size=batchSize_expert, epochs=epochs_expert,verbose=verbose, validation_data=(X_valid, Y_valid),class_weight=class_weight)
+                                    lr_current = K.eval(model_keras[0].optimizer.lr)
+    
+                                lr_diff = learning_rate_expert-lr_current
+                                if  abs(lr_diff) > 1e-6:
+                                    if collection==False:
+                                        K.set_value(model_keras.optimizer.lr, learning_rate_expert)
+                                    else:
+                                        K.set_value(model_keras[0].optimizer.lr, learning_rate_expert)
+    
+                                    text_updates +=  "Changed the learning rate to "+ str(learning_rate_expert)+"\n"
+                                recompile = False
+                                #Compare current optimizer and the optimizer on expert tab:
+                                if collection==False:
+                                    optimizer_current = aid_dl.get_optimizer_name(model_keras).lower()#get the current optimizer of the model
+                                else:
+                                    optimizer_current = aid_dl.get_optimizer_name(model_keras[0]).lower()#get the current optimizer of the model
+    
+                                if optimizer_current!=optimizer_expert.lower():#if the current model has a different optimizer
+                                    recompile = True
+                                    text_updates+="Changed the optimizer to "+optimizer_expert+"\n"
+    
+                                #Compare current loss function and the loss-function on expert tab:
+                                if collection==False:
+                                    loss_ = model_keras.loss
+                                else:
+                                    loss_ = model_keras[0].loss
+                                if loss_!=loss_expert:
+                                    recompile = True
+                                    model_metrics_records["loss"] = 9E20 #Reset the record for loss because new loss function could converge to a different min. value
+                                    model_metrics_records["val_loss"] = 9E20 #Reset the record for loss because new loss function could converge to a different min. value
+                                    text_updates+="Changed the loss function to "+loss_expert+"\n"
+    
+                                if recompile==True and collection==False:
+                                    print("Recompiling...")
+                                    aid_dl.model_compile(model_keras,loss_expert,optimizer_expert,learning_rate_expert,model_metrics,nr_classes)
+                                    if model_keras_p!=None:#if model_keras_p is NOT None, there exists a parallel model, which also needs to be re-compiled
+                                        aid_dl.model_compile(model_keras_p,loss_expert,optimizer_expert,learning_rate_expert,model_metrics,nr_classes)
+                                        print("Recompiled parallel model to change optimizer, loss and learninig rate.")
+    
+                                elif recompile==True and collection==True:
+                                    if model_keras_p!=None:#if model_keras_p is NOT None, there exists a parallel model, which also needs to be re-compiled
+                                        print("Altering learning rate is not suported for collections (yet)")
+                                        return
+                                    print("Recompiling...")
+                                    for m in model_keras:
+                                        aid_dl.model_compile(m,loss_expert,optimizer_expert,learning_rate_expert,model_metrics,nr_classes)
+    
+                                self.fittingpopups_ui[listindex].textBrowser_FittingInfo_pop.append(text_updates)
+    
+                                self.model_keras = model_keras #overwrite the model in self
+                                self.fittingpopups_ui[listindex].checkBox_ApplyNextEpoch.setChecked(False)
+    
+    
+                            ##########Contrast/Saturation/Hue augmentation#########
+                            #is there any of contrast/saturation/hue augmentation to do?
+                            X_batch = X_batch.astype(np.uint8)
+                            t5 = time.time()
+                            if contrast_on:
+                                t_con_aug_1 = time.time()
+                                X_batch = aid_img.contrast_augm_cv2(X_batch,contrast_lower,contrast_higher) #this function is almost 15 times faster than random_contrast from tf!
+                                t_con_aug_2 = time.time()
+                                if verbose == 1:
+                                    print("Time to augment contrast="+str(t_con_aug_2-t_con_aug_1))
+    
+                            if saturation_on or hue_on:
+                                t_sat_aug_1 = time.time()
+                                X_batch = aid_img.satur_hue_augm_cv2(X_batch.astype(np.uint8),saturation_on,saturation_lower,saturation_higher,hue_on,hue_delta) #Gray and RGB; both values >0!
+                                t_sat_aug_2 = time.time()
+                                if verbose == 1:
+                                    print("Time to augment saturation/hue="+str(t_sat_aug_2-t_sat_aug_1))
+    
+                            ##########Average/Gauss/Motion blurring#########
+                            #is there any of blurring to do?
                             
-                            Histories.append(history.history)
-                            Stopwatch.append(time.time()-time_start)
-
-                            #Check if any metric broke a record
-                            record_broken = False #initially, assume there is no new record
-                            for key in history.history.keys():
-                                value = history.history[key][-1]
-                                record = model_metrics_records[key]
-                                if 'val_acc' in key or 'val_precision' in key or 'val_recall' in key or 'val_f1_score' in key:
-                                    #These metrics should go up (towards 1)
-                                    if value>record:
-                                        model_metrics_records[key] = value
-                                        record_broken = True
-                                        print(key+" broke record -> Model is saved")
-
-                                        #one could 'break' here, but I want to update all records
-                                elif 'val_loss' in key:
-                                    #This metric should go down (towards 0)
-                                    if value<record:
-                                        model_metrics_records[key] = value
-                                        record_broken = True
-                                        print(key+" broke record -> Model is saved")
-
-                            if record_broken:
-                                #Save the model
-                                model_keras.save(new_modelname.split(".model")[0]+"_"+str(counter)+".model")
-                                Saved.append(1)
-                            
-                            #Also save the model upon user-request  
-                            elif bool(self.fittingpopups_ui[listindex].checkBox_saveEpoch_pop.isChecked())==True:
-                                model_keras.save(new_modelname.split(".model")[0]+"_"+str(counter)+".model")
-                                Saved.append(1)
-                                self.fittingpopups_ui[listindex].checkBox_saveEpoch_pop.setChecked(False)
+                            if avgBlur_on:
+                                t_avgBlur_1 = time.time()
+                                X_batch = aid_img.avg_blur_cv2(X_batch,avgBlur_min,avgBlur_max)
+                                t_avgBlur_2 = time.time()
+                                if verbose == 1:
+                                    print("Time to perform average blurring="+str(t_avgBlur_2-t_avgBlur_1))
+    
+                            if gaussBlur_on:
+                                t_gaussBlur_1 = time.time()
+                                X_batch = aid_img.gauss_blur_cv(X_batch,gaussBlur_min,gaussBlur_max)
+                                t_gaussBlur_2 = time.time()
+                                if verbose == 1:
+                                    print("Time to perform gaussian blurring="+str(t_gaussBlur_2-t_gaussBlur_1))
+    
+                            if motionBlur_on:
+                                t_motionBlur_1 = time.time()
+                                X_batch = aid_img.motion_blur_cv(X_batch,motionBlur_kernel,motionBlur_angle)
+                                t_motionBlur_2 = time.time()
+                                if verbose == 1:
+                                    print("Time to perform motion blurring="+str(t_motionBlur_2-t_motionBlur_1))
+    
+                            ##########Brightness noise#########
+                            t3 = time.time()
+                            X_batch = aid_img.brightn_noise_augm_cv2(X_batch,brightness_add_lower,brightness_add_upper,brightness_mult_lower,brightness_mult_upper,gaussnoise_mean,gaussnoise_scale)
+                            t4 = time.time()
+                            if verbose == 1:
+                                print("Time to augment brightness="+str(t4-t3))
+    
+                            t3 = time.time()
+                            if norm == "StdScaling using mean and std of all training data":
+                                X_batch = aid_img.norm_imgs(X_batch,norm,mean_trainingdata,std_trainingdata)
                             else:
-                                Saved.append(0)
-
-                        elif collection==True:
-                            for i in range(len(model_keras)):
-                                if expert_mode==False:
-                                    history = model_keras[i].fit(X_batch, Y_batch, batch_size=32, epochs=1,verbose=verbose, validation_data=(X_valid, Y_valid),class_weight=None)
-                                    HISTORIES[i].append(history.history)
-                                elif expert_mode==True:
+                                X_batch = aid_img.norm_imgs(X_batch,norm)
+                            t4 = time.time()
+                            if verbose == 1:
+                                print("Time to apply normalization="+str(t4-t3))
+                            
+                            #Fitting can be paused
+                            while str(self.fittingpopups_ui[listindex].pushButton_Pause_pop.text())=="":
+                                time.sleep(2) #wait 2 seconds and then check the text on the button again
+    
+                            if verbose == 1: 
+                                print("X_batch.shape")
+                                print(X_batch.shape)
+                                print("X_valid.shape")
+                                print(X_valid.shape)
+    
+                            ###################################################
+                            ###############Actual fitting######################
+                            ###################################################
+    
+                            if collection==False:
+                                if expert_mode == False and model_keras_p == None:
+                                    history = model_keras.fit(X_batch, Y_batch, batch_size=32, epochs=1,verbose=verbose, validation_data=(X_valid, Y_valid),class_weight=None)
+                                elif expert_mode == False and model_keras_p != None:
+                                    history = model_keras_p.fit(X_batch, Y_batch, batch_size=32, epochs=1,verbose=verbose, validation_data=(X_valid, Y_valid),class_weight=None)
+                                elif expert_mode == True and model_keras_p == None:
                                     #Here the user can determine batch size epochs and learning rate of the model
                                     #Fit model in with 'expert'-settings
-                                    history = model_keras[i].fit(X_batch, Y_batch, batch_size=batchSize_expert, epochs=epochs_expert,verbose=verbose, validation_data=(X_valid, Y_valid),class_weight=class_weight)
-                                    HISTORIES[i].append(history.history)
+                                    history = model_keras.fit(X_batch, Y_batch, batch_size=batchSize_expert, epochs=epochs_expert,verbose=verbose, validation_data=(X_valid, Y_valid),class_weight=class_weight)
+                                elif expert_mode == True and model_keras_p != None:
+                                    history = model_keras_p.fit(X_batch, Y_batch, batch_size=batchSize_expert, epochs=epochs_expert,verbose=verbose, validation_data=(X_valid, Y_valid),class_weight=class_weight)
                                 
-                                print("model_keras_path[i]")
-                                print(model_keras_path[i])
-
+                                Histories.append(history.history)
+                                Stopwatch.append(time.time()-time_start)
+    
                                 #Check if any metric broke a record
                                 record_broken = False #initially, assume there is no new record
                                 for key in history.history.keys():
@@ -8775,6 +8834,7 @@ class MainWindow(QtWidgets.QMainWindow):
                                             model_metrics_records[key] = value
                                             record_broken = True
                                             print(key+" broke record -> Model is saved")
+    
                                             #one could 'break' here, but I want to update all records
                                     elif 'val_loss' in key:
                                         #This metric should go down (towards 0)
@@ -8782,167 +8842,215 @@ class MainWindow(QtWidgets.QMainWindow):
                                             model_metrics_records[key] = value
                                             record_broken = True
                                             print(key+" broke record -> Model is saved")
-
+    
                                 if record_broken:
                                     #Save the model
-                                    model_keras[i].save(model_keras_path[i].split(".model")[0]+"_"+str(counter)+".model")
-                                    SAVED[i].append(1)
+                                    model_keras.save(new_modelname.split(".model")[0]+"_"+str(counter)+".model")
+                                    Saved.append(1)
+                                
+                                #Also save the model upon user-request  
                                 elif bool(self.fittingpopups_ui[listindex].checkBox_saveEpoch_pop.isChecked())==True:
-                                    model_keras[i].save(model_keras_path[i].split(".model")[0]+"_"+str(counter)+".model")
-                                    SAVED[i].append(1)
+                                    model_keras.save(new_modelname.split(".model")[0]+"_"+str(counter)+".model")
+                                    Saved.append(1)
                                     self.fittingpopups_ui[listindex].checkBox_saveEpoch_pop.setChecked(False)
                                 else:
-                                    SAVED[i].append(0)
-
-
-                        callback_progessbar = float(counter)/nr_epochs
-                        progress_callback.emit(100.0*callback_progessbar)
-                        history_callback.emit(history.history)
-                        Index.append(counter)
-                        
-                        t2 =  time.time()
-                        
-                        if collection==False:
-                            if counter==0:
-                                #If this runs the first time, create the file with header
-                                DF1 = [pd.DataFrame(h).iloc[[-1]] for h in Histories] #just in case the nb_epoch in .fit() is >1, only save the last history item, beacuse this would a  model that could be saved 
-                                DF1 = pd.concat(DF1)
-                                DF1["Saved"] = Saved
-                                DF1["Time"] = Stopwatch
-                                DF1.index = Index
-
-                                #If this runs the first time, create the file with header
-                                if os.path.isfile(new_modelname.split(".model")[0]+'_meta.xlsx'):
-                                    os.chmod(new_modelname.split(".model")[0]+'_meta.xlsx', S_IREAD|S_IRGRP|S_IROTH|S_IWRITE|S_IWGRP|S_IWOTH) #read/write
-                                DF1.to_excel(writer,sheet_name='History')
-                                writer.save()
-                                os.chmod(new_modelname.split(".model")[0]+'_meta.xlsx', S_IREAD|S_IRGRP|S_IROTH)
-                                print("meta.xlsx was saved")
-                                Index,Histories,Saved,Stopwatch = [],[],[],[]#reset the lists
-                                
-                            #Get a sensible frequency for saving the dataframe (every 20s)
-                            elif t2-t1>20:                                   
-                            #elif counter%50==0:  #otherwise save the history to excel after each n epochs
-                                DF1 = [pd.DataFrame(h).iloc[[-1]] for h in Histories] #just in case the nb_epoch in .fit() is >1, only save the last history item, beacuse this would a  model that could be saved 
-                                DF1 = pd.concat(DF1)
-                                DF1["Saved"] = Saved
-                                DF1["Time"] = Stopwatch
-                                DF1.index = Index
-
-                                #in case the history is saved on a server and another PC wants to access 
-                                #the history file (meta.excel) there can be an error
-                                #In such a case try a few times, and wait
-                                tries = 0
-#                                    while tries<10:
-#                                        try:
-                                #Saving
-                                if os.path.isfile(new_modelname.split(".model")[0]+'_meta.xlsx'):
-                                    os.chmod(new_modelname.split(".model")[0]+'_meta.xlsx', S_IREAD|S_IRGRP|S_IROTH|S_IWRITE|S_IWGRP|S_IWOTH) #make read/write
-                                DF1.to_excel(writer,sheet_name='History', startrow=writer.sheets['History'].max_row,header= False)
-                                writer.save()
-                                os.chmod(new_modelname.split(".model")[0]+'_meta.xlsx', S_IREAD|S_IRGRP|S_IROTH)  #make read only
-                                print("meta.xlsx was saved")
-                                Index,Histories,Saved,Stopwatch = [],[],[],[]#reset the lists
-                                t1 = time.time()
-#                                        except:
-#                                            time.sleep(1.5)
-#                                            tries+=1
+                                    Saved.append(0)
+    
+                            elif collection==True:
+                                for i in range(len(model_keras)):
+                                    if expert_mode==False:
+                                        history = model_keras[i].fit(X_batch, Y_batch, batch_size=32, epochs=1,verbose=verbose, validation_data=(X_valid, Y_valid),class_weight=None)
+                                        HISTORIES[i].append(history.history)
+                                    elif expert_mode==True:
+                                        #Here the user can determine batch size epochs and learning rate of the model
+                                        #Fit model in with 'expert'-settings
+                                        history = model_keras[i].fit(X_batch, Y_batch, batch_size=batchSize_expert, epochs=epochs_expert,verbose=verbose, validation_data=(X_valid, Y_valid),class_weight=class_weight)
+                                        HISTORIES[i].append(history.history)
                                     
-                                    
-                        if collection==True:
-                            if counter==0:
-                                for i in range(len(HISTORIES)):
-                                    Histories = HISTORIES[i]
-                                    Saved = SAVED[i]
+                                    print("model_keras_path[i]")
+                                    print(model_keras_path[i])
+    
+                                    #Check if any metric broke a record
+                                    record_broken = False #initially, assume there is no new record
+                                    for key in history.history.keys():
+                                        value = history.history[key][-1]
+                                        record = model_metrics_records[key]
+                                        if 'val_acc' in key or 'val_precision' in key or 'val_recall' in key or 'val_f1_score' in key:
+                                            #These metrics should go up (towards 1)
+                                            if value>record:
+                                                model_metrics_records[key] = value
+                                                record_broken = True
+                                                print(key+" broke record -> Model is saved")
+                                                #one could 'break' here, but I want to update all records
+                                        elif 'val_loss' in key:
+                                            #This metric should go down (towards 0)
+                                            if value<record:
+                                                model_metrics_records[key] = value
+                                                record_broken = True
+                                                print(key+" broke record -> Model is saved")
+    
+                                    if record_broken:
+                                        #Save the model
+                                        model_keras[i].save(model_keras_path[i].split(".model")[0]+"_"+str(counter)+".model")
+                                        SAVED[i].append(1)
+                                    elif bool(self.fittingpopups_ui[listindex].checkBox_saveEpoch_pop.isChecked())==True:
+                                        model_keras[i].save(model_keras_path[i].split(".model")[0]+"_"+str(counter)+".model")
+                                        SAVED[i].append(1)
+                                        self.fittingpopups_ui[listindex].checkBox_saveEpoch_pop.setChecked(False)
+                                    else:
+                                        SAVED[i].append(0)
+    
+    
+                            callback_progessbar = float(counter)/nr_epochs
+                            progress_callback.emit(100.0*callback_progessbar)
+                            history_callback.emit(history.history)
+                            Index.append(counter)
+                            
+                            t2 =  time.time()
+                            
+                            if collection==False:
+                                if counter==0:
                                     #If this runs the first time, create the file with header
                                     DF1 = [pd.DataFrame(h).iloc[[-1]] for h in Histories] #just in case the nb_epoch in .fit() is >1, only save the last history item, beacuse this would a  model that could be saved 
                                     DF1 = pd.concat(DF1)
                                     DF1["Saved"] = Saved
+                                    DF1["Time"] = Stopwatch
                                     DF1.index = Index
-                                    HISTORIES[i] = []#reset the Histories list
-                                    SAVED[i] = []
+    
                                     #If this runs the first time, create the file with header
-                                    if os.path.isfile(model_keras_path[i].split(".model")[0]+'_meta.xlsx'):
-                                        os.chmod(model_keras_path[i].split(".model")[0]+'_meta.xlsx', S_IREAD|S_IRGRP|S_IROTH|S_IWRITE|S_IWGRP|S_IWOTH) #read/write
-                                    DF1.to_excel(Writers[i],sheet_name='History')
-                                    Writers[i].save()
-                                    os.chmod(model_keras_path[i].split(".model")[0]+'_meta.xlsx', S_IREAD|S_IRGRP|S_IROTH)
+                                    if os.path.isfile(new_modelname.split(".model")[0]+'_meta.xlsx'):
+                                        os.chmod(new_modelname.split(".model")[0]+'_meta.xlsx', S_IREAD|S_IRGRP|S_IROTH|S_IWRITE|S_IWGRP|S_IWOTH) #read/write
+                                    DF1.to_excel(writer,sheet_name='History')
+                                    writer.save()
+                                    os.chmod(new_modelname.split(".model")[0]+'_meta.xlsx', S_IREAD|S_IRGRP|S_IROTH)
                                     print("meta.xlsx was saved")
-                                Index = []#reset the Index list
-                                
-                            #Get a sensible frequency for saving the dataframe (every 20s)
-                            elif t2-t1>20:                                    
-                                for i in range(len(HISTORIES)):
-                                    Histories = HISTORIES[i]
-                                    Saved = SAVED[i]
+                                    Index,Histories,Saved,Stopwatch = [],[],[],[]#reset the lists
+                                    
+                                #Get a sensible frequency for saving the dataframe (every 20s)
+                                elif t2-t1>20:                                   
+                                #elif counter%50==0:  #otherwise save the history to excel after each n epochs
                                     DF1 = [pd.DataFrame(h).iloc[[-1]] for h in Histories] #just in case the nb_epoch in .fit() is >1, only save the last history item, beacuse this would a  model that could be saved 
                                     DF1 = pd.concat(DF1)
                                     DF1["Saved"] = Saved
+                                    DF1["Time"] = Stopwatch
                                     DF1.index = Index
-                                    HISTORIES[i] = []#reset the Histories list
-                                    SAVED[i] = []
+    
+                                    #in case the history is saved on a server and another PC wants to access 
+                                    #the history file (meta.excel) there can be an error
+                                    #In such a case try a few times, and wait
+                                    tries = 0
+    #                                    while tries<10:
+    #                                        try:
                                     #Saving
-                                    if os.path.isfile(model_keras_path[i].split(".model")[0]+'_meta.xlsx'):
-                                        os.chmod(model_keras_path[i].split(".model")[0]+'_meta.xlsx', S_IREAD|S_IRGRP|S_IROTH|S_IWRITE|S_IWGRP|S_IWOTH) #make read/write
-                                    DF1.to_excel(Writers[i],sheet_name='History', startrow=Writers[i].sheets['History'].max_row,header= False)
-                                    Writers[i].save()
-                                    os.chmod(model_keras_path[i].split(".model")[0]+'_meta.xlsx', S_IREAD|S_IRGRP|S_IROTH)  #make read only
+                                    if os.path.isfile(new_modelname.split(".model")[0]+'_meta.xlsx'):
+                                        os.chmod(new_modelname.split(".model")[0]+'_meta.xlsx', S_IREAD|S_IRGRP|S_IROTH|S_IWRITE|S_IWGRP|S_IWOTH) #make read/write
+                                    DF1.to_excel(writer,sheet_name='History', startrow=writer.sheets['History'].max_row,header= False)
+                                    writer.save()
+                                    os.chmod(new_modelname.split(".model")[0]+'_meta.xlsx', S_IREAD|S_IRGRP|S_IROTH)  #make read only
                                     print("meta.xlsx was saved")
+                                    Index,Histories,Saved,Stopwatch = [],[],[],[]#reset the lists
                                     t1 = time.time()
-                                Index = []#reset the Index list
-
-                        counter+=1
-                    
-        progress_callback.emit(100.0)
-
-        if collection==False:
-            if len(Histories)>0: #if the list for History files is not empty, process it!
-                DF1 = [pd.DataFrame(h).iloc[[-1]] for h in Histories] #just in case the nb_epoch in .fit() is >1, only save the last history item, beacuse this would a  model that could be saved 
-                DF1 = pd.concat(DF1)
-                DF1["Saved"] = Saved
-                DF1["Time"] = Stopwatch
-                DF1.index = Index
-                Index = []#reset the Index list
-                Histories = []#reset the Histories list
-                Saved = []
-                #does such a file exist already? append! 
-                if not os.path.isfile(new_modelname.split(".model")[0]+'_meta.xlsx'):
-                   DF1.to_excel(writer,sheet_name='History')
-                else: # else it exists so append without writing the header
-                   DF1.to_excel(writer,sheet_name='History', startrow=writer.sheets['History'].max_row,header= False)
-            if os.path.isfile(new_modelname.split(".model")[0]+'_meta.xlsx'):
-                os.chmod(new_modelname.split(".model")[0]+'_meta.xlsx', S_IREAD|S_IRGRP|S_IROTH|S_IWRITE|S_IWGRP|S_IWOTH) #make read/write
-            writer.save()
-            writer.close()
-
-        if collection==True:
-            for i in range(len(HISTORIES)):
-                Histories = HISTORIES[i]
-                Saved = SAVED[i]
+    #                                        except:
+    #                                            time.sleep(1.5)
+    #                                            tries+=1
+                                        
+                                        
+                            if collection==True:
+                                if counter==0:
+                                    for i in range(len(HISTORIES)):
+                                        Histories = HISTORIES[i]
+                                        Saved = SAVED[i]
+                                        #If this runs the first time, create the file with header
+                                        DF1 = [pd.DataFrame(h).iloc[[-1]] for h in Histories] #just in case the nb_epoch in .fit() is >1, only save the last history item, beacuse this would a  model that could be saved 
+                                        DF1 = pd.concat(DF1)
+                                        DF1["Saved"] = Saved
+                                        DF1.index = Index
+                                        HISTORIES[i] = []#reset the Histories list
+                                        SAVED[i] = []
+                                        #If this runs the first time, create the file with header
+                                        if os.path.isfile(model_keras_path[i].split(".model")[0]+'_meta.xlsx'):
+                                            os.chmod(model_keras_path[i].split(".model")[0]+'_meta.xlsx', S_IREAD|S_IRGRP|S_IROTH|S_IWRITE|S_IWGRP|S_IWOTH) #read/write
+                                        DF1.to_excel(Writers[i],sheet_name='History')
+                                        Writers[i].save()
+                                        os.chmod(model_keras_path[i].split(".model")[0]+'_meta.xlsx', S_IREAD|S_IRGRP|S_IROTH)
+                                        print("meta.xlsx was saved")
+                                    Index = []#reset the Index list
+                                    
+                                #Get a sensible frequency for saving the dataframe (every 20s)
+                                elif t2-t1>20:                                    
+                                    for i in range(len(HISTORIES)):
+                                        Histories = HISTORIES[i]
+                                        Saved = SAVED[i]
+                                        DF1 = [pd.DataFrame(h).iloc[[-1]] for h in Histories] #just in case the nb_epoch in .fit() is >1, only save the last history item, beacuse this would a  model that could be saved 
+                                        DF1 = pd.concat(DF1)
+                                        DF1["Saved"] = Saved
+                                        DF1.index = Index
+                                        HISTORIES[i] = []#reset the Histories list
+                                        SAVED[i] = []
+                                        #Saving
+                                        if os.path.isfile(model_keras_path[i].split(".model")[0]+'_meta.xlsx'):
+                                            os.chmod(model_keras_path[i].split(".model")[0]+'_meta.xlsx', S_IREAD|S_IRGRP|S_IROTH|S_IWRITE|S_IWGRP|S_IWOTH) #make read/write
+                                        DF1.to_excel(Writers[i],sheet_name='History', startrow=Writers[i].sheets['History'].max_row,header= False)
+                                        Writers[i].save()
+                                        os.chmod(model_keras_path[i].split(".model")[0]+'_meta.xlsx', S_IREAD|S_IRGRP|S_IROTH)  #make read only
+                                        print("meta.xlsx was saved")
+                                        t1 = time.time()
+                                    Index = []#reset the Index list
+    
+                            counter+=1
+                        
+            progress_callback.emit(100.0)
+    
+            if collection==False:
                 if len(Histories)>0: #if the list for History files is not empty, process it!
                     DF1 = [pd.DataFrame(h).iloc[[-1]] for h in Histories] #just in case the nb_epoch in .fit() is >1, only save the last history item, beacuse this would a  model that could be saved 
                     DF1 = pd.concat(DF1)
                     DF1["Saved"] = Saved
+                    DF1["Time"] = Stopwatch
                     DF1.index = Index
-                    HISTORIES[i] = []#reset the Histories list
-                    SAVED[i] = []
+                    Index = []#reset the Index list
+                    Histories = []#reset the Histories list
+                    Saved = []
                     #does such a file exist already? append! 
-                    if not os.path.isfile(model_keras_path[i].split(".model")[0]+'_meta.xlsx'):
-                       DF1.to_excel(Writers[i],sheet_name='History')
+                    if not os.path.isfile(new_modelname.split(".model")[0]+'_meta.xlsx'):
+                       DF1.to_excel(writer,sheet_name='History')
                     else: # else it exists so append without writing the header
                        DF1.to_excel(writer,sheet_name='History', startrow=writer.sheets['History'].max_row,header= False)
-                if os.path.isfile(model_keras_path[i].split(".model")[0]+'_meta.xlsx'):
-                    os.chmod(model_keras_path[i].split(".model")[0]+'_meta.xlsx', S_IREAD|S_IRGRP|S_IROTH|S_IWRITE|S_IWGRP|S_IWOTH) #make read/write
-                Writers[i].save()
-                Writers[i].close()
-                
-            Index = []#reset the Index list
+                if os.path.isfile(new_modelname.split(".model")[0]+'_meta.xlsx'):
+                    os.chmod(new_modelname.split(".model")[0]+'_meta.xlsx', S_IREAD|S_IRGRP|S_IROTH|S_IWRITE|S_IWGRP|S_IWOTH) #make read/write
+                writer.save()
+                writer.close()
+    
+            if collection==True:
+                for i in range(len(HISTORIES)):
+                    Histories = HISTORIES[i]
+                    Saved = SAVED[i]
+                    if len(Histories)>0: #if the list for History files is not empty, process it!
+                        DF1 = [pd.DataFrame(h).iloc[[-1]] for h in Histories] #just in case the nb_epoch in .fit() is >1, only save the last history item, beacuse this would a  model that could be saved 
+                        DF1 = pd.concat(DF1)
+                        DF1["Saved"] = Saved
+                        DF1.index = Index
+                        HISTORIES[i] = []#reset the Histories list
+                        SAVED[i] = []
+                        #does such a file exist already? append! 
+                        if not os.path.isfile(model_keras_path[i].split(".model")[0]+'_meta.xlsx'):
+                           DF1.to_excel(Writers[i],sheet_name='History')
+                        else: # else it exists so append without writing the header
+                           DF1.to_excel(writer,sheet_name='History', startrow=writer.sheets['History'].max_row,header= False)
+                    if os.path.isfile(model_keras_path[i].split(".model")[0]+'_meta.xlsx'):
+                        os.chmod(model_keras_path[i].split(".model")[0]+'_meta.xlsx', S_IREAD|S_IRGRP|S_IROTH|S_IWRITE|S_IWGRP|S_IWOTH) #make read/write
+                    Writers[i].save()
+                    Writers[i].close()
+                    
+                Index = []#reset the Index list
+    
+            sess.close()
+    #        try:
+    #            aid_dl.reset_keras(model_keras)
+    #        except:
+    #            pass
 
-        sess.close()
-                    
-                    
-                    
-                    
+
 
     def action_fit_model(self):
         #Take the initialized model
@@ -8968,6 +9076,8 @@ class MainWindow(QtWidgets.QMainWindow):
        
         if model_keras==None:
             self.action_initialize_model()
+            print("Had to re-run action_initialize_model!")
+            model_keras = self.model_keras
             if model_keras==None:
 #                msg = QtWidgets.QMessageBox()
 #                msg.setIcon(QtWidgets.QMessageBox.Information)       
@@ -10326,38 +10436,43 @@ class MainWindow(QtWidgets.QMainWindow):
     def history_tab_convertModel_nnet_worker(self,ConvertToNnet,progress_callback,history_callback):
         #Define a new session -> Necessary for threading in TensorFlow
         #with tf.Session(graph = tf.Graph(), config=config_gpu) as sess:
-        sess = tf.InteractiveSession()
+        with tf.Session() as sess:
         
-        path = self.model_2_convert
-        try:
-            model_keras = load_model(path,custom_objects=get_custom_metrics())
-        except:
-            model_keras = load_model(path)
-            
-        dic = {"model_keras":model_keras}
-        history_callback.emit(dic)
-        progress_callback.emit(1)
+            path = self.model_2_convert
+            try:
+                model_keras = load_model(path,custom_objects=get_custom_metrics())
+            except:
+                model_keras = load_model(path)
+                
+            dic = {"model_keras":model_keras}
+            history_callback.emit(dic)
+            progress_callback.emit(1)
+    
+            if ConvertToNnet==1:
+                #Since this happened in a thread, TensorFlow cant access it anywhere else
+                #Therefore perform Conversion to nnet right away:
+                model_config = model_keras.get_config()#["layers"]
+                if type(model_config)==dict:
+                    model_config = model_config["layers"]#for keras version>2.2.3, there is a change in the output of get_config()
+                #Convert model to theano weights format (Only necesary for CNNs)
+                for layer in model_keras.layers:
+                   if layer.__class__.__name__ in ['Convolution1D', 'Convolution2D']:
+                      original_w = K.get_value(layer.W)
+                      converted_w = convert_kernel(original_w)
+                      K.set_value(layer.W, converted_w)
+                
+                nnet_path, nnet_filename = os.path.split(self.model_2_convert)
+                nnet_filename = nnet_filename.split(".model")[0]+".nnet" 
+                out_path = os.path.join(nnet_path,nnet_filename)
+                aid_dl.dump_to_simple_cpp(model_keras=model_keras,model_config=model_config,output=out_path,verbose=False)
+                            
+#            sess.close()
+#        try:
+#            aid_dl.reset_keras()
+#        except:
+#            print("Could not reset Keras (1)")
 
-        if ConvertToNnet==1:
-            #Since this happened in a thread, TensorFlow cant access it anywhere else
-            #Therefore perform Conversion to nnet right away:
-            model_config = model_keras.get_config()#["layers"]
-            if type(model_config)==dict:
-                model_config = model_config["layers"]#for keras version>2.2.3, there is a change in the output of get_config()
-            #Convert model to theano weights format (Only necesary for CNNs)
-            for layer in model_keras.layers:
-               if layer.__class__.__name__ in ['Convolution1D', 'Convolution2D']:
-                  original_w = K.get_value(layer.W)
-                  converted_w = convert_kernel(original_w)
-                  K.set_value(layer.W, converted_w)
-            
-            nnet_path, nnet_filename = os.path.split(self.model_2_convert)
-            nnet_filename = nnet_filename.split(".model")[0]+".nnet" 
-            out_path = os.path.join(nnet_path,nnet_filename)
-            aid_dl.dump_to_simple_cpp(model_keras=model_keras,model_config=model_config,output=out_path,verbose=False)
-                        
-        sess.close()
-
+        
     def history_tab_ConvertToNnet(self):
         print("Not used")
 #        model_keras = self.model_keras
@@ -10977,36 +11092,42 @@ class MainWindow(QtWidgets.QMainWindow):
         
     
     def inference_time_worker(self,progress_callback,history_callback):
-        #Initiate a fresh session
-        #with tf.Session(graph = tf.Graph(), config=config_gpu) as sess:
-        sess = tf.InteractiveSession()
-        
-        model_keras = load_model(self.load_model_path,custom_objects=get_custom_metrics())
-        #Get the model input dimensions
-        in_dim = np.array(model_keras.get_input_shape_at(0))
-        ind = np.where(in_dim==None)
-        in_dim[ind] = 1
-        nr_imgs = self.spinBox_inftime_nr_images.value()
-        nr_imgs = int(np.round(float(nr_imgs)/10.0))
-        
-        #Warm up by predicting a single image
-        image = (np.random.randint(0,255,size=in_dim)).astype(np.float32)/255.0
-        model_keras.predict(image) # warm up
+        if self.radioButton_cpu.isChecked():
+            deviceSelected = str(self.comboBox_cpu.currentText())
+        elif self.radioButton_gpu.isChecked():
+            deviceSelected = str(self.comboBox_gpu.currentText())
+        gpu_memory = float(self.doubleSpinBox_memory.value())
 
-        Times = []
-        for k in range(10):
+        #Create config (define which device to use)
+        config_gpu = aid_dl.get_config(cpu_nr,gpu_nr,deviceSelected,gpu_memory)
+
+        #Initiate a fresh session
+        with tf.Session(graph = tf.Graph(), config=config_gpu) as sess:       
+            model_keras = load_model(self.load_model_path,custom_objects=get_custom_metrics())
+            #Get the model input dimensions
+            in_dim = np.array(model_keras.get_input_shape_at(0))
+            ind = np.where(in_dim==None)
+            in_dim[ind] = 1
+            nr_imgs = self.spinBox_inftime_nr_images.value()
+            nr_imgs = int(np.round(float(nr_imgs)/10.0))
+            
+            #Warm up by predicting a single image
             image = (np.random.randint(0,255,size=in_dim)).astype(np.float32)/255.0
-            t1 = time.time()
-            for i in range(nr_imgs):#predict 50 times 20 images
-                model_keras.predict(image)
-            t2 = time.time()
-            dt = (t2-t1)/(nr_imgs) #divide by nr_imgs to get time [s] per image
-            dt = dt*1000.0 #multiply by 1000 to change to ms range
-            dic = {"outp":str(round(dt,3))+"ms"}
-            history_callback.emit(dic)
-            Times.append(dt)   
+            model_keras.predict(image) # warm up
+    
+            Times = []
+            for k in range(10):
+                image = (np.random.randint(0,255,size=in_dim)).astype(np.float32)/255.0
+                t1 = time.time()
+                for i in range(nr_imgs):#predict 50 times 20 images
+                    model_keras.predict(image)
+                t2 = time.time()
+                dt = (t2-t1)/(nr_imgs) #divide by nr_imgs to get time [s] per image
+                dt = dt*1000.0 #multiply by 1000 to change to ms range
+                dic = {"outp":str(round(dt,3))+"ms"}
+                history_callback.emit(dic)
+                Times.append(dt)   
         
-        sess.close()        
         
         #Send out the Times
         text = " [ms] Mean: "+str(round(np.mean(Times),3))+"; "+"Median: "+str(round(np.median(Times),3))+"; "+"Min: "+str(round(np.min(Times),3))+"; "+"Max: "+str(round(np.max(Times),3))
@@ -11016,6 +11137,19 @@ class MainWindow(QtWidgets.QMainWindow):
         self.threadpool_single_queue = 0 #reset the thread-counter
 
     def inference_time(self):
+        if self.radioButton_cpu.isChecked():
+            deviceSelected = str(self.comboBox_cpu.currentText())
+        elif self.radioButton_gpu.isChecked():
+            deviceSelected = str(self.comboBox_gpu.currentText())
+
+        #Inform user that certain config is used for inference
+        msg = QtWidgets.QMessageBox()
+        msg.setIcon(QtWidgets.QMessageBox.Information)       
+        msg.setText("Will use "+deviceSelected+" for inference. To change bewtween CPU and GPU, use the options on the Build-Tab")
+        msg.setWindowTitle("CPU used for inference")
+        msg.setStandardButtons(QtWidgets.QMessageBox.Ok)
+        msg.exec_()
+
         #Take the model path from the GUI
         self.load_model_path = str(self.lineEdit_LoadModel_2.text())
         if len(self.load_model_path)==0:
@@ -11706,26 +11840,22 @@ class MainWindow(QtWidgets.QMainWindow):
         y_valid = self.ValidationSet["y_valid"] #load the validation labels to a new variable
         #X_valid = self.X_valid #<--dont do this since it is used only once (.predict) and it would require additional RAM; instad use self.X_valid for .predict
         #Load the model and predict
-        #with tf.Session(graph = tf.Graph(), config=config_gpu) as sess:
-        sess = tf.InteractiveSession()
-        
-        model_keras = load_model(self.load_model_path,custom_objects=get_custom_metrics())  
-        in_dim = model_keras.get_input_shape_at(node_index=0)
-        channels_model = in_dim[-1]
-        channels_data = self.ValidationSet["X_valid"].shape[-1]
-        #Compare channel dimensions of loaded model and validation set
-        if channels_model!=channels_data: #Model and validation data have differnt channel dims
-            text = "Model expects "+str(int(channels_model))+" channel(s), but data has "+str(int(channels_data))+" channel(s)!"
-            msg = QtWidgets.QMessageBox()
-            msg.setIcon(QtWidgets.QMessageBox.Information)       
-            msg.setText(text)
-            msg.setWindowTitle("Model and data channel dimension not equal!")
-            msg.setStandardButtons(QtWidgets.QMessageBox.Ok)
-            msg.exec_()
-            return
-        scores = model_keras.predict(self.ValidationSet["X_valid"])
-        #I got all I need from the tensorflow session. Close it
-        sess.close()
+        with tf.Session() as sess:
+            model_keras = load_model(self.load_model_path,custom_objects=get_custom_metrics())  
+            in_dim = model_keras.get_input_shape_at(node_index=0)
+            channels_model = in_dim[-1]
+            channels_data = self.ValidationSet["X_valid"].shape[-1]
+            #Compare channel dimensions of loaded model and validation set
+            if channels_model!=channels_data: #Model and validation data have differnt channel dims
+                text = "Model expects "+str(int(channels_model))+" channel(s), but data has "+str(int(channels_data))+" channel(s)!"
+                msg = QtWidgets.QMessageBox()
+                msg.setIcon(QtWidgets.QMessageBox.Information)       
+                msg.setText(text)
+                msg.setWindowTitle("Model and data channel dimension not equal!")
+                msg.setStandardButtons(QtWidgets.QMessageBox.Ok)
+                msg.exec_()
+                return
+            scores = model_keras.predict(self.ValidationSet["X_valid"])
         
         #Get settings from the GUI
         threshold = float(self.doubleSpinBox_sortingThresh.value())#threshold probability obove which a cell is sorted
@@ -12341,194 +12471,198 @@ class MainWindow(QtWidgets.QMainWindow):
             mean_trainingdata = None
             std_trainingdata = None
         
-        #with tf.Session(graph = tf.Graph(), config=config_gpu) as sess:#load the model since its the same for each file            
-        sess = tf.InteractiveSession()
-        
-        model_keras = load_model(self.load_model_path,custom_objects=get_custom_metrics())
-        in_dim = model_keras.get_input_shape_at(node_index=0)
-        #Get the color mode of the model
-        channels_model = in_dim[-1]
-        if channels_model==1:
-            color_mode='Grayscale'
-        elif channels_model==3:
-            color_mode='RGB'
-        else:
-            print("Invalid number of channels. AID only supports grayscale (1 channel) and RGB (3 channels) images.")
-
-
-        #Get the user-set export option (Excel or to 'userdef0' in .rtdc file)
-        export_option = str(self.comboBox_scoresOrPrediction.currentText())
+        #Create config (define which device to use)
+        if self.radioButton_cpu.isChecked():
+            deviceSelected = str(self.comboBox_cpu.currentText())
+        elif self.radioButton_gpu.isChecked():
+            deviceSelected = str(self.comboBox_gpu.currentText())
+        gpu_memory = float(self.doubleSpinBox_memory.value())
+        config_gpu = aid_dl.get_config(cpu_nr,gpu_nr,deviceSelected,gpu_memory)
+                    
+        with tf.Session(graph = tf.Graph(), config=config_gpu) as sess:     
+            model_keras = load_model(self.load_model_path,custom_objects=get_custom_metrics())
+            in_dim = model_keras.get_input_shape_at(node_index=0)
+            #Get the color mode of the model
+            channels_model = in_dim[-1]
+            if channels_model==1:
+                color_mode='Grayscale'
+            elif channels_model==3:
+                color_mode='RGB'
+            else:
+                print("Invalid number of channels. AID only supports grayscale (1 channel) and RGB (3 channels) images.")
     
-        if export_option == "Add predictions to .rtdc file (userdef0)" or export_option=="Add pred&scores to .rtdc file (userdef0 to 9)":
-        #Users sometimes need to have Donor-ID (Parent foldername) added to the .rtdc file
-        #Ask the user: Do you want to get a specific fixed addon to filename, OR do you want to have the parent-foldername added?
-            msg = QtWidgets.QMessageBox()
-            msg.setIcon(QtWidgets.QMessageBox.Question)
-            text = "Do you want to get a specific fixed addon to filename, <b>or do you want to have the parent-foldername added for each file individually?"
-            text = "<html><head/><body><p>"+text+"</p></body></html>"
-            msg.setText(text)
-            msg.setWindowTitle("Filename-addon for created files")
-            msg.addButton(QtGui.QPushButton('Specific fixed addon...'), QtGui.QMessageBox.YesRole)
-            msg.addButton(QtGui.QPushButton('Parent foldername'), QtGui.QMessageBox.NoRole)
-            msg.addButton(QtGui.QPushButton('Cancel'), QtGui.QMessageBox.RejectRole)
-            retval = msg.exec_()
-
-            if retval==0: 
-                #Get some user input:
-                fname_addon, ok = QtWidgets.QInputDialog.getText(self, 'Specific fixed addon...', 'Enter filname addon:')
-                if ok:
-                    fname_addon = str(fname_addon)
+    
+            #Get the user-set export option (Excel or to 'userdef0' in .rtdc file)
+            export_option = str(self.comboBox_scoresOrPrediction.currentText())
+        
+            if export_option == "Add predictions to .rtdc file (userdef0)" or export_option=="Add pred&scores to .rtdc file (userdef0 to 9)":
+            #Users sometimes need to have Donor-ID (Parent foldername) added to the .rtdc file
+            #Ask the user: Do you want to get a specific fixed addon to filename, OR do you want to have the parent-foldername added?
+                msg = QtWidgets.QMessageBox()
+                msg.setIcon(QtWidgets.QMessageBox.Question)
+                text = "Do you want to get a specific fixed addon to filename, <b>or do you want to have the parent-foldername added for each file individually?"
+                text = "<html><head/><body><p>"+text+"</p></body></html>"
+                msg.setText(text)
+                msg.setWindowTitle("Filename-addon for created files")
+                msg.addButton(QtGui.QPushButton('Specific fixed addon...'), QtGui.QMessageBox.YesRole)
+                msg.addButton(QtGui.QPushButton('Parent foldername'), QtGui.QMessageBox.NoRole)
+                msg.addButton(QtGui.QPushButton('Cancel'), QtGui.QMessageBox.RejectRole)
+                retval = msg.exec_()
+    
+                if retval==0: 
+                    #Get some user input:
+                    fname_addon, ok = QtWidgets.QInputDialog.getText(self, 'Specific fixed addon...', 'Enter filname addon:')
+                    if ok:
+                        fname_addon = str(fname_addon)
+                    else:
+                        return
+                elif retval==1:
+                    fname_addon = "Action:GetParentFolderName!"
                 else:
                     return
-            elif retval==1:
-                fname_addon = "Action:GetParentFolderName!"
-            else:
-                return
-
-        #Iterate over all Files
-        for rtdc_path in Files:
-            #get all images, cropped correcetly
-            gen_train = aid_img.gen_crop_img(crop,rtdc_path,random_images=False,color_mode=color_mode,padding_mode=paddingMode)    
-            x_train,index = next(gen_train) #x_train-images of all cells, index-original index of all cells           
-            
-            if norm == "StdScaling using mean and std of all training data":
-                x_train = aid_img.norm_imgs(x_train,norm,mean_trainingdata,std_trainingdata)
-            else:
-                x_train = aid_img.norm_imgs(x_train,norm)
-                        
-            #Check the input dimensions:
-            img_dim = x_train.shape[-2]
-            model_in = int(self.spinBox_Crop_2.value())
-            if model_in!=img_dim:
-                msg = QtWidgets.QMessageBox()
-                msg.setIcon(QtWidgets.QMessageBox.Information)       
-                msg.setText("New model has different input dimensions (image crop). Validation set is re-loaded (clicked files on build-tab)")
-                msg.setWindowTitle("Input dimensions not fitting")
-                msg.setStandardButtons(QtWidgets.QMessageBox.Ok)
-                msg.exec_()
-
-            scores = model_keras.predict(x_train)
-            scores_normal = np.copy(scores)
-            pred_normal = np.argmax(scores_normal,axis=1)
-            
-            #Get settings from the GUI
-            threshold = float(self.doubleSpinBox_sortingThresh.value())#threshold probability obove which a cell is sorted
-            target_index = int(self.spinBox_indexOfInterest.value())#index of the cell type that should be sorted for
-
-            #Use argmax for prediction (threshold can only be applied to one index)
-            pred_normal = np.argmax(scores,axis=1)
-
-            #First: check the scores_in_function of the sorting index and adjust them using the threshold
-            pred_thresh = np.array([1 if p>threshold else 0 for p in scores[:,target_index]])
-            #replace the corresponding column in the scores_in_function
-            scores[:,target_index] = pred_thresh
-            #Determine the prediction again, considering the threshold for the target index
-            pred_thresh = np.argmax(scores,axis=1)
-            
-            normal_or_thresh = bool(self.checkBox_SortingThresh.isChecked())
-            if normal_or_thresh==True: #(if its true means its normal means p=0.5)
-                prediction_to_rtdc_ds = pred_normal
-            if normal_or_thresh==False: #(if its false means its thresholded for some class)
-                prediction_to_rtdc_ds = pred_thresh
-            
-            if export_option == "Scores and predictions to Excel sheet":
-                info = np.array([[self.load_model_path],[rtdc_path],[target_index],[threshold]]).T
-                info = pd.DataFrame(info,columns=["load_model_path","rtdc_path","target_class","threshold"])
-                #Combine all information in nice excel sheet
-                filename = rtdc_path.split(".rtdc")[0]+"_Prediction.xlsx"
-                writer = pd.ExcelWriter(filename, engine='openpyxl')
-                #Used files go to a separate sheet on the -session.xlsx
-                pd.DataFrame().to_excel(writer,sheet_name='Info') #initialize empty Sheet
-                info.to_excel(writer,sheet_name='Info')
-
-                pd.DataFrame().to_excel(writer,sheet_name='Scores_normal') #initialize empty Sheet
-                pd.DataFrame(scores_normal).to_excel(writer,sheet_name='Scores_normal')
-
-                pd.DataFrame().to_excel(writer,sheet_name='Prediction_normal') #initialize empty Sheet
-                pd.DataFrame(pred_normal).to_excel(writer,sheet_name='Prediction_normal')
-
-                pd.DataFrame().to_excel(writer,sheet_name='Scores_thresholded') #initialize empty Sheet
-                pd.DataFrame(scores).to_excel(writer,sheet_name='Scores_thresholded')
-
-                pd.DataFrame().to_excel(writer,sheet_name='Prediction_thresholded') #initialize empty Sheet
-                pd.DataFrame(pred_thresh).to_excel(writer,sheet_name='Prediction_thresholded')
-
-                writer.save()
-                writer.close()
-
-            if export_option == "Add predictions to .rtdc file (userdef0)" or export_option==         "Add pred&scores to .rtdc file (userdef0 to 9)":           
-                #Get initial dataset
-                failed,rtdc_ds = aid_bin.load_rtdc(rtdc_path)
-                if failed:
+    
+            #Iterate over all Files
+            for rtdc_path in Files:
+                #get all images, cropped correcetly
+                gen_train = aid_img.gen_crop_img(crop,rtdc_path,random_images=False,color_mode=color_mode,padding_mode=paddingMode)    
+                x_train,index = next(gen_train) #x_train-images of all cells, index-original index of all cells           
+                
+                if norm == "StdScaling using mean and std of all training data":
+                    x_train = aid_img.norm_imgs(x_train,norm,mean_trainingdata,std_trainingdata)
+                else:
+                    x_train = aid_img.norm_imgs(x_train,norm)
+                            
+                #Check the input dimensions:
+                img_dim = x_train.shape[-2]
+                model_in = int(self.spinBox_Crop_2.value())
+                if model_in!=img_dim:
                     msg = QtWidgets.QMessageBox()
-                    msg.setIcon(QtWidgets.QMessageBox.Critical)       
-                    msg.setText(str(rtdc_ds))
-                    msg.setWindowTitle("Error occurred during loading file")
+                    msg.setIcon(QtWidgets.QMessageBox.Information)       
+                    msg.setText("New model has different input dimensions (image crop). Validation set is re-loaded (clicked files on build-tab)")
+                    msg.setWindowTitle("Input dimensions not fitting")
                     msg.setStandardButtons(QtWidgets.QMessageBox.Ok)
                     msg.exec_()
-                    return
+    
+                scores = model_keras.predict(x_train)
+                scores_normal = np.copy(scores)
+                pred_normal = np.argmax(scores_normal,axis=1)
                 
-                failed,rtdc_ds = aid_bin.load_rtdc(rtdc_path)
-                rtdc_ds_len = rtdc_ds["image"].shape[0] #this way is actually faster than asking any other feature for its len :)
-                prediction_fillnan = np.full([rtdc_ds_len], np.nan)#put initially np.nan for all cells
-
-                if export_option == "Add pred&scores to .rtdc file (userdef0 to 9)":
-                    classes = scores_normal.shape[1]
-                    if classes>9:
-                        classes = 9#set the max number of classes to 9. It cannot saved more to .rtdc due to limitation of userdef
-                    scores_fillnan = np.full([rtdc_ds_len,classes], np.nan)
-
-                #Make sure the predictions get again to the same length as the initial data set
-                #Fill array with corresponding predictions
-                for i in range(len(prediction_to_rtdc_ds)):
-                    indx = index[i]
-                    prediction_fillnan[indx] = prediction_to_rtdc_ds[i]
-                    if export_option == "Add pred&scores to .rtdc file (userdef0 to 9)":
-                        #for class_ in range(classes):
-                        scores_fillnan[indx,0:classes] = scores_normal[i,0:classes]
-
-                #Get savename
-                path, rtdc_file = os.path.split(rtdc_path)
-
-                if fname_addon!="Action:GetParentFolderName!":#dont get the parentfoldername, instead used user defined addon!
-                    savename = rtdc_path.split(".rtdc")[0]
-                    savename = savename+"_"+str(fname_addon)+".rtdc"
+                #Get settings from the GUI
+                threshold = float(self.doubleSpinBox_sortingThresh.value())#threshold probability obove which a cell is sorted
+                target_index = int(self.spinBox_indexOfInterest.value())#index of the cell type that should be sorted for
+    
+                #Use argmax for prediction (threshold can only be applied to one index)
+                pred_normal = np.argmax(scores,axis=1)
+    
+                #First: check the scores_in_function of the sorting index and adjust them using the threshold
+                pred_thresh = np.array([1 if p>threshold else 0 for p in scores[:,target_index]])
+                #replace the corresponding column in the scores_in_function
+                scores[:,target_index] = pred_thresh
+                #Determine the prediction again, considering the threshold for the target index
+                pred_thresh = np.argmax(scores,axis=1)
+                
+                normal_or_thresh = bool(self.checkBox_SortingThresh.isChecked())
+                if normal_or_thresh==True: #(if its true means its normal means p=0.5)
+                    prediction_to_rtdc_ds = pred_normal
+                if normal_or_thresh==False: #(if its false means its thresholded for some class)
+                    prediction_to_rtdc_ds = pred_thresh
+                
+                if export_option == "Scores and predictions to Excel sheet":
+                    info = np.array([[self.load_model_path],[rtdc_path],[target_index],[threshold]]).T
+                    info = pd.DataFrame(info,columns=["load_model_path","rtdc_path","target_class","threshold"])
+                    #Combine all information in nice excel sheet
+                    filename = rtdc_path.split(".rtdc")[0]+"_Prediction.xlsx"
+                    writer = pd.ExcelWriter(filename, engine='openpyxl')
+                    #Used files go to a separate sheet on the -session.xlsx
+                    pd.DataFrame().to_excel(writer,sheet_name='Info') #initialize empty Sheet
+                    info.to_excel(writer,sheet_name='Info')
+    
+                    pd.DataFrame().to_excel(writer,sheet_name='Scores_normal') #initialize empty Sheet
+                    pd.DataFrame(scores_normal).to_excel(writer,sheet_name='Scores_normal')
+    
+                    pd.DataFrame().to_excel(writer,sheet_name='Prediction_normal') #initialize empty Sheet
+                    pd.DataFrame(pred_normal).to_excel(writer,sheet_name='Prediction_normal')
+    
+                    pd.DataFrame().to_excel(writer,sheet_name='Scores_thresholded') #initialize empty Sheet
+                    pd.DataFrame(scores).to_excel(writer,sheet_name='Scores_thresholded')
+    
+                    pd.DataFrame().to_excel(writer,sheet_name='Prediction_thresholded') #initialize empty Sheet
+                    pd.DataFrame(pred_thresh).to_excel(writer,sheet_name='Prediction_thresholded')
+    
+                    writer.save()
+                    writer.close()
+    
+                if export_option == "Add predictions to .rtdc file (userdef0)" or export_option==         "Add pred&scores to .rtdc file (userdef0 to 9)":           
+                    #Get initial dataset
+                    failed,rtdc_ds = aid_bin.load_rtdc(rtdc_path)
+                    if failed:
+                        msg = QtWidgets.QMessageBox()
+                        msg.setIcon(QtWidgets.QMessageBox.Critical)       
+                        msg.setText(str(rtdc_ds))
+                        msg.setWindowTitle("Error occurred during loading file")
+                        msg.setStandardButtons(QtWidgets.QMessageBox.Ok)
+                        msg.exec_()
+                        return
                     
-                elif fname_addon=="Action:GetParentFolderName!":                        
-                    savename = rtdc_path.split(".rtdc")[0]
-                    parentfolder = aid_bin.splitall(rtdc_path)[-2]
-                    savename = savename+"_"+str(parentfolder)+".rtdc"
-                else:
-                    return
-                
-                if not os.path.isfile(savename):#if such a file does not yet exist...
-                    savename = savename
-                else:#such a file already exists!!!
-                    #Avoid to overwriting an existing file:
-                    print("Adding additional number since file exists!")
-                    addon = 1
-                    while os.path.isfile(savename):
-                        savename = savename.split(".rtdc")[0]
-                        if addon>1:
-                            savename = savename.split("_"+str(addon-1))[0]
-                        savename = savename+"_"+str(addon)+".rtdc"
-                        addon += 1        
-                
-                print(savename)                    
-                shutil.copy(rtdc_path, savename) #copy original file
-                #append to hdf5 file
-                with h5py.File(savename, mode="a") as h5:
-                    h5["events/userdef0"] = prediction_fillnan
+                    failed,rtdc_ds = aid_bin.load_rtdc(rtdc_path)
+                    rtdc_ds_len = rtdc_ds["image"].shape[0] #this way is actually faster than asking any other feature for its len :)
+                    prediction_fillnan = np.full([rtdc_ds_len], np.nan)#put initially np.nan for all cells
+    
                     if export_option == "Add pred&scores to .rtdc file (userdef0 to 9)":
-                        #add the scores to userdef1...9
-                        userdef_ind = 1
-                        for class_ in range(classes):
-                            scores_i = scores_fillnan[:,class_]
-                            h5["events/userdef"+str(userdef_ind)] = scores_i
-                            userdef_ind += 1
-                                
-        sess.close()
-
+                        classes = scores_normal.shape[1]
+                        if classes>9:
+                            classes = 9#set the max number of classes to 9. It cannot saved more to .rtdc due to limitation of userdef
+                        scores_fillnan = np.full([rtdc_ds_len,classes], np.nan)
+    
+                    #Make sure the predictions get again to the same length as the initial data set
+                    #Fill array with corresponding predictions
+                    for i in range(len(prediction_to_rtdc_ds)):
+                        indx = index[i]
+                        prediction_fillnan[indx] = prediction_to_rtdc_ds[i]
+                        if export_option == "Add pred&scores to .rtdc file (userdef0 to 9)":
+                            #for class_ in range(classes):
+                            scores_fillnan[indx,0:classes] = scores_normal[i,0:classes]
+    
+                    #Get savename
+                    path, rtdc_file = os.path.split(rtdc_path)
+    
+                    if fname_addon!="Action:GetParentFolderName!":#dont get the parentfoldername, instead used user defined addon!
+                        savename = rtdc_path.split(".rtdc")[0]
+                        savename = savename+"_"+str(fname_addon)+".rtdc"
+                        
+                    elif fname_addon=="Action:GetParentFolderName!":                        
+                        savename = rtdc_path.split(".rtdc")[0]
+                        parentfolder = aid_bin.splitall(rtdc_path)[-2]
+                        savename = savename+"_"+str(parentfolder)+".rtdc"
+                    else:
+                        return
+                    
+                    if not os.path.isfile(savename):#if such a file does not yet exist...
+                        savename = savename
+                    else:#such a file already exists!!!
+                        #Avoid to overwriting an existing file:
+                        print("Adding additional number since file exists!")
+                        addon = 1
+                        while os.path.isfile(savename):
+                            savename = savename.split(".rtdc")[0]
+                            if addon>1:
+                                savename = savename.split("_"+str(addon-1))[0]
+                            savename = savename+"_"+str(addon)+".rtdc"
+                            addon += 1        
+                    
+                    print(savename)                    
+                    shutil.copy(rtdc_path, savename) #copy original file
+                    #append to hdf5 file
+                    with h5py.File(savename, mode="a") as h5:
+                        h5["events/userdef0"] = prediction_fillnan
+                        if export_option == "Add pred&scores to .rtdc file (userdef0 to 9)":
+                            #add the scores to userdef1...9
+                            userdef_ind = 1
+                            for class_ in range(classes):
+                                scores_i = scores_fillnan[:,class_]
+                                h5["events/userdef"+str(userdef_ind)] = scores_i
+                                userdef_ind += 1
+        
 
     #####################Python Editor/Console#################################
     def pythonInRun(self):
