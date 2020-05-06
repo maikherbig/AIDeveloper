@@ -7,7 +7,6 @@ some functions that I want to keep separate to make the main script a bit shorte
 """
 
 import os,shutil,json
-import pandas as pd
 
 def banner():
     #generated using: https://www.ascii-art-generator.org/    
@@ -61,7 +60,7 @@ def get_default_dict(dir_settings):
             Default_dict["Image_import_interpol_method"] = "Lanczos"
 
         if "spinBox_batchSize" not in Default_dict.keys():
-            Default_dict["spinBox_batchSize"] = 128
+            Default_dict["spinBox_batchSize"] = 32
         if "doubleSpinBox_learningRate_Adam" not in Default_dict.keys():
             Default_dict["doubleSpinBox_learningRate_Adam"] = 0.001
         if "doubleSpinBox_learningRate_SGD" not in Default_dict.keys():
@@ -340,6 +339,9 @@ def get_tooltips():
     tooltips["checkBox_saveEpoch_pop"] = "<html><head/><body><p>Save the model, when the current epoch is done</p></body></html>"
     tooltips["pushButton_Pause_pop"] = "<html><head/><body><p>Pause fitting, push this button again to continue.</p></body></html>"
     tooltips["pushButton_Stop_pop"] = "<html><head/><body><p>Stop fitting entirely, Close this window manually, after the progressbar shows 100%.</p></body></html>"
+    tooltips["actioncpu_merge"] = "<html><head/><body><p>Identify whether to force merging model weights under the scope of the CPU or not. Source: https://www.tensorflow.org/api_docs/python/tf/keras/utils/multi_gpu_model</p></body></html>"
+    tooltips["actioncpu_relocation"] = "<html><head/><body><p>Identify whether to create the model's weights under the scope of the CPU. If the model is not defined under any preceding device scope, you can still rescue it by activating this option. Source: https://www.tensorflow.org/api_docs/python/tf/keras/utils/multi_gpu_model</p></body></html>"
+    tooltips["actioncpu_weightmerge"] = "<html><head/><body><p>Uses tf.device('/cpu:0') prior constriction model to manage merging of weights using CPU.</p></body></html>"
     
 
     return tooltips
