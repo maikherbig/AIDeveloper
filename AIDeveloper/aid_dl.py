@@ -5,7 +5,7 @@ functions adjust and convert deep neural nets
 ---------
 @author: maikherbig
 """
-import os, shutil
+import os, shutil,gc
 import numpy as np
 rand_state = np.random.RandomState(117) #to get the same random number on diff. PCs
 import tensorflow as tf
@@ -124,7 +124,7 @@ def change_dropout(model_keras,do,model_metrics,out_dim,loss_,optimizer_,learnin
             for i in range(len(ind)):
                 model_keras.layers[ind[i]].rate = do[i]
                 
-    #Only way that it actually has a effect is to clone the model, compile and reload weights
+    #Only way that it actually has an effect is to clone the model, compile and reload weights
     model_keras = keras.models.clone_model(model_keras) # If I do not clone, the new rate is never used. Weights are re-init now.
     model_compile(model_keras,loss_,optimizer_,learning_rate_,model_metrics,out_dim)
     
@@ -472,3 +472,57 @@ def convert_kerastf_2_coreml(model_path):
     sess.close()
 
 
+def get_config(cpu_nr,gpu_nr,deviceSelected,gpu_memory):
+    #No GPU available, CPU selected:
+    if gpu_nr==0: #and deviceSelected=="Default CPU":
+        print("Adjusted options for CPU usage")
+        config_gpu = tf.ConfigProto()
+    #GPU available but user wants to use CPU
+    elif gpu_nr>0 and deviceSelected=="Default CPU":
+        config_gpu = tf.ConfigProto(intra_op_parallelism_threads=cpu_nr,\
+                inter_op_parallelism_threads=cpu_nr, allow_soft_placement=True,\
+                device_count = {'CPU' : 1, 'GPU' : 0})
+        print("Adjusted options for CPU usage")
+    
+    #GPU selected
+    elif deviceSelected=="Single-GPU" or deviceSelected=="Multi-GPU":
+        gpu_options = tf.GPUOptions(per_process_gpu_memory_fraction=gpu_memory,\
+                                    allow_growth = True)
+        config_gpu = tf.ConfigProto(allow_soft_placement=True,\
+                                    gpu_options = gpu_options,\
+                                    log_device_placement=True)
+        if deviceSelected=="Single-GPU":
+            print("Adjusted GPU options for Single-GPU usage. Set memeory fraction to "+str(gpu_memory))
+        if deviceSelected=="Multi-GPU":
+            print("Adjusted GPU options for Multi-GPU usage. Set memeory fraction to "+str(gpu_memory))
+    
+#        if deviceSelected=="Multi-GPU":
+#            for device in gpu_devices:
+#                tf.config.experimental.set_memory_growth(device, True)
+#            config_gpu.gpu_options.per_process_gpu_memory_fraction = gpu_memory
+
+    return config_gpu
+
+def reset_keras(model=None,create_new_config=False):
+    "Source: https://forums.fast.ai/t/how-could-i-release-gpu-memory-of-keras/2023/18"
+    sess = K.get_session()
+    K.clear_session()
+    sess.close()
+    sess = K.get_session()
+
+    try:
+        del model # this is from global space - change this as you need
+    except:
+        pass
+
+    garbage = gc.collect() # if it's done something you should see a number being outputted
+    
+    if create_new_config:
+        # use the same config as you used to create the session
+        config = tf.ConfigProto()
+        config.gpu_options.per_process_gpu_memory_fraction = 1
+        config.gpu_options.visible_device_list = "0"
+        K.set_session(tf.Session(config=config))
+        
+
+    
