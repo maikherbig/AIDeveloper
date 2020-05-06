@@ -1168,6 +1168,7 @@ class Fitting_Ui(QtWidgets.QWidget):
         self.label_Crop_pop.setText(_translate("Form", "Input image size", None))
         self.label_CropIcon_pop.setToolTip(_translate("Form", tooltips["label_Crop"], None))
 
+        self.groupBox_system_pop.setTitle(_translate("Form", "Training", None))
         self.label_padIcon_pop.setToolTip(_translate("Form", tooltips["label_paddingMode"], None))
         self.comboBox_paddingMode_pop.setToolTip(_translate("Form", tooltips["label_paddingMode"], None))
         self.label_paddingMode_pop.setToolTip(_translate("Form", tooltips["label_paddingMode"], None))
@@ -1551,7 +1552,7 @@ class Fitting_Ui(QtWidgets.QWidget):
         value_current = float(self.doubleSpinBox_learningRate_pop.value())
         value_wanted = Default_dict["doubleSpinBox_learningRate_"+optimizer]
         text = str(self.textBrowser_FittingInfo_pop.toPlainText())
-        if value_current!=value_wanted and len(text)>120:#avoid that the message pops up when window is created
+        if value_current!=value_wanted and "Epoch" in text:#avoid that the message pops up when window is created
             self.doubleSpinBox_learningRate_pop.setValue(value_wanted)
             #Inform user
             msg = QtWidgets.QMessageBox()
