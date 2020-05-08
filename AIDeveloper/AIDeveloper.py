@@ -7336,9 +7336,7 @@ class MainWindow(QtWidgets.QMainWindow):
         #Create config (define which device to use)
         config_gpu = aid_dl.get_config(cpu_nr,gpu_nr,deviceSelected,gpu_memory)
         
-        with tf.Session(graph = tf.Graph(), config=config_gpu) as sess:       
-            #K.set_session(sess)
-            
+        with tf.Session(graph = tf.Graph(), config=config_gpu) as sess:                   
             #get an index of the fitting popup
             listindex = self.popupcounter-1
             #Get user-specified filename for the new model
@@ -7352,7 +7350,7 @@ class MainWindow(QtWidgets.QMainWindow):
                 model_keras = [load_model(model_keras_path[i],custom_objects=get_custom_metrics()) for i in range(len(model_keras_path)) ]
                 model_architecture_names = self.model_keras[0]
                 print(model_architecture_names)    
-                self.model_keras = None
+                #self.model_keras = None
     
             else:
                 collection = False
@@ -7362,8 +7360,7 @@ class MainWindow(QtWidgets.QMainWindow):
                         model_keras = load_model(model_keras_path,custom_objects=get_custom_metrics()) 
                 else:
                     model_keras = load_model(model_keras_path,custom_objects=get_custom_metrics())
-    
-                self.model_keras = None
+                #self.model_keras = None
                 
             #Initialize a variable for the parallel model
             model_keras_p = None
@@ -7373,7 +7370,8 @@ class MainWindow(QtWidgets.QMainWindow):
                 if collection==False:
                     print("Adjusting the model for Multi-GPU")
                     model_keras_p = multi_gpu_model(model_keras, gpus=gpu_nr, cpu_merge=cpu_merge, cpu_relocation=cpu_relocation)#indicate the numbers of gpus that you have
-    
+                    if self.radioButton_LoadContinueModel.isChecked():#calling multi_gpu_model resets the weights. Hence, they need to be put in place again
+                        model_keras_p.set_weights(model_keras.get_weights())
                 elif collection==True:
                     print("Collection & Multi-GPU is not supported yet")
                     return
@@ -7852,7 +7850,7 @@ class MainWindow(QtWidgets.QMainWindow):
     
             self.fittingpopups_ui[listindex].textBrowser_FittingInfo_pop.append(text_updates)
     
-            self.model_keras = model_keras #overwrite the model on self
+            #self.model_keras = model_keras #overwrite the model on self
     
             ######################Load the Training Data################################
             ind = [selectedfile["TrainOrValid"] == "Train" for selectedfile in SelectedFiles]
@@ -8732,7 +8730,7 @@ class MainWindow(QtWidgets.QMainWindow):
     
                                 self.fittingpopups_ui[listindex].textBrowser_FittingInfo_pop.append(text_updates)
     
-                                self.model_keras = model_keras #overwrite the model in self
+                                #self.model_keras = model_keras #overwrite the model in self
                                 self.fittingpopups_ui[listindex].checkBox_ApplyNextEpoch.setChecked(False)
     
     
@@ -8844,12 +8842,19 @@ class MainWindow(QtWidgets.QMainWindow):
                                             print(key+" broke record -> Model is saved")
     
                                 if record_broken:
+                                    if deviceSelected=="Multi-GPU":#in case of Multi-GPU...
+                                        #In case of multi-GPU, first copy the weights of the parallel model to the normal model
+                                        model_keras.set_weights(model_keras_p.get_weights())
                                     #Save the model
                                     model_keras.save(new_modelname.split(".model")[0]+"_"+str(counter)+".model")
+
                                     Saved.append(1)
                                 
                                 #Also save the model upon user-request  
                                 elif bool(self.fittingpopups_ui[listindex].checkBox_saveEpoch_pop.isChecked())==True:
+                                    if deviceSelected=="Multi-GPU":#in case of Multi-GPU...
+                                        #In case of multi-GPU, first copy the weights of the parallel model to the normal model
+                                        model_keras.set_weights(model_keras_p.get_weights())
                                     model_keras.save(new_modelname.split(".model")[0]+"_"+str(counter)+".model")
                                     Saved.append(1)
                                     self.fittingpopups_ui[listindex].checkBox_saveEpoch_pop.setChecked(False)
@@ -8888,7 +8893,8 @@ class MainWindow(QtWidgets.QMainWindow):
                                                 model_metrics_records[key] = value
                                                 record_broken = True
                                                 print(key+" broke record -> Model is saved")
-    
+                                    
+                                    #For collections of models:
                                     if record_broken:
                                         #Save the model
                                         model_keras[i].save(model_keras_path[i].split(".model")[0]+"_"+str(counter)+".model")
@@ -8988,6 +8994,7 @@ class MainWindow(QtWidgets.QMainWindow):
                                         HISTORIES[i] = []#reset the Histories list
                                         SAVED[i] = []
                                         #Saving
+                                        #TODO: save to temp, if harddisk not available to prevent crash.
                                         if os.path.isfile(model_keras_path[i].split(".model")[0]+'_meta.xlsx'):
                                             os.chmod(model_keras_path[i].split(".model")[0]+'_meta.xlsx', S_IREAD|S_IRGRP|S_IROTH|S_IWRITE|S_IWGRP|S_IWOTH) #make read/write
                                         DF1.to_excel(Writers[i],sheet_name='History', startrow=Writers[i].sheets['History'].max_row,header= False)
@@ -9078,6 +9085,8 @@ class MainWindow(QtWidgets.QMainWindow):
             self.action_initialize_model()
             print("Had to re-run action_initialize_model!")
             model_keras = self.model_keras
+            self.model_keras = None#delete this copy
+            
             if model_keras==None:
 #                msg = QtWidgets.QMessageBox()
 #                msg.setIcon(QtWidgets.QMessageBox.Information)       
@@ -11012,25 +11021,29 @@ class MainWindow(QtWidgets.QMainWindow):
             #Adjust the Color mode in the UI:
             channels = in_dim[-1] #TensorFlow: channels in last dimension
             if channels==1:
+                #Set the combobox on Assess model tab to Grayscale; just info for user
+                index = self.comboBox_loadedRGBorGray.findText("Grayscale", QtCore.Qt.MatchFixedString)
+                if index >= 0:
+                    self.comboBox_loadedRGBorGray.setCurrentIndex(index)                                        
+                #Check the currently set color_mode. This is important since images are loaded accordingly
                 if self.get_color_mode()!="Grayscale":
                     #when model needs Grayscale, set the color mode in comboBox_GrayOrRGB to that
                     index = self.comboBox_GrayOrRGB.findText("Grayscale", QtCore.Qt.MatchFixedString)
                     if index >= 0:
                         self.comboBox_GrayOrRGB.setCurrentIndex(index)                                                            
-                    index = self.comboBox_loadedRGBorGray.findText("Grayscale", QtCore.Qt.MatchFixedString)
-                    if index >= 0:
-                        self.comboBox_loadedRGBorGray.setCurrentIndex(index)                                        
                     self.statusbar.showMessage("Color Mode set to Grayscale",5000)
             
             elif channels==3:
+                #Set the combobox on Assess model tab to Grayscale; just info for user
+                index = self.comboBox_loadedRGBorGray.findText("RGB", QtCore.Qt.MatchFixedString)
+                if index >= 0:
+                    self.comboBox_loadedRGBorGray.setCurrentIndex(index)                                        
+                #Check the currently set color_mode. This is important since images are loaded accordingly
                 if self.get_color_mode()!="RGB":
-                    #when model needs RGB, set the color mode in the ui to that
+                    #when model needs RGB, set the color mode in comboBox_GrayOrRGB to that
                     index = self.comboBox_GrayOrRGB.findText("RGB", QtCore.Qt.MatchFixedString)
                     if index >= 0:
                         self.comboBox_GrayOrRGB.setCurrentIndex(index)
-                    index = self.comboBox_loadedRGBorGray.findText("RGB", QtCore.Qt.MatchFixedString)
-                    if index >= 0:
-                        self.comboBox_loadedRGBorGray.setCurrentIndex(index)                                        
                     self.statusbar.showMessage("Color Mode set to RGB",5000)
             else:
                 msg = QtWidgets.QMessageBox()
@@ -11101,9 +11114,25 @@ class MainWindow(QtWidgets.QMainWindow):
         #Create config (define which device to use)
         config_gpu = aid_dl.get_config(cpu_nr,gpu_nr,deviceSelected,gpu_memory)
 
+        #Retrieve more Multi-GPU Options from Menubar:
+        cpu_merge = bool(self.actioncpu_merge.isEnabled())
+        cpu_relocation = bool(self.actioncpu_relocation.isEnabled())
+        cpu_weight_merge = bool(self.actioncpu_weightmerge.isEnabled())    
+
+
         #Initiate a fresh session
-        with tf.Session(graph = tf.Graph(), config=config_gpu) as sess:       
-            model_keras = load_model(self.load_model_path,custom_objects=get_custom_metrics())
+        with tf.Session(graph = tf.Graph(), config=config_gpu) as sess:
+            if deviceSelected=="Multi-GPU" and cpu_weight_merge==True:
+                with tf.device("/cpu:0"):
+                    model_keras = load_model(self.load_model_path,custom_objects=get_custom_metrics()) 
+            else:
+                model_keras = load_model(self.load_model_path,custom_objects=get_custom_metrics())
+        
+            #Multi-GPU
+            if deviceSelected=="Multi-GPU":
+                print("Adjusting the model for Multi-GPU")
+                model_keras = multi_gpu_model(model_keras, gpus=gpu_nr, cpu_merge=cpu_merge, cpu_relocation=cpu_relocation)#indicate the numbers of gpus that you have
+            
             #Get the model input dimensions
             in_dim = np.array(model_keras.get_input_shape_at(0))
             ind = np.where(in_dim==None)
