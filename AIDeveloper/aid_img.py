@@ -77,30 +77,55 @@ def gen_crop_img(cropsize,rtdc_path,nr_events=100,replace=True,random_images=Tru
     #HEIGHT
     #Compute, if after zooming, the image would need to be cropped or padded in height
     #Difference between the (zoomed) image height and the required final height?
-    diff_h = int(abs(cropsize-zoom_factor*images_shape[1]))
+    diff_h = int(abs(cropsize-np.round( zoom_factor*images_shape[1],0) ))
     #Padding or Cropping?
     if cropsize > zoom_factor*images_shape[1]: #Cropsize is larger than the image_shape
         padding_h = True #if the requested image height is larger than the zoomed in version of the original images, I have to pad
-        diff_h = int(np.round(abs(cropsize-zoom_factor*images_shape[1])/2.0,0))
+        diff_h = int(np.round(abs(cropsize-np.round( zoom_factor*images_shape[1],0) )/2.0,0))
         print("I will pad in height: "+str(diff_h) + " pixels on each side")
     elif cropsize <= zoom_factor*images_shape[1]:
         padding_h = False
-        diff_h = int(np.round(abs(cropsize-zoom_factor*images_shape[1])/2.0,0))
+        diff_h = int(np.round(abs(cropsize-np.round( zoom_factor*images_shape[1],0) )/2.0,0))
         print("I will crop: "+str(diff_h) + " pixels in height")
 
     #WIDTH
     #Compute, if after zooming, the image would need to be cropped or padded in width
     #Difference between the (zoomed) image width and the required final width?
-    diff_w = int(abs(cropsize-zoom_factor*images_shape[2]))
+    diff_w = int(abs(cropsize-np.round( zoom_factor*images_shape[2],0)  ))
     #Padding or Cropping?
     if cropsize > zoom_factor*images_shape[2]: #Cropsize is larger than the image_shape
         padding_w = True #if the requested image height is larger than the zoomed in version of the original images, I have to pad
-        diff_w = int(np.round(abs(cropsize-zoom_factor*images_shape[2])/2.0,0))
+        diff_w = int(np.round(abs(cropsize-np.round( zoom_factor*images_shape[2],0) )/2.0,0))
         print("I will pad in width: "+str(diff_w) + " pixels on each side")
     elif cropsize <= zoom_factor*images_shape[2]:
         padding_w = False
-        diff_w = int(np.round(abs(cropsize-zoom_factor*images_shape[2])/2.0,0))
+        diff_w = int(np.round(abs(cropsize-np.round( zoom_factor*images_shape[2],0) )/2.0,0))
         print("I will crop: "+str(diff_h) + " pixels in width")
+
+
+    #check if the resulting cropping or padding operation would return the correct size
+    odd_h,odd_w = -1,-1
+    if padding_w == True:
+        while cropsize!=np.round(zoom_factor*images_shape[2],0)+2*diff_w+odd_w:
+            odd_w+=1 #odd_w is increased until the resulting image is of correct size
+    elif padding_w == False:
+        while cropsize!=np.round(zoom_factor*images_shape[2],0)-2*diff_w+odd_w:
+            odd_w+=1 #odd_w is increased until the resulting image is of correct size
+    if padding_h == True:
+        while cropsize!=np.round(zoom_factor*images_shape[1],0)+2*diff_h+odd_h:
+            odd_h+=1 #odd_w is increased until the resulting image is of correct size
+    elif padding_h == False:
+        while cropsize!=np.round(zoom_factor*images_shape[1],0)-2*diff_h+odd_h:
+            odd_h+=1 #odd_w is increased until the resulting image is of correct size
+
+
+
+
+
+
+
+
+
 
     pos_x,pos_y = rtdc_ds["pos_x"][:]/pix,rtdc_ds["pos_y"][:]/pix #/pix converts to pixel index 
     #If there is a zooming to be applied, adjust pos_x and pos_y accordingly
@@ -115,8 +140,6 @@ def gen_crop_img(cropsize,rtdc_path,nr_events=100,replace=True,random_images=Tru
 
     if padding_w==False: #If there is no padding in width, means cells that are at the border can be out of frame
         #Indices of cells that would fit into the required cropping frame (cells at the end of the image do not fit)
-        
-        
         ind = np.where( (x1>=0) & (x2<=zoom_factor*images_shape[2]) & (y1>=0) & (y2<=zoom_factor*images_shape[1]))[0]        
     if padding_w==True:
         ind = range(len(images))
@@ -188,15 +211,16 @@ def gen_crop_img(cropsize,rtdc_path,nr_events=100,replace=True,random_images=Tru
 
     if padding_h==True and padding_w==True:
         if channels==1:
-            images = np.pad(images,pad_width=( (0, 0),(diff_h, diff_h),(diff_w, diff_w) ),mode=padding_mode)
+            images = np.pad(images,pad_width=( (0, 0),(diff_h, diff_h+odd_h),(diff_w, diff_w+odd_w) ),mode=padding_mode)
         elif channels==3:
-            images = np.pad(images,pad_width=( (0, 0),(diff_h, diff_h),(diff_w, diff_w),(0, 0) ),mode=padding_mode)
+            images = np.pad(images,pad_width=( (0, 0),(diff_h, diff_h+odd_h),(diff_w, diff_w+odd_w),(0, 0) ),mode=padding_mode)
         else:
             print("Invalid image dimensions: "+str(images.shape))
             return
         print("Final size:"+str(images.shape)+","+str(np.array(index).shape))
         #terminate the function by yielding the result
         yield check_squared(images),np.array(index).astype(int)
+
 
     if padding_h==False and padding_w==False:
         #Compute again the x,y locations of the cells (this is fast)
@@ -216,9 +240,9 @@ def gen_crop_img(cropsize,rtdc_path,nr_events=100,replace=True,random_images=Tru
 
     if padding_h==True:
         if channels==1:
-            images = np.pad(images,pad_width=( (0, 0),(diff_h, diff_h),(0, 0) ),mode=padding_mode)
+            images = np.pad(images,pad_width=( (0, 0),(diff_h, diff_h+odd_h),(0, 0) ),mode=padding_mode)
         elif channels==3:
-            images = np.pad(images,pad_width=( (0, 0),(diff_h, diff_h),(0, 0),(0, 0) ),mode=padding_mode)
+            images = np.pad(images,pad_width=( (0, 0),(diff_h, diff_h+odd_h),(0, 0),(0, 0) ),mode=padding_mode)
         else:
             print("Invalid image dimensions: "+str(images.shape))
             return
@@ -227,9 +251,9 @@ def gen_crop_img(cropsize,rtdc_path,nr_events=100,replace=True,random_images=Tru
         
     if padding_w==True:
         if channels==1:
-            images = np.pad(images,pad_width=( (0, 0),(0, 0),(diff_w, diff_w) ),mode=padding_mode)
+            images = np.pad(images,pad_width=( (0, 0),(0, 0),(diff_w, diff_w+odd_w) ),mode=padding_mode)
         elif channels==3:
-            images = np.pad(images,pad_width=( (0, 0),(0, 0),(diff_w, diff_w),(0, 0) ),mode=padding_mode)
+            images = np.pad(images,pad_width=( (0, 0),(0, 0),(diff_w, diff_w+odd_w),(0, 0) ),mode=padding_mode)
         else:
             print("Invalid image dimensions: "+str(images.shape))
             return
