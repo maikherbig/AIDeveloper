@@ -7371,7 +7371,7 @@ class MainWindow(QtWidgets.QMainWindow):
                     print("Adjusting the model for Multi-GPU")
                     model_keras_p = multi_gpu_model(model_keras, gpus=gpu_nr, cpu_merge=cpu_merge, cpu_relocation=cpu_relocation)#indicate the numbers of gpus that you have
                     if self.radioButton_LoadContinueModel.isChecked():#calling multi_gpu_model resets the weights. Hence, they need to be put in place again
-                        model_keras_p.set_weights(model_keras.get_weights())
+                        model_keras_p.layers[-2].set_weights(model_keras.get_weights())
                 elif collection==True:
                     print("Collection & Multi-GPU is not supported yet")
                     return
@@ -8844,7 +8844,7 @@ class MainWindow(QtWidgets.QMainWindow):
                                 if record_broken:
                                     if deviceSelected=="Multi-GPU":#in case of Multi-GPU...
                                         #In case of multi-GPU, first copy the weights of the parallel model to the normal model
-                                        model_keras.set_weights(model_keras_p.get_weights())
+                                        model_keras.set_weights(model_keras_p.layers[-2].get_weights())
                                     #Save the model
                                     model_keras.save(new_modelname.split(".model")[0]+"_"+str(counter)+".model")
 
@@ -8854,7 +8854,7 @@ class MainWindow(QtWidgets.QMainWindow):
                                 elif bool(self.fittingpopups_ui[listindex].checkBox_saveEpoch_pop.isChecked())==True:
                                     if deviceSelected=="Multi-GPU":#in case of Multi-GPU...
                                         #In case of multi-GPU, first copy the weights of the parallel model to the normal model
-                                        model_keras.set_weights(model_keras_p.get_weights())
+                                        model_keras.set_weights(model_keras_p.layers[-2].get_weights())
                                     model_keras.save(new_modelname.split(".model")[0]+"_"+str(counter)+".model")
                                     Saved.append(1)
                                     self.fittingpopups_ui[listindex].checkBox_saveEpoch_pop.setChecked(False)
