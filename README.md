@@ -51,13 +51,35 @@ The script based version was tested using Python 3.5 on Windows, Mac and Linux. 
 * Download the entire GitHub repository of AIDeveloper: find the green button on the top right ("Clone or download"), click it and then click "Download ZIP"
 * Unzip the folder for example to C:\Users\MyPC\Downloads\AIDeveloper_0.0.6
 * open Anaconda Prompt
+### Option 1: Install dependencies using .yml file
 * navigate to the folder where you put AIDeveloper `cd C:\Users\MyPC\Downloads\AIDeveloper_0.0.6`
-* Generate an environment using the provided .yml file (AID_myenv_Win7.yml): `conda env create -f AID_myenv_Win7.yml`
-* This will create a new environment called "myenv"
-* Activate it: `conda activate myenv`
-* Run AIDeveloper using `python AIDeveloper.py`
-  
-  
+* Generate an environment using the provided .yml file (AID_myenv_Win7.yml): `conda env create -f aid_env_cpu.yml`
+* This will create a new environment called "aid_env_cpu"
+* Activate it: `conda activate aid_env_cpu`
+* Run AIDeveloper using `python AIDeveloper.py`  
+### Option 2: Manually install all dependencies:
+`conda create -n aid_env_cpu python=3.5`  
+`activate aid_env_cpu`  
+`pip install --upgrade setuptools`  
+`pip install keras==2.2.4`  
+`pip install tensorflow==1.12.3`  
+`pip install scikit-learn==0.20.0`  
+`pip install dclab==0.22.1`  
+`pip install Pillow==5.4.1`  
+`pip install pandas==0.24.0 psutil==5.4.7`  
+`pip install mkl==2019.0`  
+`pip install pyqt5==5.9.2`  
+`pip install pyqtgraph==0.11.0rc0`  
+`pip install imageio==2.4.1`  
+`pip install opencv-contrib-python-headless==4.1.1.26`  
+`pip install openpyxl==2.5.6`  
+`pip install xlrd==1.1.0`  
+`pip install keras2onnx==1.4.0`  
+`pip install libopencv`  
+`pip install ffmpeg==1.4`  
+`pip install tf2onnx==1.4.1`  
+`pip install numpy==1.16.4`  
+
 # AIDeveloper in scientific literature  
 [1]	[M. Kräter et al., “AIDeveloper: deep learning image classification in life science and beyond,” bioRxiv, p. 2020.03.03.975250, Mar. 2020.](https://www.biorxiv.org/content/10.1101/2020.03.03.975250v1)  
 [2]	[A. A. Nawaz et al., “Using real-time fluorescence and deformability cytometry and deep learning to transfer molecular specificity to label-free sorting,” bioRxiv, p. 862227, Dec. 2019.](https://www.biorxiv.org/content/10.1101/862227v2)    
