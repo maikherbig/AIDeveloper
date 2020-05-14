@@ -1,3 +1,4 @@
+#MacOS
 Package                        Version            
 ------------------------------ -------------------
 absl-py                        0.9.0              
@@ -10,20 +11,20 @@ et-xmlfile                     1.0.1
 ffmpeg                         1.4                
 gast                           0.3.3              
 grpcio                         1.27.2             
-h5py                           2.8.0              
+h5py                           2.10.0             
 idna                           2.9                
 imageio                        2.4.1              
 intel-openmp                   2018.0.3           
 jdcal                          1.4.1              
-Keras                          2.2.2              
-Keras-Applications             1.0.4              
-Keras-Preprocessing            1.0.2              
+Keras                          2.2.4              
+Keras-Applications             1.0.8              
+Keras-Preprocessing            1.1.2              
 keras2onnx                     1.4.0              
 libopencv                      0.0.1              
 macholib                       1.14               
 Markdown                       3.2.1              
-mkl                            2018.0.3           
-numpy                          1.15.2             
+mkl                            2019.0             
+numpy                          1.16.4             
 onnx                           1.6.0              
 onnxconverter-common           1.6.0              
 opencv-contrib-python-headless 4.1.1.26           
@@ -31,7 +32,7 @@ openpyxl                       2.5.6
 pandas                         0.24.0             
 Pillow                         5.4.1              
 pip                            20.0.2             
-protobuf                       3.6.0              
+protobuf                       3.11.3             
 psutil                         5.4.7              
 pycosat                        0.6.3              
 PyInstaller                    4.0.dev0+89a5f6e9c9
@@ -49,8 +50,8 @@ scipy                          1.4.1
 setuptools                     44.0.0             
 sip                            4.19.8             
 six                            1.14.0             
-tensorboard                    1.10.0             
-tensorflow                     1.10.0             
+tensorboard                    1.12.2             
+tensorflow                     1.12.3             
 termcolor                      1.1.0              
 tf2onnx                        1.4.1              
 typing-extensions              3.7.4.1            
@@ -58,4 +59,3 @@ urllib3                        1.25.8
 Werkzeug                       1.0.0              
 wheel                          0.34.2             
 xlrd                           1.1.0              
-(myenv) martinks-mbp:AID_0.0.8 maiksurlaub$ 
