@@ -38,6 +38,12 @@ Furthermore, there is a video showing the analysis procedure from beginning to e
 [![Alternate Text](art/Youtube_Link_Tutorial5_v03.png)](https://www.youtube.com/watch?v=KRDJBJD7CsA "AIDeveloper Tutorial 5")
 
 
+
+## More tutorials  
+[Adding models to the model zoo](https://figshare.com/articles/Krater_et_al_2020_Data_zip/9902636)  
+[Create standalone using PyInstaller](https://figshare.com/articles/Krater_et_al_2020_Data_zip/9902636)  
+[AIDeveloper on AWS with GPU support](https://www.youtube.com/watch?v=C3pMNAg68XQ&t=1818s)  
+
 # Prerequisites  
 Since version 0.0.6, the standalone [executables](https://github.com/maikherbig/AIDeveloper/releases) of AIDeveloper are compatible to Windows, Mac and Linux.
 
