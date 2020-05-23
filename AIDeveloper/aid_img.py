@@ -38,7 +38,11 @@ def check_squared(images):
         print("Final size after correcting: "+str(images.shape))
     return images
 
-def gen_crop_img(cropsize,rtdc_path,nr_events=100,replace=True,random_images=True,zoom_factor=1,zoom_order=0,color_mode='Grayscale',padding_mode='constant'):
+def gen_crop_img(cropsize,rtdc_path,nr_events=100,replace=True,random_images=True,zoom_factor=1,zoom_order=0,color_mode='Grayscale',padding_mode='constant',xtra_in=False):
+    print("gen_crop_img")
+    print("xtra_in")
+    print(xtra_in)
+
     failed,rtdc_ds = aid_bin.load_rtdc(rtdc_path)
     if failed:
         msg = QtWidgets.QMessageBox()
@@ -120,13 +124,6 @@ def gen_crop_img(cropsize,rtdc_path,nr_events=100,replace=True,random_images=Tru
 
 
 
-
-
-
-
-
-
-
     pos_x,pos_y = rtdc_ds["pos_x"][:]/pix,rtdc_ds["pos_y"][:]/pix #/pix converts to pixel index 
     #If there is a zooming to be applied, adjust pos_x and pos_y accordingly
     if zoom_factor != 1:
@@ -143,7 +140,12 @@ def gen_crop_img(cropsize,rtdc_path,nr_events=100,replace=True,random_images=Tru
         ind = np.where( (x1>=0) & (x2<=zoom_factor*images_shape[2]) & (y1>=0) & (y2<=zoom_factor*images_shape[1]))[0]        
     if padding_w==True:
         ind = range(len(images))
-
+    
+    if xtra_in==True:
+        xtra_data = np.array(rtdc_ds._h5["xtra_in"])
+    if xtra_in==False:
+        xtra_data = []#in case xtra_in==None, this empty list will be returned
+    
     if random_images==True:
         print("I'm loading random images (from disk)")
         #select a random amount of those cells 
@@ -162,10 +164,15 @@ def gen_crop_img(cropsize,rtdc_path,nr_events=100,replace=True,random_images=Tru
         images_required = images[random_ind_unique[0],:,:] #now we have one copy of each image,but some images are required several times
         pos_x,pos_y = pos_x[random_ind_unique[0]],pos_y[random_ind_unique[0]]
         index = np.array(index)[random_ind_unique[0]] 
-
-        images,Pos_x,Pos_y,indices = [],[],[],[] #overwrite images by defining the list images
+        
+        if xtra_in==True:
+            xtra_data = xtra_data[random_ind_unique[0]] 
+            print("xtra_data")
+            print(xtra_data)
+            
+        images,Pos_x,Pos_y,indices,Xtra_data = [],[],[],[],[] #overwrite images by defining the list images
         for i in range(len(random_ind_unique[1])):
-            for j in range(random_ind_unique[1][i]):
+            for j in range(random_ind_unique[1][i]):#when shuffle=True it can happend that some images occure multiple times. This look makes sure this is possible
                 if channels==1:
                     images.append(ndimage.zoom(images_required[i,:,:], zoom=zoom_factor,order=int(zoom_order)))
                 elif channels==3:
@@ -174,17 +181,24 @@ def gen_crop_img(cropsize,rtdc_path,nr_events=100,replace=True,random_images=Tru
                 Pos_x.append(pos_x[i])
                 Pos_y.append(pos_y[i])
                 indices.append(index[i])
+                if xtra_in==True: 
+                    Xtra_data.append(xtra_data[i])
+                    
 
         images = np.array(images)
         pos_x = np.array(Pos_x)
         pos_y = np.array(Pos_y)
         index = np.array(indices)
-
+        if xtra_in==True: 
+            xtra_data = np.array(Xtra_data)
+ 
         permut = np.random.permutation(images.shape[0])
         images = np.take(images,permut,axis=0,out=images) #Shuffle the images
         pos_x = np.take(pos_x,permut,axis=0,out=pos_x) #Shuffle pos_x
         pos_y = np.take(pos_y,permut,axis=0,out=pos_y) #Shuffle pos_y
         index = np.take(index,permut,axis=0,out=index) #Shuffle index
+        if xtra_in==True:         
+            xtra_data = np.take(xtra_data,permut,axis=0,out=xtra_data) #Shuffle xtra_data
         
     if random_images==False:
         print("I'm loading all images (from disk)")
@@ -208,6 +222,8 @@ def gen_crop_img(cropsize,rtdc_path,nr_events=100,replace=True,random_images=Tru
 
         pos_x,pos_y = pos_x[random_ind],pos_y[random_ind]
         index = np.array(index)[random_ind] #this is the original index of all used cells
+        if xtra_in==True:         
+            xtra_data = np.array(xtra_data)[random_ind] #this is the original index of all used cells
 
     if padding_h==True and padding_w==True:
         if channels==1:
@@ -219,7 +235,7 @@ def gen_crop_img(cropsize,rtdc_path,nr_events=100,replace=True,random_images=Tru
             return
         print("Final size:"+str(images.shape)+","+str(np.array(index).shape))
         #terminate the function by yielding the result
-        yield check_squared(images),np.array(index).astype(int)
+        yield check_squared(images),np.array(index).astype(int),np.array(xtra_data)
 
 
     if padding_h==False and padding_w==False:
@@ -236,7 +252,7 @@ def gen_crop_img(cropsize,rtdc_path,nr_events=100,replace=True,random_images=Tru
         images = np.r_[Images_Cropped]
         print("Final size:"+str(images.shape)+","+str(np.array(index).shape))
         #terminate the function by yielding the result
-        yield check_squared(images),np.array(index).astype(int)
+        yield check_squared(images),np.array(index).astype(int),np.array(xtra_data)
 
     if padding_h==True:
         if channels==1:
@@ -283,13 +299,18 @@ def gen_crop_img(cropsize,rtdc_path,nr_events=100,replace=True,random_images=Tru
         print("Image size after cropping width:"+str(images.shape)+","+str(np.array(index).shape))
 
     print("Final size:"+str(images.shape)+","+str(np.array(index).shape))
-    yield check_squared(images),np.array(index).astype(int)
+    yield check_squared(images),np.array(index).astype(int),np.array(xtra_data)
 
-def gen_crop_img_ram(dic,rtdc_path,nr_events=100,replace=True,random_images=True):        
+def gen_crop_img_ram(dic,rtdc_path,nr_events=100,replace=True,random_images=True,xtra_in=False):        
     Rtdc_path = dic["rtdc_path"]
     ind = np.where(np.array(Rtdc_path)==rtdc_path)[0]
     images = np.array(dic["Cropped_Images"])[ind][0]   
     indices = np.array(dic["Indices"])[ind][0]   
+    xtra_data = np.array(dic["Xtra_In"])[ind][0]   
+    print("indices.shape")    
+    print(indices.shape)
+    print("xtra_data.shape")
+    print(xtra_data.shape)
 
     ind = range(len(images))
     if random_images==True:
@@ -299,27 +320,36 @@ def gen_crop_img_ram(dic,rtdc_path,nr_events=100,replace=True,random_images=True
 
         images_required = images[random_ind_unique[0],:,:] #now we have one copy of each image,but some images are required several times
         indices_required = indices[random_ind_unique[0]]
+        if xtra_in:
+            xtra_data_required = xtra_data[random_ind_unique[0]]
         
-        images,indices = [],[]
+        images,indices,xtra_data = [],[],[]
         for i in range(len(random_ind_unique[1])):
             for j in range(random_ind_unique[1][i]):
                 images.append(images_required[i,:,:])
                 indices.append(indices_required[i])
+                if xtra_in:
+                    xtra_data.append(xtra_data_required[i])
 
         images = np.array(images)
         indices = np.array(indices)
+        if xtra_in:
+            xtra_data = np.array(xtra_data)
 
         permut = np.random.permutation(images.shape[0])
         images = np.take(images,permut,axis=0,out=images) #Shuffle the images
         indices = np.take(indices,permut,axis=0,out=indices) #Shuffle the images
+        if xtra_in:
+            xtra_data = np.take(xtra_data,permut,axis=0,out=xtra_data) #Shuffle the images
         
     if random_images==False:
         #simply take all available cells              
         random_ind = ind                   
         images = images
         indices = indices
+        xtra_data = xtra_data
         
-    yield images,np.array(indices).astype(int)
+    yield images,np.array(indices).astype(int),xtra_data
 
 def contrast_augm_numpy(images,fmin,fmax):
     for i in range(images.shape[0]):
@@ -601,18 +631,28 @@ def crop_imgs_to_ram(SelectedFiles,crop,zoom_factors=None,zoom_order=0,color_mod
     
     Rtdc_paths = [selectedfile["rtdc_path"] for selectedfile in SelectedFiles] #get rtdc paths
     Rtdc_paths_uni = np.unique(np.array(Rtdc_paths)) #get unique Rtdc_paths
+    xtra_in = set([selectedfile["xtra_in"] for selectedfile in SelectedFiles])
+    print("xtra_in")
+    print(xtra_in)
+    if len(xtra_in)>1:# False and True is present. Not supported
+        print("Xtra data is used only for some files. Xtra data needs to be used either by all or by none!")
+        return
+    xtra_in = list(xtra_in)[0]#this is either True or False
     
-    X_train,Indices = [],[]
+    
+    X_train,Indices,Xtra_in_data = [],[],[]
     for i in range(len(Rtdc_paths_uni)): #Move all images to RAM (Not only some random images!)->random_images=False
         if zoom_factors!=None:
-            gen_train = gen_crop_img(crop,Rtdc_paths_uni[i],random_images=False,zoom_factor=zoom_factors[i],zoom_order=zoom_order,color_mode=color_mode) #Replace=true means that individual cells could occur several times    
+            gen_train = gen_crop_img(crop,Rtdc_paths_uni[i],random_images=False,zoom_factor=zoom_factors[i],zoom_order=zoom_order,color_mode=color_mode,xtra_in=xtra_in) #Replace=true means that individual cells could occur several times    
         else:
-            gen_train = gen_crop_img(crop,Rtdc_paths_uni[i],random_images=False,color_mode=color_mode) #Replace=true means that individual cells could occur several times    
+            gen_train = gen_crop_img(crop,Rtdc_paths_uni[i],random_images=False,color_mode=color_mode,xtra_in=xtra_in) #Replace=true means that individual cells could occur several times    
         
-        x_train,index = next(gen_train)        
+        x_train,index,xtra_in_data = next(gen_train)        
         X_train.append(x_train)
-        Indices.append(index)        
-    dic = {"rtdc_path":Rtdc_paths_uni,"Cropped_Images":X_train,"Indices":Indices}
+        Indices.append(index)
+        Xtra_in_data.append(xtra_in_data)
+        
+    dic = {"rtdc_path":Rtdc_paths_uni,"Cropped_Images":X_train,"Indices":Indices,"Xtra_In":Xtra_in_data}
     return dic
 
 
