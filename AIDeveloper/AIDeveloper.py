@@ -114,7 +114,7 @@ import aid_img, aid_dl, aid_bin
 import aid_frontend
 from partial_trainability import partial_trainability
 
-VERSION = "0.0.9" #Python 3.5.6 Version
+VERSION = "0.0.9_dev1" #Python 3.5.6 Version
 model_zoo_version = model_zoo.__version__()
 print("AIDeveloper Version: "+VERSION)
 print("model_zoo.py Version: "+model_zoo.__version__())
@@ -311,13 +311,13 @@ class MainWindow(QtWidgets.QMainWindow):
         self.gridLayout_8 = QtWidgets.QGridLayout(self.groupBox_dragdrop)
         self.gridLayout_8.setObjectName(_fromUtf8("gridLayout_8"))
         
-        self.table_dragdrop = MyTable(0,10,self.groupBox_dragdrop) #table with 9 columns
+        self.table_dragdrop = MyTable(0,11,self.groupBox_dragdrop) #table with 9 columns
         self.table_dragdrop.setObjectName(_fromUtf8("table_dragdrop"))
-        header_labels = ["File", "Class" ,"T", "V", "Show","Events total","Events/Epoch","PIX","Shuffle","Zoom"]
+        header_labels = ["File", "Class" ,"T", "V", "Show","Events total","Events/Epoch","PIX","Shuffle","Zoom","Xtra_In"]
 
         self.table_dragdrop.setHorizontalHeaderLabels(header_labels) 
         header = self.table_dragdrop.horizontalHeader()
-        for i in [1,2,3,4,5,6,7,8,9]:#range(len(header_labels)):
+        for i in [1,2,3,4,5,6,7,8,9,10]:#range(len(header_labels)):
             header.setResizeMode(i, QtWidgets.QHeaderView.ResizeToContents)        
         self.table_dragdrop.setAcceptDrops(True)
         self.table_dragdrop.setDragEnabled(True)
@@ -3684,7 +3684,8 @@ class MainWindow(QtWidgets.QMainWindow):
                 if "image" in features and "pos_x" in features and "pos_y" in features:
                     nr_images = rtdc_ds["image"].len()
                     pix = rtdc_ds.config["imaging"]["pixel size"]
-                    fileinfo.append({"rtdc_ds":rtdc_ds,"rtdc_path":rtdc_path,"features":features,"nr_images":nr_images,"pix":pix})
+                    xtra_in_available = len(rtdc_ds._h5.keys())>2 #Is True, only if there are more than 2 elements. 
+                    fileinfo.append({"rtdc_ds":rtdc_ds,"rtdc_path":rtdc_path,"features":features,"nr_images":nr_images,"pix":pix,"xtra_in":xtra_in_available})
                 else:
                     missing = []
                     for feat in ["image","pos_x","pos_y"]:
@@ -3697,6 +3698,7 @@ class MainWindow(QtWidgets.QMainWindow):
                     msg.setWindowTitle("Missing essential features")
                     msg.setStandardButtons(QtWidgets.QMessageBox.Ok)
                     msg.exec_()                      
+                                
             except:
                 pass
         
@@ -3797,6 +3799,17 @@ class MainWindow(QtWidgets.QMainWindow):
             item.setData(QtCore.Qt.EditRole,zoom)
             self.table_dragdrop.setItem(rowPosition, columnPosition, item)
 
+            columnPosition = 10           
+            #Should xtra_data be used?
+            item = QtWidgets.QTableWidgetItem()#("item {0} {1}".format(rowNumber, columnNumber))
+            xtra_in_available = fileinfo[rowNumber]["xtra_in"]
+            if xtra_in_available:
+                item.setFlags( QtCore.Qt.ItemIsUserCheckable | QtCore.Qt.ItemIsEnabled  )
+            else:
+                item.setFlags( QtCore.Qt.ItemIsUserCheckable )
+            item.setCheckState(QtCore.Qt.Unchecked)
+
+            self.table_dragdrop.setItem(rowPosition, columnPosition, item)
 
 
     #Functions for Keras augmentation checkboxes
@@ -4482,6 +4495,8 @@ class MainWindow(QtWidgets.QMainWindow):
             shuffle = bool(self.table_dragdrop.item(rowPosition, 8).checkState())           
             #should the images be zoomed in/out by a factor?
             zoom_factor = float(self.table_dragdrop.item(rowPosition, 9).text())            
+            #should xtra_data be used for training?
+            xtra_in = bool(self.table_dragdrop.item(rowPosition, 10).checkState())           
             
             if cb_t.checkState() == QtCore.Qt.Checked and nr_events_epoch>0: #add to training files if the user wants more than 0 images per epoch
                 failed,rtdc_ds = aid_bin.load_rtdc(rtdc_path)
@@ -4497,7 +4512,7 @@ class MainWindow(QtWidgets.QMainWindow):
                 hash_ = rtdc_ds.hash
                 features = rtdc_ds.features
                 nr_images = rtdc_ds["image"].len()
-                SelectedFiles.append({"rtdc_ds":rtdc_ds,"rtdc_path":rtdc_path,"features":features,"nr_images":nr_images,"class":index,"TrainOrValid":"Train","nr_events":nr_events,"nr_events_epoch":nr_events_epoch,"shuffle":shuffle,"zoom_factor":zoom_factor,"hash":hash_})
+                SelectedFiles.append({"rtdc_ds":rtdc_ds,"rtdc_path":rtdc_path,"features":features,"nr_images":nr_images,"class":index,"TrainOrValid":"Train","nr_events":nr_events,"nr_events_epoch":nr_events_epoch,"shuffle":shuffle,"zoom_factor":zoom_factor,"hash":hash_,"xtra_in":xtra_in})
             
             cb_v = self.table_dragdrop.item(rowPosition, 3)
             if cb_v.checkState() == QtCore.Qt.Checked and nr_events_epoch>0:
@@ -4513,7 +4528,35 @@ class MainWindow(QtWidgets.QMainWindow):
                 hash_ = rtdc_ds.hash
                 features = rtdc_ds.features
                 nr_images = rtdc_ds["image"].len()
-                SelectedFiles.append({"rtdc_ds":rtdc_ds,"rtdc_path":rtdc_path,"features":features,"nr_images":nr_images,"class":index,"TrainOrValid":"Valid","nr_events":nr_events,"nr_events_epoch":nr_events_epoch,"shuffle":shuffle,"zoom_factor":zoom_factor,"hash":hash_})
+                SelectedFiles.append({"rtdc_ds":rtdc_ds,"rtdc_path":rtdc_path,"features":features,"nr_images":nr_images,"class":index,"TrainOrValid":"Valid","nr_events":nr_events,"nr_events_epoch":nr_events_epoch,"shuffle":shuffle,"zoom_factor":zoom_factor,"hash":hash_,"xtra_in":xtra_in})
+        return SelectedFiles
+
+    def items_available(self):
+        """
+        Function grabs all information from table_dragdrop. Checked and Unchecked
+        Does not load rtdc_ds (save time)
+        """
+        rowCount = self.table_dragdrop.rowCount()
+        #Collect urls to files that are checked
+        SelectedFiles = []
+        for rowPosition in range(rowCount):  
+            #get the filename/path
+            rtdc_path = str(self.table_dragdrop.cellWidget(rowPosition, 0).text())
+            #get the index (celltype) of it
+            index = int(self.table_dragdrop.cellWidget(rowPosition, 1).value())
+            #How many Events contains dataset in total?
+            nr_events = int(self.table_dragdrop.item(rowPosition, 5).text())
+            #how many cells/epoch during training or validation?
+            nr_events_epoch = int(self.table_dragdrop.item(rowPosition, 6).text())            
+            #should the dataset be randomized (shuffled?)            
+            shuffle = bool(self.table_dragdrop.item(rowPosition, 8).checkState())           
+            #should the images be zoomed in/out by a factor?
+            zoom_factor = float(self.table_dragdrop.item(rowPosition, 9).text())            
+            #should xtra_data be used for training?
+            xtra_in = bool(self.table_dragdrop.item(rowPosition, 10).checkState())           
+            
+            SelectedFiles.append({"rtdc_path":rtdc_path,"class":index,"TrainOrValid":"NotSpecified","nr_events":nr_events,"nr_events_epoch":nr_events_epoch,"shuffle":shuffle,"zoom_factor":zoom_factor,"xtra_in":xtra_in})
+            
         return SelectedFiles
 
 
@@ -4541,8 +4584,6 @@ class MainWindow(QtWidgets.QMainWindow):
         return SelectedFiles
 
 
-
-
     def uncheck_if_zero(self,item):
         #If the Nr. of epochs is changed to zero:
         #uncheck the dataset for train/valid
@@ -4557,7 +4598,8 @@ class MainWindow(QtWidgets.QMainWindow):
             cb_v = self.table_dragdrop.item(row, 3)
             if cb_v.checkState() == QtCore.Qt.Checked:
                 cb_v.setCheckState(False)
-            
+
+      
     def item_click(self,item): 
         colPosition = item.column()
         rowPosition = item.row()
@@ -4731,9 +4773,6 @@ class MainWindow(QtWidgets.QMainWindow):
 
             rowPosition += 1
         
-
-
-
         #Validation info
         self.tableWidget_Info.setSpan(rowPosition, 0, 1, 2) 
         item = QtWidgets.QTableWidgetItem("Val. data")  
@@ -4768,6 +4807,7 @@ class MainWindow(QtWidgets.QMainWindow):
             rowPosition += 1
         self.tableWidget_Info.resizeColumnsToContents()            
         self.tableWidget_Info.resizeRowsToContents()
+
 
     def update_data_overview_2(self,SelectedFiles):
         if len(SelectedFiles)==0:
@@ -4872,7 +4912,10 @@ class MainWindow(QtWidgets.QMainWindow):
                     self.update_historyplot()
  
     def select_all(self,col):
-        apply_at_col = [2,3,8]
+        """
+        Check/Uncheck items on table_dragdrop
+        """
+        apply_at_col = [2,3,8,10]
         if col not in apply_at_col:
             return
         #otherwiese continue
@@ -7510,6 +7553,14 @@ class MainWindow(QtWidgets.QMainWindow):
     
             #To get the class weights (loss), the SelectedFiles are required 
             SelectedFiles = self.items_clicked()
+            #Check if xtra_data should be used for training
+            xtra_in = [s["xtra_in"] for s in SelectedFiles]
+            if len(set(xtra_in))==1:
+                xtra_in = list(set(xtra_in))[0]
+            elif len(set(xtra_in))>1:# False and True is present. Not supported
+                print("Xtra data is used only for some files. Xtra data needs to be used either by all or by none!")
+                return
+
             self.fittingpopups_ui[listindex].SelectedFiles = SelectedFiles #save to self. to make it accessible for popup showing loss weights
             #Get the class weights. This function runs now the first time in the fitting routine. 
             #It is possible that the user chose Custom weights and then changed the classes. Hence first check if 
@@ -7864,6 +7915,11 @@ class MainWindow(QtWidgets.QMainWindow):
             zoom_order = [self.actionOrder0.isChecked(),self.actionOrder1.isChecked(),self.actionOrder2.isChecked(),self.actionOrder3.isChecked(),self.actionOrder4.isChecked(),self.actionOrder5.isChecked()]
             zoom_order = int(np.where(np.array(zoom_order)==True)[0])
             shuffle_train = [selectedfile["shuffle"] for selectedfile in SelectedFiles_train]
+            xtra_in = set([selectedfile["xtra_in"] for selectedfile in SelectedFiles_train])   
+            if len(xtra_in)>1:# False and True is present. Not supported
+                print("Xtra data is used only for some files. Xtra data needs to be used either by all or by none!")
+                return
+            xtra_in = list(xtra_in)[0]#this is either True or False
             
             #read self.ram to new variable ; next clear ram. This is required for multitasking (training multiple models with maybe different data)
             DATA = self.ram
@@ -7878,7 +7934,7 @@ class MainWindow(QtWidgets.QMainWindow):
                     #if Data_to_RAM was not enabled:
                     #if not self.actionDataToRam.isChecked():
                     if len(DATA)==0: #Here, the entire training set needs to be used! Not only random images!
-                        #Replace true means that individual cells could occur several times
+                        #Replace=true: means individual cells could occur several times
                         gen_train = aid_img.gen_crop_img(crop,rtdc_path_train[i],random_images=False,zoom_factor=zoom_factors_train[i],zoom_order=zoom_order,color_mode=self.get_color_mode(),padding_mode=paddingMode) 
     #                    else: #get a similar generator, using the ram-data
     #                        if len(DATA)==0:
@@ -8123,19 +8179,24 @@ class MainWindow(QtWidgets.QMainWindow):
             zoom_order = [self.actionOrder0.isChecked(),self.actionOrder1.isChecked(),self.actionOrder2.isChecked(),self.actionOrder3.isChecked(),self.actionOrder4.isChecked(),self.actionOrder5.isChecked()]
             zoom_order = int(np.where(np.array(zoom_order)==True)[0])
             shuffle_valid = [selectedfile["shuffle"] for selectedfile in SelectedFiles_valid]
-        
+            xtra_in = set([selectedfile["xtra_in"] for selectedfile in SelectedFiles_valid])   
+            if len(xtra_in)>1:# False and True is present. Not supported
+                print("Xtra data is used only for some files. Xtra data needs to be used either by all or by none!")
+                return
+            xtra_in = list(xtra_in)[0]#this is either True or False
+
             ############Cropping#####################
-            X_valid,y_valid,Indices = [],[],[]
+            X_valid,y_valid,Indices,xtra_valid = [],[],[],[]
             for i in range(len(SelectedFiles_valid)):
                 if not self.actionDataToRam.isChecked():
-                    #Replace true means that individual cells could occur several times
-                    gen_valid = aid_img.gen_crop_img(crop,rtdc_path_valid[i],nr_events_epoch_valid[i],random_images=shuffle_valid[i],replace=True,zoom_factor=zoom_factors_valid[i],zoom_order=zoom_order,color_mode=self.get_color_mode(),padding_mode=paddingMode)
+                    #Replace=true means individual cells could occur several times
+                    gen_valid = aid_img.gen_crop_img(crop,rtdc_path_valid[i],nr_events_epoch_valid[i],random_images=shuffle_valid[i],replace=True,zoom_factor=zoom_factors_valid[i],zoom_order=zoom_order,color_mode=self.get_color_mode(),padding_mode=paddingMode,xtra_in=xtra_in)
                 else: #get a similar generator, using the ram-data
                     if len(DATA)==0:
-                        #Replace true means that individual cells could occur several times
-                        gen_valid = aid_img.gen_crop_img(crop,rtdc_path_valid[i],nr_events_epoch_valid[i],random_images=shuffle_valid[i],replace=True,zoom_factor=zoom_factors_valid[i],zoom_order=zoom_order,color_mode=self.get_color_mode(),padding_mode=paddingMode)
+                        #Replace=true means individual cells could occur several times
+                        gen_valid = aid_img.gen_crop_img(crop,rtdc_path_valid[i],nr_events_epoch_valid[i],random_images=shuffle_valid[i],replace=True,zoom_factor=zoom_factors_valid[i],zoom_order=zoom_order,color_mode=self.get_color_mode(),padding_mode=paddingMode,xtra_in=xtra_in)
                     else:
-                        gen_valid = aid_img.gen_crop_img_ram(DATA,rtdc_path_valid[i],nr_events_epoch_valid[i],random_images=shuffle_valid[i],replace=True) #Replace true means that individual cells could occur several times
+                        gen_valid = aid_img.gen_crop_img_ram(DATA,rtdc_path_valid[i],nr_events_epoch_valid[i],random_images=shuffle_valid[i],replace=True,xtra_in=xtra_in) #Replace true means that individual cells could occur several times
                         if self.actionVerbose.isChecked():
                             print("Loaded data from RAM")
                 generator_cropped_out = next(gen_valid)
@@ -8143,6 +8204,7 @@ class MainWindow(QtWidgets.QMainWindow):
                 #y_valid.append(np.repeat(indices_valid[i],nr_events_epoch_valid[i]))
                 y_valid.append(np.repeat(indices_valid[i],X_valid[-1].shape[0]))
                 Indices.append(generator_cropped_out[1])
+                xtra_valid.append(generator_cropped_out[2])
                 del generator_cropped_out
             #Save the validation set (BEFORE normalization!)
             #Write to.rtdc files
@@ -8168,7 +8230,7 @@ class MainWindow(QtWidgets.QMainWindow):
             X_valid = np.concatenate(X_valid)
             y_valid = np.concatenate(y_valid)
             Y_valid = np_utils.to_categorical(y_valid, nr_classes)# * 2 - 1
-    
+            xtra_valid = np.concatenate(xtra_valid)
             if not bool(self.actionExport_Off.isChecked())==True:
                 #Save the labels
                 np.savetxt(new_modelname.split(".model")[0]+'_Valid_Labels.txt',y_valid.astype(int),fmt='%i')            
@@ -8198,6 +8260,10 @@ class MainWindow(QtWidgets.QMainWindow):
                 print("Change dim. (pixels x pixels) of validation set to ="+str(crop))
                 remove = int(dim_val[2]/2.0 - crop/2.0)
                 X_valid = X_valid[:,remove:remove+crop,remove:remove+crop,:] #crop to crop x crop pixels #TensorFlow
+            
+            if xtra_in==True:
+                print("Add Xtra Data to X_valid")
+                X_valid = [X_valid,xtra_valid]
     
     
             ####################Update the PopupFitting########################
@@ -8343,8 +8409,6 @@ class MainWindow(QtWidgets.QMainWindow):
                SAVED = [ [] for model in model_keras]
     
             counter = 0
-    #            thresh_acc = 0
-    #            thresh_loss = 9E20
             
             model_metrics_names = []
             for met in model_metrics:
@@ -8378,28 +8442,30 @@ class MainWindow(QtWidgets.QMainWindow):
                 if isVisible:                    
                     ############Keras image augmentation#####################
                     #Start the first iteration:                
-                    X_train,y_train = [],[]
+                    X_train,y_train,xtra_train = [],[],[]
                     t3 = time.time()
                     for i in range(len(SelectedFiles_train)):
-    #                        if not self.actionDataToRam.isChecked():
                         if len(DATA)==0:
                             #Replace true means that individual cells could occur several times
-                            gen_train = aid_img.gen_crop_img(cropsize2,rtdc_path_train[i],nr_events_epoch_train[i],random_images=shuffle_train[i],replace=True,zoom_factor=zoom_factors_train[i],zoom_order=zoom_order,color_mode=self.get_color_mode(),padding_mode=paddingMode) 
-    #                        else:
-    #                            if len(DATA)==0:
-    #                                gen_train = aid_img.gen_crop_img(cropsize2,rtdc_path_train[i],nr_events_epoch_train[i],replace=True) #Replace true means that individual cells could occur several times
+                            gen_train = aid_img.gen_crop_img(cropsize2,rtdc_path_train[i],nr_events_epoch_train[i],random_images=shuffle_train[i],replace=True,zoom_factor=zoom_factors_train[i],zoom_order=zoom_order,color_mode=self.get_color_mode(),padding_mode=paddingMode,xtra_in=xtra_in) 
                         else:
-                            gen_train = aid_img.gen_crop_img_ram(DATA,rtdc_path_train[i],nr_events_epoch_train[i],random_images=shuffle_train[i],replace=True) #Replace true means that individual cells could occur several times
+                            gen_train = aid_img.gen_crop_img_ram(DATA,rtdc_path_train[i],nr_events_epoch_train[i],random_images=shuffle_train[i],replace=True,xtra_in=xtra_in) #Replace true means that individual cells could occur several times
                             if self.actionVerbose.isChecked():
                                 print("Loaded data from RAM")
-                        X_train.append(next(gen_train)[0])
-                        #y_train.append(np.repeat(indices_train[i],nr_events_epoch_train[i])) #This does not work if shuffle=False, because actually not all images can be used (the given number in the table (Cells/Epoch) is actually wrong!)
+                        data_ = next(gen_train)
+                        X_train.append(data_[0])
                         y_train.append(np.repeat(indices_train[i],X_train[-1].shape[0]))
-    
+                        if xtra_in==True:
+                            xtra_train.append(data_[2])
+                        del data_
+                        
                     X_train = np.concatenate(X_train)
                     X_train = X_train.astype(np.uint8)
-                        
                     y_train = np.concatenate(y_train)
+                    if xtra_in==True:
+                        print("Retrieve Xtra Data...")
+                        xtra_train = np.concatenate(xtra_train)
+                    
                     t4 = time.time()
                     if verbose == 1:
                         print("Time to load data (from .rtdc or RAM) and crop="+str(t4-t3))
@@ -8409,7 +8475,7 @@ class MainWindow(QtWidgets.QMainWindow):
                     elif len(X_train.shape)==3:
                         channels=1
                     else:
-                        print("Invalid data dimension:" +str(X_valid.shape))
+                        print("Invalid data dimension:" +str(X_train.shape))
                     if channels==1:
                         #Add the "channels" dimension
                         X_train = np.expand_dims(X_train,3)
@@ -8480,10 +8546,7 @@ class MainWindow(QtWidgets.QMainWindow):
                             verbose = 1
                         else:
                             verbose = 0                            
-                                                
-    #                        X_batch = np.copy(X_batch_orig)#copy from X_batch_orig, X_batch will be altered without altering X_batch_orig            
-    #                        X_batch = X_batch.astype(float)
-                        
+                                                                        
                         #Another while loop if the user wants to reuse the keras-augmented data
                         #several times and only apply brightness augmentation:
                         brightnesss_iter_counter = 0
@@ -8492,7 +8555,7 @@ class MainWindow(QtWidgets.QMainWindow):
                             X_batch = np.copy(X_batch_orig)#copy from X_batch_orig, X_batch will be altered without altering X_batch_orig            
                             X_batch = X_batch.astype(np.uint8)                            
                             
-                            #########X_batch = X_batch.astype(float)########## No floating yet :) !!!
+                            #########X_batch = X_batch.astype(float)########## No float yet :) !!!
                             
                             brightnesss_iter_counter += 1
                             if self.actionVerbose.isChecked()==True:
@@ -8799,9 +8862,13 @@ class MainWindow(QtWidgets.QMainWindow):
                             if verbose == 1: 
                                 print("X_batch.shape")
                                 print(X_batch.shape)
-                                print("X_valid.shape")
-                                print(X_valid.shape)
-    
+                                #print("X_valid.shape")
+                                #print(X_valid.shape)
+
+                            if xtra_in==True:
+                                print("Add Xtra Data to X_batch")
+                                X_batch = [X_batch,xtra_train]
+
                             ###################################################
                             ###############Actual fitting######################
                             ###################################################
@@ -9690,17 +9757,23 @@ class MainWindow(QtWidgets.QMainWindow):
         zoom_order = [self.actionOrder0.isChecked(),self.actionOrder1.isChecked(),self.actionOrder2.isChecked(),self.actionOrder3.isChecked(),self.actionOrder4.isChecked(),self.actionOrder5.isChecked()]
         zoom_order = int(np.where(np.array(zoom_order)==True)[0])
         shuffle = [selectedfile["shuffle"] for selectedfile in SelectedFiles]
+        xtra_in = set([selectedfile["xtra_in"] for selectedfile in SelectedFiles])   
+        if len(xtra_in)>1:# False and True is present. Not supported
+            print("Xtra data is used only for some files. Xtra data needs to be used either by all or by none!")
+            return
+        xtra_in = list(xtra_in)[0]#this is either True or False
+        
         #If the scaling method is "divide by mean and std of the whole training set":
         if norm == "StdScaling using mean and std of all training data":
             mean_trainingdata,std_trainingdata = [],[]
             for i in range(len(SelectedFiles)):
                 if not self.actionDataToRam.isChecked():
-                    gen = aid_img.gen_crop_img(crop,rtdc_path[i],random_images=False,zoom_factor=zoom_factors[i],zoom_order=zoom_order,color_mode=self.get_color_mode(),padding_mode=paddingMode) #Replace true means that individual cells could occur several times
+                    gen = aid_img.gen_crop_img(crop,rtdc_path[i],random_images=False,zoom_factor=zoom_factors[i],zoom_order=zoom_order,color_mode=self.get_color_mode(),padding_mode=paddingMode,xtra_in=xtra_in) #Replace true means that individual cells could occur several times
                 else:
                     if len(self.ram)==0:
-                        gen = aid_img.gen_crop_img(crop,rtdc_path[i],random_images=False,zoom_factor=zoom_factors[i],zoom_order=zoom_order,color_mode=self.get_color_mode(),padding_mode=paddingMode) #Replace true means that individual cells could occur several times
+                        gen = aid_img.gen_crop_img(crop,rtdc_path[i],random_images=False,zoom_factor=zoom_factors[i],zoom_order=zoom_order,color_mode=self.get_color_mode(),padding_mode=paddingMode,xtra_in=xtra_in) #Replace true means that individual cells could occur several times
                     else:    
-                        gen = aid_img.gen_crop_img_ram(self.ram,rtdc_path[i],random_images=False) #Replace true means that individual cells could occur several times
+                        gen = aid_img.gen_crop_img_ram(self.ram,rtdc_path[i],random_images=False,xtra_in=xtra_in) #Replace true means that individual cells could occur several times
                         if self.actionVerbose.isChecked():
                             print("Loaded data from RAM")
 
@@ -11274,6 +11347,11 @@ class MainWindow(QtWidgets.QMainWindow):
         zoom_order = [self.actionOrder0.isChecked(),self.actionOrder1.isChecked(),self.actionOrder2.isChecked(),self.actionOrder3.isChecked(),self.actionOrder4.isChecked(),self.actionOrder5.isChecked()]
         zoom_order = int(np.where(np.array(zoom_order)==True)[0])
         shuffle_valid = [selectedfile["shuffle"] for selectedfile in SelectedFiles_valid]
+        xtra_in = set([selectedfile["xtra_in"] for selectedfile in SelectedFiles])   
+        if len(xtra_in)>1:# False and True is present. Not supported
+            print("Xtra data is used only for some files. Xtra data needs to be used either by all or by none!")
+            return
+        xtra_in = list(xtra_in)[0]#this is either True or False
         
         #Read other model properties from the Ui
         norm = self.comboBox_Normalization_2.currentText()
@@ -11299,25 +11377,25 @@ class MainWindow(QtWidgets.QMainWindow):
         #self.ram = dict() #DONT clear the ram here! 
          
         ############Cropping#####################
-        X_valid,y_valid,Indices = [],[],[]
+        X_valid,y_valid,Indices,Xtra_in = [],[],[],[]
         for i in range(len(SelectedFiles_valid)):
             if not self.actionDataToRam.isChecked():
                 #Replace=True means that individual cells could occur several times
-                gen_valid = aid_img.gen_crop_img(crop,rtdc_path_valid[i],nr_events_epoch_valid[i],random_images=shuffle_valid[i],replace=True,zoom_factor=zoom_factors_valid[i],zoom_order=zoom_order,color_mode=self.get_color_mode(),padding_mode=paddingMode) 
+                gen_valid = aid_img.gen_crop_img(crop,rtdc_path_valid[i],nr_events_epoch_valid[i],random_images=shuffle_valid[i],replace=True,zoom_factor=zoom_factors_valid[i],zoom_order=zoom_order,color_mode=self.get_color_mode(),padding_mode=paddingMode,xtra_in=xtra_in) 
             else: #get a similar generator, using the ram-data
                 if len(DATA)==0:
                     #Replace=True means that individual cells could occur several times
-                    gen_valid = aid_img.gen_crop_img(crop,rtdc_path_valid[i],nr_events_epoch_valid[i],random_images=shuffle_valid[i],replace=True,zoom_factor=zoom_factors_valid[i],zoom_order=zoom_order,color_mode=self.get_color_mode(),padding_mode=paddingMode) 
+                    gen_valid = aid_img.gen_crop_img(crop,rtdc_path_valid[i],nr_events_epoch_valid[i],random_images=shuffle_valid[i],replace=True,zoom_factor=zoom_factors_valid[i],zoom_order=zoom_order,color_mode=self.get_color_mode(),padding_mode=paddingMode,xtra_in=xtra_in) 
                 else:
                     if self.actionVerbose.isChecked():
                         print("Loaded data from RAM")
-                    gen_valid = aid_img.gen_crop_img_ram(DATA,rtdc_path_valid[i],nr_events_epoch_valid[i],random_images=shuffle_valid[i],replace=True) #Replace=True means that individual cells could occur several times
+                    gen_valid = aid_img.gen_crop_img_ram(DATA,rtdc_path_valid[i],nr_events_epoch_valid[i],random_images=shuffle_valid[i],replace=True,xtra_in=xtra_in) #Replace=True means that individual cells could occur several times
             
             gen = next(gen_valid)
             X_valid.append(gen[0])
             y_valid.append(np.repeat(indices_valid[i],X_valid[-1].shape[0]))
             Indices.append(gen[1]) #Cell index to track the event in the data-set(not cell-type!)
-
+            Xtra_in.append(gen[2])
             
         X_valid_orig = [X.astype(np.uint8) for X in X_valid]
         X_valid = np.concatenate(X_valid)
@@ -11349,7 +11427,7 @@ class MainWindow(QtWidgets.QMainWindow):
                 X_valid = aid_img.norm_imgs(X_valid,norm)
         else:
             X_valid = None
-        dic = {"SelectedFiles_valid":SelectedFiles_valid,"nr_events_epoch_valid":nr_events_epoch_valid,"rtdc_path_valid":rtdc_path_valid,"X_valid_orig":X_valid_orig,"X_valid":X_valid,"y_valid":y_valid,"Indices":Indices}
+        dic = {"SelectedFiles_valid":SelectedFiles_valid,"nr_events_epoch_valid":nr_events_epoch_valid,"rtdc_path_valid":rtdc_path_valid,"X_valid_orig":X_valid_orig,"X_valid":X_valid,"y_valid":y_valid,"Indices":Indices,"Xtra_in":Xtra_in}
         self.ValidationSet = dic
         return 1
         
@@ -11501,7 +11579,7 @@ class MainWindow(QtWidgets.QMainWindow):
             print("Images are non-squared->use aid_img.gen_crop_img")
             #Use aid_img.gen_crop_img to crop with respect to centroid
             gen_valid = aid_img.gen_crop_img(model_in,rtdc_path,random_images=False)
-            x_valid,index = next(gen_valid)
+            x_valid,index,xtra_valid = next(gen_valid)
             #When object is too far at side of image, the frame is dropped.
             #Consider this for y_valid
             y_valid = y_valid[index]
@@ -12449,16 +12527,13 @@ class MainWindow(QtWidgets.QMainWindow):
             msg.exec_()
             return
 
+        AvailableFiles = self.items_available()
+        rtdc_paths = [file_["rtdc_path"] for file_ in AvailableFiles] 
         #Classify all datasets or just one?
-        Files = []
+        Files,FileIndex = [],[]
         if self.radioButton_selectAll.isChecked():
-            #Get the urls of ALL files on the "build"-tab
-            rowCount = self.table_dragdrop.rowCount()
-            for rowPosition in range(rowCount):  
-                #get the filename/path
-                rtdc_path = self.table_dragdrop.cellWidget(rowPosition, 0).text()
-                rtdc_path = str(rtdc_path)
-                Files.append(rtdc_path)
+            Files = rtdc_paths
+            FileIndex = list(range(len(Files)))
             if len(Files)==0:
                 msg = QtWidgets.QMessageBox()
                 msg.setIcon(QtWidgets.QMessageBox.Information)       
@@ -12470,6 +12545,8 @@ class MainWindow(QtWidgets.QMainWindow):
         elif self.radioButton_selectDataSet.isChecked():
             rtdc_path = self.comboBox_selectData.currentText()
             Files.append(rtdc_path)
+            #get the index of this file on the table
+            FileIndex = list(np.where(np.array(rtdc_path)==np.array(rtdc_paths))[0])
         else:
             msg = QtWidgets.QMessageBox()
             msg.setIcon(QtWidgets.QMessageBox.Information)       
@@ -12486,6 +12563,17 @@ class MainWindow(QtWidgets.QMainWindow):
         crop = int(self.spinBox_Crop_2.value())
         norm = str(self.comboBox_Normalization_2.currentText())
         paddingMode = str(self.comboBox_paddingMode.currentText())
+
+        color_mode = self.get_color_mode()
+
+        zoom_factors = [selectedfile["zoom_factor"] for selectedfile in AvailableFiles]
+        zoom_order = [self.actionOrder0.isChecked(),self.actionOrder1.isChecked(),self.actionOrder2.isChecked(),self.actionOrder3.isChecked(),self.actionOrder4.isChecked(),self.actionOrder5.isChecked()]
+        zoom_order = int(np.where(np.array(zoom_order)==True)[0])
+        xtra_in = set([selectedfile["xtra_in"] for selectedfile in AvailableFiles])   
+        if len(xtra_in)>1:# False and True is present. Not supported
+            print("Xtra data is used only for some files. Xtra data needs to be used either by all or by none!")
+            return
+        xtra_in = list(xtra_in)[0]#this is either True or False
 
         #if normalization method needs mean/std of training set, the metafile needs to be loaded:
         if norm == "StdScaling using mean and std of all training data":
@@ -12551,10 +12639,16 @@ class MainWindow(QtWidgets.QMainWindow):
                     return
     
             #Iterate over all Files
-            for rtdc_path in Files:
+            for i in range(len(Files)):#rtdc_path in Files:
+                f_index = FileIndex[i]
+                zoom_factor = zoom_factors[f_index]
+                zoom_order_ = zoom_order[f_index]
+                print("zoom_factor")
+                print(zoom_factor)
+                
                 #get all images, cropped correcetly
-                gen_train = aid_img.gen_crop_img(crop,rtdc_path,random_images=False,color_mode=color_mode,padding_mode=paddingMode)    
-                x_train,index = next(gen_train) #x_train-images of all cells, index-original index of all cells           
+                gen_train = aid_img.gen_crop_img(crop,rtdc_path,replace=True,random_images=False,zoom_factor=zoom_factor,zoom_order=zoom_order_,color_mode=color_mode,padding_mode=paddingMode,xtra_in=xtra_in)
+                x_train,index,xtra_train = next(gen_train) #x_train-images of all cells, index-original index of all cells           
                 
                 if norm == "StdScaling using mean and std of all training data":
                     x_train = aid_img.norm_imgs(x_train,norm,mean_trainingdata,std_trainingdata)
