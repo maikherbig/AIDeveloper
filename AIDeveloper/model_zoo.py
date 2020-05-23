@@ -13,7 +13,7 @@ import keras
 import numpy as np
 
 
-version = "0.0.8_Original" #1.) Use any string you like to specify/define your version of the model_zoo
+version = "0.0.9_Original" #1.) Use any string you like to specify/define your version of the model_zoo
 def __version__():
     #print(version)
     return version
@@ -27,23 +27,25 @@ predefined_5 = ["MhNet1_bn_do_skipcon","MhNet2_bn_do_skipcon","CNN_4Conv2Dense_O
 predefined_6_1 = ["pretrained_mobilenet_v2","pretrained_nasnetmobile","pretrained_nasnetlarge","pretrained_densenet","pretrained_mobilenet","pretrained_inception_v3","pretrained_vgg19","pretrained_vgg16","pretrained_xception"]
 predefined_6_2 = ["pretrained_resnet50","pretrained_resnet101","pretrained_resnet152","pretrained_resnet50_v2","pretrained_resnet101_v2","pretrained_resnet152_v2"]
 predefined_7 = ["Collection_1","Collection_2","Collection_3","Collection_4","Collection_5","Collection_6"]
-
+multiInputModels = ["MLP_MultiIn_3Lay_64"]
 predefined_coll_test = ["Collection_test"]
 
 predefined_models = predefined_1+predefined_2+predefined_3+predefined_4+\
-predefined_5+predefined_6_1+predefined_6_2+predefined_7+predefined_coll_test
+predefined_5+predefined_6_1+predefined_6_2+predefined_7+predefined_coll_test+multiInputModels
 def get_predefined_models(): #this function is used inside AIDeveloper.py
     return predefined_models
 
 #3.) Update the get_model function
 def get_model(modelname,in_dim,channels,out_dim):
-    if modelname.startswith("MLP") and "skipcon" not in modelname and "do" not in modelname :
+    if modelname.startswith("MLP") and "skipcon" not in modelname and "do" not in modelname and "MultiIn" not in modelname :
         modelname = modelname.split("MLP")[1]
         model = mlp_generator(modelname,in_dim,channels,out_dim)
     elif modelname=="MLP_24_16_24_skipcon":
         model = MLP_24_16_24_skipcon(in_dim,channels,out_dim)
     elif modelname=="MLP_256_128_64_do":
         model = MLP_256_128_64_do(in_dim,channels,out_dim)
+    elif modelname=="MLP_MultiIn_3Lay_64":
+        model = MLP_MultiIn_3Lay_64(in_dim,channels,out_dim)
 
     elif modelname=="LeNet5":
         model = LeNet5(in_dim,channels,out_dim)
@@ -1575,4 +1577,28 @@ def collection_test(in_dim1, in_dim2, channels, out_dim):
     return names, models
 
 
+#########################Multi-Input models#######################
 
+
+def MLP_MultiIn_3Lay_64(in_dim,channels,out_dim):
+    inputA = Input(shape=(in_dim, in_dim,channels),name="inputTensorA") #TensorFlow format (height,width,channels)
+    inputB = Input(shape=(1,),name="inputTensorB") 
+    
+    flattenA = Flatten()(inputA)
+    #flattenB = Flatten()(inputB)
+    x = Concatenate(axis=1)([flattenA, inputB])
+    
+    #x = Flatten()(x)
+
+    x = Dense(64)(x)
+    x = Dense(80)(x)
+    x = Dense(32)(x)
+
+    x = Activation('relu')(x)
+
+    x = Dense(out_dim)(x)
+    predictions = Activation('softmax',name="outputTensor")(x)
+    
+    model = Model(inputs=[inputA, inputB], outputs=predictions)
+
+    return model
