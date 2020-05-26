@@ -88,7 +88,7 @@ The script based version was tested using Python 3.5 on Windows, Mac and Linux. 
 
 # AIDeveloper in scientific literature  
 [1]	[M. Kräter et al., “AIDeveloper: deep learning image classification in life science and beyond,” bioRxiv, p. 2020.03.03.975250, Mar. 2020.](https://www.biorxiv.org/content/10.1101/2020.03.03.975250v1)  
-[2]	[A. A. Nawaz et al., “Using real-time fluorescence and deformability cytometry and deep learning to transfer molecular specificity to label-free sorting,” bioRxiv, p. 862227, Dec. 2019.](https://www.biorxiv.org/content/10.1101/862227v2)    
+[2]	[A. A. Nawaz et al., “Intelligent image-based deformation-assisted cell sorting with molecular specificity,” Nat. Methods, May 2020.](https://rdcu.be/b4ow4)    
 [3]	[T. Krüger et al., “Reliable isolation of human mesenchymal stromal cells from bone marrow biopsy specimens in patients after allogeneic hematopoietic cell transplantation,” Cytotherapy, vol. 22, no. 1, pp. 21–26, Jan. 2020.](https://www.ncbi.nlm.nih.gov/pubmed/31883948)   
 
 # Citing AIDeveloper  
