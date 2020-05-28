@@ -39,9 +39,6 @@ def check_squared(images):
     return images
 
 def gen_crop_img(cropsize,rtdc_path,nr_events=100,replace=True,random_images=True,zoom_factor=1,zoom_order=0,color_mode='Grayscale',padding_mode='constant',xtra_in=False):
-    print("gen_crop_img")
-    print("xtra_in")
-    print(xtra_in)
 
     failed,rtdc_ds = aid_bin.load_rtdc(rtdc_path)
     if failed:
@@ -167,8 +164,6 @@ def gen_crop_img(cropsize,rtdc_path,nr_events=100,replace=True,random_images=Tru
         
         if xtra_in==True:
             xtra_data = xtra_data[random_ind_unique[0]] 
-            print("xtra_data")
-            print(xtra_data)
             
         images,Pos_x,Pos_y,indices,Xtra_data = [],[],[],[],[] #overwrite images by defining the list images
         for i in range(len(random_ind_unique[1])):
@@ -307,10 +302,6 @@ def gen_crop_img_ram(dic,rtdc_path,nr_events=100,replace=True,random_images=True
     images = np.array(dic["Cropped_Images"])[ind][0]   
     indices = np.array(dic["Indices"])[ind][0]   
     xtra_data = np.array(dic["Xtra_In"])[ind][0]   
-    print("indices.shape")    
-    print(indices.shape)
-    print("xtra_data.shape")
-    print(xtra_data.shape)
 
     ind = range(len(images))
     if random_images==True:
@@ -632,14 +623,11 @@ def crop_imgs_to_ram(SelectedFiles,crop,zoom_factors=None,zoom_order=0,color_mod
     Rtdc_paths = [selectedfile["rtdc_path"] for selectedfile in SelectedFiles] #get rtdc paths
     Rtdc_paths_uni = np.unique(np.array(Rtdc_paths)) #get unique Rtdc_paths
     xtra_in = set([selectedfile["xtra_in"] for selectedfile in SelectedFiles])
-    print("xtra_in")
-    print(xtra_in)
     if len(xtra_in)>1:# False and True is present. Not supported
         print("Xtra data is used only for some files. Xtra data needs to be used either by all or by none!")
         return
     xtra_in = list(xtra_in)[0]#this is either True or False
-    
-    
+
     X_train,Indices,Xtra_in_data = [],[],[]
     for i in range(len(Rtdc_paths_uni)): #Move all images to RAM (Not only some random images!)->random_images=False
         if zoom_factors!=None:
