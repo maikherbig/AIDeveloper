@@ -114,7 +114,7 @@ import aid_img, aid_dl, aid_bin
 import aid_frontend
 from partial_trainability import partial_trainability
 
-VERSION = "0.0.9_dev1" #Python 3.5.6 Version
+VERSION = "0.0.9_dev2" #Python 3.5.6 Version
 model_zoo_version = model_zoo.__version__()
 print("AIDeveloper Version: "+VERSION)
 print("model_zoo.py Version: "+model_zoo.__version__())
@@ -8862,8 +8862,6 @@ class MainWindow(QtWidgets.QMainWindow):
                             if verbose == 1: 
                                 print("X_batch.shape")
                                 print(X_batch.shape)
-                                #print("X_valid.shape")
-                                #print(X_valid.shape)
 
                             if xtra_in==True:
                                 print("Add Xtra Data to X_batch")
@@ -8913,7 +8911,33 @@ class MainWindow(QtWidgets.QMainWindow):
                                         #In case of multi-GPU, first copy the weights of the parallel model to the normal model
                                         model_keras.set_weights(model_keras_p.layers[-2].get_weights())
                                     #Save the model
-                                    model_keras.save(new_modelname.split(".model")[0]+"_"+str(counter)+".model")
+                                    print("This is the model path")
+                                    print(os.path.dirname(new_modelname))
+                                    if os.path.exists(os.path.dirname(new_modelname)):
+                                        model_keras.save(new_modelname.split(".model")[0]+"_"+str(counter)+".model")
+                                    else:#in case the folder does not exist (anymore), create a folder in temp
+                                        #what is the foldername of the model?
+                                        print("Saving failed. Create folder in temp")
+                                        temp_path = aid_bin.create_temp_folder()#create a temp folder if it does not already exist
+                                        print("Your temp folder is here: "+str(temp_path))
+                                        parentfolder = aid_bin.splitall(new_modelname)[-2]
+                                        fname = os.path.split(new_modelname)[-1]
+
+                                        #create that folder in temp if it not exists already
+                                        if not os.path.exists(os.path.join(temp_path,parentfolder)):
+                                            print("create "+os.path.join(temp_path,parentfolder))
+                                            os.mkdir(os.path.join(temp_path,parentfolder))
+
+                                        #change the new_modelname to a path in temp
+                                        new_modelname = os.path.join(temp_path,parentfolder,fname)
+                                        model_keras.save(new_modelname.split(".model")[0]+"_"+str(counter)+".model")
+                                        #Also update the excel writer!
+                                        writer = pd.ExcelWriter(new_modelname.split(".model")[0]+'_meta.xlsx', engine='openpyxl')
+                                        pd.DataFrame().to_excel(writer,sheet_name='UsedData') #initialize empty Sheet
+                                        SelectedFiles_df.to_excel(writer,sheet_name='UsedData')
+                                        DataOverview_df.to_excel(writer,sheet_name='DataOverview') #write data overview to separate sheet            
+                                        pd.DataFrame().to_excel(writer,sheet_name='Parameters') #initialize empty Sheet
+                                        pd.DataFrame().to_excel(writer,sheet_name='History') #initialize empty Sheet
 
                                     Saved.append(1)
                                 
@@ -9007,25 +9031,72 @@ class MainWindow(QtWidgets.QMainWindow):
                                     DF1["Saved"] = Saved
                                     DF1["Time"] = Stopwatch
                                     DF1.index = Index
-    
-                                    #in case the history is saved on a server and another PC wants to access 
-                                    #the history file (meta.excel) there can be an error
-                                    #In such a case try a few times, and wait
-                                    tries = 0
-    #                                    while tries<10:
-    #                                        try:
+
+
+
+                                    if os.path.exists(os.path.dirname(new_modelname)):
+                                        print("Path exists. Save now")
+                                        model_keras.save(new_modelname.split(".model")[0]+"_"+str(counter)+".model")
+                                    else:#in case the folder does not exist (anymore), create a folder in temp
+                                        #what is the foldername of the model?
+                                        print("Saving failed. Create folder in temp")
+                                        temp_path = aid_bin.create_temp_folder()#create a temp folder if it does not already exist
+                                        print("Your temp folder is here: "+str(temp_path))
+                                        parentfolder = aid_bin.splitall(new_modelname)[-2]
+                                        fname = os.path.split(new_modelname)[-1]
+
+                                        #create that folder in temp if it not exists already
+                                        if not os.path.exists(os.path.join(temp_path,parentfolder)):
+                                            print("create "+os.path.join(temp_path,parentfolder))
+                                            os.mkdir(os.path.join(temp_path,parentfolder))
+
+                                        #change the new_modelname to a path in temp
+                                        new_modelname = os.path.join(temp_path,parentfolder,fname)
+
                                     #Saving
-                                    if os.path.isfile(new_modelname.split(".model")[0]+'_meta.xlsx'):
-                                        os.chmod(new_modelname.split(".model")[0]+'_meta.xlsx', S_IREAD|S_IRGRP|S_IROTH|S_IWRITE|S_IWGRP|S_IWOTH) #make read/write
-                                    DF1.to_excel(writer,sheet_name='History', startrow=writer.sheets['History'].max_row,header= False)
-                                    writer.save()
-                                    os.chmod(new_modelname.split(".model")[0]+'_meta.xlsx', S_IREAD|S_IRGRP|S_IROTH)  #make read only
-                                    print("meta.xlsx was saved")
-                                    Index,Histories,Saved,Stopwatch = [],[],[],[]#reset the lists
-                                    t1 = time.time()
-    #                                        except:
-    #                                            time.sleep(1.5)
-    #                                            tries+=1
+                                    if os.path.exists(os.path.dirname(new_modelname)):#check if folder is (still) available
+                                        if os.path.isfile(new_modelname.split(".model")[0]+'_meta.xlsx'):
+                                            os.chmod(new_modelname.split(".model")[0]+'_meta.xlsx', S_IREAD|S_IRGRP|S_IROTH|S_IWRITE|S_IWGRP|S_IWOTH) #make read/write
+                                        DF1.to_excel(writer,sheet_name='History', startrow=writer.sheets['History'].max_row,header= False)
+                                        writer.save()
+                                        os.chmod(new_modelname.split(".model")[0]+'_meta.xlsx', S_IREAD|S_IRGRP|S_IROTH)  #make read only
+                                        print("meta.xlsx was saved")
+                                        Index,Histories,Saved,Stopwatch = [],[],[],[]#reset the lists
+                                        t1 = time.time()
+                                        print("Saved to: "+new_modelname)
+                                    else:#If folder not available, create a folder in temp
+                                        print("Saving failed. Create folder in temp")
+                                        temp_path = aid_bin.create_temp_folder()#create a temp folder if it does not already exist
+                                        print("Your temp folder is here: "+str(temp_path))
+                                        folder = os.path.split(new_modelname)[-2]
+                                        print("folder: "+folder)
+                                        fname = os.path.split(new_modelname)[-1]
+                                        print("fname: "+fname)
+
+                                        #create that folder in temp if it not exists already
+                                        if not os.path.exists(os.path.join(temp_path,folder)):
+                                            print("create "+os.path.join(temp_path,folder))
+                                            os.mkdir(os.path.join(temp_path,folder))
+
+                                        #change the new_modelname to a path in temp
+                                        new_modelname = os.path.join(temp_path,folder,fname)
+                                        
+                                        #update the excel writer
+                                        writer = pd.ExcelWriter(new_modelname.split(".model")[0]+'_meta.xlsx', engine='openpyxl')
+                                        pd.DataFrame().to_excel(writer,sheet_name='UsedData') #initialize empty Sheet
+                                        SelectedFiles_df.to_excel(writer,sheet_name='UsedData')
+                                        DataOverview_df.to_excel(writer,sheet_name='DataOverview') #write data overview to separate sheet            
+                                        pd.DataFrame().to_excel(writer,sheet_name='Parameters') #initialize empty Sheet
+                                        pd.DataFrame().to_excel(writer,sheet_name='History') #initialize empty Sheet
+
+                                        if os.path.isfile(new_modelname.split(".model")[0]+'_meta.xlsx'):
+                                            print("There is already such a file...AID will add new data to it. Please check if this is OK")
+                                            os.chmod(new_modelname.split(".model")[0]+'_meta.xlsx', S_IREAD|S_IRGRP|S_IROTH|S_IWRITE|S_IWGRP|S_IWOTH) #read/write
+                                        DF1.to_excel(writer,sheet_name='History')
+                                        writer.save()
+                                        os.chmod(new_modelname.split(".model")[0]+'_meta.xlsx', S_IREAD|S_IRGRP|S_IROTH)
+                                        print("meta.xlsx was saved")
+                                        Index,Histories,Saved,Stopwatch = [],[],[],[]#reset the lists
                                         
                                         
                             if collection==True:
