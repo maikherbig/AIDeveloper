@@ -36,11 +36,10 @@ In this tutorial, AID is used to tackle a biomedical question that is currently 
 More information and step by step instructions are available [here](https://github.com/maikherbig/AIDeveloper/tree/master/Tutorial%205%20COVID-19%20Chest%20X-ray%20images).  
 Furthermore, there is a video showing the analysis procedure from beginning to end:  
 [![Alternate Text](art/Youtube_Link_Tutorial5_v03.png)](https://www.youtube.com/watch?v=KRDJBJD7CsA "AIDeveloper Tutorial 5")
-
-
-
+  
+  
 ## More tutorials  
-[Adding models to the model zoo](https://figshare.com/articles/Krater_et_al_2020_Data_zip/9902636)  
+[Adding models to the model zoo](https://www.youtube.com/watch?v=XboH-YsG6LA&t=31s)  
 [Create standalone using PyInstaller](https://figshare.com/articles/Krater_et_al_2020_Data_zip/9902636)  
 [AIDeveloper on AWS with GPU support](https://www.youtube.com/watch?v=C3pMNAg68XQ&t=1818s)  
 
