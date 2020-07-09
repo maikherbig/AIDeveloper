@@ -50,6 +50,8 @@ import h5py,json,time,copy,urllib
 from stat import S_IREAD,S_IRGRP,S_IROTH,S_IWRITE,S_IWGRP,S_IWOTH
 
 import tensorflow as tf
+from tensorboard import program
+
 from tensorflow.python.client import device_lib
 devices = device_lib.list_local_devices()
 device_types = [devices[i].device_type for i in range(len(devices))]
@@ -114,7 +116,7 @@ import aid_img, aid_dl, aid_bin
 import aid_frontend
 from partial_trainability import partial_trainability
 
-VERSION = "0.0.9_dev2" #Python 3.5.6 Version
+VERSION = "0.0.9_dev3" #Python 3.5.6 Version
 model_zoo_version = model_zoo.__version__()
 print("AIDeveloper Version: "+VERSION)
 print("model_zoo.py Version: "+model_zoo.__version__())
@@ -132,6 +134,8 @@ try:
 except AttributeError:
     def _translate(context, text, disambig):
         return QtWidgets.QApplication.translate(context, text, disambig)
+
+os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'#suppress warnings/info from tensorflow
 
 tooltips = aid_start.get_tooltips()
 
@@ -2442,10 +2446,10 @@ class MainWindow(QtWidgets.QMainWindow):
 #        self.groupBox_confusionMatrixPlot.setMaximumSize(QtCore.QSize(600, 16777215))
         self.tableWidget_CM1.setColumnCount(0)
         self.tableWidget_CM1.setRowCount(0)
-        self.tableWidget_CM1.doubleClicked.connect(self.export_to_rtdc)
+        self.tableWidget_CM1.doubleClicked.connect(self.cm_interaction)
         self.tableWidget_CM2.setColumnCount(0)
         self.tableWidget_CM2.setRowCount(0)
-        self.tableWidget_CM2.doubleClicked.connect(self.export_to_rtdc)
+        self.tableWidget_CM2.doubleClicked.connect(self.cm_interaction)
         self.pushButton_CM1_to_Clipboard.clicked.connect(lambda: self.copy_cm_to_clipboard(1)) #1 tells the function to connect to CM1
         self.pushButton_CM2_to_Clipboard.clicked.connect(lambda: self.copy_cm_to_clipboard(2)) #2 tells the function to connect to CM2
         self.pushButton_CompInfTime.clicked.connect(self.inference_time)
@@ -10690,7 +10694,7 @@ class MainWindow(QtWidgets.QMainWindow):
         icon = QtGui.QPixmap(icon).scaledToHeight(32, QtCore.Qt.SmoothTransformation)
         msg = QtWidgets.QMessageBox()
         msg.setIconPixmap(icon)
-        text = "<html><head/><body><p>AIDeveloper "+str(VERSION)+"<br>"+sys.version+"<br>Click 'Show Details' to retrieve a list of all used packages.</p></body></html>"
+        text = "<html><head/><body><p>AIDeveloper "+str(VERSION)+"<br>"+sys.version+"<br>Click 'Show Details' to retrieve a list of all Python packages used."+"<br>AID_GPU uses CUDA (NVIDIA) to facilitate GPU processing</p></body></html>"
         msg.setText(text)
         msg.setDetailedText(text_modules)
         msg.setWindowTitle("Software")
@@ -11780,10 +11784,11 @@ class MainWindow(QtWidgets.QMainWindow):
 
                 
         
-    def export_to_rtdc(self,item):
+    def cm_interaction(self,item):
         """
         Grab validation data of particular class, load the scores (model.predict)
         and save images to .rtdc, or show them (users decision)
+        first, "assess_model_plotting" has the be carried out
         """
         true_label = item.row()
         predicted_label = item.column()
@@ -11797,6 +11802,7 @@ class MainWindow(QtWidgets.QMainWindow):
 
         rtdc_path_valid = self.ValidationSet["rtdc_path_valid"]
         X_valid_orig = self.ValidationSet["X_valid_orig"] #cropped but non-normalized images
+                
         Indices = self.ValidationSet["Indices"]
         y_valid = self.ValidationSet["y_valid"] #load the validation labels to a new variable      
         dic = self.Metrics #gives {"scores":scores,"pred":pred,"conc_target_cell":conc_target_cell,"enrichment":enrichment,"yield_":yield_}
@@ -11823,7 +11829,7 @@ class MainWindow(QtWidgets.QMainWindow):
             ind = np.where( (y_val==true_label) & (pred_==predicted_label) )[0] #select true_label cells and which of them are clasified as predicted_label
             #Grab the corresponding images
             ToSave.append(X_valid_orig[i][ind,:,:]) #get non-normalized X_valid to new variable
-            #np.save("X_valid_orig_"+str(i)+".npy",X_valid_orig[i][ind,:,:])
+            #X_valid_.append(X_valid[i][ind,:,:]) #get normalized/cropped images ready to run through the model
             y_valid_list.append(y_val[ind])
             Indices_.append(Indices[i][ind]) #get non-normalized X_valid to new variable
 
@@ -11832,123 +11838,259 @@ class MainWindow(QtWidgets.QMainWindow):
 
         msg = QtWidgets.QMessageBox()
         msg.setIcon(QtWidgets.QMessageBox.Question)
-        text = "<html><head/><body><p>Show images or save to .rtdc/.png/.jpg?</p></body></html>"
+        text = "<html><head/><body><p>Show images/heatmap or save to .rtdc/.png/.jpg?</p></body></html>"
         msg.setText(text)
         msg.setWindowTitle("Show or save?")
-        msg.setStandardButtons(QtGui.QMessageBox.Yes | QtGui.QMessageBox.YesToAll | QtGui.QMessageBox.Save | QtGui.QMessageBox.Cancel)
+        msg.setStandardButtons(QtGui.QMessageBox.Yes | QtGui.QMessageBox.Save | QtGui.QMessageBox.Cancel)
         show = msg.button(QtGui.QMessageBox.Yes)
-        show.setText('Show')
-        save_rtdc = msg.button(QtGui.QMessageBox.YesToAll)
-        save_rtdc.setText('Save to .rtdc')
+        show.setText('Show image/heatmap')
+#        show = msg.button(QtGui.QMessageBox.YesToAll)
+#        show.setText('Show image/heatmap')
         save_png = msg.button(QtGui.QMessageBox.Save)
-        save_png.setText('Save to .png/.jpg...')
+        save_png.setText('Save to .rtdc/.png/.jpg...')
         cancel = msg.button(QtGui.QMessageBox.Cancel)
         cancel.setText('Cancel')
         msg.exec_()        
         
-        if msg.clickedButton()==show: #Show video
-            #Show ToSave Images as video stream
-            if total_number_of_chosen_cells>0:
-                self.plt_cm.append(pg.ImageView())
-                self.plt_cm[-1].show()
-                #append an last frame again to ToSave. Otherwise pyqtgraph does not show all iamges
-                viewimgs = np.concatenate(ToSave).swapaxes(1,2)
-                viewimgs = np.append(viewimgs,viewimgs[-1:],axis=0)
-                self.plt_cm[-1].setImage(viewimgs)
-            else:
-                return
-        
-        #For .rtdc saving
-        elif msg.clickedButton()==save_rtdc: #Save to .rtdc
+
+        #View image and heatmap overlay (Grad-CAM)
+        if msg.clickedButton()==show: #show image and heatmap overlay
             if total_number_of_chosen_cells==0:
                 return
-            sumlen = np.sum(np.array([len(l) for l in ToSave]))
-            self.statusbar.showMessage("Nr. of target cells above threshold = "+str(sumlen),2000)
-    
-            filename = QtWidgets.QFileDialog.getSaveFileName(self, 'Save to .rtdc', Default_dict["Path of last model"],".rtdc (*.rtdc)")
-            filename = filename[0]
-    
-            if len(filename)==0:
-                return
-    
-            #add the suffix _Valid_Data.rtdc or _Valid_Labels.txt
-            if not filename.endswith(".rtdc"):
-                filename = filename +".rtdc"
-            filename_X = filename.split(".rtdc")[0]+"_Valid_Data.rtdc"
-            filename_y = filename.split(".rtdc")[0]+"_Valid_Labels.txt"
-    
-            #Save the labels
-            y_valid_list = np.concatenate(y_valid_list)
-            #Save the .rtdc data (images and all other stuff)
-            #Should cropped or original be saved?
-            if bool(self.actionExport_Original.isChecked())==True:
-                print("Export original images")
-                save_cropped = False
-            if bool(self.actionExport_Cropped.isChecked())==True:
-                print("Export cropped images")
-                save_cropped = True
-            elif bool(self.actionExport_Off.isChecked())==True:
-                print("Exporting is turned off")
-                msg = QtWidgets.QMessageBox()
-                msg.setIcon(QtWidgets.QMessageBox.Information)       
-                msg.setText("You may want to choose a different exporting option in ->Options->Export")
-                msg.setWindowTitle("Export is turned off!")
-                msg.setStandardButtons(QtWidgets.QMessageBox.Ok)
-                msg.exec_()
-                return
-    
-            np.savetxt(filename_y,y_valid_list.astype(int),fmt='%i')      
-            aid_bin.write_rtdc(filename_X,rtdc_path_valid,ToSave,Indices_,cropped=save_cropped,color_mode=self.get_color_mode())
+            #Get the images that were passed through the model for prediction
+            X_valid = self.ValidationSet["X_valid"] #cropped but non-normalized images
+            ind = np.where( (y_valid==true_label) & (pred==predicted_label) )[0] #select true_label cells and which of them are clasified as predicted_label
+            X_valid_ = X_valid[ind]            
 
-            #If all that run without issue, remember the path for next time
-            Default_dict["Path of last model"] = os.path.split(filename)[0]
-            aid_bin.save_aid_settings(Default_dict)
+            #Popup window to show images and settings
+            self.popup_gradcam = QtGui.QDialog()
+            self.popup_gradcam_ui = aid_frontend.popup_cm_interaction()
+            self.popup_gradcam_ui.setupUi(self.popup_gradcam) #open a popup to show images and options
+            #self.popup_imgRes.setWindowModality(QtCore.Qt.WindowModal)
+            #self.popup_gradcam.setWindowModality(QtCore.Qt.ApplicationModal)
+            
+            #Fill Model info
+            self.popup_gradcam_ui.lineEdit_loadModel.setText(self.load_model_path)
+            in_dim = int(self.spinBox_Crop_2.value()) #grab value from Assess Tab
+            self.popup_gradcam_ui.spinBox_Crop_inpImgSize.setValue(in_dim)#insert value into popup
+            out_dim = int(self.spinBox_OutClasses_2.value()) #grab value from Assess Tab
+            self.popup_gradcam_ui.spinBox_outpSize.setValue(out_dim) #insert value into popup
+            self.popup_gradcam_ui.spinBox_gradCAM_targetClass.setMaximum(out_dim-1)
 
-        #For .png saving
-        elif msg.clickedButton()==save_png: #Save to .png/.jpg
+            #For the grad_cam the name of the final conv-layer needs to be selected
+            convlayers = [layer.name for layer in self.model_keras.layers if len(layer.output_shape)==4]
+            convlayers = convlayers[::-1] #reverse list
+            self.popup_gradcam_ui.comboBox_gradCAM_targetLayer.addItems(convlayers)
+
+            #Connect buttons to functions
+            self.popup_gradcam_ui.pushButton_update.clicked.connect(lambda: self.popup_cm_show_update(ToSave,X_valid_))
+            self.popup_gradcam_ui.pushButton_reset.clicked.connect(self.popup_cm_reset)
+            self.popup_gradcam_ui.pushButton_showSummary.clicked.connect(self.popup_show_model_summary)
+            self.popup_gradcam_ui.pushButton_toTensorB.clicked.connect(self.popup_to_tensorboard)
+
+            #Get the original image
+            img_display = np.concatenate(ToSave)
+
+            img_display = np.r_[img_display]
+            img_display = img_display.swapaxes(1,2)
+            img_display = np.append(img_display,img_display[-1:],axis=0)
+
+            self.popup_gradcam_ui.widget_image.setImage(img_display)
+            self.popup_gradcam.show()
+
+
+        #For .rtdc/.png... saving
+        elif msg.clickedButton()==save_png: #Save to .rtdc/.png/.jpg/...
             if total_number_of_chosen_cells==0:
                 return
             sumlen = np.sum(np.array([len(l) for l in ToSave]))
             self.statusbar.showMessage("Nr. of target cells above threshold = "+str(sumlen),2000)
 
-            filename = QtWidgets.QFileDialog.getSaveFileName(self, 'Save to .png/.jpg', Default_dict["Path of last model"],"Image file format (*.png *.jpg *.bmp *.eps *.gif *.ico *.icns)")
+            filename = QtWidgets.QFileDialog.getSaveFileName(self, 'Save to .rtdc/.png/.jpg', Default_dict["Path of last model"],"File format (*.rtdc *.png *.jpg *.bmp *.eps *.gif *.ico *.icns)")
             filename = filename[0]
             if len(filename)==0:
                 return
             filename_X, file_extension = os.path.splitext(filename)#divide into path and file_extension if possible
             #Check if chosen file_extension is valid
-            if not file_extension in [".png",".jpg",".bmp",".eps",".gif",".ico",".icns"]:
+            if not file_extension in [".rtdc",".png",".jpg",".bmp",".eps",".gif",".ico",".icns"]:
                 print("Invalid file extension detected. Will use .png instead.")
                 file_extension = ".png"
+            
+            if file_extension==".rtdc":#user wants to save to .rtdc
+                #add the suffix _Valid_Data.rtdc or _Valid_Labels.txt
+                if not filename.endswith(".rtdc"):
+                    filename = filename +".rtdc"
+                filename_X = filename.split(".rtdc")[0]+"_Valid_Data.rtdc"
+                filename_y = filename.split(".rtdc")[0]+"_Valid_Labels.txt"
+        
+                #Save the labels
+                y_valid_list = np.concatenate(y_valid_list)
+                #Save the .rtdc data (images and all other stuff)
+                #Should cropped or original be saved?
+                if bool(self.actionExport_Original.isChecked())==True:
+                    print("Export original images")
+                    save_cropped = False
+                if bool(self.actionExport_Cropped.isChecked())==True:
+                    print("Export cropped images")
+                    save_cropped = True
+                elif bool(self.actionExport_Off.isChecked())==True:
+                    print("Exporting is turned off")
+                    msg = QtWidgets.QMessageBox()
+                    msg.setIcon(QtWidgets.QMessageBox.Information)       
+                    msg.setText("You may want to choose a different exporting option in ->Options->Export")
+                    msg.setWindowTitle("Export is turned off!")
+                    msg.setStandardButtons(QtWidgets.QMessageBox.Ok)
+                    msg.exec_()
+                    return
+        
+                np.savetxt(filename_y,y_valid_list.astype(int),fmt='%i')      
+                aid_bin.write_rtdc(filename_X,rtdc_path_valid,ToSave,Indices_,cropped=save_cropped,color_mode=self.get_color_mode())
     
-            #Should cropped or original be saved?
-            if bool(self.actionExport_Original.isChecked())==True:
-                print("Export original images")
-                save_cropped = False
-            if bool(self.actionExport_Cropped.isChecked())==True:
-                print("Export cropped images")
-                save_cropped = True
-            elif bool(self.actionExport_Off.isChecked())==True:
-                print("Exporting is turned off")
-                msg = QtWidgets.QMessageBox()
-                msg.setIcon(QtWidgets.QMessageBox.Information)       
-                msg.setText("You may want to choose a different exporting option in ->Options->Export")
-                msg.setWindowTitle("Export is turned off!")
-                msg.setStandardButtons(QtWidgets.QMessageBox.Ok)
-                msg.exec_()
-                return
+                #If all that run without issue, remember the path for next time
+                Default_dict["Path of last model"] = os.path.split(filename)[0]
+                aid_bin.save_aid_settings(Default_dict)
+                
+                
+            else: #some image file format was chosen
+                #Should cropped or original be saved?
+                if bool(self.actionExport_Original.isChecked())==True:
+                    print("Export original images")
+                    save_cropped = False
+                if bool(self.actionExport_Cropped.isChecked())==True:
+                    print("Export cropped images")
+                    save_cropped = True
+                elif bool(self.actionExport_Off.isChecked())==True:
+                    print("Exporting is turned off")
+                    msg = QtWidgets.QMessageBox()
+                    msg.setIcon(QtWidgets.QMessageBox.Information)       
+                    msg.setText("You may want to choose a different exporting option in ->Options->Export")
+                    msg.setWindowTitle("Export is turned off!")
+                    msg.setStandardButtons(QtWidgets.QMessageBox.Ok)
+                    msg.exec_()
+                    return
+    
+                #Save the images data to .png/.jpeg...
+                index = 0
+                for imgs in ToSave:
+                    for img in imgs:
+                        img = PIL.Image.fromarray(img)
+                        img.save(filename_X+"_"+str(index)+file_extension)
+                        index+=1
+    
+                #If all that run without issue, remember the path for next time
+                Default_dict["Path of last model"] = os.path.split(filename)[0]
+                aid_bin.save_aid_settings(Default_dict)
 
-            #Save the images data to .png/.jpeg...
-            index = 0
-            for imgs in ToSave:
-                for img in imgs:
-                    img = PIL.Image.fromarray(img)
-                    img.save(filename_X+"_"+str(index)+file_extension)
-                    index+=1
 
-            #If all that run without issue, remember the path for next time
-            Default_dict["Path of last model"] = os.path.split(filename)[0]
-            aid_bin.save_aid_settings(Default_dict)
+
+    def popup_cm_show_update(self,ToSave,X_valid_):
+        #ui_item = self.popup_gradcam_ui
+        #grab information from the popup window
+        show_image = bool(self.popup_gradcam_ui.groupBox_image_Settings.isChecked())
+        show_gradCAM = bool(self.popup_gradcam_ui.groupBox_gradCAM_Settings.isChecked())
+        alpha_1 = float(self.popup_gradcam_ui.doubleSpinBox_image_alpha.value())
+        alpha_2 = float(self.popup_gradcam_ui.doubleSpinBox_gradCAM_alpha.value())
+        layer_name = str(self.popup_gradcam_ui.comboBox_gradCAM_targetLayer.currentText()) #self.model_keras exists after assess_model_plotting was carried out
+        class_ = int(self.popup_gradcam_ui.spinBox_gradCAM_targetClass.value())
+        colormap = str(self.popup_gradcam_ui.comboBox_gradCAM_colorMap.currentText()) #self.model_keras exists after assess_model_plotting was carried out
+        colormap = "COLORMAP_"+colormap
+        colormap = getattr(cv2, colormap)
+        currentindex = self.popup_gradcam_ui.widget_image.currentIndex
+        
+        if show_image and not show_gradCAM:
+            #Get the original image for display
+            img_display = np.concatenate(ToSave)
+            img_display = np.r_[img_display]
+            img_display = img_display.swapaxes(1,2)
+            img_display = np.append(img_display,img_display[-1:],axis=0)
+        
+        if show_gradCAM:#grad-Cam is on
+            img_display = np.concatenate(ToSave)
+
+            img2 = aid_dl.grad_cam(self.load_model_path, X_valid_, class_, layer_name)#Carry out grad-cam
+            img2 = [cv2.applyColorMap(cam_, colormap) for cam_ in img2]#create colormap returns BGR image!
+            img2 = [cv2.cvtColor(cam_, cv2.COLOR_BGR2RGB) for cam_ in img2]#convert to RGB
+            
+            #add heatmap to image, make sure alpha_1=0 if show_image=False
+            img_display = [cv2.addWeighted(img_display[i], alpha_1, img2[i], alpha_2, 0) for i in range(X_valid_.shape[0])]
+            #ToDo: this only works for RGB images. Adjust expression to work or grayscale and RGB  
+            
+            img_display = np.r_[img_display]
+            img_display = img_display.swapaxes(1,2)
+            img_display = np.append(img_display,img_display[-1:],axis=0)
+
+        self.popup_gradcam_ui.widget_image.setImage(img_display)
+        self.popup_gradcam_ui.widget_image.setCurrentIndex(currentindex)
+        self.popup_gradcam.show()
+
+    def popup_cm_reset(self):
+        self.popup_gradcam_ui.groupBox_image_Settings.setChecked(True)
+        self.popup_gradcam_ui.groupBox_gradCAM_Settings.setChecked(False)
+        #self.popup_gradcam_ui.doubleSpinBox_image_alpha.setValue(1)
+        self.popup_gradcam_ui.comboBox_gradCAM_targetLayer.setCurrentIndex(0)
+        #self.popup_gradcam_ui.comboBox_gradCAM_colorMap.setCurrentIndex(0)
+        self.popup_gradcam_ui.spinBox_gradCAM_targetClass.setValue(0)
+
+
+
+    def popup_show_model_summary(self):
+        #textbrowser popup        
+        self.popup_modelsummary = MyPopup()
+        self.popup_modelsummary_ui = aid_frontend.popup_cm_modelsummary()
+        self.popup_modelsummary_ui.setupUi(self.popup_modelsummary) #open a popup to show images and options
+
+        text5 = "Model summary:\n"
+        summary = []
+        self.model_keras.summary(print_fn=summary.append)
+        summary = "\n".join(summary)
+        text = text5+summary
+        self.popup_modelsummary_ui.textBrowser_modelsummary.append(text)
+        self.popup_modelsummary.show()
+
+
+    def popup_to_tensorboard(self):
+        #import signal
+        self.threadpool_single_queue += 1
+        if self.threadpool_single_queue == 1:
+            worker = Worker(self.tensorboad_worker)
+            def get_pid_from_worker(dic):
+                pid = dic["outp"]
+                print("WORKER-PID")
+                print("pid")
+                #os.kill(pid,signal.CTRL_C_EVENT)
+                #ToDo Find a way to kill that process!
+            worker.signals.history.connect(get_pid_from_worker)
+            self.threadpool_single.start(worker)        
+            print("PID-Here:")
+            print(os.getpid())
+            time.sleep(2)
+            
+
+    def tensorboad_worker(self,progress_callback,history_callback):
+        #send the model to tensorboard (webbased application)
+        model_keras = load_model(self.load_model_path) #load the model
+
+        graph = K.get_session().graph # Get the sessions graph
+        #get a folder for that model in temp
+        temp_path = aid_bin.create_temp_folder()
+        modelname = os.path.split(self.load_model_path)[-1]
+        modelname = modelname.split(".model")[0]
+        log_dir = os.path.join(temp_path,modelname)
+        writer = tf.summary.FileWriter(logdir=log_dir, graph=graph)#write a log
+
+        tb = program.TensorBoard()
+        #tb = program.TensorBoard(default.get_plugins(), default.get_assets_zip_provider())
+        tb.configure(argv=[None, '--logdir', log_dir,"--host","localhost"])
+        url = tb.launch()
+        os.system("start "+url)
+        pid = os.getpid()
+        dic = {"outp":pid}
+        print("WORKER1-PID")
+        print(pid)
+        history_callback.emit(dic) #return the pid (use it to kill the process)
+        self.threadpool_single_queue = 0 #reset the thread-counter
+        
+        
 
 
     def copy_cm_to_clipboard(self,cm1_or_cm2):
@@ -12020,6 +12162,7 @@ class MainWindow(QtWidgets.QMainWindow):
         #Load the model and predict
         with tf.Session() as sess:
             model_keras = load_model(self.load_model_path,custom_objects=get_custom_metrics())  
+            self.model_keras = model_keras #useful to get the list of layers for Grad-CAM; also used to show the summary
             in_dim = model_keras.get_input_shape_at(node_index=0)
             channels_model = in_dim[-1]
             channels_data = self.ValidationSet["X_valid"].shape[-1]
