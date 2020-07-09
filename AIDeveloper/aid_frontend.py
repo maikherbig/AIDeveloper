@@ -1,6 +1,8 @@
 import pyqtgraph as pg
 from pyqtgraph.Qt import QtCore, QtWidgets, QtGui
 import sys,os,json
+import numpy as np
+import cv2
 
 import aid_start #import a module that sits in the AIDeveloper folder
 dir_root = os.path.dirname(aid_start.__file__)#ask the module for its origin
@@ -933,10 +935,7 @@ class Fitting_Ui(QtWidgets.QWidget):
         icon1.addPixmap(QtGui.QPixmap(os.path.join(dir_root,"art",Default_dict["Icon theme"],"cpu.png")), QtGui.QIcon.Normal, QtGui.QIcon.Off)
         self.radioButton_cpu_pop.setIcon(icon1)
         
-        
-        
-        
-        
+
         self.checkBox_ApplyNextEpoch.setIcon(QtGui.QIcon(os.path.join(dir_root,"art",Default_dict["Icon theme"],"thumb.png")))
 
         self.checkBox_saveEpoch_pop.setIcon(QtGui.QIcon(os.path.join(dir_root,"art",Default_dict["Icon theme"],"save_epoch.png")))
@@ -1940,12 +1939,203 @@ class popup_imageLoadResize(QtWidgets.QWidget):
 
 
 
+class popup_cm_interaction(QtWidgets.QWidget):
+    def setupUi(self, Form_cm_interaction):
+        Form_cm_interaction.setObjectName("Form_cm_interaction")
+        Form_cm_interaction.resize(702, 572)
+        self.gridLayout_6 = QtWidgets.QGridLayout(Form_cm_interaction)
+        self.gridLayout_6.setObjectName("gridLayout_6")
+        self.groupBox_model = QtWidgets.QGroupBox(Form_cm_interaction)
+        self.groupBox_model.setObjectName("groupBox_model")
+        self.gridLayout_5 = QtWidgets.QGridLayout(self.groupBox_model)
+        self.gridLayout_5.setObjectName("gridLayout_5")
+        self.lineEdit_loadModel = QtWidgets.QLineEdit(self.groupBox_model)
+        self.lineEdit_loadModel.setEnabled(False)
+        self.lineEdit_loadModel.setObjectName("lineEdit_loadModel")
+        self.gridLayout_5.addWidget(self.lineEdit_loadModel, 0, 0, 1, 4)
+        self.pushButton_showSummary = QtWidgets.QPushButton(self.groupBox_model)
+        self.pushButton_showSummary.setObjectName("pushButton_showSummary")
+        self.gridLayout_5.addWidget(self.pushButton_showSummary, 0, 4, 1, 1)
+        self.label_inpImgSize = QtWidgets.QLabel(self.groupBox_model)
+        self.label_inpImgSize.setObjectName("label_inpImgSize")
+        self.gridLayout_5.addWidget(self.label_inpImgSize, 1, 0, 1, 1)
+        self.spinBox_Crop_inpImgSize = QtWidgets.QSpinBox(self.groupBox_model)
+        self.spinBox_Crop_inpImgSize.setEnabled(False)
+        self.spinBox_Crop_inpImgSize.setObjectName("spinBox_Crop_inpImgSize")
+        self.gridLayout_5.addWidget(self.spinBox_Crop_inpImgSize, 1, 1, 1, 1)
+        self.label_outpSize = QtWidgets.QLabel(self.groupBox_model)
+        self.label_outpSize.setObjectName("label_outpSize")
+        self.gridLayout_5.addWidget(self.label_outpSize, 1, 2, 1, 1)
+        self.spinBox_outpSize = QtWidgets.QSpinBox(self.groupBox_model)
+        self.spinBox_outpSize.setEnabled(False)
+        self.spinBox_outpSize.setObjectName("spinBox_outpSize")
+        self.gridLayout_5.addWidget(self.spinBox_outpSize, 1, 3, 1, 1)
+        self.pushButton_toTensorB = QtWidgets.QPushButton(self.groupBox_model)
+        self.pushButton_toTensorB.setObjectName("pushButton_toTensorB")
+        self.gridLayout_5.addWidget(self.pushButton_toTensorB, 1, 4, 1, 1)
+        self.gridLayout_6.addWidget(self.groupBox_model, 0, 0, 1, 2)
+        self.groupBox_imageShow = QtWidgets.QGroupBox(Form_cm_interaction)
+        self.groupBox_imageShow.setObjectName("groupBox_imageShow")
+        self.gridLayout = QtWidgets.QGridLayout(self.groupBox_imageShow)
+        self.gridLayout.setObjectName("gridLayout")
+        
+        self.widget_image = pg.ImageView(self.groupBox_imageShow)
+        self.widget_image.show()
+        self.widget_image.setMinimumSize(QtCore.QSize(400, 400))
+        #self.widget_image.setMaximumSize(QtCore.QSize(16777215, 91))
+#        self.widget_image.ui.histogram.hide()
+#        self.widget_image.ui.roiBtn.hide()
+#        self.widget_image.ui.menuBtn.hide()
+        self.widget_image.setObjectName("widget_image")
+        
+        self.gridLayout.addWidget(self.widget_image, 0, 0, 1, 1)
+        self.gridLayout_6.addWidget(self.groupBox_imageShow, 1, 0, 2, 1)
+        self.scrollArea_settings = QtWidgets.QScrollArea(Form_cm_interaction)
+        self.scrollArea_settings.setWidgetResizable(True)
+        self.scrollArea_settings.setObjectName("scrollArea_settings")
+        self.scrollAreaWidgetContents = QtWidgets.QWidget()
+        self.scrollAreaWidgetContents.setGeometry(QtCore.QRect(0, 0, 247, 431))
+        self.scrollAreaWidgetContents.setObjectName("scrollAreaWidgetContents")
+        self.gridLayout_4 = QtWidgets.QGridLayout(self.scrollAreaWidgetContents)
+        self.gridLayout_4.setObjectName("gridLayout_4")
+        self.groupBox_image_Settings = QtWidgets.QGroupBox(self.scrollAreaWidgetContents)
+        self.groupBox_image_Settings.setCheckable(True)
+        self.groupBox_image_Settings.toggled.connect(self.image_on_off)
+        
+        self.groupBox_image_Settings.setObjectName("groupBox_image_Settings")
+        self.gridLayout_2 = QtWidgets.QGridLayout(self.groupBox_image_Settings)
+        self.gridLayout_2.setObjectName("gridLayout_2")
+        self.label_image_alpha = QtWidgets.QLabel(self.groupBox_image_Settings)
+        self.label_image_alpha.setObjectName("label_image_alpha")
+        self.gridLayout_2.addWidget(self.label_image_alpha, 0, 0, 1, 1)
+        self.doubleSpinBox_image_alpha = QtWidgets.QDoubleSpinBox(self.groupBox_image_Settings)
+
+        self.doubleSpinBox_image_alpha.setMinimum(0.0)
+        self.doubleSpinBox_image_alpha.setMaximum(1.0)
+        self.doubleSpinBox_image_alpha.setSingleStep(0.1)
+        self.doubleSpinBox_image_alpha.setDecimals(3)
+        self.doubleSpinBox_image_alpha.setValue(1.0)
+
+        self.doubleSpinBox_image_alpha.setObjectName("doubleSpinBox_image_alpha")
+        self.gridLayout_2.addWidget(self.doubleSpinBox_image_alpha, 0, 1, 1, 1)
+        self.gridLayout_4.addWidget(self.groupBox_image_Settings, 0, 0, 1, 2)
+        self.groupBox_gradCAM_Settings = QtWidgets.QGroupBox(self.scrollAreaWidgetContents)
+        self.groupBox_gradCAM_Settings.setCheckable(True)
+        self.groupBox_gradCAM_Settings.setChecked(False)
+        self.groupBox_gradCAM_Settings.toggled.connect(self.gradCAM_on_off)
+        
+        self.groupBox_gradCAM_Settings.setObjectName("groupBox_gradCAM_Settings")
+        self.gridLayout_3 = QtWidgets.QGridLayout(self.groupBox_gradCAM_Settings)
+        self.gridLayout_3.setObjectName("gridLayout_3")
+        self.label_gradCAM_targetClass = QtWidgets.QLabel(self.groupBox_gradCAM_Settings)
+        self.label_gradCAM_targetClass.setObjectName("label_gradCAM_targetClass")
+        self.gridLayout_3.addWidget(self.label_gradCAM_targetClass, 0, 0, 1, 1)
+        self.spinBox_gradCAM_targetClass = QtWidgets.QSpinBox(self.groupBox_gradCAM_Settings)
+        
+        self.spinBox_gradCAM_targetClass.setMinimum(0)
+        self.spinBox_gradCAM_targetClass.setValue(0)
+        
+        self.spinBox_gradCAM_targetClass.setObjectName("spinBox_gradCAM_targetClass")
+        self.gridLayout_3.addWidget(self.spinBox_gradCAM_targetClass, 0, 1, 1, 1)
+        self.label_gradCAM_targetLayer = QtWidgets.QLabel(self.groupBox_gradCAM_Settings)
+        self.label_gradCAM_targetLayer.setObjectName("label_gradCAM_targetLayer")
+        self.gridLayout_3.addWidget(self.label_gradCAM_targetLayer, 1, 0, 1, 1)
+        self.comboBox_gradCAM_targetLayer = QtWidgets.QComboBox(self.groupBox_gradCAM_Settings)
+        self.comboBox_gradCAM_targetLayer.setObjectName("comboBox_gradCAM_targetLayer")
+        self.gridLayout_3.addWidget(self.comboBox_gradCAM_targetLayer, 1, 1, 1, 1)
+        self.label_gradCAM_colorMap = QtWidgets.QLabel(self.groupBox_gradCAM_Settings)
+        self.label_gradCAM_colorMap.setObjectName("label_gradCAM_colorMap")
+        self.gridLayout_3.addWidget(self.label_gradCAM_colorMap, 2, 0, 1, 1)
+        self.comboBox_gradCAM_colorMap = QtWidgets.QComboBox(self.groupBox_gradCAM_Settings)
+        cmaps = dir(cv2)
+        ind = ["COLORMAP" in a for a in cmaps]
+        cmaps = list(np.array(cmaps)[ind])
+        cmaps = [a.split("_")[1] for a in cmaps]
+        self.comboBox_gradCAM_colorMap.addItems(cmaps)
+        #find "VIRIDIS" in cmaps
+        ind = np.where(np.array(cmaps)=="VIRIDIS")[0][0]
+        self.comboBox_gradCAM_colorMap.setCurrentIndex(ind)
 
 
 
+        self.comboBox_gradCAM_colorMap.setObjectName("comboBox_gradCAM_colorMap")
+        self.gridLayout_3.addWidget(self.comboBox_gradCAM_colorMap, 2, 1, 1, 1)
+        self.label_gradCAM_alpha = QtWidgets.QLabel(self.groupBox_gradCAM_Settings)
+        self.label_gradCAM_alpha.setObjectName("label_gradCAM_alpha")
+        self.gridLayout_3.addWidget(self.label_gradCAM_alpha, 3, 0, 1, 1)
+        self.doubleSpinBox_gradCAM_alpha = QtWidgets.QDoubleSpinBox(self.groupBox_gradCAM_Settings)
+        
+        self.doubleSpinBox_gradCAM_alpha.setMinimum(0.0)
+        self.doubleSpinBox_gradCAM_alpha.setMaximum(1.0)
+        self.doubleSpinBox_image_alpha.setSingleStep(0.1)
+        self.doubleSpinBox_gradCAM_alpha.setDecimals(3)
+        self.doubleSpinBox_gradCAM_alpha.setValue(0.0)
+
+        self.doubleSpinBox_gradCAM_alpha.setObjectName("doubleSpinBox_gradCAM_alpha")
+        self.gridLayout_3.addWidget(self.doubleSpinBox_gradCAM_alpha, 3, 1, 1, 1)
+        self.gridLayout_4.addWidget(self.groupBox_gradCAM_Settings, 1, 0, 1, 2)
+        self.pushButton_reset = QtWidgets.QPushButton(self.scrollAreaWidgetContents)
+        self.pushButton_reset.setObjectName("pushButton_reset")
+        self.gridLayout_4.addWidget(self.pushButton_reset, 2, 0, 1, 1)
+        self.pushButton_update = QtWidgets.QPushButton(self.scrollAreaWidgetContents)
+        self.pushButton_update.setObjectName("pushButton_update")
+        self.gridLayout_4.addWidget(self.pushButton_update, 2, 1, 1, 1)
+        self.scrollArea_settings.setWidget(self.scrollAreaWidgetContents)
+        self.gridLayout_6.addWidget(self.scrollArea_settings, 2, 1, 1, 1)
+
+        self.retranslateUi(Form_cm_interaction)
+        QtCore.QMetaObject.connectSlotsByName(Form_cm_interaction)
+
+    def retranslateUi(self, Form_cm_interaction):
+        _translate = QtCore.QCoreApplication.translate
+        Form_cm_interaction.setWindowTitle(_translate("Form_cm_interaction", "Show images/heatmaps"))
+        self.groupBox_model.setTitle(_translate("Form_cm_interaction", "Model"))
+        self.lineEdit_loadModel.setToolTip(_translate("Form_cm_interaction", "Enter path and filename of a history-file (.csv)"))
+        self.pushButton_showSummary.setText(_translate("Form_cm_interaction", "Show summary"))
+        self.label_inpImgSize.setText(_translate("Form_cm_interaction", "Input img. crop"))
+        self.label_outpSize.setText(_translate("Form_cm_interaction", "Output Nr. of classes"))
+        self.pushButton_toTensorB.setText(_translate("Form_cm_interaction", "To TensorBoard"))
+        self.groupBox_imageShow.setTitle(_translate("Form_cm_interaction", "Image"))
+        self.groupBox_image_Settings.setTitle(_translate("Form_cm_interaction", "Image"))
+        self.label_image_alpha.setText(_translate("Form_cm_interaction", "Alpha"))
+        self.groupBox_gradCAM_Settings.setTitle(_translate("Form_cm_interaction", "Grad-CAM"))
+        self.label_gradCAM_targetClass.setText(_translate("Form_cm_interaction", "Class"))
+        self.label_gradCAM_targetLayer.setText(_translate("Form_cm_interaction", "Layer"))
+        self.label_gradCAM_colorMap.setText(_translate("Form_cm_interaction", "Colormap"))
+        self.label_gradCAM_alpha.setText(_translate("Form_cm_interaction", "Alpha"))
+        self.pushButton_reset.setText(_translate("Form_cm_interaction", "Reset"))
+        self.pushButton_update.setText(_translate("Form_cm_interaction", "Update"))
+
+    def gradCAM_on_off(self,on_or_off):
+        if on_or_off==False:#it is switched off
+            #set image_alpha to 1
+            self.doubleSpinBox_image_alpha.setValue(1)
+        if on_or_off==True:#it is switched on
+            #set image_alpha and gradCAM_alpha to 0.5
+            self.doubleSpinBox_image_alpha.setValue(0.5)
+            self.doubleSpinBox_gradCAM_alpha.setValue(0.5)
+
+    def image_on_off(self,on_or_off):
+        if on_or_off==False:#it is switched off
+            self.doubleSpinBox_image_alpha.setValue(0)
 
 
+class popup_cm_modelsummary(QtWidgets.QWidget):
+    def setupUi(self, Form):
+        Form.setObjectName("Form")
+        Form.resize(300, 300)
+        self.gridLayout = QtWidgets.QGridLayout(Form)
+        self.gridLayout.setObjectName("gridLayout")
+        self.textBrowser_modelsummary = QtWidgets.QTextBrowser(Form)
+        self.textBrowser_modelsummary.setObjectName("textBrowser_modelsummary")
+        self.gridLayout.addWidget(self.textBrowser_modelsummary, 0, 0, 1, 1)
 
+        self.retranslateUi(Form)
+        QtCore.QMetaObject.connectSlotsByName(Form)
+
+    def retranslateUi(self, Form):
+        _translate = QtCore.QCoreApplication.translate
+        Form.setWindowTitle(_translate("Form", "Model summary"))
 
 
 
