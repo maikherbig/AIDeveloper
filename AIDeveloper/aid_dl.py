@@ -27,6 +27,7 @@ from keras2onnx import convert_keras
 from onnx import save_model as save_onnx
 from mmdnn.conversion._script import convertToIR,IRToCode,convert
 import coremltools
+import cv2
 import aid_bin
 
 def get_metrics_fresh(metrics,nr_classes):
@@ -523,6 +524,67 @@ def reset_keras(model=None,create_new_config=False):
         config.gpu_options.per_process_gpu_memory_fraction = 1
         config.gpu_options.visible_device_list = "0"
         K.set_session(tf.Session(config=config))
-        
 
+
+def get_last_conv_layer_name(model_keras):
+    """
+    Search for the last convolutional layer
+    Args:
+        model_keras: A keras model object
+
+    Returns:
+        Name of the layer (str)
+    """
+    for layer in reversed(model_keras.layers):#loop in reverse order
+        # Select closest 4D layer to the end of the network.
+        if len(layer.output_shape) == 4:
+            return layer.name
+
+    raise ValueError("Could not find a convolutional layer (layer with 4D).")
+
+
+def grad_cam(load_model_path, images, class_, layer_name):
+    """
+    Reference to paper
+    -https://arxiv.org/abs/1610.02391
+    
+    Args:
+        model_keras: A keras model object
+        image: N images as numpy array. Dimension: [N,W,H,C]
+        class_: Integer (int) indicating, for which class Grad-CAM should be computed
+        layer_name: Name of the last convolutional layer
+    Returns:
+       List: List of numpy arrays (Grad-CAM heatmaps), each of the same size as the input images
+    """
+    tf.reset_default_graph() #Make sure to start with a fresh session
+    sess = tf.InteractiveSession()
+    
+    model_keras = load_model(load_model_path)  
+
+    #get loss for class_
+    class_output = model_keras.output[:, class_]
+    #get output of the last convolutional layer
+    convolution_output = model_keras.get_layer(layer_name).output
+    #compute gradients
+    grads = K.gradients(class_output, convolution_output)[0]
+    #define a function mapping from the oringinal input (image) to the values of the last conv. layer and the gradients
+    gradient_function = K.function([model_keras.input], [convolution_output, grads])
+
+    conv_out, grads_out = gradient_function([images])
+
+    #averaging all final feature maps
+    weights = np.mean(grads_out, axis=(1,2))
+    cam = [np.dot(conv_out[i], weights[i]) for i in range(conv_out.shape[0])]
+    #normalize between 0 and 255
+    cam = [cam_ -np.min(cam_) for cam_ in cam] #subtract minimum 
+    cam = [(cam_/np.max(cam_))*255.0 for cam_ in cam] #divide by maximum; multiply with 255
+    cam = [cam_.astype(np.uint8) for cam_ in cam]#convert to uint8
+
+    #resize cam to get a heatmap of the same size as input image; 
+    #Take note that resize happens after normalization since OpenCV is much faster with uint8 images
+    cam = [cv2.resize(cam_, (images[0].shape[0], images[0].shape[1]), cv2.INTER_LINEAR) for cam_ in cam]
+
+    sess.close()
+    
+    return cam
     
