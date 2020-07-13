@@ -25,6 +25,10 @@ if device_types[0]=='GPU':
 
 dir_root = os.path.dirname(aid_bin.__file__)#ask the module for its origin
 
+def rgb_2_gray(images):
+    images = (0.21 * images[:,:,:,:1]) + (0.72 * images[:,:,:,1:2]) + (0.07 * images[:,:,:,-1:])
+    return images[:,:,:,0:1]#make sure to keep the 4th dimension
+   
 def check_squared(images):
     if images.shape[1]==images.shape[2]:
         return images #everything is fine
