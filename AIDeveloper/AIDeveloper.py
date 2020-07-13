@@ -12006,11 +12006,33 @@ class MainWindow(QtWidgets.QMainWindow):
         
         if show_gradCAM:#grad-Cam is on
             img_display = np.concatenate(ToSave)
+            
+            #compare model input dim and dom of provided data
+            in_model = self.model_keras.input.shape.as_list()[1:]
+            in_data = list(X_valid_.shape[1:])
+
+            channels_model = in_model[-1]
+            
+            if not in_data==in_model:
+                msg = QtWidgets.QMessageBox()
+                msg.setIcon(QtWidgets.QMessageBox.Information) 
+                msg = "Model input dimension ("+str(in_model)+") not equal to dim. of input data ("+str(in_data)+")"
+                msg.setText(msg)
+                msg.setWindowTitle("Input dimension error")
+                msg.setStandardButtons(QtWidgets.QMessageBox.Ok)
+                msg.exec_()
+                return
 
             img2 = aid_dl.grad_cam(self.load_model_path, X_valid_, class_, layer_name)#Carry out grad-cam
             img2 = [cv2.applyColorMap(cam_, colormap) for cam_ in img2]#create colormap returns BGR image!
             img2 = [cv2.cvtColor(cam_, cv2.COLOR_BGR2RGB) for cam_ in img2]#convert to RGB
             
+            #in case img_display is grayscale, mimick rgb image by stacking 
+            
+            if channels_model==1:
+                print("Triple stacking grayscale channel")
+                img_display = [np.stack((img_display_,)*3, axis=-1) for img_display_ in img_display]
+
             #add heatmap to image, make sure alpha_1=0 if show_image=False
             img_display = [cv2.addWeighted(img_display[i], alpha_1, img2[i], alpha_2, 0) for i in range(X_valid_.shape[0])]
             #ToDo: this only works for RGB images. Adjust expression to work or grayscale and RGB  
@@ -12049,20 +12071,22 @@ class MainWindow(QtWidgets.QMainWindow):
 
 
     def popup_to_tensorboard(self):
-        #import signal
+        #Open the model in tensorboard
+        #Issue: I cannot stop the process. The appraoch below, which uses a 
+        #separate thread for the function does not solve the issue
         self.threadpool_single_queue += 1
         if self.threadpool_single_queue == 1:
             worker = Worker(self.tensorboad_worker)
             def get_pid_from_worker(dic):
                 pid = dic["outp"]
-                print("WORKER-PID")
-                print("pid")
+                #print("WORKER-PID")
+                #print("pid")
                 #os.kill(pid,signal.CTRL_C_EVENT)
                 #ToDo Find a way to kill that process!
             worker.signals.history.connect(get_pid_from_worker)
             self.threadpool_single.start(worker)        
-            print("PID-Here:")
-            print(os.getpid())
+            #print("PID-Here:")
+            #print(os.getpid())
             time.sleep(2)
             
 
@@ -12085,8 +12109,8 @@ class MainWindow(QtWidgets.QMainWindow):
         os.system("start "+url)
         pid = os.getpid()
         dic = {"outp":pid}
-        print("WORKER1-PID")
-        print(pid)
+        #print("WORKER1-PID")
+        #print(pid)
         history_callback.emit(dic) #return the pid (use it to kill the process)
         self.threadpool_single_queue = 0 #reset the thread-counter
         
@@ -12166,8 +12190,35 @@ class MainWindow(QtWidgets.QMainWindow):
             in_dim = model_keras.get_input_shape_at(node_index=0)
             channels_model = in_dim[-1]
             channels_data = self.ValidationSet["X_valid"].shape[-1]
+            
             #Compare channel dimensions of loaded model and validation set
-            if channels_model!=channels_data: #Model and validation data have differnt channel dims
+            if channels_model==3 and channels_data==1:
+                msg = QtWidgets.QMessageBox()
+                msg.setIcon(QtWidgets.QMessageBox.Information)
+                text = "Model expects 3 channels, but data has 1 channel!"
+                text = text+" Will stack available channel three times to generate RGB image."
+                msg.setText(text)
+                msg.setWindowTitle("Automatic adjustment of image channels")
+                msg.setStandardButtons(QtWidgets.QMessageBox.Ok)
+                msg.exec_()
+
+                #model wants rgb images, but provided data is grayscale->copy and stack 3 times
+                self.ValidationSet["X_valid"] = np.stack((self.ValidationSet["X_valid"][:,:,:,0],)*3, axis=-1)
+            
+            elif channels_model==1 and channels_data==3:
+                msg = QtWidgets.QMessageBox()
+                msg.setIcon(QtWidgets.QMessageBox.Information)
+                text = "Model expects 1 channel, but data has 3 channels!"
+                text = text+" Will use the luminosity formula to convert RGB to grayscale."
+                msg.setText(text)
+                msg.setWindowTitle("Automatic adjustment of image channels")
+                msg.setStandardButtons(QtWidgets.QMessageBox.Ok)
+                msg.exec_()
+                
+                #model wants grayscale, but provided data is rgb
+                self.ValidationSet["X_valid"] = aid_img.rgb_2_gray(self.ValidationSet["X_valid"])
+            
+            elif channels_model!=channels_data: #Model and validation data have differnt channel dims
                 text = "Model expects "+str(int(channels_model))+" channel(s), but data has "+str(int(channels_data))+" channel(s)!"
                 msg = QtWidgets.QMessageBox()
                 msg.setIcon(QtWidgets.QMessageBox.Information)       
@@ -12176,6 +12227,7 @@ class MainWindow(QtWidgets.QMainWindow):
                 msg.setStandardButtons(QtWidgets.QMessageBox.Ok)
                 msg.exec_()
                 return
+            
             scores = model_keras.predict(self.ValidationSet["X_valid"])
         
         #Get settings from the GUI
