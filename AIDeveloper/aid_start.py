@@ -272,6 +272,7 @@ def get_tooltips():
     tooltips["pushButton_convertModel"] = "<html><head/><body><p>Convert chosen model to the format indicated by the dropbox above. This might be useful to deply models to other platforms. AIDeveloper is only compatible with Keras TensorFlow models to perform inference. For usage of the model with soRT-DC, please convert it to .nnet (currently only MLPs are supported by soRT-DC software!).</p></body></html>"
     tooltips["lineEdit_ModelSelection_2"] = "<html><head/><body><p>Model architecture name, read from meta.xlsx ('Chosen Model') is displayed here</p></body></html>"
     tooltips["tableWidget_Info_2"] = "<html><head/><body><p>Specify validation data via 'Build'-tab or load .rtdc file (->From .rtdc).<br>Use column 'Name' to specify proper cell names (for presentation purposes).<br>Use column 'clr' to specify plotting color of that cell-type</p></body></html>"
+    tooltips["lineEdit_LoadModel_2"] = "<html><head/><body><p>Enter path/filename of a model (.model)</p></body></html>"
     tooltips["pushButton_ExportValidToNpy"] = "<html><head/><body><p>Export the validation data (images and labels). Optionally the cropped images can exported->use 'Options'->'Export' to change. Normalization method of the chosen model is not yet applied. Please use the \'Build\' tab to define data</p></body></html>"
     tooltips["pushButton_ImportValidFromNpy"] = "<html><head/><body><p>Import validation data (images from .rtdc and labels from .txt) file. Cropped and non-cropped images can be imported. If necessary they will be cropped to the correct format. If the loaded images are smaller than the required size, there will be zero-padding.</p></body></html>"
     tooltips["groupBox_InferenceTime"] = "<html><head/><body><p>Inference time is the time required to predict a single image. To get a meaningful value, several (define how many using spinbox->) images are predicted one by one. The given Nr. (spinbox->) is divided by 10. The resulting nr. of images is predicted one by one and an average computing time is obtained. This process is repqeated 10 times</p></body></html>"
@@ -343,5 +344,26 @@ def get_tooltips():
     tooltips["actioncpu_relocation"] = "<html><head/><body><p>Identify whether to create the model's weights under the scope of the CPU. If the model is not defined under any preceding device scope, you can still rescue it by activating this option. Source: https://www.tensorflow.org/api_docs/python/tf/keras/utils/multi_gpu_model</p></body></html>"
     tooltips["actioncpu_weightmerge"] = "<html><head/><body><p>Uses tf.device('/cpu:0') prior constriction model to manage merging of weights using CPU.</p></body></html>"
     
+    ############Confusion matrix show image popup
+    tooltips["groupBox_model"] = "<html><head/><body><p>Properties of the model.</p></body></html>"
+    tooltips["pushButton_showSummary"] = "<html><head/><body><p>Show a textual summary of your model.</p></body></html>"
+    tooltips["label_inpImgSize"] = "<html><head/><body><p>Input image size.</p></body></html>"
+    tooltips["label_outpSize"] = "<html><head/><body><p>Output dimension of model. Typically, the number of classes.</p></body></html>"
+    tooltips["pushButton_toTensorB"] = "<html><head/><body><p>Show model architecture in Tensorboard (web browser will be started).</p></body></html>"
+
+    tooltips["groupBox_imageShow"] = "<html><head/><body><p>Our image will be shown here.</p></body></html>"
+    tooltips["groupBox_image_Settings"] = "<html><head/><body><p>Plotting options.</p></body></html>"
+    tooltips["label_image_alpha"] = "<html><head/><body><p>Alpha value for the image.</p></body></html>"
+
+    tooltips["groupBox_gradCAM_Settings"] = "<html><head/><body><p>Settings for Grad-CAM activation heatmap. Title of original paper: Grad-CAM: Visual Explanations from Deep Networks via Gradient-based Localization; URL: https://arxiv.org/abs/1610.02391 </p></body></html>"
+    tooltips["label_gradCAM_targetClass"] = "<html><head/><body><p>Determine the class for which the activation heatmap should be shown.</p></body></html>"
+    tooltips["label_gradCAM_targetLayer"] = "<html><head/><body><p>Determine the layer for which the activation heatmap should be show. Typically, the last convolutional layer is used.</p></body></html>"
+
+    tooltips["label_gradCAM_colorMap"] = "<html><head/><body><p>Colormap for the Grad-CAM activation heatmap.</p></body></html>"
+    tooltips["label_gradCAM_alpha"] = "<html><head/><body><p>Alpha value for the Grad-CAM heatmap.</p></body></html>"
+    tooltips["pushButton_reset"] = "<html><head/><body><p>Reset settings.</p></body></html>"
+    tooltips["pushButton_update"] = "<html><head/><body><p>Apply the settings and update the image.</p></body></html>"
+
+
 
     return tooltips
