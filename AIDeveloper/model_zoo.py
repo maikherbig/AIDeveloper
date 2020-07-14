@@ -5,15 +5,16 @@ Created on Fri Dec 14 12:36:16 2018
 @author: maikh
 """
 from keras.models import Sequential,Model
-from keras.layers import Add,Concatenate,Input,Dense,Dropout,Flatten,Activation,Conv2D,MaxPooling2D,BatchNormalization,GlobalAveragePooling2D
+from keras.layers import Add,Concatenate,Input,Dense,Dropout,Flatten,Activation,Conv2D,MaxPooling2D,BatchNormalization,GlobalAveragePooling2D,GlobalMaxPooling2D,concatenate
 from keras.layers.merge import add
 from keras import regularizers
+from keras.engine.topology import get_source_inputs
 import keras_applications
 import keras
 import numpy as np
 
 
-version = "0.0.9_Original" #1.) Use any string you like to specify/define your version of the model_zoo
+version = "0.1.0_Original" #1.) Use any string you like to specify/define your version of the model_zoo
 def __version__():
     #print(version)
     return version
@@ -24,7 +25,7 @@ predefined_2 = ["LeNet5","LeNet5_do","LeNet5_bn_do","LeNet5_bn_do_skipcon","Tiny
 predefined_3 = ["VGG_small_1", "VGG_small_2","VGG_small_3","VGG_small_4"]
 predefined_4 = ["Nitta_et_al_6layer","Nitta_et_al_8layer","Nitta_et_al_6layer_linact"]
 predefined_5 = ["MhNet1_bn_do_skipcon","MhNet2_bn_do_skipcon","CNN_4Conv2Dense_Optim"]
-predefined_6_1 = ["pretrained_mobilenet_v2","pretrained_nasnetmobile","pretrained_nasnetlarge","pretrained_densenet","pretrained_mobilenet","pretrained_inception_v3","pretrained_vgg19","pretrained_vgg16","pretrained_xception"]
+predefined_6_1 = ["pretrained_squeezenet","pretrained_mobilenet_v2","pretrained_nasnetmobile","pretrained_nasnetlarge","pretrained_densenet","pretrained_mobilenet","pretrained_inception_v3","pretrained_vgg19","pretrained_vgg16","pretrained_xception"]
 predefined_6_2 = ["pretrained_resnet50","pretrained_resnet101","pretrained_resnet152","pretrained_resnet50_v2","pretrained_resnet101_v2","pretrained_resnet152_v2"]
 predefined_7 = ["Collection_1","Collection_2","Collection_3","Collection_4","Collection_5","Collection_6"]
 multiInputModels = ["MLP_MultiIn_3Lay_64"]
@@ -44,6 +45,11 @@ def get_model(modelname,in_dim,channels,out_dim):
         model = MLP_24_16_24_skipcon(in_dim,channels,out_dim)
     elif modelname=="MLP_256_128_64_do":
         model = MLP_256_128_64_do(in_dim,channels,out_dim)
+    elif modelname=="MLP_80_56_80_48_do":
+        model = MLP_80_56_80_48_do(in_dim,channels,out_dim)
+    elif modelname=="MLP_72_64_48_48_do":
+        model = MLP_72_64_48_48_do(in_dim,channels,out_dim)
+
     elif modelname=="MLP_MultiIn_3Lay_64":
         model = MLP_MultiIn_3Lay_64(in_dim,channels,out_dim)
 
@@ -73,62 +79,64 @@ def get_model(modelname,in_dim,channels,out_dim):
         model = nitta_et_al_6layer(in_dim,in_dim,channels,out_dim)
 
     elif modelname=="Nitta_et_al_8layer":
-        model =  nitta_et_al_8layer(in_dim,in_dim,channels,out_dim)
+        model = nitta_et_al_8layer(in_dim,in_dim,channels,out_dim)
     elif modelname=="Nitta_et_al_6layer_linact":
-        model =  Nitta_et_al_6layer_linact(in_dim,in_dim,channels,out_dim)
+        model = Nitta_et_al_6layer_linact(in_dim,in_dim,channels,out_dim)
         
     elif modelname=="MhNet1_bn_do_skipcon":
-        model =  MhNet1_bn_do_skipcon(in_dim,channels,out_dim)
+        model = MhNet1_bn_do_skipcon(in_dim,channels,out_dim)
     elif modelname=="MhNet2_bn_do_skipcon":
-        model =  MhNet2_bn_do_skipcon(in_dim,channels,out_dim)
+        model = MhNet2_bn_do_skipcon(in_dim,channels,out_dim)
     elif modelname=="CNN_4Conv2Dense_Optim":
-        model =  CNN_4Conv2Dense_Optim(in_dim,channels,out_dim)
-        
+        model = CNN_4Conv2Dense_Optim(in_dim,channels,out_dim)
+
+    elif modelname=="pretrained_squeezenet":
+        model = pretrained_squeezenet(in_dim,in_dim,channels,out_dim)   
     elif modelname=="pretrained_mobilenet_v2":
-        model =  pretrained_mobilenet_v2(in_dim,in_dim,channels,out_dim)
+        model = pretrained_mobilenet_v2(in_dim,in_dim,channels,out_dim)
     elif modelname=="pretrained_nasnetmobile":
-        model =  pretrained_nasnetmobile(in_dim,in_dim,channels,out_dim)
+        model = pretrained_nasnetmobile(in_dim,in_dim,channels,out_dim)
     elif modelname=="pretrained_nasnetlarge":
-        model =  pretrained_nasnetlarge(in_dim,in_dim,channels,out_dim)
+        model = pretrained_nasnetlarge(in_dim,in_dim,channels,out_dim)
     elif modelname=="pretrained_densenet":
-        model =  pretrained_densenet(in_dim,in_dim,channels,out_dim)
+        model = pretrained_densenet(in_dim,in_dim,channels,out_dim)
     elif modelname=="pretrained_mobilenet":
-        model =  pretrained_mobilenet(in_dim,in_dim,channels,out_dim)
+        model = pretrained_mobilenet(in_dim,in_dim,channels,out_dim)
     elif modelname=="pretrained_inception_v3":
-        model =  pretrained_inception_v3(in_dim,in_dim,channels,out_dim)
+        model = pretrained_inception_v3(in_dim,in_dim,channels,out_dim)
 
     elif modelname=="pretrained_vgg19":
-        model =  pretrained_vgg19(in_dim,in_dim,channels,out_dim)
+        model = pretrained_vgg19(in_dim,in_dim,channels,out_dim)
     elif modelname=="pretrained_vgg16":
-        model =  pretrained_vgg16(in_dim,in_dim,channels,out_dim)
+        model = pretrained_vgg16(in_dim,in_dim,channels,out_dim)
     elif modelname=="pretrained_xception":
-        model =  pretrained_xception(in_dim,in_dim,channels,out_dim)
+        model = pretrained_xception(in_dim,in_dim,channels,out_dim)
 
     elif modelname=="pretrained_resnet50":
-        model =  pretrained_resnet50(in_dim,in_dim,channels,out_dim)
+        model = pretrained_resnet50(in_dim,in_dim,channels,out_dim)
     elif modelname=="pretrained_resnet101":
-        model =  pretrained_resnet101(in_dim,in_dim,channels,out_dim)
+        model = pretrained_resnet101(in_dim,in_dim,channels,out_dim)
     elif modelname=="pretrained_resnet152":
-        model =  pretrained_resnet152(in_dim,in_dim,channels,out_dim)
+        model = pretrained_resnet152(in_dim,in_dim,channels,out_dim)
     elif modelname=="pretrained_resnet50_v2":
-        model =  pretrained_resnet50_v2(in_dim,in_dim,channels,out_dim)
+        model = pretrained_resnet50_v2(in_dim,in_dim,channels,out_dim)
     elif modelname=="pretrained_resnet101_v2":
-        model =  pretrained_resnet101_v2(in_dim,in_dim,channels,out_dim)
+        model = pretrained_resnet101_v2(in_dim,in_dim,channels,out_dim)
     elif modelname=="pretrained_resnet152_v2":
-        model =  pretrained_resnet152_v2(in_dim,in_dim,channels,out_dim)
+        model = pretrained_resnet152_v2(in_dim,in_dim,channels,out_dim)
 
     elif modelname=="Collection_1":
-        model =  collection_1(in_dim,in_dim,channels,out_dim)
+        model = collection_1(in_dim,in_dim,channels,out_dim)
     elif modelname=="Collection_2":
-        model =  collection_2(in_dim,in_dim,channels,out_dim)
+        model = collection_2(in_dim,in_dim,channels,out_dim)
     elif modelname=="Collection_3":
-        model =  collection_3(in_dim,in_dim,channels,out_dim)
+        model = collection_3(in_dim,in_dim,channels,out_dim)
     elif modelname=="Collection_4":
-        model =  collection_4(in_dim,in_dim,channels,out_dim)
+        model = collection_4(in_dim,in_dim,channels,out_dim)
     elif modelname=="Collection_5":
-        model =  collection_5(in_dim,in_dim,channels,out_dim)
+        model = collection_5(in_dim,in_dim,channels,out_dim)
     elif modelname=="Collection_6":
-        model =  collection_6(in_dim,in_dim,channels,out_dim)
+        model = collection_6(in_dim,in_dim,channels,out_dim)
 
     return model
 
@@ -165,6 +173,7 @@ def Example_sequential_api(in_dim,channels,out_dim):
 #                optimizer='adam',
 #                metrics=['accuracy'])
     return model
+
 
 #Example 2: Functional API
 def Example_functional_api(in_dim,channels,out_dim):
@@ -269,6 +278,7 @@ def MLP_24_16_24_skipcon(in_dim,channels,out_dim):
 
     return model
 
+
 def MLP_256_128_64_do(in_dim,channels,out_dim):
     model = Sequential()
     model.add(Flatten(input_shape=(in_dim, in_dim,channels),name="inputTensor")) #TensorFlow
@@ -290,6 +300,58 @@ def MLP_256_128_64_do(in_dim,channels,out_dim):
 #    model.compile(loss='categorical_crossentropy',
 #                optimizer='adam',
 #                metrics=['accuracy'])
+    return model
+
+
+def MLP_80_56_80_48_do(in_dim,channels,out_dim):
+    model = Sequential()
+    model.add(Flatten(input_shape=(in_dim, in_dim,channels),name="inputTensor")) #TensorFlow
+
+    model.add(Dense(80)) 
+    model.add(Activation('relu'))
+    model.add(Dropout(0.25))
+
+    model.add(Dense(56)) 
+    model.add(Activation('relu'))
+    model.add(Dropout(0.25))
+
+    model.add(Dense(80)) 
+    model.add(Activation('relu'))
+    model.add(Dropout(0.25))
+
+    model.add(Dense(48)) 
+    model.add(Activation('relu'))
+    model.add(Dropout(0.25))
+
+    model.add(Dense(out_dim))
+    model.add(Activation('softmax',name="outputTensor"))
+
+    return model
+
+
+def MLP_72_64_48_48_do(in_dim,channels,out_dim):
+    model = Sequential()
+    model.add(Flatten(input_shape=(in_dim, in_dim,channels),name="inputTensor")) #TensorFlow
+
+    model.add(Dense(72)) 
+    model.add(Activation('relu'))
+    model.add(Dropout(0.2))
+
+    model.add(Dense(64)) 
+    model.add(Activation('relu'))
+    model.add(Dropout(0.1))
+
+    model.add(Dense(48)) 
+    model.add(Activation('relu'))
+    model.add(Dropout(0.1))
+
+    model.add(Dense(48)) 
+    model.add(Activation('relu'))
+    model.add(Dropout(0.1))
+
+    model.add(Dense(out_dim))
+    model.add(Activation('softmax',name="outputTensor"))
+
     return model
 
 
@@ -317,11 +379,6 @@ def LeNet5(in_dim,channels,out_dim):
 
     model.add(Dense(out_dim))
     model.add(Activation('softmax',name="outputTensor"))
-
-#    model.compile(loss='categorical_crossentropy',
-#                optimizer='adam',
-#                metrics=['accuracy'])
-
     return model
 
 
@@ -350,13 +407,7 @@ def LeNet5_do(in_dim,channels,out_dim):
 
     model.add(Dense(out_dim))
     model.add(Activation('softmax',name="outputTensor"))
-
-#    model.compile(loss='categorical_crossentropy',
-#                optimizer='adam',
-#                metrics=['accuracy'])
-
     return model
-
 
 
 def LeNet5_bn_do(in_dim,channels,out_dim):
@@ -388,11 +439,6 @@ def LeNet5_bn_do(in_dim,channels,out_dim):
 
     model.add(Dense(out_dim))
     model.add(Activation('softmax',name="outputTensor"))
-
-#    model.compile(loss='categorical_crossentropy',
-#                optimizer='adam',
-#                metrics=['accuracy'])
-
     return model
 
 
@@ -439,11 +485,8 @@ def LeNet5_bn_do_skipcon(in_dim,channels,out_dim):
     predictions = Activation('softmax',name="outputTensor")(x)
     
     model = Model(inputs=inputs, outputs=predictions)
-#    model.compile(loss='categorical_crossentropy',
-#                optimizer='adam',
-#                metrics=['accuracy'])
-
     return model
+
 
 def MhNet1_bn_do_skipcon(in_dim,channels,out_dim):
     #Define a CNN similar to the LeNet but with skip connections (ResNet)
@@ -498,12 +541,7 @@ def MhNet1_bn_do_skipcon(in_dim,channels,out_dim):
     predictions = Activation('softmax',name="outputTensor")(x)
     
     model = Model(inputs=inputs, outputs=predictions)
-#    model.compile(loss='categorical_crossentropy',
-#                optimizer='adam',
-#                metrics=['accuracy'])
-
     return model
-
 
 
 def MhNet2_bn_do_skipcon(in_dim,channels,out_dim):
@@ -567,10 +605,6 @@ def MhNet2_bn_do_skipcon(in_dim,channels,out_dim):
     predictions = Activation('softmax',name="outputTensor")(x)
     
     model = Model(inputs=inputs, outputs=predictions)
-#    model.compile(loss='categorical_crossentropy',
-#                optimizer='adam',
-#                metrics=['accuracy'])
-
     return model
 
 
@@ -619,7 +653,6 @@ def CNN_4Conv2Dense_Optim(in_dim,channels,out_dim):
     
     model.add(Dense(out_dim))
     model.add(Activation('softmax',name="outputTensor"))
-
     return model
 
 
@@ -653,6 +686,7 @@ def block(n_output, upscale=False):
         return add([f, h]) # F_l(x) = f(x) + H_l(x):
     return f
 
+
 def TinyResNet(in_dim,channels,out_dim):
     #Source: https://www.kaggle.com/meownoid/tiny-resnet-with-keras-99-314
     #Author: Egor Malykh
@@ -684,7 +718,6 @@ def TinyResNet(in_dim,channels,out_dim):
     x = Activation("softmax")(x)
     
     model = Model(inputs=input_tensor, outputs=x)
-#    model.compile(loss='categorical_crossentropy', optimizer='adam', metrics=['accuracy'])
     return model
 
 
@@ -710,13 +743,7 @@ def TinyCNN(in_dim,channels,out_dim):
 
     model.add(Dense(out_dim))
     model.add(Activation('softmax',name="outputTensor"))
-
-#    model.compile(loss='categorical_crossentropy',
-#                optimizer='adam',
-#                metrics=['accuracy'])
-
     return model
-
 
 
 def VGG_small_1(in_dim,channels,out_dim):
@@ -749,11 +776,8 @@ def VGG_small_1(in_dim,channels,out_dim):
 
     model.add(Dense(out_dim))
     model.add(Activation('softmax',name="outputTensor"))
-
-#    model.compile(loss='categorical_crossentropy',
-#                optimizer='adam',
-#                metrics=['accuracy'])
     return model
+
 
 def VGG_small_2(in_dim,channels,out_dim):
     inputs = Input(shape=(in_dim, in_dim,channels),name="inputTensor") #TensorFlow format; Keep and add to x after a convolution
@@ -793,11 +817,8 @@ def VGG_small_2(in_dim,channels,out_dim):
     predictions = Activation('softmax',name="outputTensor")(x)
     
     model = Model(inputs=inputs, outputs=predictions)
-#    model.compile(loss='categorical_crossentropy',
-#                optimizer='adam',
-#                metrics=['accuracy'])
-
     return model
+
 
 def VGG_small_3(in_dim,channels,out_dim): #Very similar to VGG_small_2, but just less BN layers and one more dense layer
     inputs = Input(shape=(in_dim, in_dim,channels),name="inputTensor") #TensorFlow format; Keep and add to x after a convolution
@@ -837,11 +858,8 @@ def VGG_small_3(in_dim,channels,out_dim): #Very similar to VGG_small_2, but just
     predictions = Activation('softmax',name="outputTensor")(x)
     
     model = Model(inputs=inputs, outputs=predictions)
-#    model.compile(loss='categorical_crossentropy',
-#                optimizer='adam',
-#                metrics=['accuracy'])
-
     return model
+
 
 def VGG_small_4(in_dim,channels,out_dim): #Another change that allows input of different sizes
     inputs = Input(shape=(in_dim, in_dim,channels),name="inputTensor") #TensorFlow format; Keep and add to x after a convolution
@@ -882,10 +900,6 @@ def VGG_small_4(in_dim,channels,out_dim): #Another change that allows input of d
     predictions = Activation('softmax',name="outputTensor")(x)
     
     model = Model(inputs=inputs, outputs=predictions)
-#    model.compile(loss='categorical_crossentropy',
-#                optimizer='adam',
-#                metrics=['accuracy'])
-
     return model
 
 
@@ -917,8 +931,8 @@ def nitta_et_al_6layer(in_dim1,in_dim2,channels,out_dim):
     model.add(Dropout(0.5))
     model.add(Dense(out_dim))
     model.add(Activation('softmax',name="outputTensor"))
-
     return model
+
 
 def nitta_et_al_8layer(in_dim1,in_dim2,channels,out_dim):
     """
@@ -957,9 +971,7 @@ def nitta_et_al_8layer(in_dim1,in_dim2,channels,out_dim):
     model.add(Dropout(0.5))
     model.add(Dense(out_dim))
     model.add(Activation('softmax',name="outputTensor"))
-
     return model
-
 
 
 def Nitta_et_al_6layer_linact(in_dim1,in_dim2,channels,out_dim):
@@ -989,11 +1001,178 @@ def Nitta_et_al_6layer_linact(in_dim1,in_dim2,channels,out_dim):
     model.add(Dropout(0.5))
     model.add(Dense(out_dim))
     model.add(Activation('linear',name="outputTensor"))
-
     return model
 
 
+
+
 #################Build models based on pretrainded weights#####################
+
+###############################Squeeze-Net#####################################
+#Source: https://github.com/rcmalli/keras-squeezenet/blob/master/keras_squeezenet/squeezenet.py
+
+sq1x1 = "squeeze1x1"
+exp1x1 = "expand1x1"
+exp3x3 = "expand3x3"
+relu = "relu_"
+    
+WEIGHTS_PATH = "https://github.com/rcmalli/keras-squeezenet/releases/download/v1.0/squeezenet_weights_tf_dim_ordering_tf_kernels.h5"
+WEIGHTS_PATH_NO_TOP = "https://github.com/rcmalli/keras-squeezenet/releases/download/v1.0/squeezenet_weights_tf_dim_ordering_tf_kernels_notop.h5"
+
+def fire_module(x, fire_id, squeeze=16, expand=64):
+    s_id = 'fire' + str(fire_id) + '/'
+
+    if keras.backend.image_data_format() == 'channels_first':
+        channel_axis = 1
+    else:
+        channel_axis = 3
+    
+    x = Conv2D(squeeze, (1, 1), padding='valid', name=s_id + sq1x1)(x)
+    x = Activation('relu', name=s_id + relu + sq1x1)(x)
+
+    left = Conv2D(expand, (1, 1), padding='valid', name=s_id + exp1x1)(x)
+    left = Activation('relu', name=s_id + relu + exp1x1)(left)
+
+    right = Conv2D(expand, (3, 3), padding='same', name=s_id + exp3x3)(x)
+    right = Activation('relu', name=s_id + relu + exp3x3)(right)
+
+    x = concatenate([left, right], axis=channel_axis, name=s_id + 'concat')
+    return x
+
+
+def SqueezeNet(include_top=True, weights='imagenet',
+               input_tensor=None, input_shape=None,
+               pooling=None,
+               classes=1000):
+    """Instantiates the SqueezeNet architecture.
+    """
+        
+    if weights not in {'imagenet', None}:
+        raise ValueError('The `weights` argument should be either '
+                         '`None` (random initialization) or `imagenet` '
+                         '(pre-training on ImageNet).')
+
+    if weights == 'imagenet' and classes != 1000:
+        raise ValueError('If using `weights` as imagenet with `include_top`'
+                         ' as true, `classes` should be 1000')
+
+
+    input_shape =  keras_applications.imagenet_utils._obtain_input_shape(input_shape,
+                                      default_size=227,
+                                      min_size=48,
+                                      data_format=keras.backend.image_data_format(),
+                                      require_flatten=include_top)
+
+    if input_tensor is None:
+        img_input = Input(shape=input_shape)
+    else:
+        if not keras.backend.is_keras_tensor(input_tensor):
+            img_input = Input(tensor=input_tensor, shape=input_shape)
+        else:
+            img_input = input_tensor
+
+
+    x = Conv2D(64, (3, 3), strides=(2, 2), padding='valid', name='conv1')(img_input)
+    x = Activation('relu', name='relu_conv1')(x)
+    x = MaxPooling2D(pool_size=(3, 3), strides=(2, 2), name='pool1')(x)
+
+    x = fire_module(x, fire_id=2, squeeze=16, expand=64)
+    x = fire_module(x, fire_id=3, squeeze=16, expand=64)
+    x = MaxPooling2D(pool_size=(3, 3), strides=(2, 2), name='pool3')(x)
+
+    x = fire_module(x, fire_id=4, squeeze=32, expand=128)
+    x = fire_module(x, fire_id=5, squeeze=32, expand=128)
+    x = MaxPooling2D(pool_size=(3, 3), strides=(2, 2), name='pool5')(x)
+
+    x = fire_module(x, fire_id=6, squeeze=48, expand=192)
+    x = fire_module(x, fire_id=7, squeeze=48, expand=192)
+    x = fire_module(x, fire_id=8, squeeze=64, expand=256)
+    x = fire_module(x, fire_id=9, squeeze=64, expand=256)
+    
+    if include_top:
+        # It's not obvious where to cut the network... 
+        # Could do the 8th or 9th layer... some work recommends cutting earlier layers.
+    
+        x = Dropout(0.5, name='drop9')(x)
+
+        x = Conv2D(classes, (1, 1), padding='valid', name='conv10')(x)
+        x = Activation('relu', name='relu_conv10')(x)
+        x = GlobalAveragePooling2D()(x)
+        x = Activation('softmax', name='loss')(x)
+    else:
+        if pooling == 'avg':
+            x = GlobalAveragePooling2D()(x)
+        elif pooling=='max':
+            x = GlobalMaxPooling2D()(x)
+        elif pooling==None:
+            pass
+        else:
+            raise ValueError("Unknown argument for 'pooling'=" + pooling)
+
+    # Ensure that the model takes into account
+    # any potential predecessors of `input_tensor`.
+    if input_tensor is not None:
+        inputs = get_source_inputs(input_tensor)
+    else:
+        inputs = img_input
+
+    model = Model(inputs, x, name='squeezenet')
+
+    # load weights
+    if weights == 'imagenet':
+        if include_top:
+            weights_path = keras.utils.get_file('squeezenet_weights_tf_dim_ordering_tf_kernels.h5',
+                                    WEIGHTS_PATH,
+                                    cache_subdir='models')
+        else:
+            weights_path = keras.utils.get_file('squeezenet_weights_tf_dim_ordering_tf_kernels_notop.h5',
+                                    WEIGHTS_PATH_NO_TOP,
+                                    cache_subdir='models')
+            
+        model.load_weights(weights_path)
+        if keras.backend.backend() == 'theano':
+            keras.utils.layer_utils.convert_all_kernels_in_model(model)
+
+        if keras.backend.image_data_format() == 'channels_first':
+
+            if keras.backend.backend() == 'tensorflow':
+                keras.layers.warnings.warn('You are using the TensorFlow backend, yet you '
+                              'are using the Theano '
+                              'image data format convention '
+                              '(`image_data_format="channels_first"`). '
+                              'For best performance, set '
+                              '`image_data_format="channels_last"` in '
+                              'your Keras config '
+                              'at ~/.keras/keras.json.')
+    return model
+
+
+def pretrained_squeezenet(in_dim1,in_dim2,channels,out_dim):
+    """
+    Loads a pretrained model (imagenet)
+    Minimum input dimension: (48,48,3)
+    --Only three channels allowed!--
+    It is recommended to use the expert mode in AIDeveloper to only train the dense layers
+    """
+    
+    pretrained_model  = SqueezeNet(weights='imagenet',input_shape=(in_dim1,in_dim2,channels),include_top=False)
+        
+    layers = pretrained_model.layers
+    layers[0].name = "inputTensor"
+    #The output of the pretrained network are the inputs to our Dense layers
+    x = Flatten()(pretrained_model.output)
+    x = Dense(512, activation='relu')(x)
+    x = Dropout(0.3)(x)
+    x = BatchNormalization()(x)
+    x = Dense(256, activation='relu')(x)
+    x = Dropout(0.3)(x)
+    x = Dense(out_dim)(x)
+    predictions = Activation('softmax',name="outputTensor")(x)
+    #combine pretrained models and our dense layers
+    model = Model(input = pretrained_model.input, output = predictions) 
+    return model
+
+
 def pretrained_xception(in_dim1,in_dim2,channels,out_dim):
     """
     Loads a pretrained model from Keras (internet required).
@@ -1106,7 +1285,6 @@ def pretrained_inception_v3(in_dim1,in_dim2,channels,out_dim):
     return model
 
 
-
 def pretrained_mobilenet(in_dim1,in_dim2,channels,out_dim):
     """
     Loads a pretrained model from Keras (internet required).
@@ -1132,9 +1310,6 @@ def pretrained_mobilenet(in_dim1,in_dim2,channels,out_dim):
     predictions = Activation('softmax',name="outputTensor")(x)
     #combine pretrained models and our dense layers
     model = Model(input = pretrained_model.input, output = predictions) 
-#    model.compile(loss='categorical_crossentropy',
-#                optimizer='adam',
-#                metrics=['accuracy'])
     return model
 
 
@@ -1221,7 +1396,6 @@ def pretrained_nasnetmobile(in_dim1,in_dim2,channels,out_dim):
     return model
 
 
-
 def pretrained_mobilenet_v2(in_dim1,in_dim2,channels,out_dim):
     """
     Loads a pretrained model from Keras (internet required).
@@ -1249,6 +1423,7 @@ def pretrained_mobilenet_v2(in_dim1,in_dim2,channels,out_dim):
     model = Model(input = pretrained_model.input, output = predictions) 
     return model
 
+
 def pretrained_resnet50(in_dim1,in_dim2,channels,out_dim):
     """
     Loads a pretrained model from Keras (internet required).
@@ -1275,6 +1450,7 @@ def pretrained_resnet50(in_dim1,in_dim2,channels,out_dim):
     #combine pretrained models and our dense layers
     model = Model(input = pretrained_model.input, output = predictions) 
     return model
+
 
 def pretrained_resnet101(in_dim1,in_dim2,channels,out_dim):
     """
@@ -1360,6 +1536,7 @@ def pretrained_resnet50_v2(in_dim1,in_dim2,channels,out_dim):
     model = Model(input = pretrained_model.input, output = predictions) 
     return model
 
+
 def pretrained_resnet101_v2(in_dim1,in_dim2,channels,out_dim):
     """
     Loads a pretrained model from Keras (internet required).
@@ -1386,6 +1563,7 @@ def pretrained_resnet101_v2(in_dim1,in_dim2,channels,out_dim):
     #combine pretrained models and our dense layers
     model = Model(input = pretrained_model.input, output = predictions) 
     return model
+
 
 def pretrained_resnet152_v2(in_dim1,in_dim2,channels,out_dim):
     """
@@ -1415,7 +1593,9 @@ def pretrained_resnet152_v2(in_dim1,in_dim2,channels,out_dim):
     return model
 
 
-
+#################################Collections###################################
+#Collections are lists of multiple MLPs
+    
 def collection_1(in_dim1,in_dim2,channels,out_dim):
     """
     Return a collection of models and their names
@@ -1438,6 +1618,7 @@ def collection_1(in_dim1,in_dim2,channels,out_dim):
         model = mlp_generator(modelname,in_dim1,channels,out_dim)
         models_100.append(model)
     return modelnames_100, models_100
+
 
 def collection_2(in_dim1,in_dim2,channels,out_dim):
     """
@@ -1502,6 +1683,7 @@ def collection_4(in_dim1,in_dim2,channels,out_dim):
         models.append(model)
     return names, models
 
+
 def collection_5(in_dim1,in_dim2,channels,out_dim):
     """
     Return a collection of models and their names
@@ -1550,7 +1732,6 @@ def collection_6(in_dim1,in_dim2,channels,out_dim):
     return modelnames_100, models_100
 
 
-
 def collection_test(in_dim1, in_dim2, channels, out_dim):
     """
     Return a small collection of models and their names
@@ -1578,7 +1759,6 @@ def collection_test(in_dim1, in_dim2, channels, out_dim):
 
 
 #########################Multi-Input models#######################
-
 
 def MLP_MultiIn_3Lay_64(in_dim,channels,out_dim):
     inputA = Input(shape=(in_dim, in_dim,channels),name="inputTensorA") #TensorFlow format (height,width,channels)
