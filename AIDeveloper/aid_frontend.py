@@ -2106,6 +2106,33 @@ class popup_cm_interaction(QtWidgets.QWidget):
         self.pushButton_reset.setText(_translate("Form_cm_interaction", "Reset"))
         self.pushButton_update.setText(_translate("Form_cm_interaction", "Update"))
 
+        #Tooltips
+        self.groupBox_model.setToolTip(_translate("Form", tooltips["groupBox_model"], None))
+        self.lineEdit_loadModel.setToolTip(_translate("Form", tooltips["lineEdit_LoadModel_2"], None))
+        self.pushButton_showSummary.setToolTip(_translate("Form", tooltips["pushButton_showSummary"], None))
+        self.label_inpImgSize.setToolTip(_translate("Form", tooltips["label_inpImgSize"], None))
+        self.spinBox_Crop_inpImgSize.setToolTip(_translate("Form", tooltips["label_inpImgSize"], None))
+        self.label_outpSize.setToolTip(_translate("Form", tooltips["label_outpSize"], None))
+        self.spinBox_outpSize.setToolTip(_translate("Form", tooltips["label_outpSize"], None))
+        self.pushButton_toTensorB.setToolTip(_translate("Form", tooltips["pushButton_toTensorB"], None))
+        self.groupBox_imageShow.setToolTip(_translate("Form", tooltips["groupBox_imageShow"], None))
+        self.groupBox_image_Settings.setToolTip(_translate("Form", tooltips["groupBox_image_Settings"], None))
+        self.label_image_alpha.setToolTip(_translate("Form", tooltips["label_image_alpha"], None))
+        self.doubleSpinBox_image_alpha.setToolTip(_translate("Form", tooltips["label_image_alpha"], None))
+        self.groupBox_gradCAM_Settings.setToolTip(_translate("Form", tooltips["groupBox_gradCAM_Settings"], None))
+        self.label_gradCAM_targetClass.setToolTip(_translate("Form", tooltips["label_gradCAM_targetClass"], None))
+        self.spinBox_gradCAM_targetClass.setToolTip(_translate("Form", tooltips["label_gradCAM_targetClass"], None))
+        self.label_gradCAM_targetLayer.setToolTip(_translate("Form", tooltips["label_gradCAM_targetLayer"], None))
+        self.comboBox_gradCAM_targetLayer.setToolTip(_translate("Form", tooltips["label_gradCAM_targetLayer"], None))
+        self.label_gradCAM_colorMap.setToolTip(_translate("Form", tooltips["label_gradCAM_colorMap"], None))
+        self.comboBox_gradCAM_colorMap.setToolTip(_translate("Form", tooltips["label_gradCAM_colorMap"], None))
+        self.label_gradCAM_alpha.setToolTip(_translate("Form", tooltips["label_gradCAM_alpha"], None))
+        self.doubleSpinBox_gradCAM_alpha.setToolTip(_translate("Form", tooltips["label_gradCAM_alpha"], None))
+        self.pushButton_reset.setToolTip(_translate("Form", tooltips["pushButton_reset"], None))
+        self.pushButton_update.setToolTip(_translate("Form", tooltips["pushButton_update"], None))
+
+
+
     def gradCAM_on_off(self,on_or_off):
         if on_or_off==False:#it is switched off
             #set image_alpha to 1
