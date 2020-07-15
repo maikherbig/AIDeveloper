@@ -30,6 +30,18 @@ import coremltools
 import cv2
 import aid_bin
 
+#Define some custom metrics which will allow to use precision, recall, etc during training
+def get_custom_metrics():
+    custom_metrics = []
+    custom_metrics.append(keras_metrics.categorical_f1_score())
+    custom_metrics.append(keras_metrics.categorical_precision())
+    custom_metrics.append(keras_metrics.categorical_recall())
+    custom_metrics = {m.__name__: m for m in custom_metrics}
+    custom_metrics["sin"] = K.sin
+    custom_metrics["abs"] = K.abs
+    return custom_metrics
+
+
 def get_metrics_fresh(metrics,nr_classes):
     """
     Function takes a list of metrics and creates fresh tensors accordingly.
@@ -261,7 +273,7 @@ def convert_kerastf_2_frozen_pb(model_path=None,outpath=None):
     elif os.path.isfile(model_path): #if is is a file (hopefully a keras file)
         tf.reset_default_graph() #Make sure to start with a fresh session
         sess = tf.InteractiveSession()
-        model_keras = load_model(model_path)#Load the model that should be converted          
+        model_keras = load_model(model_path,custom_objects=get_custom_metrics())#Load the model that should be converted          
         #Freeze the graph  
         frozen_graph,input_names,output_names = freeze_session(K.get_session(),input_names=[out.op.name for out in model_keras.inputs],output_names=[out.op.name for out in model_keras.outputs])
         #Get the names of the input and output node (required for optimization)
@@ -282,7 +294,7 @@ def convert_kerastf_2_optimized_pb(model_path=None,outpath=None):
     else: #Continue to the actual function
         tf.reset_default_graph() #Make sure to start with a fresh session
         sess = tf.InteractiveSession()
-        model_keras = load_model(model_path)#Load the model that should be converted          
+        model_keras = load_model(model_path,custom_objects=get_custom_metrics())#Load the model that should be converted          
         #Freeze the graph  
         frozen_graph,input_names,output_names = freeze_session(K.get_session(),input_names=[out.op.name for out in model_keras.inputs],output_names=[out.op.name for out in model_keras.outputs])
         #Get the names of the input and output node (required for optimization)
@@ -372,7 +384,7 @@ def convert_frozen_2_optimized_pb(model_path=None,outpath=None):
 def convert_kerastf_2_onnx(model_path=None,outpath=None):
     tf.reset_default_graph() #Make sure to start with a fresh session
     sess = tf.InteractiveSession()
-    model_keras = load_model(model_path)#Load the model that should be converted          
+    model_keras = load_model(model_path,custom_objects=get_custom_metrics())#Load the model that should be converted          
     onnx_model = convert_keras(model_keras,model_keras.name)
     save_onnx(onnx_model, outpath)
     sess.close()
@@ -559,8 +571,8 @@ def grad_cam(load_model_path, images, class_, layer_name):
     tf.reset_default_graph() #Make sure to start with a fresh session
     sess = tf.InteractiveSession()
     
-    model_keras = load_model(load_model_path)  
-
+    model_keras = load_model(load_model_path,custom_objects=get_custom_metrics())  
+    
     #get loss for class_
     class_output = model_keras.output[:, class_]
     #get output of the last convolutional layer
@@ -587,4 +599,3 @@ def grad_cam(load_model_path, images, class_, layer_name):
     sess.close()
     
     return cam
-    
