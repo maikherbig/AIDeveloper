@@ -206,16 +206,6 @@ class MyPopup(QtWidgets.QWidget):
         QtWidgets.QWidget.__init__(self)
 
 
-#Define some custom metrics which will allow to use precision, recall, etc during training
-def get_custom_metrics():
-    custom_metrics = []
-    custom_metrics.append(keras_metrics.categorical_f1_score())
-    custom_metrics.append(keras_metrics.categorical_precision())
-    custom_metrics.append(keras_metrics.categorical_recall())
-    custom_metrics = {m.__name__: m for m in custom_metrics}
-    custom_metrics["sin"] = K.sin
-    custom_metrics["abs"] = K.abs
-    return custom_metrics
 
 class WorkerSignals(QtCore.QObject):
     '''
@@ -6896,10 +6886,10 @@ class MainWindow(QtWidgets.QMainWindow):
                 if load_modelname.endswith(".model"):              
                     #Load the full model
                     try:
-                        model_keras = load_model(load_modelname,custom_objects=get_custom_metrics())
+                        model_keras = load_model(load_modelname,custom_objects=aid_dl.get_custom_metrics())
                     except:
                         K.clear_session() #On linux It happened that there was an error, if another fitting run before
-                        model_keras = load_model(load_modelname,custom_objects=get_custom_metrics())
+                        model_keras = load_model(load_modelname,custom_objects=aid_dl.get_custom_metrics())
                     #model_config = model_keras.config() #Load the model config (this is the architecture)
                     #load_modelname = load_modelname.split(".model")[0]
                     text1 = "Architecture: loaded from .model\nWeights: pretrained weights loaded'\n"
@@ -7396,7 +7386,7 @@ class MainWindow(QtWidgets.QMainWindow):
                 collection = True
                 #Take the initialized models
                 model_keras_path = self.model_keras_path
-                model_keras = [load_model(model_keras_path[i],custom_objects=get_custom_metrics()) for i in range(len(model_keras_path)) ]
+                model_keras = [load_model(model_keras_path[i],custom_objects=aid_dl.get_custom_metrics()) for i in range(len(model_keras_path)) ]
                 model_architecture_names = self.model_keras[0]
                 print(model_architecture_names)    
                 #self.model_keras = None
@@ -7406,9 +7396,9 @@ class MainWindow(QtWidgets.QMainWindow):
     
                 if deviceSelected=="Multi-GPU" and cpu_weight_merge==True:
                     with tf.device("/cpu:0"):
-                        model_keras = load_model(model_keras_path,custom_objects=get_custom_metrics()) 
+                        model_keras = load_model(model_keras_path,custom_objects=aid_dl.get_custom_metrics()) 
                 else:
-                    model_keras = load_model(model_keras_path,custom_objects=get_custom_metrics())
+                    model_keras = load_model(model_keras_path,custom_objects=aid_dl.get_custom_metrics())
                 #self.model_keras = None
                 
             #Initialize a variable for the parallel model
@@ -10599,7 +10589,7 @@ class MainWindow(QtWidgets.QMainWindow):
         
             path = self.model_2_convert
             try:
-                model_keras = load_model(path,custom_objects=get_custom_metrics())
+                model_keras = load_model(path,custom_objects=aid_dl.get_custom_metrics())
             except:
                 model_keras = load_model(path)
                 
@@ -11274,9 +11264,9 @@ class MainWindow(QtWidgets.QMainWindow):
         with tf.Session(graph = tf.Graph(), config=config_gpu) as sess:
             if deviceSelected=="Multi-GPU" and cpu_weight_merge==True:
                 with tf.device("/cpu:0"):
-                    model_keras = load_model(self.load_model_path,custom_objects=get_custom_metrics()) 
+                    model_keras = load_model(self.load_model_path,custom_objects=aid_dl.get_custom_metrics()) 
             else:
-                model_keras = load_model(self.load_model_path,custom_objects=get_custom_metrics())
+                model_keras = load_model(self.load_model_path,custom_objects=aid_dl.get_custom_metrics())
         
             #Multi-GPU
             if deviceSelected=="Multi-GPU":
@@ -12187,7 +12177,7 @@ class MainWindow(QtWidgets.QMainWindow):
         #X_valid = self.X_valid #<--dont do this since it is used only once (.predict) and it would require additional RAM; instad use self.X_valid for .predict
         #Load the model and predict
         with tf.Session() as sess:
-            model_keras = load_model(self.load_model_path,custom_objects=get_custom_metrics())  
+            model_keras = load_model(self.load_model_path,custom_objects=aid_dl.get_custom_metrics())  
             self.model_keras = model_keras #useful to get the list of layers for Grad-CAM; also used to show the summary
             in_dim = model_keras.get_input_shape_at(node_index=0)
             channels_model = in_dim[-1]
@@ -12865,7 +12855,7 @@ class MainWindow(QtWidgets.QMainWindow):
         config_gpu = aid_dl.get_config(cpu_nr,gpu_nr,deviceSelected,gpu_memory)
                     
         with tf.Session(graph = tf.Graph(), config=config_gpu) as sess:     
-            model_keras = load_model(self.load_model_path,custom_objects=get_custom_metrics())
+            model_keras = load_model(self.load_model_path,custom_objects=aid_dl.get_custom_metrics())
             in_dim = model_keras.get_input_shape_at(node_index=0)
             #Get the color mode of the model
             channels_model = in_dim[-1]
