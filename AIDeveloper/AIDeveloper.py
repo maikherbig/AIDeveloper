@@ -3234,7 +3234,7 @@ class MainWindow(QtWidgets.QMainWindow):
         self.label_Crop_2.setText(_translate("MainWindow", "Input size", None))
         self.label_OutClasses_2.setText(_translate("MainWindow", "Output Nr. of classes", None))
         self.pushButton_LoadModel_2.setText(_translate("MainWindow", "Load model", None))
-        self.lineEdit_LoadModel_2.setToolTip(_translate("MainWindow", "Enter path/filename of a model (.model)", None))
+        self.lineEdit_LoadModel_2.setToolTip(_translate("MainWindow", tooltips["lineEdit_LoadModel_2"], None))
         self.tableWidget_Info_2.setToolTip(_translate("MainWindow",tooltips["tableWidget_Info_2"] , None))
 
         self.pushButton_ExportValidToNpy.setToolTip(_translate("MainWindow",tooltips["pushButton_ExportValidToNpy"] , None))
@@ -4147,7 +4147,9 @@ class MainWindow(QtWidgets.QMainWindow):
             color = tuple(color)                
             pencolor = pg.mkColor(color)
             brush = pg.mkBrush(color=pencolor)
-            historyscatter = plt1.plot(range(len(df)), df,pen=None,symbol='o',symbolPen=None,symbolBrush=brush,name=key,clear=False)
+            print(df)
+            
+            historyscatter = plt1.plot(range(len(df)), df.values, pen=None,symbol='o',symbolPen=None,symbolBrush=brush,name=key,clear=False)
             #self.fittingpopups_ui[listindex].historyscatters.append(historyscatter)
             self.fittingpopups_ui[listindex].historyscatters[key]=historyscatter
 
