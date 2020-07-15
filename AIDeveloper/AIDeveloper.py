@@ -5,6 +5,8 @@ AIDeveloper
 @author: maikherbig
 """
 import os,sys,gc
+os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'#suppress warnings/info from tensorflow
+
 if not sys.platform.startswith("win"):
     from multiprocessing import freeze_support
     freeze_support()
@@ -134,8 +136,6 @@ try:
 except AttributeError:
     def _translate(context, text, disambig):
         return QtWidgets.QApplication.translate(context, text, disambig)
-
-os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'#suppress warnings/info from tensorflow
 
 tooltips = aid_start.get_tooltips()
 
