@@ -53,6 +53,7 @@ from stat import S_IREAD,S_IRGRP,S_IROTH,S_IWRITE,S_IWGRP,S_IWOTH
 
 import tensorflow as tf
 from tensorboard import program
+from tensorboard import default
 
 from tensorflow.python.client import device_lib
 devices = device_lib.list_local_devices()
@@ -12079,33 +12080,37 @@ class MainWindow(QtWidgets.QMainWindow):
             self.threadpool_single.start(worker)        
             #print("PID-Here:")
             #print(os.getpid())
-            time.sleep(2)
+            #time.sleep(2)
             
 
     def tensorboad_worker(self,progress_callback,history_callback):
         #send the model to tensorboard (webbased application)
-        model_keras = load_model(self.load_model_path) #load the model
+        with tf.Session() as sess:
+            model_keras = load_model(self.load_model_path,custom_objects=aid_dl.get_custom_metrics())  
 
-        graph = K.get_session().graph # Get the sessions graph
-        #get a folder for that model in temp
-        temp_path = aid_bin.create_temp_folder()
-        modelname = os.path.split(self.load_model_path)[-1]
-        modelname = modelname.split(".model")[0]
-        log_dir = os.path.join(temp_path,modelname)
-        writer = tf.summary.FileWriter(logdir=log_dir, graph=graph)#write a log
+            graph = K.get_session().graph # Get the sessions graph
+            #get a folder for that model in temp
+            temp_path = aid_bin.create_temp_folder()
+            modelname = os.path.split(self.load_model_path)[-1]
+            modelname = modelname.split(".model")[0]
+            log_dir = os.path.join(temp_path,modelname)
+            writer = tf.summary.FileWriter(logdir=log_dir, graph=graph)#write a log
+    
+            #tb = program.TensorBoard()            
+            tb = program.TensorBoard(default.get_plugins(), default.get_assets_zip_provider())
+            #tb.configure(argv=[None, '--logdir', log_dir,"--host","127.0.0.1"])
+            tb.configure(argv=[None, '--logdir', log_dir,"--host","localhost"])
 
-        tb = program.TensorBoard()
-        #tb = program.TensorBoard(default.get_plugins(), default.get_assets_zip_provider())
-        tb.configure(argv=[None, '--logdir', log_dir,"--host","localhost"])
-        url = tb.launch()
-        os.system("start "+url)
-        pid = os.getpid()
-        dic = {"outp":pid}
-        #print("WORKER1-PID")
-        #print(pid)
-        history_callback.emit(dic) #return the pid (use it to kill the process)
-        self.threadpool_single_queue = 0 #reset the thread-counter
-        
+            url = tb.launch()
+            url = os.path.join(url)
+            os.system(r"start "+url)
+            pid = os.getpid()
+            dic = {"outp":pid}
+            #print("WORKER1-PID")
+            #print(pid)
+            history_callback.emit(dic) #return the pid (use it to kill the process)
+            self.threadpool_single_queue = 0 #reset the thread-counter
+        time.sleep(0.5)
         
 
 
