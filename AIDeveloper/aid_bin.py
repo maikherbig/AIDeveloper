@@ -10,7 +10,7 @@ make the main script a bit shorter
 import os,shutil,json,re,urllib
 import numpy as np
 import dclab
-import h5py
+import h5py,time
 import aid_start #import a module that sits in the AIDeveloper folder
 dir_root = os.path.dirname(aid_start.__file__)#ask the module for its origin
 
@@ -486,7 +486,11 @@ def create_temp_folder():
     temp_path = os.path.join(dir_root,"temp")
     if os.path.isdir(temp_path):
         print("Found existing temporary folder")
-    
+        print("Delete all contents of that folder")
+        shutil.rmtree(temp_path,ignore_errors=True)
+        time.sleep(0.5)
+        os.mkdir(temp_path)
+
     if not os.path.exists(temp_path):
         os.mkdir(temp_path)
         print("Created temporary folder: "+temp_path)
