@@ -119,7 +119,7 @@ import aid_img, aid_dl, aid_bin
 import aid_frontend
 from partial_trainability import partial_trainability
 
-VERSION = "0.1.0" #Python 3.5.6 Version
+VERSION = "0.1.0_dev1" #Python 3.5.6 Version
 model_zoo_version = model_zoo.__version__()
 print("AIDeveloper Version: "+VERSION)
 print("model_zoo.py Version: "+model_zoo.__version__())
@@ -12832,6 +12832,7 @@ class MainWindow(QtWidgets.QMainWindow):
         zoom_factors = [selectedfile["zoom_factor"] for selectedfile in AvailableFiles]
         zoom_order = [self.actionOrder0.isChecked(),self.actionOrder1.isChecked(),self.actionOrder2.isChecked(),self.actionOrder3.isChecked(),self.actionOrder4.isChecked(),self.actionOrder5.isChecked()]
         zoom_order = int(np.where(np.array(zoom_order)==True)[0])
+        
         xtra_in = set([selectedfile["xtra_in"] for selectedfile in AvailableFiles])   
         if len(xtra_in)>1:# False and True is present. Not supported
             print("Xtra data is used only for some files. Xtra data needs to be used either by all or by none!")
@@ -12905,12 +12906,10 @@ class MainWindow(QtWidgets.QMainWindow):
             for i in range(len(Files)):#rtdc_path in Files:
                 f_index = FileIndex[i]
                 zoom_factor = zoom_factors[f_index]
-                zoom_order_ = zoom_order[f_index]
-                print("zoom_factor")
-                print(zoom_factor)
+                rtdc_path = Files[f_index]
                 
                 #get all images, cropped correcetly
-                gen_train = aid_img.gen_crop_img(crop,rtdc_path,replace=True,random_images=False,zoom_factor=zoom_factor,zoom_order=zoom_order_,color_mode=color_mode,padding_mode=paddingMode,xtra_in=xtra_in)
+                gen_train = aid_img.gen_crop_img(crop,rtdc_path,replace=True,random_images=False,zoom_factor=zoom_factor,zoom_order=zoom_order,color_mode=color_mode,padding_mode=paddingMode,xtra_in=xtra_in)
                 x_train,index,xtra_train = next(gen_train) #x_train-images of all cells, index-original index of all cells           
                 
                 if norm == "StdScaling using mean and std of all training data":
