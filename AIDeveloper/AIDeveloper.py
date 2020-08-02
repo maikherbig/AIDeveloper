@@ -8927,6 +8927,15 @@ class MainWindow(QtWidgets.QMainWindow):
 
                                         #change the new_modelname to a path in temp
                                         new_modelname = os.path.join(temp_path,parentfolder,fname)
+
+                                        #inform user!
+                                        text = "Could not find original folder. Files are now saved to "+new_modelname
+                                        text = "<span style=\' color: red;\'>" +text+"</span>"
+                                        self.fittingpopups_ui[listindex].textBrowser_FittingInfo_pop.append(text)
+                                        text = "<span style=\' color: black;\'>" +""+"</span>"
+                                        self.fittingpopups_ui[listindex].textBrowser_FittingInfo_pop.append(text)
+
+                                        #Save the  model
                                         model_keras.save(new_modelname.split(".model")[0]+"_"+str(counter)+".model")
                                         #Also update the excel writer!
                                         writer = pd.ExcelWriter(new_modelname.split(".model")[0]+'_meta.xlsx', engine='openpyxl')
@@ -9054,10 +9063,18 @@ class MainWindow(QtWidgets.QMainWindow):
                                         if not os.path.exists(os.path.join(temp_path,folder)):
                                             print("create "+os.path.join(temp_path,folder))
                                             os.mkdir(os.path.join(temp_path,folder))
-
+                                        
                                         #change the new_modelname to a path in temp
                                         new_modelname = os.path.join(temp_path,folder,fname)
-                                        
+
+                                        #inform user!
+                                        text = "Could not find original folder. Files are now saved to "+new_modelname
+                                        text = "<span style=\' color: red;\'>" +text+"</span>"
+                                        self.fittingpopups_ui[listindex].textBrowser_FittingInfo_pop.append(text)
+                                        text = "<span style=\' color: black;\'>" +""+"</span>"
+                                        self.fittingpopups_ui[listindex].textBrowser_FittingInfo_pop.append(text)
+
+
                                         #update the excel writer
                                         writer = pd.ExcelWriter(new_modelname.split(".model")[0]+'_meta.xlsx', engine='openpyxl')
                                         pd.DataFrame().to_excel(writer,sheet_name='UsedData') #initialize empty Sheet
