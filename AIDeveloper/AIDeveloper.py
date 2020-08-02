@@ -2660,6 +2660,10 @@ class MainWindow(QtWidgets.QMainWindow):
         self.actionClearMemory.setObjectName(_fromUtf8("actionSaveToPng"))
         self.actionClearMemory.triggered.connect(aid_dl.reset_keras)
 
+        self.actionOpenTemp = QtWidgets.QAction(self)
+        self.actionOpenTemp.setObjectName(_fromUtf8("actionOpenTemp"))
+        self.actionOpenTemp.triggered.connect(aid_bin.open_temp)
+
         self.actionGroup_Export = QtWidgets.QActionGroup(self,exclusive=True)
         self.actionExport_Off = QtWidgets.QAction(self)
         self.actionExport_Off.setCheckable(True)
@@ -2797,6 +2801,7 @@ class MainWindow(QtWidgets.QMainWindow):
 
         self.menuEdit.addSeparator()
         self.menuEdit.addAction(self.actionClearMemory)
+        self.menuEdit.addAction(self.actionOpenTemp)
 
         self.menuEdit.addSeparator()
         self.menuEdit.addAction(self.actionVerbose)
@@ -3397,6 +3402,7 @@ class MainWindow(QtWidgets.QMainWindow):
         self.actionRemoveSelected.setText(_translate("MainWindow", "Remove selected", None))
         self.actionSaveToPng.setText(_translate("MainWindow", "Export selected to .png/.jpg", None))
         self.actionClearMemory.setText(_translate("MainWindow", "Clear memory (CPU/GPU)", None))
+        self.actionOpenTemp.setText(_translate("MainWindow", "Open temp directory", None))
         
         self.actionExport_Off.setText(_translate("MainWindow", "No exporting",None))
         self.actionExport_Original.setText(_translate("MainWindow", "Export Original Images",None))
@@ -3421,6 +3427,12 @@ class MainWindow(QtWidgets.QMainWindow):
         self.actioncpu_weightmerge.setToolTip(_translate("MainWindow", tooltips["actioncpu_weightmerge"],None))
 
         self.actionTooltipOnOff.setText(_translate("MainWindow", "Show tooltips",None))
+
+        #count the number of files in the temp. folder
+        nr_temp_files = aid_bin.count_temp_folder()
+        if nr_temp_files>0:
+            #inform user
+            self.statusbar.showMessage("Files are left in temporary folder. Find temp via: ->Edit->Open temp directory",10000)
 
     def dataDropped(self, l):
         #If there is data stored on ram tell user that RAM needs to be refreshed!
