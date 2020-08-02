@@ -501,7 +501,42 @@ def create_temp_folder():
     return temp_path
 
 
+#def delete_temp_folder():
+#    temp_path = os.path.join(dir_root,"temp")
+#    if os.path.exists(temp_path):
+#        print("Found existing temporary folder: "+temp_path)
+#        print("Delete all contents of that folder")
+#        shutil.rmtree(temp_path,ignore_errors=True)
+#        time.sleep(0.5)
+#        try:
+#            os.mkdir(temp_path)
+#        except:
+#            print("Could not delete temp folder. Files probably still in use!")
+#            pass
+#
+#    if not os.path.exists(temp_path):#temp folder does not exist
+#        os.mkdir(temp_path)#create the folder
+#        print("Created temporary folder: "+temp_path)
+#    return temp_path
 
+def count_temp_folder():
+    """
+    Count the number of folders within the temporary folder
+    """
+    temp_path = os.path.join(dir_root,"temp")
+    if os.path.exists(temp_path):#if temp even exists...
+        files = os.listdir(temp_path)
+        nr_temp_files = len(files)
+    else:
+        #there is no temp folder!
+        create_temp_folder()#create a temp folder
+        nr_temp_files = 0
+    return nr_temp_files 
+
+def open_temp():
+    temp_path = create_temp_folder()
+    os.startfile(temp_path)
+    
 
 #################Some functions that are not used anymore######################
 
