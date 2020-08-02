@@ -8908,7 +8908,7 @@ class MainWindow(QtWidgets.QMainWindow):
                                         #In case of multi-GPU, first copy the weights of the parallel model to the normal model
                                         model_keras.set_weights(model_keras_p.layers[-2].get_weights())
                                     #Save the model
-                                    print("This is the model path")
+                                    print("Save model to following directory:")
                                     print(os.path.dirname(new_modelname))
                                     if os.path.exists(os.path.dirname(new_modelname)):
                                         model_keras.save(new_modelname.split(".model")[0]+"_"+str(counter)+".model")
@@ -9029,27 +9029,6 @@ class MainWindow(QtWidgets.QMainWindow):
                                     DF1["Time"] = Stopwatch
                                     DF1.index = Index
 
-
-
-                                    if os.path.exists(os.path.dirname(new_modelname)):
-                                        print("Path exists. Save now")
-                                        model_keras.save(new_modelname.split(".model")[0]+"_"+str(counter)+".model")
-                                    else:#in case the folder does not exist (anymore), create a folder in temp
-                                        #what is the foldername of the model?
-                                        print("Saving failed. Create folder in temp")
-                                        temp_path = aid_bin.create_temp_folder()#create a temp folder if it does not already exist
-                                        print("Your temp folder is here: "+str(temp_path))
-                                        parentfolder = aid_bin.splitall(new_modelname)[-2]
-                                        fname = os.path.split(new_modelname)[-1]
-
-                                        #create that folder in temp if it not exists already
-                                        if not os.path.exists(os.path.join(temp_path,parentfolder)):
-                                            print("create "+os.path.join(temp_path,parentfolder))
-                                            os.mkdir(os.path.join(temp_path,parentfolder))
-
-                                        #change the new_modelname to a path in temp
-                                        new_modelname = os.path.join(temp_path,parentfolder,fname)
-
                                     #Saving
                                     if os.path.exists(os.path.dirname(new_modelname)):#check if folder is (still) available
                                         if os.path.isfile(new_modelname.split(".model")[0]+'_meta.xlsx'):
@@ -9066,11 +9045,12 @@ class MainWindow(QtWidgets.QMainWindow):
                                         temp_path = aid_bin.create_temp_folder()#create a temp folder if it does not already exist
                                         print("Your temp folder is here: "+str(temp_path))
                                         folder = os.path.split(new_modelname)[-2]
+                                        folder = os.path.split(folder)[-1]
                                         print("folder: "+folder)
                                         fname = os.path.split(new_modelname)[-1]
                                         print("fname: "+fname)
 
-                                        #create that folder in temp if it not exists already
+                                        #create that folder in temp if it does'nt exist already
                                         if not os.path.exists(os.path.join(temp_path,folder)):
                                             print("create "+os.path.join(temp_path,folder))
                                             os.mkdir(os.path.join(temp_path,folder))
