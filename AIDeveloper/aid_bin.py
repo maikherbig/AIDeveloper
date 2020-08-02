@@ -484,12 +484,16 @@ def check_update(this_version):
 
 def create_temp_folder():
     temp_path = os.path.join(dir_root,"temp")
-    if os.path.isdir(temp_path):
-        print("Found existing temporary folder")
-        print("Delete all contents of that folder")
-        shutil.rmtree(temp_path,ignore_errors=True)
-        time.sleep(0.5)
-        os.mkdir(temp_path)
+    if os.path.exists(temp_path):
+        print("Found existing temporary folder: "+temp_path)
+#        print("Delete all contents of that folder")
+#        shutil.rmtree(temp_path,ignore_errors=True)
+#        time.sleep(0.5)
+#        try:
+#            os.mkdir(temp_path)
+#        except:
+#            print("Could not delete temp folder. Files probably still in use!")
+#            pass
 
     if not os.path.exists(temp_path):
         os.mkdir(temp_path)
