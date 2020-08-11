@@ -246,12 +246,34 @@ def get_tooltips():
     tooltips["spinBox_avgBlurMax"] = "<html><head/><body><p>Define the maximum kernel size for average blur</p></body></html>"
     tooltips["lineEdit_motionBlurKernel"] = "<html><head/><body><p>Define kernels by giving a range \"min,max\". Values from this range are then randomly picked for each image</p></body></html>"
     tooltips["groupBox_expertMode"] = "<html><head/><body><p>Expert mode allows changing the learning rate and you can even set parts of the neural net to \'not trainable\' in order to perform transfer learning and fine tune models. Also dropout rates can be adjusted. When expert mode is turned off again, the initial values are applied again.</p></body></html>"
-    tooltips["checkBox_learningRate"] = "<html><head/><body><p>Change the learning rate. The default optimizer is \'adam\' with a learning rate of 0.001</p></body></html>"
+    tooltips["groupBox_learningRate"] = "<html><head/><body><p>Change the learning rate. The default optimizer is \'adam\' with a learning rate of 0.001</p></body></html>"
     tooltips["checkBox_trainLastNOnly"] = "<html><head/><body><p>When checked, only the last n layers of the model, which have >0 parameters will stay trainable. Layers before are set to trainable=False. Please specify n using the spinbox. After this change, the model has to be recompiled, which means the optimizer values are deleted.</p></body></html>"  
     tooltips["spinBox_trainLastNOnly"] = "<html><head/><body><p>Specify the number of last layer in your model that should be kept trainable. Only layers with >0 parameters are counted. Use the checkbox to apply this option. After this change, the model has to be recompiled, which means the optimizer values are deleted.</p></body></html>"
     tooltips["checkBox_trainDenseOnly"] = "<html><head/><body><p>When checked, only the dense layers are kept trainable (if they have >0 parameters). Other layers are set to trainable=False. After this change, the model has to be recompiled, which means the optimizer values are deleted.</p></body></html>"
     tooltips["label_batchSize"] = "<html><head/><body><p>Number of samples per gradient update. If unspecified, batch_size will default to 32. (Source: Keras documentation)</p></body></html>"
     tooltips["label_epochs"] = "<html><head/><body><p>Number of epochs to train the model on an identical batch.</p></body></html>"    
+ 
+    tooltips["groupBox_learningRate"] = "<html><head/><body><p>The learning rate defines how strong parameters are changed in each training iteration.</p></body></html>"    
+    tooltips["radioButton_LrConst"] = "<html><head/><body><p>Define a constant learning rate.</p></body></html>"    
+    tooltips["doubleSpinBox_learningRate"] = "<html><head/><body><p>Define a constant value for the learning rate. The learning rate defines how strong parameters are changed in each training iteration.</p></body></html>"    
+    tooltips["radioButton_LrCycl"] = "<html><head/><body><p>Apply cyclical learning rate schedule. Here, the learning rate oszillates between two bounds (Min/Max). After each processed batch, the lr is adjusted. Button (...) leads to functions that allow to find sensible bounds. Cyclical learning rate was orignally defined in the paper 'Cyclical Learning Rates for Training Neural Networks': https://arxiv.org/abs/1506.01186.</p></body></html>"    
+    tooltips["label_cycLrMin"] = "<html><head/><body><p>Lower bound for cyclical learning rate.</p></body></html>"    
+    tooltips["label_cycLrMax"] = "<html><head/><body><p>Upper bound for cyclical learning rate.</p></body></html>"    
+    tooltips["comboBox_cycLrMethod"] = "<html><head/><body><p>Method for changing the learning rate.</p></body></html>"    
+    tooltips["pushButton_cycLrPopup"] = "<html><head/><body><p>Methods to find sensible bounds for cyclicyal learning rates.</p></body></html>"    
+    
+    tooltips["radioButton_LrExpo"] = "<html><head/><body><p>Apply exponentially decreasing learning rates. Equation: LR = initial_LR * decay_rate ^ (epoch / decay_steps).</p></body></html>"    
+    tooltips["label_expDecInitLr"] = "<html><head/><body><p>Apply exponentially decreasing learning rates. Equation: LR = initial_LR * decay_rate ^ (epoch / decay_steps).</p></body></html>"    
+    tooltips["label_expDecSteps"] = "<html><head/><body><p>Decay steps: Nr. of epochs it should take till LR decreases to decay_rate*inital_LR. Equation: LR = initial_LR * decay_rate ^ (epoch / decay_steps).</p></body></html>"    
+    tooltips["label_expDecRate"] = "<html><head/><body><p>Decay rate: choose value between 0 and 1. Lower means earlier drop of LR. 1 means never decrease learning rate.</p></body></html>"    
+
+
+
+
+
+
+    
+    
     tooltips["checkBox_dropout"] = "<html><head/><body><p>If your model has one or more dropout layers, you can change the dropout rates here. Insert into the lineEdit one value (e.g. 0.5) to apply this one value to all dropout layers, or insert a list of values to specify the dropout rates for each dropout layer individually (e.g. for three dropout layers: [ 0.2 , 0.5 , 0.25 ]. The model will be recompiled, but the optimizer weights are not deleted.</p></body></html>"
     tooltips["checkBox_partialTrainability"] = "<html><head/><body><p>Partial trainability allows you to make parts of a layer non-trainable. Hence, this option makes most sense in combination with 'Load and continue' training a model. After checking this box, the model you chose on 'Define model'-tab is initialized. The line on the right shows the trainability of each layer in the model. Use the button on the right ('...') to open a popup menu, which allows you to specify individual trainabilities for each layer.</p></body></html>"
     tooltips["checkBox_lossW"] = "<html><head/><body><p>Specify scalar coefficients to weight the loss contributions of different classes.</p></body></html>"
@@ -365,5 +387,8 @@ def get_tooltips():
     tooltips["pushButton_update"] = "<html><head/><body><p>Apply the settings and update the image.</p></body></html>"
 
 
+
+    ####outdated!
+    tooltips["checkBox_learningRate"] = "<html><head/><body><p>Change the learning rate. The default optimizer is \'adam\' with a learning rate of 0.001</p></body></html>"
 
     return tooltips
