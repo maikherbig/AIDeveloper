@@ -1,28 +1,25 @@
 # -*- coding: utf-8 -*-
 """
 aid_dl
-functions adjust and convert deep neural nets
+functions to adjust and convert deep neural nets
+grad_cam
+LearningRateFinder
 ---------
 @author: maikherbig
 """
-import os, shutil,gc
+import os, shutil,gc,tempfile
 import numpy as np
+import pandas as pd
 rand_state = np.random.RandomState(117) #to get the same random number on diff. PCs
 import tensorflow as tf
-#from tensorflow.python.client import device_lib
-#device_types = device_lib.list_local_devices()
-#device_types = [device_types[i].device_type for i in range(len(device_types))]
-#config_gpu = tf.ConfigProto()
-#if device_types[0]=='GPU':
-#    config_gpu.gpu_options.allow_growth = True
-#    config_gpu.gpu_options.per_process_gpu_memory_fraction = 0.7
+from tensorflow.python.tools import optimize_for_inference_lib
 import keras
+from keras.models import load_model
+from keras import backend as K
+
 import keras_metrics #side package for precision, recall etc during training
 global keras_metrics
 
-from tensorflow.python.tools import optimize_for_inference_lib
-from keras.models import load_model
-from keras import backend as K
 from keras2onnx import convert_keras
 from onnx import save_model as save_onnx
 from mmdnn.conversion._script import convertToIR,IRToCode,convert
@@ -557,7 +554,7 @@ def get_last_conv_layer_name(model_keras):
 
 def grad_cam(load_model_path, images, class_, layer_name):
     """
-    Reference to paper
+    Reference to paper:
     -https://arxiv.org/abs/1610.02391
     
     Args:
@@ -599,3 +596,387 @@ def grad_cam(load_model_path, images, class_, layer_name):
     sess.close()
     
     return cam
+
+
+class LearningRateFinder:
+    """
+    Citation: Rosebrock, A (2019) Keras Learning Rate Finder [Source code].
+    https://www.pyimagesearch.com/2019/08/05/keras-learning-rate-finder
+    """
+    def __init__(self, model, stopFactor=4, beta=0.98):
+		# store the model, stop factor, and beta value (for computing
+		# a smoothed, average loss)
+        self.model = model
+        self.stopFactor = stopFactor
+        self.beta = beta
+        # initialize our list of learning rates and losses,
+        # respectively
+        self.lrs = []
+        self.losses = []
+        # initialize our learning rate multiplier, average loss, best
+        # loss found thus far, current batch number, and weights file
+        self.lrMult = 1
+        self.avgLoss = 0
+        self.bestLoss = 1e9
+        self.batchNum = 0
+        self.weightsFile = None
+
+    def reset(self):
+        # re-initialize all variables from our constructor
+        self.lrs = []
+        self.losses = []
+        self.lrMult = 1
+        self.avgLoss = 0
+        self.bestLoss = 1e9
+        self.batchNum = 0
+        self.weightsFile = None
+	
+    def is_data_iter(self, data):
+        # define the set of class types we will check for
+        iterClasses = ["NumpyArrayIterator", "DirectoryIterator",
+        "DataFrameIterator", "Iterator", "Sequence"]
+        # return whether our data is an iterator
+        return data.__class__.__name__ in iterClasses
+
+    def on_batch_end(self, batch, logs):
+        # grab the current learning rate and add log it to the list of
+        # learning rates that we've tried
+        lr = K.get_value(self.model.optimizer.lr)
+        self.lrs.append(lr)
+        # grab the loss at the end of this batch, increment the total
+        # number of batches processed, compute the average average
+        # loss, smooth it, and update the losses list with the
+        # smoothed value
+        l = logs["loss"]
+        self.batchNum += 1
+        self.avgLoss = (self.beta * self.avgLoss) + ((1 - self.beta) * l)
+        smooth = self.avgLoss / (1 - (self.beta ** self.batchNum))
+        self.losses.append(smooth)
+        # compute the maximum loss stopping factor value
+        stopLoss = self.stopFactor * self.bestLoss
+        # check to see whether the loss has grown too large
+        if self.batchNum > 1 and smooth > stopLoss:
+            # stop returning and return from the method
+            self.model.stop_training = True
+            return
+        # check to see if the best loss should be updated
+        if self.batchNum == 1 or smooth < self.bestLoss:
+            self.bestLoss = smooth
+        # increase the learning rate
+        lr *= self.lrMult
+        K.set_value(self.model.optimizer.lr, lr)
+        
+    def find(self, trainData, startLR, endLR, epochs=None,
+        stepsPerEpoch=None, batchSize=32, sampleSize=2048,
+        verbose=1):
+        # reset our class-specific variables
+        self.reset()
+        # determine if we are using a data generator or not
+        useGen = self.is_data_iter(trainData)
+        # if we're using a generator and the steps per epoch is not
+        # supplied, raise an error
+        if useGen and stepsPerEpoch is None:
+            msg = "Using generator without supplying stepsPerEpoch"
+            raise Exception(msg)
+        # if we're not using a generator then our entire dataset must
+        # already be in memory
+        elif not useGen:
+            # grab the number of samples in the training data and
+            # then derive the number of steps per epoch
+            numSamples = len(trainData[0])
+            stepsPerEpoch = np.ceil(numSamples / float(batchSize))
+        # if no number of training epochs are supplied, compute the
+        # training epochs based on a default sample size
+        if epochs is None:
+            epochs = int(np.ceil(sampleSize / float(stepsPerEpoch)))
+            
+        # compute the total number of batch updates that will take
+        # place while we are attempting to find a good starting
+        # learning rate
+        numBatchUpdates = epochs * stepsPerEpoch
+        # derive the learning rate multiplier based on the ending
+        # learning rate, starting learning rate, and total number of
+        # batch updates
+        self.lrMult = (endLR / startLR) ** (1.0 / numBatchUpdates)
+        # create a temporary file path for the model weights and
+        # then save the weights (so we can reset the weights when we
+        # are done)
+        self.weightsFile = tempfile.mkstemp()[1]
+        self.model.save_weights(self.weightsFile)
+        # grab the *original* learning rate (so we can reset it
+        # later), and then set the *starting* learning rate
+        origLR = K.get_value(self.model.optimizer.lr)
+        K.set_value(self.model.optimizer.lr, startLR)            
+                    
+        # construct a callback that will be called at the end of each
+        # batch, enabling us to increase our learning rate as training
+        # progresses
+        callback = keras.callbacks.LambdaCallback(on_batch_end=lambda batch, logs: self.on_batch_end(batch, logs))
+        # check to see if we are using a data iterator
+        if useGen:
+            self.model.fit(
+            x=trainData,
+            steps_per_epoch=stepsPerEpoch,
+            epochs=epochs,
+            verbose=verbose,
+            callbacks=[callback])
+        # otherwise, our entire training data is already in memory
+        else:
+            # train our model using Keras' fit method
+            self.model.fit(
+                x=trainData[0], y=trainData[1],
+                batch_size=batchSize,
+                epochs=epochs,
+                callbacks=[callback],
+                verbose=verbose)
+        # restore the original model weights and learning rate
+        self.model.load_weights(self.weightsFile)
+        K.set_value(self.model.optimizer.lr, origLR)            
+        
+
+class cyclicLR(keras.callbacks.Callback):
+    """
+    Reference: https://github.com/bckenstler/CLR/blob/master/clr_callback.py
+    Author: Brad Kenstler
+    
+    This callback implements a cyclical learning rate policy (CLR).
+    The method cycles the learning rate between two boundaries with
+    some constant frequency, as detailed in this paper (https://arxiv.org/abs/1506.01186).
+    The amplitude of the cycle can be scaled on a per-iteration or 
+    per-cycle basis.
+    This class has three built-in policies, as put forth in the paper.
+    "triangular":
+        A basic triangular cycle w/ no amplitude scaling.
+    "triangular2":
+        A basic triangular cycle that scales initial amplitude by half each cycle.
+    "exp_range":
+        A cycle that scales initial amplitude by gamma**(cycle iterations) at each 
+        cycle iteration.
+    For more detail, please see paper.
+    
+    # Example
+        ```python
+            clr = cyclicLR(base_lr=0.001, max_lr=0.006,
+                                step_size=2000., mode='triangular')
+            model.fit(X_train, Y_train, callbacks=[clr])
+        ```
+    
+    Class also supports custom scaling functions:
+        ```python
+            clr_fn = lambda x: 0.5*(1+np.sin(x*np.pi/2.))
+            clr = cyclicLR(base_lr=0.001, max_lr=0.006,
+                                step_size=2000., scale_fn=clr_fn,
+                                scale_mode='cycle')
+            model.fit(X_train, Y_train, callbacks=[clr])
+        ```    
+    # Arguments
+        base_lr: initial learning rate which is the
+            lower boundary in the cycle.
+        max_lr: upper boundary in the cycle. Functionally,
+            it defines the cycle amplitude (max_lr - base_lr).
+            The lr at any cycle is the sum of base_lr
+            and some scaling of the amplitude; therefore 
+            max_lr may not actually be reached depending on
+            scaling function.
+        step_size: number of training iterations per
+            half cycle. Authors suggest setting step_size
+            2-8 x training iterations in epoch.
+        mode: one of {triangular, triangular2, exp_range}.
+            Default 'triangular'.
+            Values correspond to policies detailed above.
+            If scale_fn is not None, this argument is ignored.
+        gamma: constant in 'exp_range' scaling function:
+            gamma**(cycle iterations)
+        scale_fn: Custom scaling policy defined by a single
+            argument lambda function, where 
+            0 <= scale_fn(x) <= 1 for all x >= 0.
+            mode paramater is ignored 
+        scale_mode: {'cycle', 'iterations'}.
+            Defines whether scale_fn is evaluated on 
+            cycle number or cycle iterations (training
+            iterations since start of cycle). Default is 'cycle'.
+    """
+
+    def __init__(self, base_lr=0.001, max_lr=0.006, step_size=2000., mode='triangular',
+                 gamma=1., scale_fn=None, scale_mode='cycle'):
+        super(cyclicLR, self).__init__()
+
+        self.base_lr = base_lr
+        self.max_lr = max_lr
+        self.step_size = step_size
+        self.mode = mode
+        self.gamma = gamma
+        if scale_fn == None:
+            if self.mode == 'triangular':
+                self.scale_fn = lambda x: 1.
+                self.scale_mode = 'cycle'
+            elif self.mode == 'triangular2':
+                self.scale_fn = lambda x: 1/(2.**(x-1))
+                self.scale_mode = 'cycle'
+            elif self.mode == 'exp_range':
+                self.scale_fn = lambda x: gamma**(x)
+                self.scale_mode = 'iterations'
+        else:
+            self.scale_fn = scale_fn
+            self.scale_mode = scale_mode
+        self.clr_iterations = 0.
+        self.trn_iterations = 0.
+        self.history = {}
+
+        self._reset()
+
+    def _reset(self, new_base_lr=None, new_max_lr=None,
+               new_step_size=None):
+        """Resets cycle iterations.
+        Optional boundary/step size adjustment.
+        """
+        if new_base_lr != None:
+            self.base_lr = new_base_lr
+        if new_max_lr != None:
+            self.max_lr = new_max_lr
+        if new_step_size != None:
+            self.step_size = new_step_size
+        self.clr_iterations = 0.
+        
+    def clr(self):
+        cycle = np.floor(1+self.clr_iterations/(2*self.step_size))
+        x = np.abs(self.clr_iterations/self.step_size - 2*cycle + 1)
+        if self.scale_mode == 'cycle':
+            return self.base_lr + (self.max_lr-self.base_lr)*np.maximum(0, (1-x))*self.scale_fn(cycle)
+        else:
+            return self.base_lr + (self.max_lr-self.base_lr)*np.maximum(0, (1-x))*self.scale_fn(self.clr_iterations)
+        
+    def on_train_begin(self, logs={}):
+        logs = logs or {}
+
+        if self.clr_iterations == 0:
+            K.set_value(self.model.optimizer.lr, self.base_lr)
+        else:
+            K.set_value(self.model.optimizer.lr, self.clr())        
+            
+    def on_batch_end(self, epoch, logs=None):
+        
+        logs = logs or {}
+        self.trn_iterations += 1
+        self.clr_iterations += 1
+
+        self.history.setdefault('lr', []).append(K.get_value(self.model.optimizer.lr))
+        self.history.setdefault('iterations', []).append(self.trn_iterations)
+
+        for k, v in logs.items():
+            self.history.setdefault(k, []).append(v)
+        
+        K.set_value(self.model.optimizer.lr, self.clr())
+
+class exponentialDecay(keras.callbacks.Callback):
+    """    
+    Decrease learning rate using exponential decay
+    lr = initial_lr * decay_rate ** (epoch / decay_steps)    
+    """
+    def __init__(self, initial_lr=0.01, decay_steps=100, decay_rate=0.95):
+        super(exponentialDecay, self).__init__()
+
+        self.initial_lr = initial_lr
+        self.decay_steps = decay_steps
+        self.decay_rate = decay_rate
+
+        self.iterations = 0.
+        self.trn_iterations = 0.
+        self.history = {}
+
+        self._reset()
+
+    def _reset(self, new_initial_lr=None, new_decay_steps=None,new_decay_rate=None):
+        if new_initial_lr != None:
+            self.initial_lr = new_initial_lr
+        if new_decay_steps != None:
+            self.decay_steps = new_decay_steps
+        if new_decay_rate != None:
+            self.decay_rate = new_decay_rate
+        self.iterations = 0.
+        
+    def exp_decay(self):
+        return self.initial_lr * self.decay_rate ** (self.iterations / self.decay_steps)
+
+    def on_train_begin(self, logs={}):
+        logs = logs or {}
+
+        if self.iterations == 0:
+            K.set_value(self.model.optimizer.lr, self.initial_lr)
+        else:
+            K.set_value(self.model.optimizer.lr, self.exp_decay())        
+            
+    def on_batch_end(self, epoch, logs=None):
+        
+        logs = logs or {}
+        self.trn_iterations += 1
+        self.iterations += 1
+
+        self.history.setdefault('lr', []).append(K.get_value(self.model.optimizer.lr))
+        self.history.setdefault('iterations', []).append(self.trn_iterations)
+
+        for k, v in logs.items():
+            self.history.setdefault(k, []).append(v)
+        
+        K.set_value(self.model.optimizer.lr, self.exp_decay())
+
+
+
+def get_cyclStepSize(SelectedFiles,step_size,batch_size):
+    ind = [selectedfile["TrainOrValid"] == "Train" for selectedfile in SelectedFiles]
+    ind = np.where(np.array(ind)==True)[0]
+    SelectedFiles_train = np.array(SelectedFiles)[ind]
+    SelectedFiles_train = list(SelectedFiles_train)
+    nr_events_train_total = np.sum([int(selectedfile["nr_events_epoch"]) for selectedfile in SelectedFiles_train])
+
+    cycLrStepSize = step_size*int(np.round(nr_events_train_total / batch_size))#number of steps in one epoch 
+    return cycLrStepSize           
+
+
+def get_lr_dict(learning_rate_const_on,learning_rate_const,
+                    learning_rate_cycLR_on,cycLrMin,cycLrMax,
+                    cycLrMethod,cycLrStepSize,
+                    learning_rate_expo_on,
+                    expDecInitLr,expDecSteps,expDecRate,cycLrGamma):
+    lr_dict = pd.DataFrame()
+    lr_dict["learning_rate_const_on"] = learning_rate_const_on,
+    lr_dict["learning_rate_const"] = learning_rate_const,
+    lr_dict["learning_rate_cycLR_on"] = learning_rate_cycLR_on,
+    lr_dict["cycLrMin"] = cycLrMin,
+    lr_dict["cycLrMax"] = cycLrMax,
+    lr_dict["cycLrMethod"] = cycLrMethod,
+    lr_dict["cycLrStepSize"] = cycLrStepSize,
+    lr_dict["expDecInitLr"] = expDecInitLr,
+    lr_dict["expDecInitLr"] = expDecInitLr,
+    lr_dict["expDecSteps"] = expDecSteps,
+    lr_dict["expDecRate"] = expDecRate,
+    lr_dict["cycLrGamma"] = cycLrGamma,
+    return lr_dict
+
+
+def get_lr_callback(learning_rate_const_on,learning_rate_const,
+                    learning_rate_cycLR_on,cycLrMin,cycLrMax,
+                    cycLrMethod,cycLrStepSize,
+                    learning_rate_expo_on,
+                    expDecInitLr,expDecSteps,expDecRate,cycLrGamma):
+
+    if learning_rate_const_on==True:
+        return None
+    elif learning_rate_cycLR_on==True:
+        return cyclicLR(mode=cycLrMethod,base_lr=cycLrMin,max_lr=cycLrMax,step_size=cycLrStepSize)  
+    elif learning_rate_expo_on==True:
+        return exponentialDecay(initial_lr=expDecInitLr, decay_steps=expDecSteps, decay_rate=expDecRate)  
+
+       
+
+        
+        
+        
+        
+        
+        
+        
+
+        
+
+    
