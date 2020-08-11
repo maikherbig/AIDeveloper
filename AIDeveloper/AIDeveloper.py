@@ -119,7 +119,7 @@ import aid_img, aid_dl, aid_bin
 import aid_frontend
 from partial_trainability import partial_trainability
 
-VERSION = "0.1.0_dev1" #Python 3.5.6 Version
+VERSION = "0.1.0_dev2" #Python 3.5.6 Version
 model_zoo_version = model_zoo.__version__()
 print("AIDeveloper Version: "+VERSION)
 print("model_zoo.py Version: "+model_zoo.__version__())
@@ -140,73 +140,9 @@ except AttributeError:
 
 tooltips = aid_start.get_tooltips()
 
-def MyExceptionHook(etype, value, trace):
-    """
-    Copied from: https://github.com/ZELLMECHANIK-DRESDEN/ShapeOut/blob/07d741db3bb5685790d9f9f6df394cd9577e8236/shapeout/gui/frontend.py
-    Handler for all unhandled exceptions.
- 
-    :param `etype`: the exception type (`SyntaxError`, `ZeroDivisionError`, etc...);
-    :type `etype`: `Exception`
-    :param string `value`: the exception error message;
-    :param string `trace`: the traceback header, if any (otherwise, it prints the
-     standard Python header: ``Traceback (most recent call last)``.
-    """
-    tmp = traceback.format_exception(etype, value, trace)
-    exception = "".join(tmp)
-    msg = QtWidgets.QMessageBox()
-    msg.setIcon(QtWidgets.QMessageBox.Information)       
-    msg.setText(exception)
-    msg.setWindowTitle("Error")
-    msg.setStandardButtons(QtWidgets.QMessageBox.Ok)
-    msg.exec_()
-    return
-
-class MyTable(QtWidgets.QTableWidget):
-    dropped = QtCore.pyqtSignal(list)
-
-    def __init__(self,  rows, columns, parent):
-        super(MyTable, self).__init__(rows, columns, parent)
-        self.setAcceptDrops(True)
-        self.setDragEnabled(True)
-        #self.setDragDropMode(QtWidgets.QAbstractItemView.InternalMove)
-        self.drag_item = None
-        self.drag_row = None
-
-    def dragEnterEvent(self, event):
-        if event.mimeData().hasUrls:
-            event.accept()
-        else:
-            event.ignore()
-
-    def dragMoveEvent(self, event):
-        if event.mimeData().hasUrls:
-            event.setDropAction(QtCore.Qt.CopyAction)
-            event.accept()
-        else:
-            event.ignore()
-
-    def dropEvent(self, event):
-        self.drag_item = None
-        if event.mimeData().hasUrls:
-            event.setDropAction(QtCore.Qt.CopyAction)
-            event.accept()
-            links = []
-            for url in event.mimeData().urls():
-                links.append(str(url.toLocalFile()))
-            self.dropped.emit(links)
-        else:
-            event.ignore()       
-        
-    def startDrag(self, supportedActions):
-        super(MyTable, self).startDrag(supportedActions)
-        self.drag_item = self.currentItem()
-        self.drag_row = self.row(self.drag_item)
-
 class MyPopup(QtWidgets.QWidget):
     def __init__(self):
         QtWidgets.QWidget.__init__(self)
-
-
 
 class WorkerSignals(QtCore.QObject):
     '''
@@ -280,3159 +216,10 @@ class MainWindow(QtWidgets.QMainWindow):
         self.setupUi()
 
     def setupUi(self):
-        self.setObjectName(_fromUtf8("MainWindow"))
-        self.resize(900, 600)
-
-        sys.excepthook = MyExceptionHook
-        self.centralwidget = QtWidgets.QWidget(self)
-        self.centralwidget.setObjectName(_fromUtf8("centralwidget"))
-        self.gridLayout_2 = QtWidgets.QGridLayout(self.centralwidget)
-        self.gridLayout_2.setObjectName(_fromUtf8("gridLayout_2"))
-        self.tabWidget_Modelbuilder = QtWidgets.QTabWidget(self.centralwidget)
-        self.tabWidget_Modelbuilder.setObjectName(_fromUtf8("tabWidget_Modelbuilder"))
-        self.tab_Build = QtWidgets.QWidget()
-        self.tab_Build.setObjectName(_fromUtf8("tab_Build"))
-        self.gridLayout_17 = QtWidgets.QGridLayout(self.tab_Build)
-        self.gridLayout_17.setObjectName(_fromUtf8("gridLayout_17"))
-        self.splitter_5 = QtWidgets.QSplitter(self.tab_Build)
-        self.splitter_5.setOrientation(QtCore.Qt.Vertical)
-        self.splitter_5.setObjectName(_fromUtf8("splitter_5"))
-        self.splitter_3 = QtWidgets.QSplitter(self.splitter_5)
-        self.splitter_3.setOrientation(QtCore.Qt.Vertical)
-        self.splitter_3.setObjectName(_fromUtf8("splitter_3"))
-        self.groupBox_dragdrop = QtWidgets.QGroupBox(self.splitter_3)
-        self.groupBox_dragdrop.setMinimumSize(QtCore.QSize(0, 200))
-        self.groupBox_dragdrop.setObjectName(_fromUtf8("groupBox_dragdrop"))
-        self.gridLayout_8 = QtWidgets.QGridLayout(self.groupBox_dragdrop)
-        self.gridLayout_8.setObjectName(_fromUtf8("gridLayout_8"))
-        
-        self.table_dragdrop = MyTable(0,11,self.groupBox_dragdrop) #table with 9 columns
-        self.table_dragdrop.setObjectName(_fromUtf8("table_dragdrop"))
-        header_labels = ["File", "Class" ,"T", "V", "Show","Events total","Events/Epoch","PIX","Shuffle","Zoom","Xtra_In"]
-
-        self.table_dragdrop.setHorizontalHeaderLabels(header_labels) 
-        header = self.table_dragdrop.horizontalHeader()
-        for i in [1,2,3,4,5,6,7,8,9,10]:#range(len(header_labels)):
-            header.setResizeMode(i, QtWidgets.QHeaderView.ResizeToContents)        
-        self.table_dragdrop.setAcceptDrops(True)
-        self.table_dragdrop.setDragEnabled(True)
-        self.table_dragdrop.dropped.connect(self.dataDropped)
-        self.table_dragdrop.clicked.connect(self.item_click)
-        self.table_dragdrop.itemChanged.connect(self.uncheck_if_zero)
-        self.table_dragdrop.doubleClicked.connect(self.item_dclick)
-        self.table_dragdrop.itemChanged.connect(self.dataOverviewOn_OnChange)
-
-        self.table_dragdrop.resizeRowsToContents()
-
-        self.table_dragdrop.horizontalHeader().sectionClicked.connect(self.select_all)
-
-
-
-
-        ############################Variables##################################
-        #######################################################################
-        #Initilaize some variables which are lateron filled in the program
-        self.w = None #Initialize a variable for a popup window
-        self.threadpool = QtCore.QThreadPool()
-        self.threadpool_single = QtCore.QThreadPool()
-        self.threadpool_single.setMaxThreadCount(1)
-        self.threadpool_single_queue = 0 #count nr. of threads in queue; 
-
-        #self.threadpool_single = QtCore.QThread()
-        self.fittingpopups = []  #This app will be designed to allow training of several models ...
-        self.fittingpopups_ui = [] #...simultaneously (threading). The info of each model is appended to a list
-        self.popupcounter = 0
-        self.colorsQt = 10*['red','yellow','blue','cyan','magenta','green','gray','darkRed','darkYellow','darkBlue','darkCyan','darkMagenta','darkGreen','darkGray']    #Some colors which are later used for different subpopulations
-
-        self.model_keras = None #Variable for storing Keras model   
-        self.model_keras_path = None
-        self.load_model_path = None
-        self.loaded_history = None #Variable for storing a loaded history file (for display on History-Tab)
-        self.loaded_para = None #Variable for storing a loaded Parameters-file (for display on History-Tab)
-        self.plt1 = None #Used for the popup window to display hist and scatter of single experiments
-        self.plt2 = None #Used for the history-tab to show accuracy of loaded history files
-        self.plt_cm = [] #Used to show images from the interactive Confusion matrix
-        self.model_2_convert = None #Variable to store the path to a chosen model (for converting to .nnet)
-        self.ram = dict() #Variable to store data if Option "Data to RAM is enabled"
-        self.ValidationSet = None
-        self.Metrics = dict()
-        #self.clip = QtGui.QApplication.clipboard() #This is how one defines a clipboard variable; one can put text on it via:#self.clip.setText("SomeText") 
-        self.new_peaks = [] #list to store used defined peaks
-        #######################################################################
-        #######################################################################
-
-
-
-
-
-
-
-
-        
-        self.gridLayout_8.addWidget(self.table_dragdrop, 0, 0, 1, 1)
-        self.splitter_2 = QtWidgets.QSplitter(self.splitter_3)
-        self.splitter_2.setOrientation(QtCore.Qt.Horizontal)
-        self.splitter_2.setObjectName(_fromUtf8("splitter_2"))
-        self.groupBox_DataOverview = QtWidgets.QGroupBox(self.splitter_2)
-        self.groupBox_DataOverview.setObjectName(_fromUtf8("groupBox_DataOverview"))
-        self.groupBox_DataOverview.setCheckable(True)
-        self.groupBox_DataOverview.setChecked(True)
-        self.groupBox_DataOverview.toggled.connect(self.dataOverviewOn)
-        
-        self.gridLayout_5 = QtWidgets.QGridLayout(self.groupBox_DataOverview)
-        self.gridLayout_5.setObjectName(_fromUtf8("gridLayout_5"))
-        self.tableWidget_Info = QtWidgets.QTableWidget(self.groupBox_DataOverview)
-        self.tableWidget_Info.setMinimumSize(QtCore.QSize(0, 0))
-        self.tableWidget_Info.setMaximumSize(QtCore.QSize(16777215, 16777215))
-        #self.tableWidget_Info.setEditTriggers(QtWidgets.QAbstractItemView.AnyKeyPressed|QtWidgets.QAbstractItemView.DoubleClicked|QtWidgets.QAbstractItemView.EditKeyPressed|QtWidgets.QAbstractItemView.SelectedClicked)
-        self.tableWidget_Info.setDragEnabled(False)
-        #self.tableWidget_Info.setDragDropMode(QtWidgets.QAbstractItemView.InternalMove)
-        self.tableWidget_Info.setAlternatingRowColors(True)
-        self.tableWidget_Info.setObjectName(_fromUtf8("tableWidget_Info"))
-        self.tableWidget_Info.setColumnCount(0)
-        self.tableWidget_Info.setRowCount(0)
-        self.gridLayout_5.addWidget(self.tableWidget_Info, 0, 0, 1, 1)
-
-
-        self.tabWidget_DefineModel = QtWidgets.QTabWidget(self.splitter_2)
-        self.tabWidget_DefineModel.setEnabled(True)
-        self.tabWidget_DefineModel.setObjectName("tabWidget_DefineModel")
-        self.tab_DefineModel = QtWidgets.QWidget()
-        self.tab_DefineModel.setObjectName("tab_DefineModel")
-        self.gridLayout_11 = QtWidgets.QGridLayout(self.tab_DefineModel)
-        self.gridLayout_11.setObjectName("gridLayout_11")
-        self.scrollArea_defineModel = QtWidgets.QScrollArea(self.tab_DefineModel)
-        self.scrollArea_defineModel.setWidgetResizable(True)
-        self.scrollArea_defineModel.setObjectName("scrollArea_defineModel")
-        self.scrollAreaWidgetContents_3 = QtWidgets.QWidget()
-        self.scrollAreaWidgetContents_3.setGeometry(QtCore.QRect(0, 0, 598, 192))
-        self.scrollAreaWidgetContents_3.setObjectName("scrollAreaWidgetContents_3")
-        self.gridLayout_44 = QtWidgets.QGridLayout(self.scrollAreaWidgetContents_3)
-        self.gridLayout_44.setObjectName("gridLayout_44")
-        self.gridLayout_newLoadModel = QtWidgets.QGridLayout()
-        self.gridLayout_newLoadModel.setObjectName("gridLayout_newLoadModel")
-        self.verticalLayout_newLoadModel = QtWidgets.QVBoxLayout()
-        self.verticalLayout_newLoadModel.setObjectName("verticalLayout_newLoadModel")
-        self.radioButton_NewModel = QtWidgets.QRadioButton(self.scrollAreaWidgetContents_3)
-        self.radioButton_NewModel.setMinimumSize(QtCore.QSize(0, 20))
-        self.radioButton_NewModel.setMaximumSize(QtCore.QSize(16777215, 20))
-        self.radioButton_NewModel.setObjectName("radioButton_NewModel")
-        self.verticalLayout_newLoadModel.addWidget(self.radioButton_NewModel)
-        self.line_loadModel = QtWidgets.QFrame(self.scrollAreaWidgetContents_3)
-        self.line_loadModel.setFrameShape(QtWidgets.QFrame.HLine)
-        self.line_loadModel.setFrameShadow(QtWidgets.QFrame.Sunken)
-        self.line_loadModel.setObjectName("line_loadModel")
-        self.verticalLayout_newLoadModel.addWidget(self.line_loadModel)
-        self.radioButton_LoadRestartModel = QtWidgets.QRadioButton(self.scrollAreaWidgetContents_3)
-        self.radioButton_LoadRestartModel.setMinimumSize(QtCore.QSize(0, 20))
-        self.radioButton_LoadRestartModel.setMaximumSize(QtCore.QSize(16777215, 20))
-        self.radioButton_LoadRestartModel.setObjectName("radioButton_LoadRestartModel")
-        self.radioButton_LoadRestartModel.clicked.connect(self.action_preview_model)
-        self.verticalLayout_newLoadModel.addWidget(self.radioButton_LoadRestartModel)
-        self.radioButton_LoadContinueModel = QtWidgets.QRadioButton(self.scrollAreaWidgetContents_3)
-        self.radioButton_LoadContinueModel.setMinimumSize(QtCore.QSize(0, 20))
-        self.radioButton_LoadContinueModel.setMaximumSize(QtCore.QSize(16777215, 20))
-        self.radioButton_LoadContinueModel.setObjectName("radioButton_LoadContinueModel")
-        self.radioButton_LoadContinueModel.clicked.connect(self.action_preview_model)
-        self.verticalLayout_newLoadModel.addWidget(self.radioButton_LoadContinueModel)
-        
-        self.gridLayout_newLoadModel.addLayout(self.verticalLayout_newLoadModel, 0, 0, 1, 1)
-        self.verticalLayout_newLoadModel_2 = QtWidgets.QVBoxLayout()
-        self.verticalLayout_newLoadModel_2.setObjectName("verticalLayout_newLoadModel_2")
-        self.comboBox_ModelSelection = QtWidgets.QComboBox(self.scrollAreaWidgetContents_3)
-        self.comboBox_ModelSelection.setMinimumSize(QtCore.QSize(0, 20))
-        self.comboBox_ModelSelection.setMaximumSize(QtCore.QSize(16777215, 20))
-        self.comboBox_ModelSelection.setObjectName("comboBox_ModelSelection")
-        self.predefined_models = ["None"] + model_zoo.get_predefined_models()
-        self.comboBox_ModelSelection.addItems(self.predefined_models)        
-        self.verticalLayout_newLoadModel_2.addWidget(self.comboBox_ModelSelection)
-        self.line_loadModel_2 = QtWidgets.QFrame(self.scrollAreaWidgetContents_3)
-        self.line_loadModel_2.setFrameShape(QtWidgets.QFrame.HLine)
-        self.line_loadModel_2.setFrameShadow(QtWidgets.QFrame.Sunken)
-        self.line_loadModel_2.setObjectName("line_loadModel_2")
-        self.verticalLayout_newLoadModel_2.addWidget(self.line_loadModel_2)
-        self.lineEdit_LoadModelPath = QtWidgets.QLineEdit(self.scrollAreaWidgetContents_3)
-        self.lineEdit_LoadModelPath.setMinimumSize(QtCore.QSize(0, 40))
-        self.lineEdit_LoadModelPath.setMaximumSize(QtCore.QSize(16777215, 40))
-        self.lineEdit_LoadModelPath.setObjectName("lineEdit_LoadModelPath")
-        self.verticalLayout_newLoadModel_2.addWidget(self.lineEdit_LoadModelPath)
-        self.gridLayout_newLoadModel.addLayout(self.verticalLayout_newLoadModel_2, 0, 1, 1, 1)
-        self.gridLayout_44.addLayout(self.gridLayout_newLoadModel, 0, 0, 1, 1)
-        
-        
-
-        
-        self.horizontalLayout_modelname = QtWidgets.QHBoxLayout()
-        self.horizontalLayout_modelname.setObjectName("horizontalLayout_modelname")
-        self.pushButton_modelname = QtWidgets.QPushButton(self.scrollAreaWidgetContents_3)
-        self.pushButton_modelname.setObjectName("pushButton_modelname")
-        self.pushButton_modelname.clicked.connect(self.action_set_modelpath_and_name)
-
-        self.horizontalLayout_modelname.addWidget(self.pushButton_modelname)
-        self.lineEdit_modelname = QtWidgets.QLineEdit(self.scrollAreaWidgetContents_3)
-        self.lineEdit_modelname.setMinimumSize(QtCore.QSize(0, 22))
-        self.lineEdit_modelname.setMaximumSize(QtCore.QSize(16777215, 22))
-        self.lineEdit_modelname.setObjectName("lineEdit_modelname")
-        self.horizontalLayout_modelname.addWidget(self.lineEdit_modelname)
-        self.gridLayout_44.addLayout(self.horizontalLayout_modelname, 3, 0, 1, 1)
-        self.scrollArea_defineModel.setWidget(self.scrollAreaWidgetContents_3)
-        self.gridLayout_11.addWidget(self.scrollArea_defineModel, 0, 0, 1, 1)
-        self.tabWidget_DefineModel.addTab(self.tab_DefineModel, "")
-
-
-
-
-
-
-        self.groupBox_imgProc = QtWidgets.QGroupBox(self.scrollAreaWidgetContents_3)
-        self.groupBox_imgProc.setObjectName("groupBox_imgProc")
-        self.gridLayout_49 = QtWidgets.QGridLayout(self.groupBox_imgProc)
-        self.gridLayout_49.setObjectName("gridLayout_49")
-        self.gridLayout_cropNormEtc = QtWidgets.QGridLayout()
-        self.gridLayout_cropNormEtc.setObjectName("gridLayout_cropNormEtc")
-        self.horizontalLayout_colorMode = QtWidgets.QHBoxLayout()
-        self.horizontalLayout_colorMode.setObjectName("horizontalLayout_colorMode")
-        self.label_colorModeIcon = QtWidgets.QLabel(self.groupBox_imgProc)
-        self.label_colorModeIcon.setText("")
-        #self.label_colorModeIcon.setPixmap(QtGui.QPixmap("../013_AIDeveloper_0.0.8_dev1/art/Icon theme 1/color_mode.png"))
-        self.label_colorModeIcon.setAlignment(QtCore.Qt.AlignRight|QtCore.Qt.AlignTrailing|QtCore.Qt.AlignVCenter)
-        self.label_colorModeIcon.setObjectName("label_colorModeIcon")
-        self.horizontalLayout_colorMode.addWidget(self.label_colorModeIcon)
-        self.label_colorMode = QtWidgets.QLabel(self.groupBox_imgProc)
-        self.label_colorMode.setAlignment(QtCore.Qt.AlignRight|QtCore.Qt.AlignTrailing|QtCore.Qt.AlignVCenter)
-        self.label_colorMode.setObjectName("label_colorMode")
-        self.horizontalLayout_colorMode.addWidget(self.label_colorMode)
-        self.gridLayout_cropNormEtc.addLayout(self.horizontalLayout_colorMode, 1, 2, 1, 1)
-        self.horizontalLayout_nrEpochs = QtWidgets.QHBoxLayout()
-        self.horizontalLayout_nrEpochs.setObjectName("horizontalLayout_nrEpochs")
-        self.label_padIcon = QtWidgets.QLabel(self.groupBox_imgProc)
-        self.label_padIcon.setText("")
-        #self.label_padIcon.setPixmap(QtGui.QPixmap("../013_AIDeveloper_0.0.8_dev1/art/Icon theme 1/padding.png"))
-        self.label_padIcon.setAlignment(QtCore.Qt.AlignRight|QtCore.Qt.AlignTrailing|QtCore.Qt.AlignVCenter)
-        self.label_padIcon.setObjectName("label_padIcon")
-        self.horizontalLayout_nrEpochs.addWidget(self.label_padIcon)
-        self.label_paddingMode = QtWidgets.QLabel(self.groupBox_imgProc)
-        self.label_paddingMode.setAlignment(QtCore.Qt.AlignRight|QtCore.Qt.AlignTrailing|QtCore.Qt.AlignVCenter)
-        self.label_paddingMode.setObjectName("label_paddingMode")
-        self.horizontalLayout_nrEpochs.addWidget(self.label_paddingMode)
-        self.gridLayout_cropNormEtc.addLayout(self.horizontalLayout_nrEpochs, 1, 0, 1, 1)
-        self.horizontalLayout_normalization = QtWidgets.QHBoxLayout()
-        self.horizontalLayout_normalization.setObjectName("horizontalLayout_normalization")
-        self.label_NormalizationIcon = QtWidgets.QLabel(self.groupBox_imgProc)
-        self.label_NormalizationIcon.setText("")
-        #self.label_NormalizationIcon.setPixmap(QtGui.QPixmap("../013_AIDeveloper_0.0.8_dev1/art/Icon theme 1/normalization.png"))
-        self.label_NormalizationIcon.setAlignment(QtCore.Qt.AlignRight|QtCore.Qt.AlignTrailing|QtCore.Qt.AlignVCenter)
-        self.label_NormalizationIcon.setObjectName("label_NormalizationIcon")
-        self.horizontalLayout_normalization.addWidget(self.label_NormalizationIcon)
-        self.label_Normalization = QtWidgets.QLabel(self.groupBox_imgProc)
-        self.label_Normalization.setLayoutDirection(QtCore.Qt.LeftToRight)
-        self.label_Normalization.setAlignment(QtCore.Qt.AlignRight|QtCore.Qt.AlignTrailing|QtCore.Qt.AlignVCenter)
-        self.label_Normalization.setObjectName("label_Normalization")
-        self.horizontalLayout_normalization.addWidget(self.label_Normalization)
-        self.gridLayout_cropNormEtc.addLayout(self.horizontalLayout_normalization, 0, 2, 1, 1)
-        self.horizontalLayout_crop = QtWidgets.QHBoxLayout()
-        self.horizontalLayout_crop.setObjectName("horizontalLayout_crop")
-        self.label_CropIcon = QtWidgets.QLabel(self.groupBox_imgProc)
-        self.label_CropIcon.setText("")
-        #self.label_CropIcon.setPixmap(QtGui.QPixmap("../013_AIDeveloper_0.0.8_dev1/art/Icon theme 1/cropping.png"))
-        self.label_CropIcon.setAlignment(QtCore.Qt.AlignRight|QtCore.Qt.AlignTrailing|QtCore.Qt.AlignVCenter)
-        self.label_CropIcon.setObjectName("label_CropIcon")
-        self.horizontalLayout_crop.addWidget(self.label_CropIcon)
-        self.label_Crop = QtWidgets.QLabel(self.groupBox_imgProc)
-        self.label_Crop.setAlignment(QtCore.Qt.AlignRight|QtCore.Qt.AlignTrailing|QtCore.Qt.AlignVCenter)
-        self.label_Crop.setObjectName("label_Crop")
-        self.horizontalLayout_crop.addWidget(self.label_Crop)
-        self.gridLayout_cropNormEtc.addLayout(self.horizontalLayout_crop, 0, 0, 1, 1)
-        self.comboBox_GrayOrRGB = QtWidgets.QComboBox(self.groupBox_imgProc)
-        self.comboBox_GrayOrRGB.setObjectName("comboBox_GrayOrRGB")
-        self.gridLayout_cropNormEtc.addWidget(self.comboBox_GrayOrRGB, 1, 3, 1, 1)
-        self.comboBox_Normalization = QtWidgets.QComboBox(self.groupBox_imgProc)
-        self.comboBox_Normalization.setMinimumSize(QtCore.QSize(200, 0))
-        self.comboBox_Normalization.setObjectName("comboBox_Normalization")
-        self.gridLayout_cropNormEtc.addWidget(self.comboBox_Normalization, 0, 3, 1, 1)
-        self.spinBox_imagecrop = QtWidgets.QSpinBox(self.groupBox_imgProc)
-        self.spinBox_imagecrop.setObjectName("spinBox_imagecrop")
-        self.gridLayout_cropNormEtc.addWidget(self.spinBox_imagecrop, 0, 1, 1, 1)
-        self.comboBox_paddingMode = QtWidgets.QComboBox(self.groupBox_imgProc)
-        self.comboBox_paddingMode.setEnabled(True)
-        self.comboBox_paddingMode.setObjectName("comboBox_paddingMode")
-        self.comboBox_paddingMode.addItem("")
-        self.comboBox_paddingMode.addItem("")
-        self.comboBox_paddingMode.addItem("")
-        self.comboBox_paddingMode.addItem("")
-        self.comboBox_paddingMode.addItem("")
-        self.comboBox_paddingMode.addItem("")
-        self.comboBox_paddingMode.addItem("")
-        self.comboBox_paddingMode.addItem("")
-        self.comboBox_paddingMode.addItem("")
-        self.comboBox_paddingMode.addItem("")
-        self.gridLayout_cropNormEtc.addWidget(self.comboBox_paddingMode, 1, 1, 1, 1)
-        self.gridLayout_49.addLayout(self.gridLayout_cropNormEtc, 0, 0, 1, 1)
-        self.gridLayout_44.addWidget(self.groupBox_imgProc, 1, 0, 1, 1)
-
-        self.horizontalLayout_4 = QtWidgets.QHBoxLayout()
-        self.horizontalLayout_4.setObjectName("horizontalLayout_4")
-        
-        
-        self.groupBox_system = QtWidgets.QGroupBox(self.scrollAreaWidgetContents_3)
-        self.groupBox_system.setObjectName("groupBox_system")
-        self.gridLayout_48 = QtWidgets.QGridLayout(self.groupBox_system)
-        self.gridLayout_48.setObjectName("gridLayout_48")
-        self.horizontalLayout_5 = QtWidgets.QHBoxLayout()
-        self.horizontalLayout_5.setObjectName("horizontalLayout_5")
-        self.label_nrEpochsIcon = QtWidgets.QLabel(self.groupBox_system)
-        self.label_nrEpochsIcon.setText("")
-        self.label_nrEpochsIcon.setObjectName("label_nrEpochsIcon")
-        self.horizontalLayout_5.addWidget(self.label_nrEpochsIcon)
-        self.label_nrEpochs = QtWidgets.QLabel(self.groupBox_system)
-        self.label_nrEpochs.setAlignment(QtCore.Qt.AlignRight|QtCore.Qt.AlignTrailing|QtCore.Qt.AlignVCenter)
-        self.label_nrEpochs.setObjectName("label_nrEpochs")
-        self.horizontalLayout_5.addWidget(self.label_nrEpochs)
-        self.spinBox_NrEpochs = QtWidgets.QSpinBox(self.groupBox_system)
-        self.spinBox_NrEpochs.setObjectName("spinBox_NrEpochs")
-        self.horizontalLayout_5.addWidget(self.spinBox_NrEpochs)
-        self.gridLayout_48.addLayout(self.horizontalLayout_5, 0, 0, 1, 1)
-        self.line_nrEpochs_cpu = QtWidgets.QFrame(self.groupBox_system)
-        self.line_nrEpochs_cpu.setFrameShape(QtWidgets.QFrame.VLine)
-        self.line_nrEpochs_cpu.setFrameShadow(QtWidgets.QFrame.Sunken)
-        self.line_nrEpochs_cpu.setObjectName("line_nrEpochs_cpu")
-        self.gridLayout_48.addWidget(self.line_nrEpochs_cpu, 0, 1, 2, 1)
-        self.radioButton_cpu = QtWidgets.QRadioButton(self.groupBox_system)
-        self.radioButton_cpu.setObjectName("radioButton_cpu")
-        self.gridLayout_48.addWidget(self.radioButton_cpu, 0, 2, 1, 1)
-        self.comboBox_cpu = QtWidgets.QComboBox(self.groupBox_system)
-        self.comboBox_cpu.setObjectName("comboBox_cpu")
-        self.gridLayout_48.addWidget(self.comboBox_cpu, 0, 3, 1, 1)
-        spacerItem = QtWidgets.QSpacerItem(198, 20, QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Minimum)
-        self.gridLayout_48.addItem(spacerItem, 0, 4, 1, 3)
-        spacerItem1 = QtWidgets.QSpacerItem(211, 20, QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Minimum)
-        self.gridLayout_48.addItem(spacerItem1, 1, 0, 1, 1)
-        self.radioButton_gpu = QtWidgets.QRadioButton(self.groupBox_system)
-        self.radioButton_gpu.setObjectName("radioButton_gpu")
-        self.gridLayout_48.addWidget(self.radioButton_gpu, 1, 2, 1, 1)
-        self.comboBox_gpu = QtWidgets.QComboBox(self.groupBox_system)
-        self.comboBox_gpu.setObjectName("comboBox_gpu")
-        self.gridLayout_48.addWidget(self.comboBox_gpu, 1, 3, 1, 2)
-        self.label_memory = QtWidgets.QLabel(self.groupBox_system)
-        self.label_memory.setAlignment(QtCore.Qt.AlignRight|QtCore.Qt.AlignTrailing|QtCore.Qt.AlignVCenter)
-        self.label_memory.setObjectName("label_memory")
-        self.gridLayout_48.addWidget(self.label_memory, 1, 5, 1, 1)
-        self.doubleSpinBox_memory = QtWidgets.QDoubleSpinBox(self.groupBox_system)
-        self.doubleSpinBox_memory.setObjectName("doubleSpinBox_memory")
-        self.gridLayout_48.addWidget(self.doubleSpinBox_memory, 1, 6, 1, 1)
-        self.horizontalLayout_4.addWidget(self.groupBox_system)
-        
-        
-        
-        
-        
-        
-        
-        
-        self.gridLayout_44.addLayout(self.horizontalLayout_4, 2, 0, 1, 1)
-        #############Manual settings##############
-        #self.label_colorMode.setMinimumSize(QtCore.QSize(55,22))
-        self.label_nrEpochsIcon.setAlignment(QtCore.Qt.AlignRight|QtCore.Qt.AlignTrailing|QtCore.Qt.AlignVCenter)
-        self.label_nrEpochs.setAlignment(QtCore.Qt.AlignRight|QtCore.Qt.AlignTrailing|QtCore.Qt.AlignVCenter)
-        #self.label_nrEpochs.setMaximumSize(QtCore.QSize(50, 22))
-
-        #self.label_NormalizationIcon.setAlignment(QtCore.Qt.AlignRight|QtCore.Qt.AlignTrailing|QtCore.Qt.AlignVCenter)
-        #self.label_NormalizationIcon.setText("")
-        #self.label_Normalization.setLayoutDirection(QtCore.Qt.LeftToRight)
-        #self.label_Normalization.setAlignment(QtCore.Qt.AlignRight|QtCore.Qt.AlignTrailing|QtCore.Qt.AlignVCenter)
-        #self.label_CropSpace.setAlignment(QtCore.Qt.AlignRight|QtCore.Qt.AlignTrailing|QtCore.Qt.AlignVCenter)
-        #self.label_CropIcon.setMinimumSize(QtCore.QSize(20, 20))
-        #self.label_CropIcon.setMaximumSize(QtCore.QSize(20, 20))
-
-        self.comboBox_Normalization.setMinimumSize(QtCore.QSize(200,22))
-        self.comboBox_Normalization.setMaximumSize(QtCore.QSize(200, 22))
-        self.norm_methods = Default_dict["norm_methods"]
-        self.comboBox_Normalization.addItems(self.norm_methods)
-        width=self.comboBox_Normalization.fontMetrics().boundingRect(max(self.norm_methods, key=len)).width()
-        self.comboBox_Normalization.view().setFixedWidth(width+10)             
-        self.spinBox_imagecrop.setMinimum(1)
-        self.spinBox_imagecrop.setMaximum(9E8)
-        self.spinBox_NrEpochs.setMinimum(1)
-        self.spinBox_NrEpochs.setMaximum(9E8)
-
-        self.comboBox_gpu.setEnabled(False)
-        self.doubleSpinBox_memory.setEnabled(False)
-        self.doubleSpinBox_memory.setValue(0.7)
-        self.comboBox_ModelSelection.setEnabled(False)
-        self.lineEdit_LoadModelPath.setEnabled(False)
-
-        self.radioButton_gpu.toggled['bool'].connect(self.comboBox_gpu.setEnabled)
-        self.radioButton_gpu.toggled['bool'].connect(self.label_memory.setEnabled)
-        self.radioButton_gpu.toggled['bool'].connect(self.doubleSpinBox_memory.setEnabled)
-        self.radioButton_cpu.toggled['bool'].connect(self.comboBox_cpu.setEnabled)
-        self.radioButton_NewModel.toggled['bool'].connect(self.comboBox_ModelSelection.setEnabled)
-        self.radioButton_LoadRestartModel.toggled['bool'].connect(self.lineEdit_LoadModelPath.setEnabled)
-        self.radioButton_LoadContinueModel.toggled['bool'].connect(self.lineEdit_LoadModelPath.setEnabled)
-
-        
-        self.tab_kerasAug = QtWidgets.QWidget()
-        self.tab_kerasAug.setObjectName(_fromUtf8("tab_kerasAug"))
-        self.gridLayout_7 = QtWidgets.QGridLayout(self.tab_kerasAug)
-        self.gridLayout_7.setObjectName(_fromUtf8("gridLayout_7"))
-        self.verticalLayout_8 = QtWidgets.QVBoxLayout()
-        self.verticalLayout_8.setObjectName(_fromUtf8("verticalLayout_8"))
-        self.horizontalLayout_9 = QtWidgets.QHBoxLayout()
-        self.horizontalLayout_9.setObjectName(_fromUtf8("horizontalLayout_9"))
-        self.label_RefreshAfterEpochs = QtWidgets.QLabel(self.tab_kerasAug)
-        self.label_RefreshAfterEpochs.setObjectName(_fromUtf8("label_RefreshAfterEpochs"))
-        self.horizontalLayout_9.addWidget(self.label_RefreshAfterEpochs)
-        self.spinBox_RefreshAfterEpochs = QtWidgets.QSpinBox(self.tab_kerasAug)
-        self.spinBox_RefreshAfterEpochs.setObjectName(_fromUtf8("spinBox_RefreshAfterEpochs"))
-        self.spinBox_RefreshAfterEpochs.setMinimum(1)
-        self.spinBox_RefreshAfterEpochs.setMaximum(9E8)
-        self.horizontalLayout_9.addWidget(self.spinBox_RefreshAfterEpochs)
-        self.verticalLayout_8.addLayout(self.horizontalLayout_9)
-        self.verticalLayout_7 = QtWidgets.QVBoxLayout()
-        self.verticalLayout_7.setObjectName(_fromUtf8("verticalLayout_7"))
-        self.horizontalLayout_8 = QtWidgets.QHBoxLayout()
-        self.horizontalLayout_8.setObjectName(_fromUtf8("horizontalLayout_8"))
-        self.checkBox_HorizFlip = QtWidgets.QCheckBox(self.tab_kerasAug)
-        self.checkBox_HorizFlip.setObjectName(_fromUtf8("checkBox_HorizFlip"))
-        self.horizontalLayout_8.addWidget(self.checkBox_HorizFlip)
-        self.checkBox_VertFlip = QtWidgets.QCheckBox(self.tab_kerasAug)
-        self.checkBox_VertFlip.setObjectName(_fromUtf8("checkBox_VertFlip"))
-        self.horizontalLayout_8.addWidget(self.checkBox_VertFlip)
-        self.verticalLayout_7.addLayout(self.horizontalLayout_8)
-        self.splitter = QtWidgets.QSplitter(self.tab_kerasAug)
-        self.splitter.setOrientation(QtCore.Qt.Horizontal)
-        self.splitter.setObjectName(_fromUtf8("splitter"))
-        self.widget = QtWidgets.QWidget(self.splitter)
-        self.widget.setObjectName(_fromUtf8("widget"))
-        self.verticalLayout_6 = QtWidgets.QVBoxLayout(self.widget)
-        self.verticalLayout_6.setContentsMargins(0, 0, 0, 0)
-        
-        self.onlyFloat = QtGui.QDoubleValidator()
-        
-        self.verticalLayout_6.setObjectName(_fromUtf8("verticalLayout_6"))
-        self.label_Rotation = QtWidgets.QCheckBox(self.widget)
-        self.label_Rotation.setObjectName(_fromUtf8("label_Rotation"))
-        self.verticalLayout_6.addWidget(self.label_Rotation)
-        self.label_width_shift = QtWidgets.QCheckBox(self.widget)
-        self.label_width_shift.setObjectName(_fromUtf8("label_width_shift"))
-        self.verticalLayout_6.addWidget(self.label_width_shift)
-        self.label_height_shift = QtWidgets.QCheckBox(self.widget)
-        self.label_height_shift.setObjectName(_fromUtf8("label_height_shift"))
-        self.verticalLayout_6.addWidget(self.label_height_shift)
-        self.label_zoom = QtWidgets.QCheckBox(self.widget)
-        self.label_zoom.setObjectName(_fromUtf8("label_zoom"))
-        self.verticalLayout_6.addWidget(self.label_zoom)
-        self.label_shear = QtWidgets.QCheckBox(self.widget)
-        self.label_shear.setObjectName(_fromUtf8("label_shear"))
-        self.verticalLayout_6.addWidget(self.label_shear)
-        self.widget1 = QtWidgets.QWidget(self.splitter)
-        self.widget1.setObjectName(_fromUtf8("widget1"))
-        self.verticalLayout_5 = QtWidgets.QVBoxLayout(self.widget1)
-        self.verticalLayout_5.setContentsMargins(0, 0, 0, 0)
-        self.verticalLayout_5.setObjectName(_fromUtf8("verticalLayout_5"))
-        self.lineEdit_Rotation = QtWidgets.QLineEdit(self.widget1)
-        self.lineEdit_Rotation.setObjectName(_fromUtf8("lineEdit_Rotation"))
-        self.lineEdit_Rotation.setValidator(self.onlyFloat)
-        self.verticalLayout_5.addWidget(self.lineEdit_Rotation)
-        self.lineEdit_widthShift = QtWidgets.QLineEdit(self.widget1)
-        self.lineEdit_widthShift.setObjectName(_fromUtf8("lineEdit_widthShift"))
-        self.lineEdit_widthShift.setValidator(self.onlyFloat)
-
-        self.verticalLayout_5.addWidget(self.lineEdit_widthShift)
-        self.lineEdit_heightShift = QtWidgets.QLineEdit(self.widget1)
-        self.lineEdit_heightShift.setObjectName(_fromUtf8("lineEdit_heightShift"))
-        self.lineEdit_heightShift.setValidator(self.onlyFloat)
-
-        self.verticalLayout_5.addWidget(self.lineEdit_heightShift)
-        self.lineEdit_zoomRange = QtWidgets.QLineEdit(self.widget1)
-        self.lineEdit_zoomRange.setObjectName(_fromUtf8("lineEdit_zoomRange"))
-        self.lineEdit_zoomRange.setValidator(self.onlyFloat)
-
-        self.verticalLayout_5.addWidget(self.lineEdit_zoomRange)
-        self.lineEdit_shearRange = QtWidgets.QLineEdit(self.widget1)
-        self.lineEdit_shearRange.setObjectName(_fromUtf8("lineEdit_shearRange"))
-        self.lineEdit_shearRange.setValidator(self.onlyFloat)
-
-        self.verticalLayout_5.addWidget(self.lineEdit_shearRange)
-        self.verticalLayout_7.addWidget(self.splitter)
-        self.verticalLayout_8.addLayout(self.verticalLayout_7)
-        self.gridLayout_7.addLayout(self.verticalLayout_8, 0, 0, 1, 1)
-        self.tabWidget_DefineModel.addTab(self.tab_kerasAug, _fromUtf8(""))
-        
-        
-        
-        
-        
-        self.tab_BrightnessAug = QtWidgets.QWidget()
-        self.tab_BrightnessAug.setObjectName("tab_BrightnessAug")
-        self.gridLayout_42 = QtWidgets.QGridLayout(self.tab_BrightnessAug)
-        self.gridLayout_42.setObjectName("gridLayout_42")
-        self.scrollArea_2 = QtWidgets.QScrollArea(self.tab_BrightnessAug)
-        self.scrollArea_2.setWidgetResizable(True)
-        self.scrollArea_2.setObjectName("scrollArea_2")
-        self.scrollAreaWidgetContents_2 = QtWidgets.QWidget()
-        self.scrollAreaWidgetContents_2.setGeometry(QtCore.QRect(0, -2, 449, 269))
-        self.scrollAreaWidgetContents_2.setObjectName("scrollAreaWidgetContents_2")
-        self.gridLayout_43 = QtWidgets.QGridLayout(self.scrollAreaWidgetContents_2)
-        self.gridLayout_43.setObjectName("gridLayout_43")
-        self.groupBox_GaussianNoise = QtWidgets.QGroupBox(self.scrollAreaWidgetContents_2)
-        self.groupBox_GaussianNoise.setObjectName("groupBox_GaussianNoise")
-        self.gridLayout_13 = QtWidgets.QGridLayout(self.groupBox_GaussianNoise)
-        self.gridLayout_13.setObjectName("gridLayout_13")
-        self.label_GaussianNoiseMean = QtWidgets.QCheckBox(self.groupBox_GaussianNoise)
-        self.label_GaussianNoiseMean.setObjectName("label_GaussianNoiseMean")
-        self.gridLayout_13.addWidget(self.label_GaussianNoiseMean, 0, 0, 1, 1)
-        self.doubleSpinBox_GaussianNoiseMean = QtWidgets.QDoubleSpinBox(self.groupBox_GaussianNoise)
-        self.doubleSpinBox_GaussianNoiseMean.setObjectName("spinBox_GaussianNoiseMean")
-        self.gridLayout_13.addWidget(self.doubleSpinBox_GaussianNoiseMean, 0, 1, 1, 1)
-        self.label_GaussianNoiseScale = QtWidgets.QCheckBox(self.groupBox_GaussianNoise)
-        self.label_GaussianNoiseScale.setObjectName("label_GaussianNoiseScale")
-        self.gridLayout_13.addWidget(self.label_GaussianNoiseScale, 1, 0, 1, 1)
-        self.doubleSpinBox_GaussianNoiseScale = QtWidgets.QDoubleSpinBox(self.groupBox_GaussianNoise)
-        self.doubleSpinBox_GaussianNoiseScale.setObjectName("spinBox_GaussianNoiseScale")
-        self.gridLayout_13.addWidget(self.doubleSpinBox_GaussianNoiseScale, 1, 1, 1, 1)
-        self.gridLayout_43.addWidget(self.groupBox_GaussianNoise, 2, 1, 1, 1)
-        self.groupBox_colorAugmentation = QtWidgets.QGroupBox(self.scrollAreaWidgetContents_2)
-        self.groupBox_colorAugmentation.setCheckable(False)
-        self.groupBox_colorAugmentation.setObjectName("groupBox_colorAugmentation")
-        self.gridLayout_15 = QtWidgets.QGridLayout(self.groupBox_colorAugmentation)
-        self.gridLayout_15.setObjectName("gridLayout_15")
-        self.doubleSpinBox_contrastLower = QtWidgets.QDoubleSpinBox(self.groupBox_colorAugmentation)
-        self.doubleSpinBox_contrastLower.setObjectName("doubleSpinBox_contrastLower")
-        self.gridLayout_15.addWidget(self.doubleSpinBox_contrastLower, 0, 1, 1, 1)
-        self.doubleSpinBox_saturationHigher = QtWidgets.QDoubleSpinBox(self.groupBox_colorAugmentation)
-        self.doubleSpinBox_saturationHigher.setObjectName("doubleSpinBox_saturationHigher")
-        self.gridLayout_15.addWidget(self.doubleSpinBox_saturationHigher, 1, 2, 1, 1)
-        self.doubleSpinBox_contrastHigher = QtWidgets.QDoubleSpinBox(self.groupBox_colorAugmentation)
-        self.doubleSpinBox_contrastHigher.setObjectName("doubleSpinBox_contrastHigher")
-        self.gridLayout_15.addWidget(self.doubleSpinBox_contrastHigher, 0, 2, 1, 1)
-        self.checkBox_contrast = QtWidgets.QCheckBox(self.groupBox_colorAugmentation)
-        self.checkBox_contrast.setCheckable(True)
-        self.checkBox_contrast.setObjectName("checkBox_contrast")
-        self.gridLayout_15.addWidget(self.checkBox_contrast, 0, 0, 1, 1)
-        self.doubleSpinBox_saturationLower = QtWidgets.QDoubleSpinBox(self.groupBox_colorAugmentation)
-        self.doubleSpinBox_saturationLower.setObjectName("doubleSpinBox_saturationLower")
-        self.gridLayout_15.addWidget(self.doubleSpinBox_saturationLower, 1, 1, 1, 1)
-        self.doubleSpinBox_hueDelta = QtWidgets.QDoubleSpinBox(self.groupBox_colorAugmentation)
-        self.doubleSpinBox_hueDelta.setObjectName("doubleSpinBox_hueDelta")
-        self.gridLayout_15.addWidget(self.doubleSpinBox_hueDelta, 2, 1, 1, 1)
-        self.checkBox_saturation = QtWidgets.QCheckBox(self.groupBox_colorAugmentation)
-        self.checkBox_saturation.setObjectName("checkBox_saturation")
-        self.gridLayout_15.addWidget(self.checkBox_saturation, 1, 0, 1, 1)
-        self.checkBox_hue = QtWidgets.QCheckBox(self.groupBox_colorAugmentation)
-        self.checkBox_hue.setObjectName("checkBox_hue")
-        self.gridLayout_15.addWidget(self.checkBox_hue, 2, 0, 1, 1)
-        self.gridLayout_43.addWidget(self.groupBox_colorAugmentation, 3, 0, 1, 1)
-        
-        self.groupBox_blurringAug = QtWidgets.QGroupBox(self.scrollAreaWidgetContents_2)
-        self.groupBox_blurringAug.setObjectName("groupBox_blurringAug")
-        self.gridLayout_45 = QtWidgets.QGridLayout(self.groupBox_blurringAug)
-        self.gridLayout_45.setObjectName("gridLayout_45")
-        self.gridLayout_blur = QtWidgets.QGridLayout()
-        self.gridLayout_blur.setObjectName("gridLayout_blur")
-        self.label_avgBlurMin = QtWidgets.QLabel(self.groupBox_blurringAug)
-        self.label_avgBlurMin.setMaximumSize(QtCore.QSize(31, 16777215))
-        self.label_avgBlurMin.setAlignment(QtCore.Qt.AlignRight|QtCore.Qt.AlignTrailing|QtCore.Qt.AlignVCenter)
-        self.label_avgBlurMin.setObjectName("label_avgBlurMin")
-        self.gridLayout_blur.addWidget(self.label_avgBlurMin, 0, 1, 1, 1)
-        self.spinBox_avgBlurMin = QtWidgets.QSpinBox(self.groupBox_blurringAug)
-        self.spinBox_avgBlurMin.setObjectName("spinBox_avgBlurMin")
-        self.gridLayout_blur.addWidget(self.spinBox_avgBlurMin, 0, 2, 1, 1)
-        self.spinBox_avgBlurMax = QtWidgets.QSpinBox(self.groupBox_blurringAug)
-        self.spinBox_avgBlurMax.setObjectName("spinBox_avgBlurMax")
-        self.gridLayout_blur.addWidget(self.spinBox_avgBlurMax, 0, 4, 1, 1)
-        self.checkBox_avgBlur = QtWidgets.QCheckBox(self.groupBox_blurringAug)
-        self.checkBox_avgBlur.setObjectName("checkBox_avgBlur")
-        self.gridLayout_blur.addWidget(self.checkBox_avgBlur, 0, 0, 1, 1)
-        self.label_avgBlurMax = QtWidgets.QLabel(self.groupBox_blurringAug)
-        self.label_avgBlurMax.setMaximumSize(QtCore.QSize(31, 16777215))
-        self.label_avgBlurMax.setObjectName("label_avgBlurMax")
-        self.gridLayout_blur.addWidget(self.label_avgBlurMax, 0, 3, 1, 1)
-        self.checkBox_avgBlur.setCheckable(True)
-        self.spinBox_gaussBlurMax = QtWidgets.QSpinBox(self.groupBox_blurringAug)
-        self.spinBox_gaussBlurMax.setObjectName("spinBox_gaussBlurMax")
-        self.gridLayout_blur.addWidget(self.spinBox_gaussBlurMax, 1, 4, 1, 1)
-        self.spinBox_gaussBlurMin = QtWidgets.QSpinBox(self.groupBox_blurringAug)
-        self.spinBox_gaussBlurMin.setObjectName("spinBox_gaussBlurMin")
-        self.gridLayout_blur.addWidget(self.spinBox_gaussBlurMin, 1, 2, 1, 1)
-        self.label_gaussBlurMin = QtWidgets.QLabel(self.groupBox_blurringAug)
-        self.label_gaussBlurMin.setMaximumSize(QtCore.QSize(31, 16777215))
-        self.label_gaussBlurMin.setAlignment(QtCore.Qt.AlignRight|QtCore.Qt.AlignTrailing|QtCore.Qt.AlignVCenter)
-        self.label_gaussBlurMin.setObjectName("label_gaussBlurMin")
-        self.gridLayout_blur.addWidget(self.label_gaussBlurMin, 1, 1, 1, 1)
-        self.checkBox_gaussBlur = QtWidgets.QCheckBox(self.groupBox_blurringAug)
-        self.checkBox_gaussBlur.setObjectName("checkBox_gaussBlur")
-        self.gridLayout_blur.addWidget(self.checkBox_gaussBlur, 1, 0, 1, 1)
-        self.label_gaussBlurMax = QtWidgets.QLabel(self.groupBox_blurringAug)
-        self.label_gaussBlurMax.setMaximumSize(QtCore.QSize(31, 16777215))
-        self.label_gaussBlurMax.setObjectName("label_gaussBlurMax")
-        self.gridLayout_blur.addWidget(self.label_gaussBlurMax, 1, 3, 1, 1)
-        self.checkBox_gaussBlur.setCheckable(True)
-        self.label_motionBlurKernel = QtWidgets.QLabel(self.groupBox_blurringAug)
-        self.label_motionBlurKernel.setMaximumSize(QtCore.QSize(31, 16777215))
-        self.label_motionBlurKernel.setObjectName("label_motionBlurKernel")
-        self.gridLayout_blur.addWidget(self.label_motionBlurKernel, 2, 1, 1, 1)
-        self.lineEdit_motionBlurAngle = QtWidgets.QLineEdit(self.groupBox_blurringAug)
-        validator = QtGui.QRegExpValidator(QtCore.QRegExp("^[-+]?[0-9]\\d{0,3},(\\d{3})$"))
-        self.lineEdit_motionBlurAngle.setValidator(validator)
-        self.lineEdit_motionBlurAngle.setMaximumSize(QtCore.QSize(100, 16777215))
-        self.lineEdit_motionBlurAngle.setInputMask("")
-        self.lineEdit_motionBlurAngle.setObjectName("lineEdit_motionBlurAngle")
-        self.gridLayout_blur.addWidget(self.lineEdit_motionBlurAngle, 2, 4, 1, 1)
-        self.checkBox_motionBlur = QtWidgets.QCheckBox(self.groupBox_blurringAug)
-        self.checkBox_motionBlur.setMaximumSize(QtCore.QSize(100, 16777215))
-        self.checkBox_motionBlur.setObjectName("checkBox_motionBlur")
-        self.gridLayout_blur.addWidget(self.checkBox_motionBlur, 2, 0, 1, 1)
-        self.label_motionBlurAngle = QtWidgets.QLabel(self.groupBox_blurringAug)
-        self.label_motionBlurAngle.setMaximumSize(QtCore.QSize(16777215, 16777215))
-        self.label_motionBlurAngle.setObjectName("label_motionBlurAngle")
-        self.gridLayout_blur.addWidget(self.label_motionBlurAngle, 2, 3, 1, 1)
-        validator = QtGui.QRegExpValidator(QtCore.QRegExp("^\\d{1,3},(\\d{3})$"))
-        self.lineEdit_motionBlurKernel = QtWidgets.QLineEdit(self.groupBox_blurringAug)
-        self.lineEdit_motionBlurKernel.setValidator(validator)
-        self.lineEdit_motionBlurKernel.setMaximumSize(QtCore.QSize(100, 16777215))
-        self.lineEdit_motionBlurKernel.setInputMask("")
-        self.lineEdit_motionBlurKernel.setMaxLength(32767)
-        self.lineEdit_motionBlurKernel.setObjectName("lineEdit_motionBlurKernel")
-        self.gridLayout_blur.addWidget(self.lineEdit_motionBlurKernel, 2, 2, 1, 1)
-        self.gridLayout_45.addLayout(self.gridLayout_blur, 0, 0, 1, 1)
-        self.gridLayout_43.addWidget(self.groupBox_blurringAug, 3, 1, 1, 1)
-        self.checkBox_motionBlur.setCheckable(True)
-        self.lineEdit_motionBlurKernel.setClearButtonEnabled(False)        
-        
-
-
- 
-        self.groupBox_BrightnessAugmentation = QtWidgets.QGroupBox(self.scrollAreaWidgetContents_2)
-        self.groupBox_BrightnessAugmentation.setObjectName("groupBox_BrightnessAugmentation")
-        self.gridLayout_12 = QtWidgets.QGridLayout(self.groupBox_BrightnessAugmentation)
-        self.gridLayout_12.setObjectName("gridLayout_12")
-        self.label_Plus = QtWidgets.QCheckBox(self.groupBox_BrightnessAugmentation)
-        self.label_Plus.setObjectName("label_Plus")
-        self.gridLayout_12.addWidget(self.label_Plus, 1, 0, 1, 1)
-        self.doubleSpinBox_MultLower = QtWidgets.QDoubleSpinBox(self.groupBox_BrightnessAugmentation)
-        self.doubleSpinBox_MultLower.setObjectName("doubleSpinBox_MultLower")
-        self.gridLayout_12.addWidget(self.doubleSpinBox_MultLower, 2, 1, 1, 1)
-        self.spinBox_PlusUpper = QtWidgets.QSpinBox(self.groupBox_BrightnessAugmentation)
-        self.spinBox_PlusUpper.setObjectName("spinBox_PlusUpper")
-        self.gridLayout_12.addWidget(self.spinBox_PlusUpper, 1, 2, 1, 2)
-        self.spinBox_PlusLower = QtWidgets.QSpinBox(self.groupBox_BrightnessAugmentation)
-        self.spinBox_PlusLower.setObjectName("spinBox_PlusLower")
-        self.gridLayout_12.addWidget(self.spinBox_PlusLower, 1, 1, 1, 1)
-        self.label_Mult = QtWidgets.QCheckBox(self.groupBox_BrightnessAugmentation)
-        self.label_Mult.setObjectName("label_Mult")
-        self.gridLayout_12.addWidget(self.label_Mult, 2, 0, 1, 1)
-        self.doubleSpinBox_MultUpper = QtWidgets.QDoubleSpinBox(self.groupBox_BrightnessAugmentation)
-        self.doubleSpinBox_MultUpper.setObjectName("doubleSpinBox_MultUpper")
-        self.gridLayout_12.addWidget(self.doubleSpinBox_MultUpper, 2, 2, 1, 2)
-        self.gridLayout_43.addWidget(self.groupBox_BrightnessAugmentation, 2, 0, 1, 1)
-        self.spinBox_RefreshAfterNrEpochs = QtWidgets.QSpinBox(self.scrollAreaWidgetContents_2)
-        self.spinBox_RefreshAfterNrEpochs.setObjectName("spinBox_RefreshAfterNrEpochs")
-        self.gridLayout_43.addWidget(self.spinBox_RefreshAfterNrEpochs, 1, 1, 1, 1)
-        self.label_RefreshAfterNrEpochs = QtWidgets.QLabel(self.scrollAreaWidgetContents_2)
-        self.label_RefreshAfterNrEpochs.setObjectName("label_RefreshAfterNrEpochs")
-        self.gridLayout_43.addWidget(self.label_RefreshAfterNrEpochs, 1, 0, 1, 1)
-        self.scrollArea_2.setWidget(self.scrollAreaWidgetContents_2)
-        self.gridLayout_42.addWidget(self.scrollArea_2, 0, 0, 1, 1)
-        self.tabWidget_DefineModel.addTab(self.tab_BrightnessAug, "")
-        
-
-        #################################ICONS#################################
-        #use full ABSOLUTE path to the image, not relative
-        self.radioButton_NewModel.setIcon(QtGui.QIcon(os.path.join(dir_root,"art",Default_dict["Icon theme"],"model_new.png")))
-        self.radioButton_LoadRestartModel.setIcon(QtGui.QIcon(os.path.join(dir_root,"art",Default_dict["Icon theme"],"model_restart.png")))
-        self.radioButton_LoadContinueModel.setIcon(QtGui.QIcon(os.path.join(dir_root,"art",Default_dict["Icon theme"],"model_continue.png")))
-        self.label_CropIcon.setPixmap(QtGui.QPixmap(os.path.join(dir_root,"art",Default_dict["Icon theme"],"cropping.png")))
-        self.label_CropIcon.setAlignment(QtCore.Qt.AlignRight | QtCore.Qt.AlignVCenter)
-        self.pushButton_modelname.setIcon(QtGui.QIcon(os.path.join(dir_root,"art",Default_dict["Icon theme"],"model_path.png")))
-
-        icon = QtGui.QIcon()
-        icon.addPixmap(QtGui.QPixmap(os.path.join(dir_root,"art",Default_dict["Icon theme"],"cpu.png")), QtGui.QIcon.Normal, QtGui.QIcon.Off)
-        self.radioButton_cpu.setIcon(icon)
-        self.radioButton_cpu.setEnabled(True)
-        icon = QtGui.QIcon()
-        icon.addPixmap(QtGui.QPixmap(os.path.join(dir_root,"art",Default_dict["Icon theme"],"gpu.png")), QtGui.QIcon.Normal, QtGui.QIcon.Off)
-        self.radioButton_gpu.setIcon(icon)
-
-        self.label_colorModeIcon.setPixmap(QtGui.QPixmap(os.path.join(dir_root,"art",Default_dict["Icon theme"],"color_mode.png")))
-        self.label_NormalizationIcon.setPixmap(QtGui.QPixmap(os.path.join(dir_root,"art",Default_dict["Icon theme"],"normalization.png")))
-        self.label_padIcon.setPixmap(QtGui.QPixmap(os.path.join(dir_root,"art",Default_dict["Icon theme"],"padding.png")))
-        self.label_nrEpochsIcon.setPixmap(QtGui.QPixmap(os.path.join(dir_root,"art",Default_dict["Icon theme"],"nr_epochs.png")))
-
-        self.checkBox_HorizFlip.setIcon(QtGui.QIcon(os.path.join(dir_root,"art",Default_dict["Icon theme"],"horizontal_flip.png")))
-        self.checkBox_VertFlip.setIcon(QtGui.QIcon(os.path.join(dir_root,"art",Default_dict["Icon theme"],"vertical_flip.png")))
-        self.label_Rotation.setIcon(QtGui.QIcon(os.path.join(dir_root,"art",Default_dict["Icon theme"],"rotation.png")))
-        self.label_Rotation.setChecked(True)
-        self.label_Rotation.stateChanged.connect(self.keras_changed_rotation)
-        self.label_width_shift.setIcon(QtGui.QIcon(os.path.join(dir_root,"art",Default_dict["Icon theme"],"width_shift.png")))
-        self.label_width_shift.setChecked(True)
-        self.label_width_shift.stateChanged.connect(self.keras_changed_width_shift)
-        self.label_height_shift.setIcon(QtGui.QIcon(os.path.join(dir_root,"art",Default_dict["Icon theme"],"height_shift.png")))
-        self.label_height_shift.setChecked(True)
-        self.label_height_shift.stateChanged.connect(self.keras_changed_height_shift)
-        self.label_zoom.setIcon(QtGui.QIcon(os.path.join(dir_root,"art",Default_dict["Icon theme"],"zoom.png")))
-        self.label_zoom.setChecked(True)
-        self.label_zoom.stateChanged.connect(self.keras_changed_zoom)
-        self.label_shear.setIcon(QtGui.QIcon(os.path.join(dir_root,"art",Default_dict["Icon theme"],"shear.png")))
-        self.label_shear.setChecked(True)
-        self.label_shear.stateChanged.connect(self.keras_changed_shear)
-        self.label_Plus.setIcon(QtGui.QIcon(os.path.join(dir_root,"art",Default_dict["Icon theme"],"brightness_plus.png")))
-        self.label_Plus.setChecked(True)
-        self.label_Plus.stateChanged.connect(self.keras_changed_brightplus)
-        self.label_Mult.setIcon(QtGui.QIcon(os.path.join(dir_root,"art",Default_dict["Icon theme"],"brightness_mult.png")))
-        self.label_Mult.setChecked(True)
-        self.label_Mult.stateChanged.connect(self.keras_changed_brightmult)
-        self.label_GaussianNoiseMean.setIcon(QtGui.QIcon(os.path.join(dir_root,"art",Default_dict["Icon theme"],"gaussian_noise_mean.png")))
-        self.label_GaussianNoiseMean.setChecked(True)
-        self.label_GaussianNoiseMean.stateChanged.connect(self.keras_changed_noiseMean)
-        self.label_GaussianNoiseScale.setIcon(QtGui.QIcon(os.path.join(dir_root,"art",Default_dict["Icon theme"],"gaussian_noise_scale.png")))
-        self.label_GaussianNoiseScale.setChecked(True)
-        self.label_GaussianNoiseScale.stateChanged.connect(self.keras_changed_noiseScale)
-        self.checkBox_contrast.setIcon(QtGui.QIcon(os.path.join(dir_root,"art",Default_dict["Icon theme"],"contrast.png")))
-        self.checkBox_contrast.stateChanged.connect(self.keras_changed_contrast)
-        self.checkBox_saturation.setIcon(QtGui.QIcon(os.path.join(dir_root,"art",Default_dict["Icon theme"],"saturation.png")))
-        self.checkBox_saturation.stateChanged.connect(self.keras_changed_saturation)
-        self.checkBox_hue.setIcon(QtGui.QIcon(os.path.join(dir_root,"art",Default_dict["Icon theme"],"hue.png")))
-        self.checkBox_hue.stateChanged.connect(self.keras_changed_hue)
-        self.checkBox_avgBlur.setIcon(QtGui.QIcon(os.path.join(dir_root,"art",Default_dict["Icon theme"],"average_blur.png")))
-        #self.checkBox_avgBlur.stateChanged.connect(self.changed_averageBlur)
-        self.checkBox_gaussBlur.setIcon(QtGui.QIcon(os.path.join(dir_root,"art",Default_dict["Icon theme"],"gaussian_blur.png")))
-        #self.checkBox_gaussBlur.stateChanged.connect(self.changed_gaussBlur)
-        self.checkBox_motionBlur.setIcon(QtGui.QIcon(os.path.join(dir_root,"art",Default_dict["Icon theme"],"motion_blur.png")))
-        #self.checkBox_motionBlur.stateChanged.connect(self.changed_motionBlur)
-
-
-        #There will be text on the label_colorMode (Color Mode), find out how "long" the text is and 
-        #resize the label to that
-        width=self.label_colorMode.fontMetrics().boundingRect(max(["Color Mode"], key=len)).width()
-        height = self.label_colorMode.geometry().height()
-        self.label_colorMode.setMaximumSize(QtCore.QSize(width, height))
-
-
-        #Manual values on Build Model Tab
-        self.spinBox_PlusUpper.setMinimum(-255)
-        self.spinBox_PlusUpper.setMaximum(255)
-        self.spinBox_PlusUpper.setSingleStep(1)
-        self.spinBox_PlusLower.setMinimum(-255)
-        self.spinBox_PlusLower.setMaximum(255)
-        self.spinBox_PlusLower.setSingleStep(1)
-
-        self.doubleSpinBox_MultLower.setMinimum(0)
-        self.doubleSpinBox_MultLower.setMaximum(999999999)
-        self.doubleSpinBox_MultLower.setSingleStep(0.1)
-        self.doubleSpinBox_MultUpper.setMinimum(0)
-        self.doubleSpinBox_MultUpper.setMaximum(999999999)
-        self.doubleSpinBox_MultUpper.setSingleStep(0.1)
-
-        self.doubleSpinBox_GaussianNoiseMean.setMinimum(-255)
-        self.doubleSpinBox_GaussianNoiseMean.setMaximum(255)
-        self.doubleSpinBox_GaussianNoiseMean.setSingleStep(0.1)
-
-        self.doubleSpinBox_GaussianNoiseScale.setMinimum(0)
-        self.doubleSpinBox_GaussianNoiseScale.setMaximum(999999999)
-        self.doubleSpinBox_GaussianNoiseScale.setSingleStep(0.1)
-
-        self.spinBox_RefreshAfterNrEpochs.setMinimum(1)
-        self.spinBox_RefreshAfterNrEpochs.setMaximum(999999999)
-        self.doubleSpinBox_hueDelta.setMaximum(0.5)
-        self.doubleSpinBox_hueDelta.setSingleStep(0.01)
-        self.doubleSpinBox_contrastHigher.setMaximum(100.0)
-        self.doubleSpinBox_contrastHigher.setSingleStep(0.1)
-        self.doubleSpinBox_contrastLower.setMaximum(100.0)
-        self.doubleSpinBox_contrastLower.setSingleStep(0.1)
-
-        self.doubleSpinBox_saturationLower.setMaximum(100.0)
-        self.doubleSpinBox_saturationLower.setSingleStep(0.1)
-        self.doubleSpinBox_saturationHigher.setMaximum(100.0)
-        self.doubleSpinBox_saturationHigher.setSingleStep(0.1)
-        
-        self.spinBox_avgBlurMin.setMinimum(0)
-        self.spinBox_avgBlurMin.setMaximum(255)
-        #self.spinBox_avgBlurMin.setSingleStep(1)
-        self.spinBox_avgBlurMax.setMinimum(0)
-        self.spinBox_avgBlurMax.setMaximum(255)
-        #self.spinBox_avgBlurMax.setSingleStep(0.1)
-        
-        self.spinBox_gaussBlurMin.setMinimum(0)
-        self.spinBox_gaussBlurMin.setMaximum(255)
-        #self.spinBox_gaussBlurMin.setSingleStep(0.1)
-        self.spinBox_gaussBlurMax.setMinimum(0)
-        self.spinBox_gaussBlurMax.setMaximum(255)
-        #self.spinBox_gaussBlurMax.setSingleStep(0.1)
-               
-        
-        
-        
-
-        
-        
-        
-        
-        
-        
-        
-        self.tab_ExampleImgs = QtWidgets.QWidget()
-        self.tab_ExampleImgs.setObjectName(_fromUtf8("tab_ExampleImgs"))
-        self.gridLayout_9 = QtWidgets.QGridLayout(self.tab_ExampleImgs)
-        self.gridLayout_9.setObjectName(_fromUtf8("gridLayout_9"))
-        self.splitter_4 = QtWidgets.QSplitter(self.tab_ExampleImgs)
-        self.splitter_4.setOrientation(QtCore.Qt.Vertical)
-        self.splitter_4.setObjectName(_fromUtf8("splitter_4"))
-        self.widget2 = QtWidgets.QWidget(self.splitter_4)
-        self.widget2.setObjectName(_fromUtf8("widget2"))
-        self.horizontalLayout_ExampleImgs = QtWidgets.QHBoxLayout(self.widget2)
-        self.horizontalLayout_ExampleImgs.setContentsMargins(0, 0, 0, 0)
-        self.horizontalLayout_ExampleImgs.setObjectName(_fromUtf8("horizontalLayout_ExampleImgs"))
-        self.comboBox_ShowTrainOrValid = QtWidgets.QComboBox(self.widget2)
-        #Insert option for training or valid
-        self.comboBox_ShowTrainOrValid.addItems(["Training","Validation"])        
-        self.comboBox_ShowTrainOrValid.setObjectName(_fromUtf8("comboBox_ShowTrainOrValid"))
-        self.horizontalLayout_ExampleImgs.addWidget(self.comboBox_ShowTrainOrValid)
-        self.comboBox_ShowWOrWoAug = QtWidgets.QComboBox(self.widget2)
-        self.comboBox_ShowWOrWoAug.addItems(["With Augmentation","Original image"])        
-        self.comboBox_ShowWOrWoAug.setObjectName(_fromUtf8("comboBox_ShowWOrWoAug"))
-        self.horizontalLayout_ExampleImgs.addWidget(self.comboBox_ShowWOrWoAug)
-        self.label_ShowIndex = QtWidgets.QLabel(self.widget2)
-        self.label_ShowIndex.setObjectName(_fromUtf8("label_ShowIndex"))
-        self.label_ShowIndex.setAlignment(QtCore.Qt.AlignRight | QtCore.Qt.AlignVCenter)
-        self.horizontalLayout_ExampleImgs.addWidget(self.label_ShowIndex)
-        self.spinBox_ShowIndex = QtWidgets.QSpinBox(self.widget2)
-        self.spinBox_ShowIndex.setMinimum(0)
-        self.spinBox_ShowIndex.setMaximum(9E8)
-
-        self.spinBox_ShowIndex.setObjectName(_fromUtf8("spinBox_ShowIndex"))
-        self.horizontalLayout_ExampleImgs.addWidget(self.spinBox_ShowIndex)
-        self.pushButton_ShowExamleImgs = QtWidgets.QPushButton(self.widget2)
-        self.pushButton_ShowExamleImgs.setObjectName(_fromUtf8("pushButton_ShowExamleImgs"))
-        self.pushButton_ShowExamleImgs.clicked.connect(self.action_show_example_imgs)
-
-        self.horizontalLayout_ExampleImgs.addWidget(self.pushButton_ShowExamleImgs)
-        self.widget_ViewImages = QtWidgets.QWidget(self.splitter_4)
-        self.widget_ViewImages.setObjectName(_fromUtf8("widget_ViewImages"))
-        self.gridLayout_9.addWidget(self.splitter_4, 0, 0, 1, 1)
-        self.tabWidget_DefineModel.addTab(self.tab_ExampleImgs, _fromUtf8(""))
-
-
-        
-
-        self.tab_expert = QtWidgets.QWidget()
-        self.tab_expert.setObjectName("tab_expert")
-        self.gridLayout_34 = QtWidgets.QGridLayout(self.tab_expert)
-        self.gridLayout_34.setObjectName("gridLayout_34")
-        self.groupBox_expertMode = QtWidgets.QGroupBox(self.tab_expert)
-        self.groupBox_expertMode.setEnabled(True)
-        self.groupBox_expertMode.setCheckable(True)
-        self.groupBox_expertMode.setChecked(False)
-        self.groupBox_expertMode.setObjectName("groupBox_expertMode")
-        self.groupBox_expertMode.toggled.connect(self.expert_mode_off)
-
-        self.gridLayout_35 = QtWidgets.QGridLayout(self.groupBox_expertMode)
-        self.gridLayout_35.setObjectName("gridLayout_35")
-        self.scrollArea = QtWidgets.QScrollArea(self.groupBox_expertMode)
-        self.scrollArea.setWidgetResizable(True)
-        self.scrollArea.setObjectName("scrollArea")
-        self.scrollAreaWidgetContents = QtWidgets.QWidget()
-        self.scrollAreaWidgetContents.setGeometry(QtCore.QRect(0, -25, 425, 218))
-        self.scrollAreaWidgetContents.setObjectName("scrollAreaWidgetContents")
-        self.gridLayout_37 = QtWidgets.QGridLayout(self.scrollAreaWidgetContents)
-        self.gridLayout_37.setObjectName("gridLayout_37")
-
-        self.groupBox_modelKerasFit = QtWidgets.QGroupBox(self.scrollAreaWidgetContents)
-        self.groupBox_modelKerasFit.setObjectName("groupBox_modelKerasFit")
-        self.gridLayout_10 = QtWidgets.QGridLayout(self.groupBox_modelKerasFit)
-        self.gridLayout_10.setObjectName("gridLayout_10")
-        
-        self.verticalLayout_19 = QtWidgets.QVBoxLayout()
-        self.verticalLayout_19.setObjectName("verticalLayout_19")
-
-        self.horizontalLayout_32 = QtWidgets.QHBoxLayout()
-        self.horizontalLayout_32.setObjectName("horizontalLayout_32")
-        self.label_batchSize = QtWidgets.QLabel(self.scrollAreaWidgetContents)
-        self.label_batchSize.setObjectName("label_batchSize")
-        self.horizontalLayout_32.addWidget(self.label_batchSize)
-        self.spinBox_batchSize = QtWidgets.QSpinBox(self.scrollAreaWidgetContents)
-        self.spinBox_batchSize.setObjectName("spinBox_batchSize")
-        self.horizontalLayout_32.addWidget(self.spinBox_batchSize)
-        self.verticalLayout_19.addLayout(self.horizontalLayout_32)
-        self.horizontalLayout_33 = QtWidgets.QHBoxLayout()
-        self.horizontalLayout_33.setObjectName("horizontalLayout_33")
-        self.label_epochs = QtWidgets.QLabel(self.scrollAreaWidgetContents)
-        self.label_epochs.setObjectName("label_epochs")
-        self.horizontalLayout_33.addWidget(self.label_epochs)
-        self.spinBox_epochs = QtWidgets.QSpinBox(self.scrollAreaWidgetContents)
-        self.spinBox_epochs.setObjectName("spinBox_epochs")
-        self.horizontalLayout_33.addWidget(self.spinBox_epochs)
-        
-        self.verticalLayout_19.addLayout(self.horizontalLayout_33)
-        self.gridLayout_10.addLayout(self.verticalLayout_19, 0, 0, 1, 1)
-        self.gridLayout_37.addWidget(self.groupBox_modelKerasFit, 1, 0, 1, 1)
-
-        self.groupBox_regularization = QtWidgets.QGroupBox(self.scrollAreaWidgetContents)
-        self.groupBox_regularization.setObjectName("groupBox_regularization")
-
-        self.gridLayout_46 = QtWidgets.QGridLayout(self.groupBox_regularization)
-        self.gridLayout_46.setObjectName("gridLayout_46")        
-
-        self.horizontalLayout_expt_loss = QtWidgets.QHBoxLayout()
-        self.horizontalLayout_expt_loss.setObjectName("horizontalLayout_expt_loss")
-        self.checkBox_expt_loss = QtWidgets.QCheckBox(self.groupBox_regularization)
-        self.checkBox_expt_loss.setObjectName("checkBox_expt_loss")
-        self.checkBox_expt_loss.stateChanged.connect(self.expert_loss_off)
-
-        self.horizontalLayout_expt_loss.addWidget(self.checkBox_expt_loss)
-        self.comboBox_expt_loss = QtWidgets.QComboBox(self.groupBox_regularization)
-        self.comboBox_expt_loss.setEnabled(False)
-        self.comboBox_expt_loss.setObjectName("comboBox_expt_loss")
-        self.comboBox_expt_loss.addItem("")
-        self.comboBox_expt_loss.addItem("")
-        self.comboBox_expt_loss.addItem("")
-        self.comboBox_expt_loss.addItem("")
-        self.comboBox_expt_loss.addItem("")
-        self.comboBox_expt_loss.addItem("")
-        self.comboBox_expt_loss.addItem("")
-        self.comboBox_expt_loss.addItem("")
-        self.comboBox_expt_loss.addItem("")
-        self.comboBox_expt_loss.addItem("")
-        self.comboBox_expt_loss.addItem("")
-        self.comboBox_expt_loss.addItem("")
-        self.comboBox_expt_loss.addItem("")
-        self.comboBox_expt_loss.addItem("")
-        self.comboBox_expt_loss.addItem("")
-        self.comboBox_expt_loss.addItem("")
-        self.horizontalLayout_expt_loss.addWidget(self.comboBox_expt_loss)
-        self.gridLayout_46.addLayout(self.horizontalLayout_expt_loss, 0, 0, 1, 1)
-
-
-
-
-        self.horizontalLayout_34 = QtWidgets.QHBoxLayout()
-        self.horizontalLayout_34.setObjectName("horizontalLayout_34")
-        self.checkBox_learningRate = QtWidgets.QCheckBox(self.scrollAreaWidgetContents)
-        self.checkBox_learningRate.setObjectName("checkBox_learningRate")
-        self.checkBox_learningRate.stateChanged.connect(self.expert_learningrate_off)
-
-        self.horizontalLayout_34.addWidget(self.checkBox_learningRate)
-        self.doubleSpinBox_learningRate = QtWidgets.QDoubleSpinBox(self.scrollAreaWidgetContents)
-        self.doubleSpinBox_learningRate.setDecimals(6)
-        self.doubleSpinBox_learningRate.setMaximum(999.0)
-        self.doubleSpinBox_learningRate.setSingleStep(0.0001)
-        self.doubleSpinBox_learningRate.setValue(Default_dict["doubleSpinBox_learningRate_Adam"])
-        self.doubleSpinBox_learningRate.setObjectName("doubleSpinBox_learningRate")
-        self.horizontalLayout_34.addWidget(self.doubleSpinBox_learningRate)
-
-        self.checkBox_optimizer = QtWidgets.QCheckBox(self.groupBox_regularization)
-        self.checkBox_optimizer.setObjectName("checkBox_optimizer")
-        self.checkBox_optimizer.stateChanged.connect(self.expert_optimizer_off)
-
-        self.horizontalLayout_34.addWidget(self.checkBox_optimizer)
-        self.comboBox_optimizer = QtWidgets.QComboBox(self.groupBox_regularization)
-        self.comboBox_optimizer.setEnabled(False)
-        self.comboBox_optimizer.setObjectName("comboBox_optimizer")
-        self.comboBox_optimizer.addItem("")
-        self.comboBox_optimizer.addItem("")
-        self.comboBox_optimizer.addItem("")
-        self.comboBox_optimizer.addItem("")
-        self.comboBox_optimizer.addItem("")
-        self.comboBox_optimizer.addItem("")
-        self.comboBox_optimizer.addItem("")
-        self.comboBox_optimizer.currentTextChanged.connect(self.expert_optimizer_changed)
-        self.horizontalLayout_34.addWidget(self.comboBox_optimizer)
-
-
-        self.gridLayout_46.addLayout(self.horizontalLayout_34, 2, 0, 1, 1)
-        self.horizontalLayout_35 = QtWidgets.QHBoxLayout()
-        self.horizontalLayout_35.setObjectName("horizontalLayout_35")
-        self.checkBox_trainLastNOnly = QtWidgets.QCheckBox(self.groupBox_regularization)
-        self.checkBox_trainLastNOnly.setObjectName("checkBox_trainLastNOnly")
-        self.horizontalLayout_35.addWidget(self.checkBox_trainLastNOnly)
-        self.spinBox_trainLastNOnly = QtWidgets.QSpinBox(self.groupBox_regularization)
-        self.spinBox_trainLastNOnly.setObjectName("spinBox_trainLastNOnly")
-        self.horizontalLayout_35.addWidget(self.spinBox_trainLastNOnly)
-        self.checkBox_trainDenseOnly = QtWidgets.QCheckBox(self.groupBox_regularization)
-        self.checkBox_trainDenseOnly.setObjectName("checkBox_trainDenseOnly")
-        self.horizontalLayout_35.addWidget(self.checkBox_trainDenseOnly)
-        self.gridLayout_46.addLayout(self.horizontalLayout_35, 3, 0, 1, 1)
-        self.horizontalLayout_2 = QtWidgets.QHBoxLayout()
-        self.horizontalLayout_2.setObjectName("horizontalLayout_2")
-        self.checkBox_dropout = QtWidgets.QCheckBox(self.groupBox_regularization)
-        self.checkBox_dropout.setObjectName("checkBox_dropout")
-        self.horizontalLayout_2.addWidget(self.checkBox_dropout)
-        self.lineEdit_dropout = QtWidgets.QLineEdit(self.groupBox_regularization)
-        self.lineEdit_dropout.setObjectName("lineEdit_dropout")
-        validator = QtGui.QRegExpValidator(QtCore.QRegExp("^[0-9 . ,]+$")) #validator allows numbers, dots and commas
-        #aternatively, I could use "^[0-9 . , \[ \] ]+$" - this would also allow the user to put the brackets. But why? I just do it in the program
-        self.lineEdit_dropout.setValidator(validator)        
-        
-        self.horizontalLayout_2.addWidget(self.lineEdit_dropout)
-        self.gridLayout_46.addLayout(self.horizontalLayout_2, 4, 0, 1, 1)
-        
-        self.horizontalLayout_partialTrainability = QtWidgets.QHBoxLayout()
-        self.horizontalLayout_partialTrainability.setObjectName("horizontalLayout_partialTrainability")
-        self.checkBox_partialTrainability = QtWidgets.QCheckBox(self.groupBox_regularization)
-        self.checkBox_partialTrainability.setObjectName("checkBox_partialTrainability")
-        self.checkBox_partialTrainability.setEnabled(False)
-        self.horizontalLayout_partialTrainability.addWidget(self.checkBox_partialTrainability)
-        self.lineEdit_partialTrainability = QtWidgets.QLineEdit(self.groupBox_regularization)
-        self.lineEdit_partialTrainability.setEnabled(False)
-        self.lineEdit_partialTrainability.setObjectName("lineEdit_partialTrainability")
-        self.horizontalLayout_partialTrainability.addWidget(self.lineEdit_partialTrainability)
-        self.pushButton_partialTrainability = QtWidgets.QPushButton(self.groupBox_regularization)
-        self.pushButton_partialTrainability.setObjectName("pushButton_partialTrainability")
-        self.horizontalLayout_partialTrainability.addWidget(self.pushButton_partialTrainability)
-        self.gridLayout_46.addLayout(self.horizontalLayout_partialTrainability, 5, 0, 1, 1)
-        self.gridLayout_37.addWidget(self.groupBox_regularization, 2, 0, 1, 1)
-
-
-        self.pushButton_partialTrainability.setEnabled(False)
-        self.pushButton_partialTrainability.setMinimumSize(QtCore.QSize(0, 0))
-        self.pushButton_partialTrainability.setMaximumSize(QtCore.QSize(40, 16777215))
-        self.pushButton_partialTrainability.clicked.connect(self.partialTrainability)
-        
-        self.horizontalLayout_lossW = QtWidgets.QHBoxLayout()
-        self.horizontalLayout_lossW.setObjectName("horizontalLayout_lossW")
-        self.checkBox_lossW = QtWidgets.QCheckBox(self.scrollAreaWidgetContents)
-        self.checkBox_lossW.setObjectName("checkBox_lossW")
-        self.horizontalLayout_lossW.addWidget(self.checkBox_lossW)
-        self.lineEdit_lossW = QtWidgets.QLineEdit(self.scrollAreaWidgetContents)
-        self.lineEdit_lossW.setEnabled(False)
-        self.lineEdit_lossW.setObjectName("lineEdit_lossW")
-        self.horizontalLayout_lossW.addWidget(self.lineEdit_lossW)
-        self.pushButton_lossW = QtWidgets.QPushButton(self.scrollAreaWidgetContents)
-        self.pushButton_lossW.setObjectName("pushButton_lossW")
-        self.pushButton_lossW.setEnabled(False)
-        self.horizontalLayout_lossW.addWidget(self.pushButton_lossW)
-        self.gridLayout_46.addLayout(self.horizontalLayout_lossW, 6, 0, 1, 1)
-        self.pushButton_lossW.setMinimumSize(QtCore.QSize(0, 0))
-        self.pushButton_lossW.setMaximumSize(QtCore.QSize(40, 16777215))
-
-
-
-        self.groupBox_expertMetrics = QtWidgets.QGroupBox(self.scrollAreaWidgetContents)
-        self.groupBox_expertMetrics.setObjectName("groupBox_expertMetrics")
-        self.gridLayout = QtWidgets.QGridLayout(self.groupBox_expertMetrics)
-        self.gridLayout.setObjectName("gridLayout")
-        self.checkBox_expertAccuracy = QtWidgets.QCheckBox(self.groupBox_expertMetrics)
-        self.checkBox_expertAccuracy.setChecked(True)
-        self.checkBox_expertAccuracy.setEnabled(False) #Accuracy is ALWAYS tracked!
-        
-        self.checkBox_expertAccuracy.setObjectName("checkBox_expertAccuracy")
-        self.gridLayout.addWidget(self.checkBox_expertAccuracy, 0, 0, 1, 1)
-        self.checkBox_expertF1 = QtWidgets.QCheckBox(self.groupBox_expertMetrics)
-        self.checkBox_expertF1.setChecked(False)
-        self.checkBox_expertF1.setObjectName("checkBox_expertF1")
-        self.gridLayout.addWidget(self.checkBox_expertF1, 0, 1, 1, 1)
-        self.checkBox_expertPrecision = QtWidgets.QCheckBox(self.groupBox_expertMetrics)
-        self.checkBox_expertPrecision.setObjectName("checkBox_expertPrecision")
-        self.gridLayout.addWidget(self.checkBox_expertPrecision, 0, 2, 1, 1)
-        self.checkBox_expertRecall = QtWidgets.QCheckBox(self.groupBox_expertMetrics)
-        self.checkBox_expertRecall.setObjectName("checkBox_expertRecall")
-        self.gridLayout.addWidget(self.checkBox_expertRecall, 0, 3, 1, 1)
-        self.gridLayout_37.addWidget(self.groupBox_expertMetrics, 7, 0, 1, 1)
-
-
-
-        
-        
-        self.scrollArea.setWidget(self.scrollAreaWidgetContents)
-        self.gridLayout_35.addWidget(self.scrollArea, 0, 0, 1, 1)
-        self.gridLayout_34.addWidget(self.groupBox_expertMode, 0, 0, 1, 1)
-
-        self.tabWidget_DefineModel.addTab(self.tab_expert, "")
-        
-        self.groupBox_Finalize = QtWidgets.QGroupBox(self.splitter_5)
-        self.groupBox_Finalize.setObjectName(_fromUtf8("groupBox_Finalize"))
-        self.gridLayout_6 = QtWidgets.QGridLayout(self.groupBox_Finalize)
-        self.gridLayout_6.setObjectName(_fromUtf8("gridLayout_6"))
-        self.horizontalLayout_3 = QtWidgets.QHBoxLayout()
-        self.horizontalLayout_3.setObjectName(_fromUtf8("horizontalLayout_3"))
-        self.textBrowser_Info = QtWidgets.QTextBrowser(self.groupBox_Finalize)
-        self.textBrowser_Info.setMinimumSize(QtCore.QSize(0, 60))
-        self.textBrowser_Info.setMaximumSize(QtCore.QSize(16777215, 500))
-        self.textBrowser_Info.setObjectName(_fromUtf8("textBrowser_Info"))
-        self.horizontalLayout_3.addWidget(self.textBrowser_Info)
-        self.pushButton_FitModel = QtWidgets.QPushButton(self.groupBox_Finalize)
-        self.pushButton_FitModel.setMinimumSize(QtCore.QSize(111, 60))
-        self.pushButton_FitModel.setMaximumSize(QtCore.QSize(111, 60))
-        self.pushButton_FitModel.setObjectName(_fromUtf8("pushButton_FitModel"))
-        self.pushButton_FitModel.clicked.connect(self.action_initialize_model)
-
-        self.horizontalLayout_3.addWidget(self.pushButton_FitModel)
-        self.gridLayout_6.addLayout(self.horizontalLayout_3, 0, 0, 1, 1)
-        self.gridLayout_17.addWidget(self.splitter_5, 0, 0, 1, 1)
-        self.tabWidget_Modelbuilder.addTab(self.tab_Build, _fromUtf8(""))
-        self.tab_History = QtWidgets.QWidget()
-        sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Expanding)
-        sizePolicy.setHorizontalStretch(0)
-        sizePolicy.setVerticalStretch(0)
-        sizePolicy.setHeightForWidth(self.tab_History.sizePolicy().hasHeightForWidth())
-        self.tab_History.setSizePolicy(sizePolicy)
-        self.tab_History.setObjectName(_fromUtf8("tab_History"))
-        self.gridLayout_3 = QtWidgets.QGridLayout(self.tab_History)
-        self.gridLayout_3.setObjectName(_fromUtf8("gridLayout_3"))
-        self.verticalLayout_9 = QtWidgets.QVBoxLayout()
-        self.verticalLayout_9.setObjectName(_fromUtf8("verticalLayout_9"))
-        self.verticalLayout_HistoryLoad = QtWidgets.QVBoxLayout()
-        self.verticalLayout_HistoryLoad.setSizeConstraint(QtWidgets.QLayout.SetFixedSize)
-        self.verticalLayout_HistoryLoad.setObjectName(_fromUtf8("verticalLayout_HistoryLoad"))
-        self.horizontalLayout_HistoryLoad = QtWidgets.QHBoxLayout()
-        self.horizontalLayout_HistoryLoad.setSizeConstraint(QtWidgets.QLayout.SetMaximumSize)
-        self.horizontalLayout_HistoryLoad.setObjectName(_fromUtf8("horizontalLayout_HistoryLoad"))
-        self.pushButton_Live = QtWidgets.QPushButton(self.tab_History)
-        self.pushButton_Live.clicked.connect(self.action_load_history_current)
-        self.pushButton_Live.setMinimumSize(QtCore.QSize(93, 28))
-        self.pushButton_Live.setMaximumSize(QtCore.QSize(93, 28))
-        self.pushButton_Live.setObjectName(_fromUtf8("pushButton_Live"))
-        self.horizontalLayout_HistoryLoad.addWidget(self.pushButton_Live)
-        self.pushButton_LoadHistory = QtWidgets.QPushButton(self.tab_History)
-        self.pushButton_LoadHistory.setMinimumSize(QtCore.QSize(93, 28))
-        self.pushButton_LoadHistory.setMaximumSize(QtCore.QSize(93, 28))
-        self.pushButton_LoadHistory.clicked.connect(self.action_load_history)
-        self.pushButton_LoadHistory.setObjectName(_fromUtf8("pushButton_LoadHistory"))
-        self.horizontalLayout_HistoryLoad.addWidget(self.pushButton_LoadHistory)
-        self.lineEdit_LoadHistory = QtWidgets.QLineEdit(self.tab_History)
-        self.lineEdit_LoadHistory.setDisabled(True)
-        self.lineEdit_LoadHistory.setObjectName(_fromUtf8("lineEdit_LoadHistory"))
-        self.horizontalLayout_HistoryLoad.addWidget(self.lineEdit_LoadHistory)
-        self.verticalLayout_HistoryLoad.addLayout(self.horizontalLayout_HistoryLoad)
-        self.horizontalLayout_HistoryLoadInfo = QtWidgets.QHBoxLayout()
-        self.horizontalLayout_HistoryLoadInfo.setSizeConstraint(QtWidgets.QLayout.SetMaximumSize)
-        self.horizontalLayout_HistoryLoadInfo.setObjectName(_fromUtf8("horizontalLayout_HistoryLoadInfo"))
-        self.tableWidget_HistoryItems = QtWidgets.QTableWidget(self.tab_History)
-        self.tableWidget_HistoryItems.setMinimumSize(QtCore.QSize(0, 100))
-        self.tableWidget_HistoryItems.setMaximumSize(QtCore.QSize(16777215, 140))
-        self.tableWidget_HistoryItems.setObjectName(_fromUtf8("tableWidget_HistoryItems"))
-        self.tableWidget_HistoryItems.setColumnCount(7)
-        self.tableWidget_HistoryItems.setRowCount(0)
-        self.horizontalLayout_HistoryLoadInfo.addWidget(self.tableWidget_HistoryItems)
-
-        self.verticalLayout_UpdatePlot = QtWidgets.QVBoxLayout()
-        self.pushButton_UpdateHistoryPlot = QtWidgets.QPushButton(self.tab_History)
-        self.pushButton_UpdateHistoryPlot.clicked.connect(self.update_historyplot)
-        sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Minimum, QtWidgets.QSizePolicy.Fixed)
-        sizePolicy.setHorizontalStretch(0)
-        sizePolicy.setVerticalStretch(0)
-        sizePolicy.setHeightForWidth(self.pushButton_UpdateHistoryPlot.sizePolicy().hasHeightForWidth())
-        self.pushButton_UpdateHistoryPlot.setSizePolicy(sizePolicy)
-        self.pushButton_UpdateHistoryPlot.setObjectName(_fromUtf8("pushButton_UpdateHistoryPlot"))
-        self.verticalLayout_UpdatePlot.addWidget(self.pushButton_UpdateHistoryPlot)
-
-        self.horizontalLayout_rollmedi = QtWidgets.QHBoxLayout()
-        self.checkBox_rollingMedian = QtWidgets.QCheckBox(self.tab_History)
-        self.checkBox_rollingMedian.setMinimumSize(QtCore.QSize(100, 19))
-        self.checkBox_rollingMedian.setMaximumSize(QtCore.QSize(125, 25))
-        self.checkBox_rollingMedian.toggled.connect(self.checkBox_rollingMedian_statechange)
-        
-        self.checkBox_rollingMedian.setObjectName(_fromUtf8("checkBox_rollingMedian"))
-        self.horizontalLayout_rollmedi.addWidget(self.checkBox_rollingMedian)        
-        self.horizontalSlider_rollmedi = QtWidgets.QSlider(self.tab_History)
-        self.horizontalSlider_rollmedi.setOrientation(QtCore.Qt.Horizontal)
-        self.horizontalSlider_rollmedi.setMinimumSize(QtCore.QSize(50, 19))
-        self.horizontalSlider_rollmedi.setMaximumSize(QtCore.QSize(50, 25))
-        #Adjust the horizontalSlider_rollmedi
-        self.horizontalSlider_rollmedi.setSingleStep(1)
-        self.horizontalSlider_rollmedi.setMinimum(1)
-        self.horizontalSlider_rollmedi.setMaximum(50)
-        self.horizontalSlider_rollmedi.setValue(10)
-        self.horizontalSlider_rollmedi.setEnabled(False)
-        
-        self.horizontalSlider_rollmedi.setObjectName(_fromUtf8("horizontalSlider_rollmedi"))
-        self.horizontalLayout_rollmedi.addWidget(self.horizontalSlider_rollmedi)
-        self.verticalLayout_UpdatePlot.addLayout(self.horizontalLayout_rollmedi)
-
-        self.checkBox_linearFit = QtWidgets.QCheckBox(self.tab_History)
-        self.checkBox_linearFit.setObjectName(_fromUtf8("checkBox_linearFit"))
-        self.verticalLayout_UpdatePlot.addWidget(self.checkBox_linearFit)
-        self.horizontalLayout_HistoryLoadInfo.addLayout(self.verticalLayout_UpdatePlot)
-        
-        self.verticalLayout_HistoryLoad.addLayout(self.horizontalLayout_HistoryLoadInfo)
-        self.verticalLayout_9.addLayout(self.verticalLayout_HistoryLoad)
-        self.widget_Scatterplot = pg.GraphicsLayoutWidget(self.tab_History)
-        sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Expanding)
-        sizePolicy.setHorizontalStretch(0)
-        sizePolicy.setVerticalStretch(0)
-        sizePolicy.setHeightForWidth(self.widget_Scatterplot.sizePolicy().hasHeightForWidth())
-        self.widget_Scatterplot.setSizePolicy(sizePolicy)
-        self.widget_Scatterplot.setMinimumSize(QtCore.QSize(491, 350))
-        self.widget_Scatterplot.setObjectName(_fromUtf8("widget_Scatterplot"))
-        self.verticalLayout_9.addWidget(self.widget_Scatterplot)
-        self.horizontalLayout_7 = QtWidgets.QHBoxLayout()
-        self.horizontalLayout_7.setSizeConstraint(QtWidgets.QLayout.SetMaximumSize)
-        self.horizontalLayout_7.setObjectName(_fromUtf8("horizontalLayout_7"))
-        self.verticalLayout_convert = QtWidgets.QVBoxLayout()
-        self.verticalLayout_convert.setSizeConstraint(QtWidgets.QLayout.SetMaximumSize)
-        self.verticalLayout_convert.setObjectName(_fromUtf8("verticalLayout_convert"))
-
-        self.verticalLayout_4 = QtWidgets.QVBoxLayout()
-        self.verticalLayout_4.setObjectName(_fromUtf8("verticalLayout_4"))
-        self.horizontalLayout_2 = QtWidgets.QHBoxLayout()
-        self.horizontalLayout_2.setObjectName(_fromUtf8("horizontalLayout_2"))
-        self.combobox_initial_format = QtWidgets.QComboBox(self.tab_History)
-        self.combobox_initial_format.setObjectName(_fromUtf8("combobox_initial_format"))
-        self.horizontalLayout_2.addWidget(self.combobox_initial_format)
-        self.verticalLayout_4.addLayout(self.horizontalLayout_2)
-        self.pushButton_LoadModel = QtWidgets.QPushButton(self.tab_History)
-        self.pushButton_LoadModel.setMinimumSize(QtCore.QSize(123, 61))
-        self.pushButton_LoadModel.setMaximumSize(QtCore.QSize(150, 61))
-        self.pushButton_LoadModel.setObjectName(_fromUtf8("pushButton_LoadModel"))
-        self.pushButton_LoadModel.clicked.connect(self.history_tab_get_model_path)
-        self.verticalLayout_4.addWidget(self.pushButton_LoadModel)
-        self.horizontalLayout_7.addLayout(self.verticalLayout_4)
-        self.textBrowser_SelectedModelInfo = QtWidgets.QTextBrowser(self.tab_History)
-        self.textBrowser_SelectedModelInfo.setMinimumSize(QtCore.QSize(0, 120))
-        self.textBrowser_SelectedModelInfo.setMaximumSize(QtCore.QSize(16777215, 120))
-        self.textBrowser_SelectedModelInfo.setObjectName(_fromUtf8("textBrowser_SelectedModelInfo"))
-        self.horizontalLayout_7.addWidget(self.textBrowser_SelectedModelInfo)
-        
-        self.comboBox_convertTo = QtWidgets.QComboBox(self.tab_History)
-        self.comboBox_convertTo.setObjectName(_fromUtf8("comboBox_convertTo"))
-        self.verticalLayout_convert.addWidget(self.comboBox_convertTo)
-
-        self.pushButton_convertModel = QtWidgets.QPushButton(self.tab_History)
-        self.pushButton_convertModel.setMinimumSize(QtCore.QSize(0, 61))
-        self.pushButton_convertModel.setMaximumSize(QtCore.QSize(16777215, 61))
-        self.pushButton_convertModel.setObjectName(_fromUtf8("pushButton_convertModel"))
-        self.pushButton_convertModel.setEnabled(True)
-        self.pushButton_convertModel.clicked.connect(self.history_tab_convertModel)
-        self.verticalLayout_convert.addWidget(self.pushButton_convertModel)
-        
-        self.horizontalLayout_7.addLayout(self.verticalLayout_convert)
-                
-        self.verticalLayout_9.addLayout(self.horizontalLayout_7)
-        self.gridLayout_3.addLayout(self.verticalLayout_9, 0, 0, 1, 1)
-        self.tabWidget_Modelbuilder.addTab(self.tab_History, _fromUtf8(""))
-
-
-
-
-        #########################Assess Model tab##############################
-
-
-        self.tab_AssessModel = QtWidgets.QWidget()
-        self.tab_AssessModel.setObjectName("tab_AssessModel")
-        self.gridLayout_23 = QtWidgets.QGridLayout(self.tab_AssessModel)
-        self.gridLayout_23.setObjectName("gridLayout_23")
-        self.splitter_7 = QtWidgets.QSplitter(self.tab_AssessModel)
-        self.splitter_7.setOrientation(QtCore.Qt.Vertical)
-        self.splitter_7.setObjectName("splitter_7")
-        self.widget = QtWidgets.QWidget(self.splitter_7)
-        self.widget.setObjectName("widget")
-        self.verticalLayout_10 = QtWidgets.QVBoxLayout(self.widget)
-        self.verticalLayout_10.setContentsMargins(0, 0, 0, 0)
-        self.verticalLayout_10.setObjectName("verticalLayout_10")
-        self.groupBox_loadModel = QtWidgets.QGroupBox(self.widget)
-        sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Preferred, QtWidgets.QSizePolicy.Preferred)
-        sizePolicy.setHorizontalStretch(0)
-        sizePolicy.setVerticalStretch(0)
-        sizePolicy.setHeightForWidth(self.groupBox_loadModel.sizePolicy().hasHeightForWidth())
-        self.groupBox_loadModel.setSizePolicy(sizePolicy)
-        self.groupBox_loadModel.setMinimumSize(QtCore.QSize(0, 101))
-        self.groupBox_loadModel.setMaximumSize(QtCore.QSize(16777215, 101))
-        self.groupBox_loadModel.setObjectName("groupBox_loadModel")
-        self.gridLayout_4 = QtWidgets.QGridLayout(self.groupBox_loadModel)
-        self.gridLayout_4.setObjectName("gridLayout_4")
-        self.horizontalLayout_10 = QtWidgets.QHBoxLayout()
-        self.horizontalLayout_10.setObjectName("horizontalLayout_10")
-        self.pushButton_LoadModel_2 = QtWidgets.QPushButton(self.groupBox_loadModel)
-        self.pushButton_LoadModel_2.setMinimumSize(QtCore.QSize(123, 24))
-        self.pushButton_LoadModel_2.setMaximumSize(QtCore.QSize(123, 24))
-        self.pushButton_LoadModel_2.setObjectName("pushButton_LoadModel_2")
-        self.horizontalLayout_10.addWidget(self.pushButton_LoadModel_2)
-        self.lineEdit_LoadModel_2 = QtWidgets.QLineEdit(self.groupBox_loadModel)
-        self.lineEdit_LoadModel_2.setEnabled(False)
-        self.lineEdit_LoadModel_2.setObjectName("lineEdit_LoadModel_2")
-        self.horizontalLayout_10.addWidget(self.lineEdit_LoadModel_2)
-        self.comboBox_loadedRGBorGray = QtWidgets.QComboBox(self.groupBox_loadModel)
-        self.comboBox_loadedRGBorGray.setEnabled(False)
-        self.comboBox_loadedRGBorGray.setObjectName("comboBox_loadedRGBorGray")
-        self.horizontalLayout_10.addWidget(self.comboBox_loadedRGBorGray)
-        self.gridLayout_4.addLayout(self.horizontalLayout_10, 0, 0, 1, 1)
-        self.horizontalLayout_11 = QtWidgets.QHBoxLayout()
-        self.horizontalLayout_11.setObjectName("horizontalLayout_11")
-        self.label_ModelIndex_2 = QtWidgets.QLabel(self.groupBox_loadModel)
-        sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Minimum, QtWidgets.QSizePolicy.Minimum)
-        sizePolicy.setHorizontalStretch(0)
-        sizePolicy.setVerticalStretch(0)
-        sizePolicy.setHeightForWidth(self.label_ModelIndex_2.sizePolicy().hasHeightForWidth())
-        self.label_ModelIndex_2.setSizePolicy(sizePolicy)
-        self.label_ModelIndex_2.setMinimumSize(QtCore.QSize(68, 25))
-        self.label_ModelIndex_2.setMaximumSize(QtCore.QSize(68, 25))
-        self.label_ModelIndex_2.setObjectName("label_ModelIndex_2")
-        self.horizontalLayout_11.addWidget(self.label_ModelIndex_2)
-        self.spinBox_ModelIndex_2 = QtWidgets.QSpinBox(self.groupBox_loadModel)
-        self.spinBox_ModelIndex_2.setEnabled(False)
-        self.spinBox_ModelIndex_2.setMinimumSize(QtCore.QSize(46, 22))
-        self.spinBox_ModelIndex_2.setMaximumSize(QtCore.QSize(46, 22))
-        self.spinBox_ModelIndex_2.setObjectName("spinBox_ModelIndex_2")
-        self.horizontalLayout_11.addWidget(self.spinBox_ModelIndex_2)
-        self.lineEdit_ModelSelection_2 = QtWidgets.QLineEdit(self.groupBox_loadModel)
-        self.lineEdit_ModelSelection_2.setEnabled(False)
-        self.lineEdit_ModelSelection_2.setObjectName("lineEdit_ModelSelection_2")
-        self.horizontalLayout_11.addWidget(self.lineEdit_ModelSelection_2)
-        self.label_Normalization_2 = QtWidgets.QLabel(self.groupBox_loadModel)
-        self.label_Normalization_2.setObjectName("label_Normalization_2")
-        self.horizontalLayout_11.addWidget(self.label_Normalization_2)
-        self.comboBox_Normalization_2 = QtWidgets.QComboBox(self.groupBox_loadModel)
-        self.comboBox_Normalization_2.setEnabled(False)
-        self.comboBox_Normalization_2.setObjectName("comboBox_Normalization_2")
-        self.horizontalLayout_11.addWidget(self.comboBox_Normalization_2)
-        self.label_Crop_2 = QtWidgets.QLabel(self.groupBox_loadModel)
-        self.label_Crop_2.setObjectName("label_Crop_2")
-        self.horizontalLayout_11.addWidget(self.label_Crop_2)
-        self.spinBox_Crop_2 = QtWidgets.QSpinBox(self.groupBox_loadModel)
-        self.spinBox_Crop_2.setEnabled(False)
-        self.spinBox_Crop_2.setObjectName("spinBox_Crop_2")
-        self.horizontalLayout_11.addWidget(self.spinBox_Crop_2)
-        self.label_OutClasses_2 = QtWidgets.QLabel(self.groupBox_loadModel)
-        self.label_OutClasses_2.setObjectName("label_OutClasses_2")
-        self.horizontalLayout_11.addWidget(self.label_OutClasses_2)
-        self.spinBox_OutClasses_2 = QtWidgets.QSpinBox(self.groupBox_loadModel)
-        self.spinBox_OutClasses_2.setEnabled(False)
-        self.spinBox_OutClasses_2.setObjectName("spinBox_OutClasses_2")
-        self.horizontalLayout_11.addWidget(self.spinBox_OutClasses_2)
-        self.gridLayout_4.addLayout(self.horizontalLayout_11, 1, 0, 1, 1)
-        self.verticalLayout_10.addWidget(self.groupBox_loadModel)
-        self.horizontalLayout_16 = QtWidgets.QHBoxLayout()
-        self.horizontalLayout_16.setObjectName("horizontalLayout_16")
-        self.groupBox_validData = QtWidgets.QGroupBox(self.widget)
-        self.groupBox_validData.setMaximumSize(QtCore.QSize(150, 250))
-        self.groupBox_validData.setObjectName("groupBox_validData")
-        self.gridLayout_14 = QtWidgets.QGridLayout(self.groupBox_validData)
-        self.gridLayout_14.setObjectName("gridLayout_14")
-        self.horizontalLayout_17 = QtWidgets.QHBoxLayout()
-        self.horizontalLayout_17.setObjectName("horizontalLayout_17")
-        self.pushButton_ImportValidFromNpy = QtWidgets.QPushButton(self.groupBox_validData)
-        self.pushButton_ImportValidFromNpy.setMinimumSize(QtCore.QSize(65, 28))
-        self.pushButton_ImportValidFromNpy.setObjectName("pushButton_ImportValidFromNpy")
-        self.horizontalLayout_17.addWidget(self.pushButton_ImportValidFromNpy)
-        self.pushButton_ExportValidToNpy = QtWidgets.QPushButton(self.groupBox_validData)
-        self.pushButton_ExportValidToNpy.setMinimumSize(QtCore.QSize(55, 0))
-        self.pushButton_ExportValidToNpy.setObjectName("pushButton_ExportValidToNpy")
-        self.horizontalLayout_17.addWidget(self.pushButton_ExportValidToNpy)
-        self.gridLayout_14.addLayout(self.horizontalLayout_17, 1, 0, 1, 1)
-        self.tableWidget_Info_2 = QtWidgets.QTableWidget(self.groupBox_validData)
-        self.tableWidget_Info_2.setObjectName("tableWidget_Info_2")
-        self.tableWidget_Info_2.setColumnCount(0)
-        self.tableWidget_Info_2.setRowCount(0)
-        self.gridLayout_14.addWidget(self.tableWidget_Info_2, 0, 0, 1, 1)
-        self.horizontalLayout_16.addWidget(self.groupBox_validData)
-        self.verticalLayout_9 = QtWidgets.QVBoxLayout()
-        self.verticalLayout_9.setObjectName("verticalLayout_9")
-        self.groupBox_InferenceTime = QtWidgets.QGroupBox(self.widget)
-        self.groupBox_InferenceTime.setMinimumSize(QtCore.QSize(0, 71))
-        self.groupBox_InferenceTime.setMaximumSize(QtCore.QSize(16777215, 71))
-        self.groupBox_InferenceTime.setObjectName("groupBox_InferenceTime")
-        self.gridLayout_20 = QtWidgets.QGridLayout(self.groupBox_InferenceTime)
-        self.gridLayout_20.setObjectName("gridLayout_20")
-        self.lineEdit_InferenceTime = QtWidgets.QLineEdit(self.groupBox_InferenceTime)
-        self.lineEdit_InferenceTime.setObjectName("lineEdit_InferenceTime")
-        self.gridLayout_20.addWidget(self.lineEdit_InferenceTime, 0, 2, 1, 1)
-        self.pushButton_CompInfTime = QtWidgets.QPushButton(self.groupBox_InferenceTime)
-        self.pushButton_CompInfTime.setMinimumSize(QtCore.QSize(121, 31))
-        self.pushButton_CompInfTime.setMaximumSize(QtCore.QSize(121, 31))
-        self.pushButton_CompInfTime.setObjectName("pushButton_CompInfTime")
-        self.gridLayout_20.addWidget(self.pushButton_CompInfTime, 0, 0, 1, 1)
-        self.spinBox_inftime_nr_images = QtWidgets.QSpinBox(self.groupBox_InferenceTime)
-        self.spinBox_inftime_nr_images.setObjectName("spinBox_inftime_nr_images")
-        self.gridLayout_20.addWidget(self.spinBox_inftime_nr_images, 0, 1, 1, 1)
-        self.verticalLayout_9.addWidget(self.groupBox_InferenceTime)
-        
-        
-        self.groupBox_classify = QtWidgets.QGroupBox(self.widget)
-        self.groupBox_classify.setObjectName("groupBox_classify")
-        self.gridLayout_36 = QtWidgets.QGridLayout(self.groupBox_classify)
-        self.gridLayout_36.setObjectName("gridLayout_36")
-        self.comboBox_scoresOrPrediction = QtWidgets.QComboBox(self.groupBox_classify)
-        self.comboBox_scoresOrPrediction.setObjectName("comboBox_scoresOrPrediction")
-        self.gridLayout_36.addWidget(self.comboBox_scoresOrPrediction, 0, 1, 1, 1)
-        self.pushButton_classify = QtWidgets.QPushButton(self.groupBox_classify)
-        self.pushButton_classify.setObjectName("pushButton_classify")
-        self.gridLayout_36.addWidget(self.pushButton_classify, 0, 2, 1, 1)
-        self.horizontalLayout_36 = QtWidgets.QHBoxLayout()
-        self.horizontalLayout_36.setObjectName("horizontalLayout_36")
-        self.radioButton_selectAll = QtWidgets.QRadioButton(self.groupBox_classify)
-        self.radioButton_selectAll.setObjectName("radioButton_selectAll")
-        self.horizontalLayout_36.addWidget(self.radioButton_selectAll)
-        self.radioButton_selectDataSet = QtWidgets.QRadioButton(self.groupBox_classify)
-        self.radioButton_selectDataSet.setMinimumSize(QtCore.QSize(10, 22))
-        self.radioButton_selectDataSet.setMaximumSize(QtCore.QSize(22, 16))
-        self.radioButton_selectDataSet.setText("")
-        self.radioButton_selectDataSet.setObjectName("radioButton_selectDataSet")
-        self.horizontalLayout_36.addWidget(self.radioButton_selectDataSet)
-        self.comboBox_selectData = QtWidgets.QComboBox(self.groupBox_classify)
-        self.comboBox_selectData.setObjectName("comboBox_selectData")
-        self.horizontalLayout_36.addWidget(self.comboBox_selectData)
-        self.gridLayout_36.addLayout(self.horizontalLayout_36, 0, 0, 1, 1)
-        self.verticalLayout_9.addWidget(self.groupBox_classify)
-        
-        self.horizontalLayout = QtWidgets.QHBoxLayout()
-        self.horizontalLayout.setObjectName("horizontalLayout")
-        self.groupBox_settings = QtWidgets.QGroupBox(self.widget)
-        self.groupBox_settings.setMinimumSize(QtCore.QSize(0, 99))
-        self.groupBox_settings.setMaximumSize(QtCore.QSize(16777215, 99))
-        self.groupBox_settings.setObjectName("groupBox_settings")
-        self.gridLayout_22 = QtWidgets.QGridLayout(self.groupBox_settings)
-        self.gridLayout_22.setObjectName("gridLayout_22")
-        self.horizontalLayout_AssessModelSettings = QtWidgets.QHBoxLayout()
-        self.horizontalLayout_AssessModelSettings.setObjectName("horizontalLayout_AssessModelSettings")
-        self.verticalLayout_AssessModelSettings = QtWidgets.QVBoxLayout()
-        self.verticalLayout_AssessModelSettings.setObjectName("verticalLayout_AssessModelSettings")
-        self.horizontalLayout_AssessModelSettings_2 = QtWidgets.QHBoxLayout()
-        self.horizontalLayout_AssessModelSettings_2.setObjectName("horizontalLayout_AssessModelSettings_2")
-        self.label_SortingIndex = QtWidgets.QLabel(self.groupBox_settings)
-        self.label_SortingIndex.setObjectName("label_SortingIndex")
-        self.horizontalLayout_AssessModelSettings_2.addWidget(self.label_SortingIndex)
-        self.spinBox_indexOfInterest = QtWidgets.QSpinBox(self.groupBox_settings)
-        self.spinBox_indexOfInterest.setObjectName("spinBox_indexOfInterest")
-        self.horizontalLayout_AssessModelSettings_2.addWidget(self.spinBox_indexOfInterest)
-        self.verticalLayout_AssessModelSettings.addLayout(self.horizontalLayout_AssessModelSettings_2)
-        self.horizontalLayout_AssessModelSettings_3 = QtWidgets.QHBoxLayout()
-        self.horizontalLayout_AssessModelSettings_3.setObjectName("horizontalLayout_AssessModelSettings_3")
-        self.checkBox_SortingThresh = QtWidgets.QCheckBox(self.groupBox_settings)
-        self.checkBox_SortingThresh.setObjectName("checkBox_SortingThresh")
-        self.horizontalLayout_AssessModelSettings_3.addWidget(self.checkBox_SortingThresh)
-        self.doubleSpinBox_sortingThresh = QtWidgets.QDoubleSpinBox(self.groupBox_settings)
-        self.doubleSpinBox_sortingThresh.setObjectName("doubleSpinBox_sortingThresh")
-        self.horizontalLayout_AssessModelSettings_3.addWidget(self.doubleSpinBox_sortingThresh)
-        self.verticalLayout_AssessModelSettings.addLayout(self.horizontalLayout_AssessModelSettings_3)
-        self.horizontalLayout_AssessModelSettings.addLayout(self.verticalLayout_AssessModelSettings)
-        self.verticalLayout_13 = QtWidgets.QVBoxLayout()
-        self.verticalLayout_13.setObjectName("verticalLayout_13")
-        self.pushButton_AssessModel = QtWidgets.QPushButton(self.groupBox_settings)
-        self.pushButton_AssessModel.setMinimumSize(QtCore.QSize(0, 36))
-        self.pushButton_AssessModel.setMaximumSize(QtCore.QSize(16777215, 16777215))
-        font = QtGui.QFont()
-        font.setBold(True)
-        font.setWeight(75)
-        self.pushButton_AssessModel.setFont(font)
-        self.pushButton_AssessModel.setAutoFillBackground(False)
-        self.pushButton_AssessModel.setShortcut("")
-        self.pushButton_AssessModel.setCheckable(False)
-        self.pushButton_AssessModel.setChecked(False)
-        self.pushButton_AssessModel.setAutoDefault(False)
-        self.pushButton_AssessModel.setDefault(False)
-        self.pushButton_AssessModel.setFlat(False)
-        self.pushButton_AssessModel.setObjectName("pushButton_AssessModel")
-        self.verticalLayout_13.addWidget(self.pushButton_AssessModel)
-        self.comboBox_probability_histogram = QtWidgets.QComboBox(self.groupBox_settings)
-        self.comboBox_probability_histogram.setMaximumSize(QtCore.QSize(16777215, 18))
-        self.comboBox_probability_histogram.setObjectName("comboBox_probability_histogram")
-        self.verticalLayout_13.addWidget(self.comboBox_probability_histogram)
-        self.horizontalLayout_AssessModelSettings.addLayout(self.verticalLayout_13)
-        self.gridLayout_22.addLayout(self.horizontalLayout_AssessModelSettings, 0, 0, 1, 1)
-        self.horizontalLayout.addWidget(self.groupBox_settings)
-        self.groupBox_3rdPlotSettings = QtWidgets.QGroupBox(self.widget)
-        self.groupBox_3rdPlotSettings.setMinimumSize(QtCore.QSize(0, 91))
-        self.groupBox_3rdPlotSettings.setMaximumSize(QtCore.QSize(16777215, 91))
-        self.groupBox_3rdPlotSettings.setObjectName("groupBox_3rdPlotSettings")
-        self.gridLayout_21 = QtWidgets.QGridLayout(self.groupBox_3rdPlotSettings)
-        self.gridLayout_21.setObjectName("gridLayout_21")
-        self.horizontalLayout_20 = QtWidgets.QHBoxLayout()
-        self.horizontalLayout_20.setObjectName("horizontalLayout_20")
-        self.verticalLayout_3rdPlotSettings = QtWidgets.QVBoxLayout()
-        self.verticalLayout_3rdPlotSettings.setObjectName("verticalLayout_3rdPlotSettings")
-        self.label_3rdPlot = QtWidgets.QLabel(self.groupBox_3rdPlotSettings)
-        self.label_3rdPlot.setObjectName("label_3rdPlot")
-        self.verticalLayout_3rdPlotSettings.addWidget(self.label_3rdPlot)
-        self.comboBox_3rdPlot = QtWidgets.QComboBox(self.groupBox_3rdPlotSettings)
-        self.comboBox_3rdPlot.setObjectName("comboBox_3rdPlot")
-        self.verticalLayout_3rdPlotSettings.addWidget(self.comboBox_3rdPlot)
-        self.horizontalLayout_20.addLayout(self.verticalLayout_3rdPlotSettings)
-        self.horizontalLayout_12 = QtWidgets.QHBoxLayout()
-        self.horizontalLayout_12.setObjectName("horizontalLayout_12")
-        self.verticalLayout_3rdPlotSettings_2 = QtWidgets.QVBoxLayout()
-        self.verticalLayout_3rdPlotSettings_2.setObjectName("verticalLayout_3rdPlotSettings_2")
-        self.label_Indx1 = QtWidgets.QLabel(self.groupBox_3rdPlotSettings)
-        self.label_Indx1.setObjectName("label_Indx1")
-        self.verticalLayout_3rdPlotSettings_2.addWidget(self.label_Indx1)
-        self.spinBox_Indx1 = QtWidgets.QSpinBox(self.groupBox_3rdPlotSettings)
-        self.spinBox_Indx1.setEnabled(False)
-        self.spinBox_Indx1.setObjectName("spinBox_Indx1")
-        self.verticalLayout_3rdPlotSettings_2.addWidget(self.spinBox_Indx1)
-        self.horizontalLayout_12.addLayout(self.verticalLayout_3rdPlotSettings_2)
-        self.verticalLayout_3rdPlotSettings_3 = QtWidgets.QVBoxLayout()
-        self.verticalLayout_3rdPlotSettings_3.setObjectName("verticalLayout_3rdPlotSettings_3")
-        self.label_Indx2 = QtWidgets.QLabel(self.groupBox_3rdPlotSettings)
-        self.label_Indx2.setObjectName("label_Indx2")
-        self.verticalLayout_3rdPlotSettings_3.addWidget(self.label_Indx2)
-        self.spinBox_Indx2 = QtWidgets.QSpinBox(self.groupBox_3rdPlotSettings)
-        self.spinBox_Indx2.setEnabled(False)
-        self.spinBox_Indx2.setObjectName("spinBox_Indx2")
-        self.verticalLayout_3rdPlotSettings_3.addWidget(self.spinBox_Indx2)
-        self.horizontalLayout_12.addLayout(self.verticalLayout_3rdPlotSettings_3)
-        self.horizontalLayout_20.addLayout(self.horizontalLayout_12)
-        self.gridLayout_21.addLayout(self.horizontalLayout_20, 0, 0, 1, 1)
-        self.horizontalLayout.addWidget(self.groupBox_3rdPlotSettings)
-        self.verticalLayout_9.addLayout(self.horizontalLayout)
-        self.horizontalLayout_16.addLayout(self.verticalLayout_9)
-        self.verticalLayout_10.addLayout(self.horizontalLayout_16)
-        self.splitter_8 = QtWidgets.QSplitter(self.splitter_7)
-        self.splitter_8.setOrientation(QtCore.Qt.Horizontal)
-        self.splitter_8.setObjectName("splitter_8")
-        self.groupBox_confusionMatrixPlot = QtWidgets.QGroupBox(self.splitter_8)
-        sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Minimum, QtWidgets.QSizePolicy.Preferred)
-        sizePolicy.setHorizontalStretch(0)
-        sizePolicy.setVerticalStretch(0)
-        sizePolicy.setHeightForWidth(self.groupBox_confusionMatrixPlot.sizePolicy().hasHeightForWidth())
-        self.groupBox_confusionMatrixPlot.setSizePolicy(sizePolicy)
-        self.groupBox_confusionMatrixPlot.setBaseSize(QtCore.QSize(250, 500))
-        self.groupBox_confusionMatrixPlot.setObjectName("groupBox_confusionMatrixPlot")
-        self.gridLayout_16 = QtWidgets.QGridLayout(self.groupBox_confusionMatrixPlot)
-        self.gridLayout_16.setObjectName("gridLayout_16")
-        self.horizontalLayout_24 = QtWidgets.QHBoxLayout()
-        self.horizontalLayout_24.setObjectName("horizontalLayout_24")
-        self.verticalLayout_11 = QtWidgets.QVBoxLayout()
-        self.verticalLayout_11.setObjectName("verticalLayout_11")
-        self.horizontalLayout_21 = QtWidgets.QHBoxLayout()
-        self.horizontalLayout_21.setObjectName("horizontalLayout_21")
-        self.label_True_CM1 = QtWidgets.QLabel(self.groupBox_confusionMatrixPlot)
-        font = QtGui.QFont()
-        font.setBold(True)
-        font.setWeight(75)
-        font.setStrikeOut(False)
-        font.setKerning(True)
-        font.setStyleStrategy(QtGui.QFont.PreferDefault)
-        self.label_True_CM1.setFont(font)
-        self.label_True_CM1.setObjectName("label_True_CM1")
-        self.horizontalLayout_21.addWidget(self.label_True_CM1)
-        self.tableWidget_CM1 = QtWidgets.QTableWidget(self.groupBox_confusionMatrixPlot)
-        sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Minimum, QtWidgets.QSizePolicy.Expanding)
-        sizePolicy.setHorizontalStretch(0)
-        sizePolicy.setVerticalStretch(0)
-        sizePolicy.setHeightForWidth(self.tableWidget_CM1.sizePolicy().hasHeightForWidth())
-        self.tableWidget_CM1.setSizePolicy(sizePolicy)
-        self.tableWidget_CM1.setBaseSize(QtCore.QSize(250, 250))
-        self.tableWidget_CM1.setObjectName("tableWidget_CM1")
-        self.tableWidget_CM1.setColumnCount(0)
-        self.tableWidget_CM1.setRowCount(0)
-        self.horizontalLayout_21.addWidget(self.tableWidget_CM1)
-        self.verticalLayout_11.addLayout(self.horizontalLayout_21)
-        self.horizontalLayout_18 = QtWidgets.QHBoxLayout()
-        self.horizontalLayout_18.setObjectName("horizontalLayout_18")
-        self.pushButton_CM1_to_Clipboard = QtWidgets.QPushButton(self.groupBox_confusionMatrixPlot)
-        self.pushButton_CM1_to_Clipboard.setObjectName("pushButton_CM1_to_Clipboard")
-        self.horizontalLayout_18.addWidget(self.pushButton_CM1_to_Clipboard)
-        self.label_Pred_CM1 = QtWidgets.QLabel(self.groupBox_confusionMatrixPlot)
-        font = QtGui.QFont()
-        font.setPointSize(8)
-        font.setBold(True)
-        font.setWeight(75)
-        self.label_Pred_CM1.setFont(font)
-        self.label_Pred_CM1.setLayoutDirection(QtCore.Qt.LeftToRight)
-        self.label_Pred_CM1.setAutoFillBackground(False)
-        self.label_Pred_CM1.setAlignment(QtCore.Qt.AlignHCenter|QtCore.Qt.AlignTop)
-        self.label_Pred_CM1.setObjectName("label_Pred_CM1")
-        self.horizontalLayout_18.addWidget(self.label_Pred_CM1)
-        self.verticalLayout_11.addLayout(self.horizontalLayout_18)
-        self.horizontalLayout_24.addLayout(self.verticalLayout_11)
-        self.verticalLayout_12 = QtWidgets.QVBoxLayout()
-        self.verticalLayout_12.setObjectName("verticalLayout_12")
-        self.horizontalLayout_23 = QtWidgets.QHBoxLayout()
-        self.horizontalLayout_23.setObjectName("horizontalLayout_23")
-        self.label_True_CM2 = QtWidgets.QLabel(self.groupBox_confusionMatrixPlot)
-        font = QtGui.QFont()
-        font.setBold(True)
-        font.setWeight(75)
-        font.setStrikeOut(False)
-        font.setKerning(True)
-        font.setStyleStrategy(QtGui.QFont.PreferDefault)
-        self.label_True_CM2.setFont(font)
-        self.label_True_CM2.setObjectName("label_True_CM2")
-        self.horizontalLayout_23.addWidget(self.label_True_CM2)
-        self.tableWidget_CM2 = QtWidgets.QTableWidget(self.groupBox_confusionMatrixPlot)
-        sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Minimum, QtWidgets.QSizePolicy.Expanding)
-        sizePolicy.setHorizontalStretch(0)
-        sizePolicy.setVerticalStretch(0)
-        sizePolicy.setHeightForWidth(self.tableWidget_CM2.sizePolicy().hasHeightForWidth())
-        self.tableWidget_CM2.setSizePolicy(sizePolicy)
-        self.tableWidget_CM2.setBaseSize(QtCore.QSize(250, 250))
-        self.tableWidget_CM2.setObjectName("tableWidget_CM2")
-        self.tableWidget_CM2.setColumnCount(0)
-        self.tableWidget_CM2.setRowCount(0)
-        self.horizontalLayout_23.addWidget(self.tableWidget_CM2)
-        self.verticalLayout_12.addLayout(self.horizontalLayout_23)
-        self.horizontalLayout_22 = QtWidgets.QHBoxLayout()
-        self.horizontalLayout_22.setObjectName("horizontalLayout_22")
-        self.pushButton_CM2_to_Clipboard = QtWidgets.QPushButton(self.groupBox_confusionMatrixPlot)
-        self.pushButton_CM2_to_Clipboard.setObjectName("pushButton_CM2_to_Clipboard")
-        self.horizontalLayout_22.addWidget(self.pushButton_CM2_to_Clipboard)
-        self.label_Pred_CM2 = QtWidgets.QLabel(self.groupBox_confusionMatrixPlot)
-        font = QtGui.QFont()
-        font.setPointSize(8)
-        font.setBold(True)
-        font.setWeight(75)
-        self.label_Pred_CM2.setFont(font)
-        self.label_Pred_CM2.setFrameShape(QtWidgets.QFrame.NoFrame)
-        self.label_Pred_CM2.setLineWidth(1)
-        self.label_Pred_CM2.setMidLineWidth(0)
-        self.label_Pred_CM2.setAlignment(QtCore.Qt.AlignHCenter|QtCore.Qt.AlignTop)
-        self.label_Pred_CM2.setIndent(-1)
-        self.label_Pred_CM2.setObjectName("label_Pred_CM2")
-        self.horizontalLayout_22.addWidget(self.label_Pred_CM2)
-        self.verticalLayout_12.addLayout(self.horizontalLayout_22)
-        self.horizontalLayout_24.addLayout(self.verticalLayout_12)
-        self.gridLayout_16.addLayout(self.horizontalLayout_24, 0, 0, 1, 1)
-        self.tableWidget_AccPrecSpec = QtWidgets.QTableWidget(self.groupBox_confusionMatrixPlot)
-        sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Minimum, QtWidgets.QSizePolicy.Expanding)
-        sizePolicy.setHorizontalStretch(0)
-        sizePolicy.setVerticalStretch(0)
-        sizePolicy.setHeightForWidth(self.tableWidget_AccPrecSpec.sizePolicy().hasHeightForWidth())
-        self.tableWidget_AccPrecSpec.setSizePolicy(sizePolicy)
-        self.tableWidget_AccPrecSpec.setObjectName("tableWidget_AccPrecSpec")
-        self.gridLayout_16.addWidget(self.tableWidget_AccPrecSpec, 1, 0, 1, 1)
-        self.groupBox_probHistPlot = QtWidgets.QGroupBox(self.splitter_8)
-        self.groupBox_probHistPlot.setObjectName("groupBox_probHistPlot")
-        self.gridLayout_19 = QtWidgets.QGridLayout(self.groupBox_probHistPlot)
-        self.gridLayout_19.setObjectName("gridLayout_19")
-        self.widget_probHistPlot = pg.GraphicsLayoutWidget(self.groupBox_probHistPlot)#QtWidgets.QWidget(self.groupBox_probHistPlot)
-        self.widget_probHistPlot.setObjectName("widget_probHistPlot")
-        self.gridLayout_19.addWidget(self.widget_probHistPlot, 0, 0, 1, 1)
-        self.groupBox_3rdPlot = QtWidgets.QGroupBox(self.splitter_8)
-        self.groupBox_3rdPlot.setObjectName("groupBox_3rdPlot")
-        self.gridLayout_18 = QtWidgets.QGridLayout(self.groupBox_3rdPlot)
-        self.gridLayout_18.setObjectName("gridLayout_18")
-        self.widget_3rdPlot = pg.GraphicsLayoutWidget(self.groupBox_3rdPlot)
-        self.widget_3rdPlot.setObjectName("widget_3rdPlot")
-        self.gridLayout_18.addWidget(self.widget_3rdPlot, 1, 0, 1, 1)
-        self.gridLayout_23.addWidget(self.splitter_7, 0, 0, 1, 1)
-        self.tabWidget_Modelbuilder.addTab(self.tab_AssessModel, "")
-
-        ##################Tab Plotting and Peakdetermination##################
-
-        self.tab_Plotting = QtWidgets.QWidget()
-        self.tab_Plotting.setObjectName("tab_Plotting")
-        self.gridLayout_25 = QtWidgets.QGridLayout(self.tab_Plotting)
-        self.gridLayout_25.setObjectName("gridLayout_25")
-        self.comboBox_chooseRtdcFile = QtWidgets.QComboBox(self.tab_Plotting)
-        self.comboBox_chooseRtdcFile.setObjectName("comboBox_chooseRtdcFile")
-        self.gridLayout_25.addWidget(self.comboBox_chooseRtdcFile, 0, 0, 1, 1)
-        self.splitter_15 = QtWidgets.QSplitter(self.tab_Plotting)
-        self.splitter_15.setOrientation(QtCore.Qt.Horizontal)
-        self.splitter_15.setObjectName("splitter_15")
-        self.splitter_14 = QtWidgets.QSplitter(self.splitter_15)
-        self.splitter_14.setOrientation(QtCore.Qt.Vertical)
-        self.splitter_14.setObjectName("splitter_14")
-        self.groupBox_plottingregion = QtWidgets.QGroupBox(self.splitter_14)
-        self.groupBox_plottingregion.setObjectName("groupBox_plottingregion")
-        self.gridLayout_27 = QtWidgets.QGridLayout(self.groupBox_plottingregion)
-        self.gridLayout_27.setObjectName("gridLayout_27")
-        self.horizontalLayout_27 = QtWidgets.QHBoxLayout()
-        self.horizontalLayout_27.setObjectName("horizontalLayout_27")
-        self.comboBox_featurey = QtWidgets.QComboBox(self.groupBox_plottingregion)
-        self.comboBox_featurey.setLayoutDirection(QtCore.Qt.LeftToRight)
-        self.comboBox_featurey.setCurrentText("")
-        self.comboBox_featurey.setObjectName("comboBox_featurey")
-        self.horizontalLayout_27.addWidget(self.comboBox_featurey)
-        self.verticalLayout_15 = QtWidgets.QVBoxLayout()
-        self.verticalLayout_15.setObjectName("verticalLayout_15")
-        self.splitter_13 = QtWidgets.QSplitter(self.groupBox_plottingregion)
-        self.splitter_13.setOrientation(QtCore.Qt.Vertical)
-        self.splitter_13.setObjectName("splitter_13")
-        self.splitter_12 = QtWidgets.QSplitter(self.splitter_13)
-        self.splitter_12.setOrientation(QtCore.Qt.Horizontal)
-        self.splitter_12.setObjectName("splitter_12")
-        self.widget_histx = pg.GraphicsLayoutWidget(self.splitter_12)
-        self.widget_histx.resize(QtCore.QSize(251, 75))
-        self.widget_histx.setObjectName("widget_histx")
-        self.widget_infoBox = QtWidgets.QWidget(self.splitter_12)
-        self.widget_infoBox.setObjectName("widget_infoBox")
-        self.gridLayout_30 = QtWidgets.QGridLayout(self.widget_infoBox)
-        self.gridLayout_30.setContentsMargins(0, 0, 0, 0)
-        self.gridLayout_30.setObjectName("gridLayout_30")
-        self.spinBox_cellInd = QtWidgets.QSpinBox(self.widget_infoBox)
-        self.spinBox_cellInd.setMaximumSize(QtCore.QSize(16777215, 22))
-        self.spinBox_cellInd.setMaximum(999999999)
-        self.spinBox_cellInd.setObjectName("spinBox_cellInd")
-        self.gridLayout_30.addWidget(self.spinBox_cellInd, 1, 0, 1, 1)
-        self.horizontalSlider_cellInd = QtWidgets.QSlider(self.widget_infoBox)
-        self.horizontalSlider_cellInd.setOrientation(QtCore.Qt.Horizontal)
-        self.horizontalSlider_cellInd.setObjectName("horizontalSlider_cellInd")
-        self.gridLayout_30.addWidget(self.horizontalSlider_cellInd, 0, 0, 1, 1)
-        self.splitter_9 = QtWidgets.QSplitter(self.splitter_13)
-        self.splitter_9.setOrientation(QtCore.Qt.Horizontal)
-        self.splitter_9.setObjectName("splitter_9")
-        self.widget_scatter = pg.GraphicsLayoutWidget(self.splitter_9)
-        sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Preferred, QtWidgets.QSizePolicy.Preferred)
-        sizePolicy.setHorizontalStretch(1)
-        sizePolicy.setVerticalStretch(1)
-        sizePolicy.setHeightForWidth(self.widget_scatter.sizePolicy().hasHeightForWidth())
-        self.widget_scatter.setSizePolicy(sizePolicy)
-        #self.widget_scatter.setMinimumSize(QtCore.QSize(251, 251))
-        self.widget_scatter.setSizeIncrement(QtCore.QSize(1, 1))
-        self.widget_scatter.setBaseSize(QtCore.QSize(1, 1))
-        self.widget_scatter.setObjectName("widget_scatter")
-        self.widget_histy = pg.GraphicsLayoutWidget(self.splitter_9)
-        #self.widget_histy.setMinimumSize(QtCore.QSize(75, 251))
-        self.widget_histy.setObjectName("widget_histy")
-        self.verticalLayout_15.addWidget(self.splitter_13)
-        self.comboBox_featurex = QtWidgets.QComboBox(self.groupBox_plottingregion)
-        self.comboBox_featurex.setMinimumSize(QtCore.QSize(326, 30))
-        self.comboBox_featurex.setObjectName("comboBox_featurex")
-        self.verticalLayout_15.addWidget(self.comboBox_featurex)
-        self.horizontalLayout_27.addLayout(self.verticalLayout_15)
-        self.gridLayout_27.addLayout(self.horizontalLayout_27, 0, 0, 1, 1)
-        self.groupBox_plottingOptions = QtWidgets.QGroupBox(self.splitter_14)
-        self.groupBox_plottingOptions.setObjectName("groupBox_plottingOptions")
-        self.gridLayout_26 = QtWidgets.QGridLayout(self.groupBox_plottingOptions)
-        self.gridLayout_26.setObjectName("gridLayout_26")
-        self.verticalLayout_14 = QtWidgets.QVBoxLayout()
-        self.verticalLayout_14.setObjectName("verticalLayout_14")
-        self.horizontalLayout_29 = QtWidgets.QHBoxLayout()
-        self.horizontalLayout_29.setObjectName("horizontalLayout_29")
-        self.checkBox_fl1 = QtWidgets.QCheckBox(self.groupBox_plottingOptions)
-        self.checkBox_fl1.setObjectName("checkBox_fl1")
-        self.horizontalLayout_29.addWidget(self.checkBox_fl1)
-        self.checkBox_fl2 = QtWidgets.QCheckBox(self.groupBox_plottingOptions)
-        self.checkBox_fl2.setObjectName("checkBox_fl2")
-        self.horizontalLayout_29.addWidget(self.checkBox_fl2)
-        self.checkBox_fl3 = QtWidgets.QCheckBox(self.groupBox_plottingOptions)
-        self.checkBox_fl3.setObjectName("checkBox_fl3")
-        self.horizontalLayout_29.addWidget(self.checkBox_fl3)
-        self.checkBox_centroid = QtWidgets.QCheckBox(self.groupBox_plottingOptions)
-        self.checkBox_centroid.setObjectName("checkBox_centroid")
-        self.horizontalLayout_29.addWidget(self.checkBox_centroid)
-
-        self.verticalLayout_14.addLayout(self.horizontalLayout_29)
-        self.horizontalLayout_26 = QtWidgets.QHBoxLayout()
-        self.horizontalLayout_26.setObjectName("horizontalLayout_26")
-        self.label_coloring = QtWidgets.QLabel(self.groupBox_plottingOptions)
-        self.label_coloring.setObjectName("label_coloring")
-        self.horizontalLayout_26.addWidget(self.label_coloring)
-        self.comboBox_coloring = QtWidgets.QComboBox(self.groupBox_plottingOptions)
-        self.comboBox_coloring.setObjectName("comboBox_coloring")
-        self.horizontalLayout_26.addWidget(self.comboBox_coloring)
-        self.checkBox_colorLog = QtWidgets.QCheckBox(self.groupBox_plottingOptions)
-        self.checkBox_colorLog.setObjectName("checkBox_colorLog")
-        self.horizontalLayout_26.addWidget(self.checkBox_colorLog)
-        self.pushButton_updateScatterPlot = QtWidgets.QPushButton(self.groupBox_plottingOptions)
-        self.pushButton_updateScatterPlot.setObjectName("pushButton_updateScatterPlot")
-        self.horizontalLayout_26.addWidget(self.pushButton_updateScatterPlot)
-        self.verticalLayout_14.addLayout(self.horizontalLayout_26)
-        self.gridLayout_26.addLayout(self.verticalLayout_14, 0, 0, 1, 1)
-        self.groupBox = QtWidgets.QGroupBox(self.splitter_14)
-        self.groupBox.setObjectName("groupBox")
-        self.gridLayout_33 = QtWidgets.QGridLayout(self.groupBox)
-        self.gridLayout_33.setObjectName("gridLayout_33")
-        self.textBrowser_fileInfo = QtWidgets.QTextBrowser(self.groupBox)
-        self.textBrowser_fileInfo.setObjectName("textBrowser_fileInfo")
-        self.gridLayout_33.addWidget(self.textBrowser_fileInfo, 0, 0, 1, 1)
-        self.tabWidget_filter_peakdet = QtWidgets.QTabWidget(self.splitter_15)
-        self.tabWidget_filter_peakdet.setObjectName("tabWidget_filter_peakdet")
-        self.tab_filter = QtWidgets.QWidget()
-        self.tab_filter.setObjectName("tab_filter")
-        self.gridLayout_24 = QtWidgets.QGridLayout(self.tab_filter)
-        self.gridLayout_24.setObjectName("gridLayout_24")
-        self.tableWidget_filterOptions = QtWidgets.QTableWidget(self.tab_filter)
-        self.tableWidget_filterOptions.setObjectName("tableWidget_filterOptions")
-        self.tableWidget_filterOptions.setColumnCount(0)
-        self.tableWidget_filterOptions.setRowCount(0)
-        self.gridLayout_24.addWidget(self.tableWidget_filterOptions, 0, 0, 1, 1)
-        self.tabWidget_filter_peakdet.addTab(self.tab_filter, "")
-        self.tab_peakdet = QtWidgets.QWidget()
-        self.tab_peakdet.setObjectName("tab_peakdet")
-        self.gridLayout_29 = QtWidgets.QGridLayout(self.tab_peakdet)
-        self.gridLayout_29.setObjectName("gridLayout_29")
-        self.splitter_10 = QtWidgets.QSplitter(self.tab_peakdet)
-        self.splitter_10.setOrientation(QtCore.Qt.Vertical)
-        self.splitter_10.setObjectName("splitter_10")
-        self.groupBox_showCell = QtWidgets.QGroupBox(self.splitter_10)
-        self.groupBox_showCell.setObjectName("groupBox_showCell")
-        self.gridLayout_32 = QtWidgets.QGridLayout(self.groupBox_showCell)
-        self.gridLayout_32.setObjectName("gridLayout_32")
-        self.widget_showFltrace = pg.GraphicsLayoutWidget(self.groupBox_showCell)
-        self.widget_showFltrace.setMinimumSize(QtCore.QSize(0, 81))
-        #self.widget_showFltrace.setMaximumSize(QtCore.QSize(16777215, 81))
-        self.widget_showFltrace.setObjectName("widget_showFltrace")
-        self.gridLayout_32.addWidget(self.widget_showFltrace, 1, 0, 1, 1)
-        self.widget_showCell = pg.ImageView(self.groupBox_showCell)
-        self.widget_showCell.setMinimumSize(QtCore.QSize(0, 91))
-        #self.widget_showCell.setMaximumSize(QtCore.QSize(16777215, 91))
-        self.widget_showCell.ui.histogram.hide()
-        self.widget_showCell.ui.roiBtn.hide()
-        self.widget_showCell.ui.menuBtn.hide()
-        self.widget_showCell.setObjectName("widget_showCell")
-        self.gridLayout_32.addWidget(self.widget_showCell, 0, 0, 1, 1)
-        
-        self.groupBox_showSelectedPeaks = QtWidgets.QGroupBox(self.splitter_10)
-        self.groupBox_showSelectedPeaks.setObjectName("groupBox_showSelectedPeaks")
-        self.gridLayout_28 = QtWidgets.QGridLayout(self.groupBox_showSelectedPeaks)
-        self.gridLayout_28.setObjectName("gridLayout_28")
-        self.splitter_11 = QtWidgets.QSplitter(self.groupBox_showSelectedPeaks)
-        self.splitter_11.setOrientation(QtCore.Qt.Horizontal)
-        self.splitter_11.setObjectName("splitter_11")
-        self.widget = QtWidgets.QWidget(self.splitter_11)
-        self.widget.setObjectName("widget")
-        self.verticalLayout_18 = QtWidgets.QVBoxLayout(self.widget)
-        self.verticalLayout_18.setSizeConstraint(QtWidgets.QLayout.SetMinimumSize)
-        self.verticalLayout_18.setContentsMargins(0, 0, 0, 0)
-        self.verticalLayout_18.setObjectName("verticalLayout_18")
-        self.horizontalLayout_30 = QtWidgets.QHBoxLayout()
-        self.horizontalLayout_30.setObjectName("horizontalLayout_30")
-        self.pushButton_selectPeakPos = QtWidgets.QPushButton(self.widget)
-        self.pushButton_selectPeakPos.setMinimumSize(QtCore.QSize(50, 28))
-        self.pushButton_selectPeakPos.setMaximumSize(QtCore.QSize(50, 28))
-        self.pushButton_selectPeakPos.setObjectName("pushButton_selectPeakPos")
-        self.horizontalLayout_30.addWidget(self.pushButton_selectPeakPos)
-        self.pushButton_selectPeakRange = QtWidgets.QPushButton(self.widget)
-        self.pushButton_selectPeakRange.setMinimumSize(QtCore.QSize(50, 28))
-        self.pushButton_selectPeakRange.setMaximumSize(QtCore.QSize(50, 28))
-        self.pushButton_selectPeakRange.setObjectName("pushButton_selectPeakRange")
-        self.horizontalLayout_30.addWidget(self.pushButton_selectPeakRange)
-        self.verticalLayout_18.addLayout(self.horizontalLayout_30)
-        self.label_automatic = QtWidgets.QLabel(self.widget)
-        self.label_automatic.setObjectName("label_automatic")
-        self.verticalLayout_18.addWidget(self.label_automatic)
-        self.horizontalLayout_28 = QtWidgets.QHBoxLayout()
-        self.horizontalLayout_28.setObjectName("horizontalLayout_28")
-        self.pushButton_highestXPercent = QtWidgets.QPushButton(self.widget)
-        self.pushButton_highestXPercent.setMinimumSize(QtCore.QSize(82, 28))
-        self.pushButton_highestXPercent.setMaximumSize(QtCore.QSize(82, 28))
-        self.pushButton_highestXPercent.setObjectName("pushButton_highestXPercent")
-        self.horizontalLayout_28.addWidget(self.pushButton_highestXPercent)
-        self.doubleSpinBox_highestXPercent = QtWidgets.QDoubleSpinBox(self.widget)
-        self.doubleSpinBox_highestXPercent.setMinimumSize(QtCore.QSize(51, 22))
-        self.doubleSpinBox_highestXPercent.setMaximumSize(QtCore.QSize(51, 22))
-        self.doubleSpinBox_highestXPercent.setObjectName("doubleSpinBox_highestXPercent")
-        self.horizontalLayout_28.addWidget(self.doubleSpinBox_highestXPercent)
-        self.verticalLayout_18.addLayout(self.horizontalLayout_28)
-        spacerItem = QtWidgets.QSpacerItem(157, 13, QtWidgets.QSizePolicy.Minimum, QtWidgets.QSizePolicy.Expanding)
-        self.verticalLayout_18.addItem(spacerItem)
-        self.label_remove = QtWidgets.QLabel(self.widget)
-        self.label_remove.setObjectName("label_remove")
-        self.verticalLayout_18.addWidget(self.label_remove)
-        self.horizontalLayout_31 = QtWidgets.QHBoxLayout()
-        self.horizontalLayout_31.setObjectName("horizontalLayout_31")
-        self.pushButton_removeSelectedPeaks = QtWidgets.QPushButton(self.widget)
-        self.pushButton_removeSelectedPeaks.setMinimumSize(QtCore.QSize(60, 28))
-        self.pushButton_removeSelectedPeaks.setMaximumSize(QtCore.QSize(60, 28))
-        self.pushButton_removeSelectedPeaks.setObjectName("pushButton_removeSelectedPeaks")
-        self.horizontalLayout_31.addWidget(self.pushButton_removeSelectedPeaks)
-        self.pushButton_removeAllPeaks = QtWidgets.QPushButton(self.widget)
-        self.pushButton_removeAllPeaks.setMinimumSize(QtCore.QSize(40, 28))
-        self.pushButton_removeAllPeaks.setMaximumSize(QtCore.QSize(40, 28))
-        self.pushButton_removeAllPeaks.setObjectName("pushButton_removeAllPeaks")
-        self.horizontalLayout_31.addWidget(self.pushButton_removeAllPeaks)
-        self.verticalLayout_18.addLayout(self.horizontalLayout_31)
-        self.widget_showSelectedPeaks = pg.GraphicsLayoutWidget(self.splitter_11)
-        self.widget_showSelectedPeaks.setObjectName("widget_showSelectedPeaks")
-        self.tableWidget_showSelectedPeaks = QtWidgets.QTableWidget(self.splitter_11)
-        self.tableWidget_showSelectedPeaks.setObjectName("tableWidget_showSelectedPeaks")
-        self.gridLayout_28.addWidget(self.splitter_11, 0, 0, 1, 1)
-
-
-        self.groupBox_peakDetModel = QtWidgets.QGroupBox(self.splitter_10)
-        self.groupBox_peakDetModel.setObjectName("groupBox_peakDetModel")
-        self.gridLayout_31 = QtWidgets.QGridLayout(self.groupBox_peakDetModel)
-        self.gridLayout_31.setObjectName("gridLayout_31")
-        self.horizontalLayout_25 = QtWidgets.QHBoxLayout()
-        self.horizontalLayout_25.setObjectName("horizontalLayout_25")
-        self.verticalLayout_16 = QtWidgets.QVBoxLayout()
-        self.verticalLayout_16.setObjectName("verticalLayout_16")
-        self.comboBox_peakDetModel = QtWidgets.QComboBox(self.groupBox_peakDetModel)
-        self.comboBox_peakDetModel.setObjectName("comboBox_peakDetModel")
-        self.verticalLayout_16.addWidget(self.comboBox_peakDetModel)
-        self.pushButton_fitPeakDetModel = QtWidgets.QPushButton(self.groupBox_peakDetModel)
-        self.pushButton_fitPeakDetModel.setObjectName("pushButton_fitPeakDetModel")
-        self.verticalLayout_16.addWidget(self.pushButton_fitPeakDetModel)
-        self.pushButton_SavePeakDetModel = QtWidgets.QPushButton(self.groupBox_peakDetModel)
-        self.pushButton_SavePeakDetModel.setObjectName("pushButton_SavePeakDetModel")
-        self.verticalLayout_16.addWidget(self.pushButton_SavePeakDetModel)
-        self.pushButton_loadPeakDetModel = QtWidgets.QPushButton(self.groupBox_peakDetModel)
-        self.pushButton_loadPeakDetModel.setObjectName("pushButton_loadPeakDetModel")
-        self.verticalLayout_16.addWidget(self.pushButton_loadPeakDetModel)
-        self.horizontalLayout_25.addLayout(self.verticalLayout_16)
-        self.tableWidget_peakModelParameters = QtWidgets.QTableWidget(self.groupBox_peakDetModel)
-        self.tableWidget_peakModelParameters.setObjectName("tableWidget_peakModelParameters")
-        self.tableWidget_peakModelParameters.setColumnCount(0)
-        self.tableWidget_peakModelParameters.setRowCount(0)
-        self.horizontalLayout_25.addWidget(self.tableWidget_peakModelParameters)
-        self.gridLayout_31.addLayout(self.horizontalLayout_25, 0, 0, 1, 1)
-        self.verticalLayout_17 = QtWidgets.QVBoxLayout()
-        self.verticalLayout_17.setObjectName("verticalLayout_17")
-        self.radioButton_exportSelected = QtWidgets.QRadioButton(self.groupBox_peakDetModel)
-        self.radioButton_exportSelected.setChecked(True)
-        self.radioButton_exportSelected.setObjectName("radioButton_exportSelected")
-        self.verticalLayout_17.addWidget(self.radioButton_exportSelected)
-        self.radioButton_exportAll = QtWidgets.QRadioButton(self.groupBox_peakDetModel)
-        self.radioButton_exportAll.setObjectName("radioButton_exportAll")
-        self.verticalLayout_17.addWidget(self.radioButton_exportAll)
-        self.comboBox_toFlOrUserdef = QtWidgets.QComboBox(self.groupBox_peakDetModel)
-        self.comboBox_toFlOrUserdef.setObjectName("comboBox_toFlOrUserdef")
-        self.verticalLayout_17.addWidget(self.comboBox_toFlOrUserdef)
-        self.pushButton_export = QtWidgets.QPushButton(self.groupBox_peakDetModel)
-        self.pushButton_export.setObjectName("pushButton_export")
-        self.verticalLayout_17.addWidget(self.pushButton_export)
-        self.gridLayout_31.addLayout(self.verticalLayout_17, 0, 1, 1, 1)
-        self.gridLayout_29.addWidget(self.splitter_10, 0, 0, 1, 1)
-        self.tabWidget_filter_peakdet.addTab(self.tab_peakdet, "")
-        self.tab_defineModel = QtWidgets.QWidget()
-        self.tab_defineModel.setObjectName("tab_defineModel")
-        self.tabWidget_filter_peakdet.addTab(self.tab_defineModel, "")
-        self.gridLayout_25.addWidget(self.splitter_15, 1, 0, 1, 1)
-        self.tabWidget_Modelbuilder.addTab(self.tab_Plotting, "")
-
-
-
-
-
-
-        ####################Tab Python Editor/Console##########################
-        self.tab_python = QtWidgets.QWidget()
-        self.tab_python.setObjectName("tab_python")
-        self.gridLayout_41 = QtWidgets.QGridLayout(self.tab_python)
-        self.gridLayout_41.setObjectName("gridLayout_41")
-        self.verticalLayout_python_1 = QtWidgets.QVBoxLayout()
-        self.verticalLayout_python_1.setObjectName("verticalLayout_python_1")
-        self.groupBox_pythonMenu = QtWidgets.QGroupBox(self.tab_python)
-        self.groupBox_pythonMenu.setMaximumSize(QtCore.QSize(16777215, 71))
-        self.groupBox_pythonMenu.setObjectName("groupBox_pythonMenu")
-        self.gridLayout_40 = QtWidgets.QGridLayout(self.groupBox_pythonMenu)
-        self.gridLayout_40.setObjectName("gridLayout_40")
-        self.horizontalLayout_pythonMenu = QtWidgets.QHBoxLayout()
-        self.horizontalLayout_pythonMenu.setObjectName("horizontalLayout_pythonMenu")
-        self.label_pythonCurrentFile = QtWidgets.QLabel(self.groupBox_pythonMenu)
-        self.label_pythonCurrentFile.setObjectName("label_pythonCurrentFile")
-        self.horizontalLayout_pythonMenu.addWidget(self.label_pythonCurrentFile)
-        self.lineEdit_pythonCurrentFile = QtWidgets.QLineEdit(self.groupBox_pythonMenu)
-        self.lineEdit_pythonCurrentFile.setEnabled(False)
-        self.lineEdit_pythonCurrentFile.setObjectName("lineEdit_pythonCurrentFile")
-        self.horizontalLayout_pythonMenu.addWidget(self.lineEdit_pythonCurrentFile)
-        self.gridLayout_40.addLayout(self.horizontalLayout_pythonMenu, 0, 0, 1, 1)
-        self.verticalLayout_python_1.addWidget(self.groupBox_pythonMenu)
-        self.splitter_python_1 = QtWidgets.QSplitter(self.tab_python)
-        self.splitter_python_1.setOrientation(QtCore.Qt.Horizontal)
-        self.splitter_python_1.setObjectName("splitter_python_1")
-        self.groupBox_pythonEditor = QtWidgets.QGroupBox(self.splitter_python_1)
-        self.groupBox_pythonEditor.setObjectName("groupBox_pythonEditor")
-        self.gridLayout_38 = QtWidgets.QGridLayout(self.groupBox_pythonEditor)
-        self.gridLayout_38.setObjectName("gridLayout_38")
-        self.verticalLayout_editor_1 = QtWidgets.QVBoxLayout()
-        self.verticalLayout_editor_1.setObjectName("verticalLayout_editor_1")
-        self.horizontalLayout_editor_1 = QtWidgets.QHBoxLayout()
-        self.horizontalLayout_editor_1.setObjectName("horizontalLayout_editor_1")
-        self.pushButton_pythonInOpen = QtWidgets.QPushButton(self.groupBox_pythonEditor)
-        self.pushButton_pythonInOpen.setObjectName("pushButton_pythonInOpen")
-        self.horizontalLayout_editor_1.addWidget(self.pushButton_pythonInOpen)
-        self.pushButton_pythonSaveAs = QtWidgets.QPushButton(self.groupBox_pythonEditor)
-        self.pushButton_pythonSaveAs.setObjectName("pushButton_pythonSaveAs")
-        self.horizontalLayout_editor_1.addWidget(self.pushButton_pythonSaveAs)
-        self.pushButton_pythonInClear = QtWidgets.QPushButton(self.groupBox_pythonEditor)
-        self.pushButton_pythonInClear.setObjectName("pushButton_pythonInClear")
-        self.horizontalLayout_editor_1.addWidget(self.pushButton_pythonInClear)
-        self.pushButton_pythonInRun = QtWidgets.QPushButton(self.groupBox_pythonEditor)
-        self.pushButton_pythonInRun.setObjectName("pushButton_pythonInRun")
-        self.horizontalLayout_editor_1.addWidget(self.pushButton_pythonInRun)
-        self.verticalLayout_editor_1.addLayout(self.horizontalLayout_editor_1)
-        self.plainTextEdit_pythonIn = QtWidgets.QPlainTextEdit(self.groupBox_pythonEditor)
-        self.plainTextEdit_pythonIn.setObjectName("plainTextEdit_pythonIn")
-        self.verticalLayout_editor_1.addWidget(self.plainTextEdit_pythonIn)
-        self.gridLayout_38.addLayout(self.verticalLayout_editor_1, 0, 0, 1, 1)
-        self.groupBox_pythonConsole = QtWidgets.QGroupBox(self.splitter_python_1)
-        self.groupBox_pythonConsole.setObjectName("groupBox_pythonConsole")
-        self.gridLayout_39 = QtWidgets.QGridLayout(self.groupBox_pythonConsole)
-        self.gridLayout_39.setObjectName("gridLayout_39")
-        self.verticalLayout_console_1 = QtWidgets.QVBoxLayout()
-        self.verticalLayout_console_1.setObjectName("verticalLayout_console_1")
-        self.horizontalLayout_console_1 = QtWidgets.QHBoxLayout()
-        self.horizontalLayout_console_1.setObjectName("horizontalLayout_console_1")
-        self.pushButton_pythonOutClear = QtWidgets.QPushButton(self.groupBox_pythonConsole)
-        self.pushButton_pythonOutClear.setObjectName("pushButton_pythonOutClear")
-        self.horizontalLayout_console_1.addWidget(self.pushButton_pythonOutClear)
-        self.pushButton_pythonOutRun = QtWidgets.QPushButton(self.groupBox_pythonConsole)
-        self.pushButton_pythonOutRun.setObjectName("pushButton_pythonOutRun")
-        self.horizontalLayout_console_1.addWidget(self.pushButton_pythonOutRun)
-        self.verticalLayout_console_1.addLayout(self.horizontalLayout_console_1)
-        self.textBrowser_pythonOut = QtWidgets.QTextBrowser(self.groupBox_pythonConsole)
-        self.textBrowser_pythonOut.setEnabled(True)
-        self.textBrowser_pythonOut.setObjectName("textBrowser_pythonOut")
-        self.verticalLayout_console_1.addWidget(self.textBrowser_pythonOut)
-        self.gridLayout_39.addLayout(self.verticalLayout_console_1, 0, 0, 1, 1)
-        self.verticalLayout_python_1.addWidget(self.splitter_python_1)
-        self.gridLayout_41.addLayout(self.verticalLayout_python_1, 0, 0, 1, 1)
-        self.tabWidget_Modelbuilder.addTab(self.tab_python, "")
-        
-
-        
-        
-        
-        
-        
-        
-        
-        
-        
-
-
-
-
-        ######################Connections######################################
-        self.doubleSpinBox_learningRate.setEnabled(False)
-        self.spinBox_trainLastNOnly.setEnabled(False)
-        self.lineEdit_dropout.setEnabled(False)
-        self.checkBox_learningRate.toggled['bool'].connect(self.doubleSpinBox_learningRate.setEnabled)        
-        self.checkBox_trainLastNOnly.toggled['bool'].connect(self.spinBox_trainLastNOnly.setEnabled)
-        self.checkBox_dropout.toggled['bool'].connect(self.lineEdit_dropout.setEnabled)
-
-
-
-
-
-
-
-
-
-
-
-
-
-        #######################################################################
-        ##########################Manual manipulation##########################
-        ##########################Manual manipulation##########################
-        #######################################################################
-        ###########this makes it easier if the Ui should be changed############
-
-
-
-        ####################Define Model####################################
-        #self.label_Crop.setChecked(True)
-        #self.label_Crop.stateChanged.connect(self.activate_deactivate_spinbox)
-        
-        self.spinBox_imagecrop.valueChanged.connect(self.delete_ram)
-        self.colorModes = ["Grayscale","RGB"]
-        self.comboBox_GrayOrRGB.addItems(self.colorModes)
-        self.comboBox_GrayOrRGB.setCurrentIndex(0)             
-        self.comboBox_GrayOrRGB.currentIndexChanged.connect(self.gray_or_rgb_augmentation)            
-        #By default, Color Mode is Grayscale. Therefore switch off saturation and hue
-        self.checkBox_contrast.setEnabled(True)
-        self.checkBox_contrast.setChecked(True)
-        self.doubleSpinBox_contrastLower.setEnabled(True)
-        self.doubleSpinBox_contrastHigher.setEnabled(True)
-        self.checkBox_saturation.setEnabled(False)
-        self.checkBox_saturation.setChecked(False)
-        self.doubleSpinBox_saturationLower.setEnabled(False)
-        self.doubleSpinBox_saturationHigher.setEnabled(False)
-        self.checkBox_hue.setEnabled(False)
-        self.checkBox_hue.setChecked(False)
-        self.doubleSpinBox_hueDelta.setEnabled(False)
-
-
-        ###########################Expert mode Tab################################
-        self.spinBox_batchSize.setMinimum(1)       
-        self.spinBox_batchSize.setMaximum(1E6)       
-        self.spinBox_batchSize.setValue(Default_dict["spinBox_batchSize"])       
-        self.spinBox_epochs.setMinimum(1)       
-        self.spinBox_epochs.setMaximum(1E6)       
-        self.spinBox_epochs.setValue(1)       
-        self.doubleSpinBox_learningRate.setDecimals(9)
-        self.doubleSpinBox_learningRate.setMinimum(0.0)       
-        self.doubleSpinBox_learningRate.setMaximum(1E6)       
-        self.doubleSpinBox_learningRate.setValue(0.001)       
-        self.doubleSpinBox_learningRate.setSingleStep(0.0001)
-        self.spinBox_trainLastNOnly.setMinimum(0)       
-        self.spinBox_trainLastNOnly.setMaximum(1E6)       
-        self.spinBox_trainLastNOnly.setValue(0)    
-        self.checkBox_trainDenseOnly.setChecked(False)
-        self.checkBox_partialTrainability.toggled.connect(self.partialtrainability_activated)
-        self.checkBox_lossW.clicked.connect(lambda on_or_off: self.lossWeights_activated(on_or_off,-1))
-        self.pushButton_lossW.clicked.connect(lambda: self.lossWeights_popup(-1))
-
-
-        ###########################History Tab################################
-        self.tableWidget_HistoryItems.doubleClicked.connect(self.tableWidget_HistoryItems_dclick)
-        conversion_methods_source = ["Keras TensorFlow", "Frozen TensorFlow .pb"]
-        conversion_methods_target = [".nnet","Frozen TensorFlow .pb", "Optimized TensorFlow .pb", "ONNX (via keras2onnx)", "ONNX (via MMdnn)","CoreML", "PyTorch Script","Caffe Script","CNTK Script","MXNet Script","ONNX Script","TensorFlow Script","Keras Script"]
-        self.comboBox_convertTo.addItems(conversion_methods_target)
-        self.comboBox_convertTo.setMinimumSize(QtCore.QSize(200,22))
-        self.comboBox_convertTo.setMaximumSize(QtCore.QSize(200, 22))
-        width=self.comboBox_convertTo.fontMetrics().boundingRect(max(conversion_methods_target, key=len)).width()
-        self.comboBox_convertTo.view().setFixedWidth(width+10)
-        self.combobox_initial_format.setCurrentIndex(0)             
-        #self.comboBox_convertTo.setEnabled(False)
-        
-        self.combobox_initial_format.addItems(conversion_methods_source)
-        self.combobox_initial_format.setMinimumSize(QtCore.QSize(200,22))
-        self.combobox_initial_format.setMaximumSize(QtCore.QSize(200, 22))
-        width=self.combobox_initial_format.fontMetrics().boundingRect(max(conversion_methods_source, key=len)).width()
-        self.combobox_initial_format.view().setFixedWidth(width+10)             
-        self.combobox_initial_format.setCurrentIndex(0)             
-        #self.combobox_initial_format.setEnabled(False)
-
-
-        ###########################Assess Model################################
-        self.comboBox_loadedRGBorGray.addItems(["Grayscale","RGB"])
-        self.groupBox_loadModel.setMaximumSize(QtCore.QSize(16777215, 120))
-        self.label_ModelIndex_2.setMinimumSize(QtCore.QSize(68, 25))
-        self.label_ModelIndex_2.setMaximumSize(QtCore.QSize(68, 25))
-        self.spinBox_ModelIndex_2.setEnabled(False) 
-        self.spinBox_ModelIndex_2.setMinimum(0)
-        self.spinBox_ModelIndex_2.setMaximum(9E8)
-        self.spinBox_ModelIndex_2.setMinimumSize(QtCore.QSize(40, 22))
-        self.spinBox_ModelIndex_2.setMaximumSize(QtCore.QSize(75, 22))
-        self.spinBox_Crop_2.setMinimumSize(QtCore.QSize(40, 22))
-        self.spinBox_Crop_2.setMaximumSize(QtCore.QSize(50, 22))
-        self.spinBox_Crop_2.setMinimum(1)
-        self.spinBox_Crop_2.setMaximum(9E8)
-        self.spinBox_OutClasses_2.setMinimumSize(QtCore.QSize(40, 22))
-        self.spinBox_OutClasses_2.setMaximumSize(QtCore.QSize(50, 22))
-        self.spinBox_OutClasses_2.setMinimum(1)
-        self.spinBox_OutClasses_2.setMaximum(9E8)
-        
-        self.lineEdit_ModelSelection_2.setMinimumSize(QtCore.QSize(0, 20))
-        self.lineEdit_ModelSelection_2.setMaximumSize(QtCore.QSize(16777215, 20))
-
-        self.pushButton_LoadModel_2.setMinimumSize(QtCore.QSize(123, 24))
-        self.pushButton_LoadModel_2.setMaximumSize(QtCore.QSize(123, 24))
-        self.pushButton_LoadModel_2.clicked.connect(self.assessmodel_tab_load_model)
-
-        self.norm_methods = Default_dict["norm_methods"] #["None","Div. by 255", "StdScaling using mean and std of each image individually","StdScaling using mean and std of all training data"]
-        self.comboBox_Normalization_2.addItems(self.norm_methods)
-        self.comboBox_Normalization_2.setMinimumSize(QtCore.QSize(200,22))
-        self.comboBox_Normalization_2.setMaximumSize(QtCore.QSize(200, 22))
-        width=self.comboBox_Normalization_2.fontMetrics().boundingRect(max(self.norm_methods, key=len)).width()
-        self.comboBox_Normalization_2.view().setFixedWidth(width+10)             
-
-        self.pushButton_ImportValidFromNpy.setMinimumSize(QtCore.QSize(65, 28))
-        self.pushButton_ImportValidFromNpy.clicked.connect(self.import_valid_from_rtdc)
-        self.pushButton_ExportValidToNpy.setMinimumSize(QtCore.QSize(55, 0))
-        self.pushButton_ExportValidToNpy.clicked.connect(self.export_valid_to_rtdc)
-
-        self.lineEdit_InferenceTime.setMinimumSize(QtCore.QSize(0, 30))
-        self.lineEdit_InferenceTime.setMaximumSize(QtCore.QSize(16777215, 30))
-        self.spinBox_inftime_nr_images.setMinimum(10)
-        self.spinBox_inftime_nr_images.setMaximum(9E8)
-        self.spinBox_inftime_nr_images.setValue(1000)
-        
-        self.groupBox_validData.setMaximumSize(QtCore.QSize(400, 250))
-        self.tableWidget_Info_2.setColumnCount(0)
-        self.tableWidget_Info_2.setRowCount(0)
-        self.tableWidget_Info_2.clicked.connect(self.tableWidget_Info_2_click)
-        self.groupBox_settings.setMaximumSize(QtCore.QSize(16777215, 250))
-        self.spinBox_indexOfInterest.setMinimum(0)
-        self.spinBox_indexOfInterest.setMaximum(9E8)
-
-        self.doubleSpinBox_sortingThresh.setMinimum(0)
-        self.doubleSpinBox_sortingThresh.setMaximum(1)
-        self.doubleSpinBox_sortingThresh.setValue(0.5)
-        self.doubleSpinBox_sortingThresh.setSingleStep(0.1)
-        self.doubleSpinBox_sortingThresh.setDecimals(5)
-
-        self.comboBox_selectData.setMinimumSize(QtCore.QSize(200,22))
-        self.comboBox_selectData.setMaximumSize(QtCore.QSize(200, 32))
-
-        
-        #3rd Plot
-        items_3rd_plot = ["None","Conc. vs. Threshold","Enrichment vs. Threshold","Yield vs. Threshold","ROC-AUC","Precision-Recall"]
-        self.comboBox_3rdPlot.addItems(items_3rd_plot)
-        self.comboBox_3rdPlot.setMinimumSize(QtCore.QSize(100,22))
-        self.comboBox_3rdPlot.setMaximumSize(QtCore.QSize(100,22))
-        width=self.comboBox_3rdPlot.fontMetrics().boundingRect(max(items_3rd_plot, key=len)).width()
-        self.comboBox_3rdPlot.view().setFixedWidth(width+10)             
-        self.comboBox_3rdPlot.currentTextChanged.connect(self.thirdplot)
-        
-        self.spinBox_Indx1.setMinimum(0)
-        self.spinBox_Indx1.setMaximum(9E8)
-        self.spinBox_Indx1.setEnabled(False)
-        self.spinBox_Indx2.setMinimum(0)
-        self.spinBox_Indx2.setMaximum(9E8)
-        self.spinBox_Indx2.setEnabled(False)
-#        self.groupBox_confusionMatrixPlot.setMinimumSize(QtCore.QSize(100, 16777215))
-#        self.groupBox_confusionMatrixPlot.setMaximumSize(QtCore.QSize(600, 16777215))
-        self.tableWidget_CM1.setColumnCount(0)
-        self.tableWidget_CM1.setRowCount(0)
-        self.tableWidget_CM1.doubleClicked.connect(self.cm_interaction)
-        self.tableWidget_CM2.setColumnCount(0)
-        self.tableWidget_CM2.setRowCount(0)
-        self.tableWidget_CM2.doubleClicked.connect(self.cm_interaction)
-        self.pushButton_CM1_to_Clipboard.clicked.connect(lambda: self.copy_cm_to_clipboard(1)) #1 tells the function to connect to CM1
-        self.pushButton_CM2_to_Clipboard.clicked.connect(lambda: self.copy_cm_to_clipboard(2)) #2 tells the function to connect to CM2
-        self.pushButton_CompInfTime.clicked.connect(self.inference_time)
-        self.pushButton_AssessModel.clicked.connect(self.assess_model_plotting)
-        #self.comboBox_probability_histogram.clicked.connect(self.probability_histogram)
-        self.comboBox_probability_histogram.addItems(["Style1","Style2","Style3","Style4","Style5"])
-
-        ##################Plot/Peak Tab########################################
-        self.tabWidget_filter_peakdet.setCurrentIndex(1)
-        self.comboBox_chooseRtdcFile.currentIndexChanged.connect(self.update_comboBox_feature_xy)
-        self.pushButton_updateScatterPlot.clicked.connect(self.updateScatterPlot)        
-        font = QtGui.QFont()
-        font.setBold(True)
-        font.setWeight(75)  
-        self.pushButton_updateScatterPlot.setFont(font)        
-        #set infobox to minimal size
-        #self.widget_infoBox.resize(QtCore.QSize(100, 100))
-        self.widget_infoBox.setMaximumSize(QtCore.QSize(100, 100))
-        self.comboBox_featurey.setMinimumSize(QtCore.QSize(30, 326))
-        self.comboBox_featurey.setMaximumSize(QtCore.QSize(75, 326))
-        self.comboBox_featurey.view().setFixedWidth(150)#Wider box for the dropdown text
-
-        #Add plot        
-        self.scatter_xy = self.widget_scatter.addPlot()
-        self.scatter_xy.showGrid(x=True,y=True)
-       
-        #Fill histogram for x-axis; widget_histx
-        self.hist_x = self.widget_histx.addPlot()
-        #hide the x-axis
-        self.hist_x.hideAxis('bottom')
-        self.hist_x.setXLink(self.scatter_xy) ## test linking by name
-        self.hist_x.showGrid(x=True,y=True)
-
-        #Initiate histogram for y-axis; widget_histy
-        self.hist_y = self.widget_histy.addPlot()
-        #hide the axes
-        self.hist_y.hideAxis('left')
-        self.hist_y.setYLink(self.scatter_xy) ## test linking by name
-        self.hist_y.showGrid(x=True,y=True)
-
-        #PlotItem for the Fl-trace:
-        self.plot_fl_trace = self.widget_showFltrace.addPlot()
-        self.plot_fl_trace.showGrid(x=True,y=True)
-        
-        #When horizontalSlider_cellInd is changed, initiate an onClick event and the points have to be accordigly
-        self.horizontalSlider_cellInd.valueChanged.connect(self.onIndexChange)
-        self.spinBox_cellInd.valueChanged.connect(self.onIndexChange)
-
-        #Select a peak
-        self.pushButton_selectPeakPos.clicked.connect(self.selectPeakPos)
-        #Select range
-        self.pushButton_selectPeakRange.clicked.connect(self.selectPeakRange)
-        #Initiate the peak-table
-        #self.tableWidget_showSelectedPeaks.append("FL_max\tFl_pos\tpos_x")
-        self.tableWidget_showSelectedPeaks.setColumnCount(0)
-        self.tableWidget_showSelectedPeaks.setColumnCount(5)
-        self.tableWidget_showSelectedPeaks.setRowCount(0)
-        header_labels = ["FL_max","Fl_pos_[us]","pos_x_[um]","Fl_pos_[]","pos_x_[]"]
-        self.tableWidget_showSelectedPeaks.setHorizontalHeaderLabels(header_labels) 
-        header = self.tableWidget_showSelectedPeaks.horizontalHeader()
-        for i in range(3):
-            header.setResizeMode(i, QtWidgets.QHeaderView.ResizeToContents)        
-        
-        
-        
-        self.pushButton_removeSelectedPeaks.clicked.connect(self.actionRemoveSelectedPeaks_function)
-        self.pushButton_removeAllPeaks.clicked.connect(self.actionRemoveAllPeaks_function)
-
-        self.selectedPeaksPlot = self.widget_showSelectedPeaks.addPlot()
-        self.selectedPeaksPlot.showGrid(x=True,y=True)
-        self.selectedPeaksPlot.setLabel('bottom', 'pos_x', units='um')
-        self.selectedPeaksPlot.setLabel('left', 'flx_pos', units='us')
-
-        self.comboBox_peakDetModel.addItems(["Linear dependency and max in range"])
-        self.comboBox_peakDetModel.setMinimumSize(QtCore.QSize(200,22))
-        self.comboBox_peakDetModel.setMaximumSize(QtCore.QSize(200, 22))
-        width=self.comboBox_peakDetModel.fontMetrics().boundingRect(max(self.norm_methods, key=len)).width()
-        self.comboBox_peakDetModel.view().setFixedWidth(width+10)             
-        self.pushButton_fitPeakDetModel.clicked.connect(self.update_peak_plot)
-
-        self.pushButton_highestXPercent.clicked.connect(self.addHighestXPctPeaks)
-        self.pushButton_SavePeakDetModel.clicked.connect(self.savePeakDetModel)
-        self.checkBox_fl1.setChecked(True)
-        self.checkBox_fl2.setChecked(True)
-        self.checkBox_fl3.setChecked(True)
-        self.checkBox_centroid.setChecked(True)
-        self.doubleSpinBox_highestXPercent.setMinimum(0)
-        self.doubleSpinBox_highestXPercent.setMaximum(100)
-        self.doubleSpinBox_highestXPercent.setValue(5)
-
-        self.tableWidget_AccPrecSpec.cellClicked.connect(lambda: self.copy_cm_to_clipboard(3))
-        self.pushButton_loadPeakDetModel.clicked.connect(self.loadPeakDetModel)
-        overwrite_methods = ["Overwrite Fl_max and Fl_pos","Save to userdef"]
-        self.comboBox_toFlOrUserdef.addItems(overwrite_methods)
-        width=self.comboBox_toFlOrUserdef.fontMetrics().boundingRect(max(overwrite_methods, key=len)).width()
-        self.comboBox_toFlOrUserdef.view().setFixedWidth(width+10)             
-        self.pushButton_export.clicked.connect(self.applyPeakModel_and_export)
-        ex_opt = ["Scores and predictions to Excel sheet","Add predictions to .rtdc file (userdef0)"]
-        ex_opt.append("Add pred&scores to .rtdc file (userdef0 to 9)")
-        self.comboBox_scoresOrPrediction.addItems(ex_opt)
-        self.pushButton_classify.clicked.connect(self.classify)
-
-
-
-        #########################Python Editor/Console#########################
-        self.pushButton_pythonInRun.clicked.connect(self.pythonInRun)
-        self.pushButton_pythonInClear.clicked.connect(self.pythonInClear)
-        self.pushButton_pythonSaveAs.clicked.connect(self.pythonInSaveAs)
-        self.pushButton_pythonInOpen.clicked.connect(self.pythonInOpen)
-        self.pushButton_pythonOutClear.clicked.connect(self.pythonOutClear)
-        self.pushButton_pythonOutRun.clicked.connect(self.pythonInRun)
-
-
-        #############################MenuBar###################################
-        self.gridLayout_2.addWidget(self.tabWidget_Modelbuilder, 0, 1, 1, 1)
-        self.setCentralWidget(self.centralwidget)
-        self.menubar = QtWidgets.QMenuBar(self)
-        self.menubar.setGeometry(QtCore.QRect(0, 0, 912, 26))
-        self.menubar.setObjectName(_fromUtf8("menubar"))
-        self.menuFile = QtWidgets.QMenu(self.menubar)
-        self.menuFile.setObjectName(_fromUtf8("menuFile"))
-        self.menuEdit = QtWidgets.QMenu(self.menubar)
-        self.menuEdit.setObjectName(_fromUtf8("menuEdit"))
-        
-        self.menu_Options = QtWidgets.QMenu(self.menubar)
-        self.menu_Options.setObjectName("menu_Options")
-        self.menu_Options.setToolTipsVisible(True)
-
-        self.menuLayout = QtWidgets.QMenu(self.menu_Options)
-        self.menuLayout.setObjectName("menuLayout")
-        self.menuExport = QtWidgets.QMenu(self.menu_Options)
-        self.menuExport.setObjectName("menuExport")
-        self.menuZoomOrder = QtWidgets.QMenu(self.menu_Options)
-        self.menuZoomOrder.setObjectName("menuZoomOrder")
-        self.menuGPU_Options = QtWidgets.QMenu(self.menu_Options)
-        self.menuGPU_Options.setObjectName("menuGPU_Options")
-        if gpu_nr<2:
-            print("Disabled Multi-GPU Options (Menubar)")
-            self.menuGPU_Options.setEnabled(False)
-        
-        self.actioncpu_merge = QtWidgets.QAction(self)
-        self.actioncpu_merge.setCheckable(True)
-        self.actioncpu_merge.setChecked(True)
-        self.actioncpu_merge.setObjectName("actioncpu_merge")
-        self.actioncpu_relocation = QtWidgets.QAction(self)
-        self.actioncpu_relocation.setCheckable(True)
-        self.actioncpu_relocation.setChecked(False)
-        self.actioncpu_relocation.setObjectName("actioncpu_relocation")
-        self.actioncpu_weightmerge = QtWidgets.QAction(self)        
-        self.actioncpu_weightmerge.setCheckable(True)
-        self.actioncpu_weightmerge.setChecked(False)
-        self.actioncpu_weightmerge.setObjectName("actioncpu_weightmerge")
-
-
-
-
-
-        self.menu_Help = QtWidgets.QMenu(self.menubar)
-        self.menu_Help.setObjectName("menu_Help")
-        self.menu_Help.setToolTipsVisible(True)
-
-        self.actionDocumentation = QtWidgets.QAction(self)
-        self.actionDocumentation.triggered.connect(self.actionDocumentation_function)
-        self.actionDocumentation.setObjectName(_fromUtf8("actionDocumentation"))
-        self.menu_Help.addAction(self.actionDocumentation)
-        self.actionSoftware = QtWidgets.QAction(self)
-        self.actionSoftware.triggered.connect(self.actionSoftware_function)
-        self.actionSoftware.setObjectName(_fromUtf8("actionSoftware"))
-        self.menu_Help.addAction(self.actionSoftware)
-        self.actionAbout = QtWidgets.QAction(self)
-        self.actionAbout.triggered.connect(self.actionAbout_function)
-        self.actionAbout.setObjectName(_fromUtf8("actionAbout"))
-        self.menu_Help.addAction(self.actionAbout)
-        self.actionUpdate = QtWidgets.QAction(self)
-        self.actionUpdate.triggered.connect(self.actionUpdate_check_function)
-        self.actionUpdate.setObjectName(_fromUtf8("actionUpdate"))
-        self.menu_Help.addAction(self.actionUpdate)
-
-
-
-        self.setMenuBar(self.menubar)
-        self.statusbar = QtWidgets.QStatusBar(self)
-        self.statusbar.setObjectName(_fromUtf8("statusbar"))
-        self.setStatusBar(self.statusbar)
-        self.statusbar_cpuRam = QtWidgets.QLabel("CPU: xx%  RAM: xx%   ")
-        self.statusbar.addPermanentWidget(self.statusbar_cpuRam)        
-        
-        self.actionLoadSession = QtWidgets.QAction(self)
-        self.actionLoadSession.triggered.connect(self.actionLoadSession_function)
-        self.actionLoadSession.setObjectName(_fromUtf8("actionLoadSession"))
-        self.actionSaveSession = QtWidgets.QAction(self)
-        self.actionSaveSession.triggered.connect(self.actionSaveSession_function)
-        self.actionSaveSession.setObjectName(_fromUtf8("actionSaveSession"))
-        
-        self.actionQuit = QtWidgets.QAction(self)
-        self.actionQuit.setObjectName(_fromUtf8("actionQuit"))
-        self.actionQuit.triggered.connect(self.quit_app)
-        
-        self.actionDataToRamNow = QtWidgets.QAction(self)
-        self.actionDataToRamNow.triggered.connect(self.actionDataToRamNow_function)
-        self.actionDataToRamNow.setObjectName(_fromUtf8("actionDataToRamNow"))
-        self.actionDataToRam = QtWidgets.QAction(self,checkable=True)
-        self.actionDataToRam.setChecked(True)
-        self.actionDataToRam.setObjectName(_fromUtf8("actionDataToRam"))
-        self.actionVerbose = QtWidgets.QAction(self,checkable=True)
-        self.actionVerbose.setObjectName(_fromUtf8("actionVerbose"))
-        self.actionClearList = QtWidgets.QAction(self)
-        self.actionClearList.triggered.connect(self.actionClearList_function)
-        self.actionClearList.setObjectName(_fromUtf8("actionClearList"))
-        self.actionRemoveSelected = QtWidgets.QAction(self)
-        self.actionRemoveSelected.setObjectName(_fromUtf8("actionRemoveSelected"))
-        self.actionRemoveSelected.triggered.connect(self.actionRemoveSelected_function)
-        self.actionSaveToPng = QtWidgets.QAction(self)
-        self.actionSaveToPng.setObjectName(_fromUtf8("actionSaveToPng"))
-        self.actionSaveToPng.triggered.connect(self.actionSaveToPng_function)
-        self.actionClearMemory = QtWidgets.QAction(self)
-        self.actionClearMemory.setObjectName(_fromUtf8("actionSaveToPng"))
-        self.actionClearMemory.triggered.connect(aid_dl.reset_keras)
-
-        self.actionOpenTemp = QtWidgets.QAction(self)
-        self.actionOpenTemp.setObjectName(_fromUtf8("actionOpenTemp"))
-        self.actionOpenTemp.triggered.connect(aid_bin.open_temp)
-
-        self.actionGroup_Export = QtWidgets.QActionGroup(self,exclusive=True)
-        self.actionExport_Off = QtWidgets.QAction(self)
-        self.actionExport_Off.setCheckable(True)
-        self.actionExport_Off.setObjectName("actionExport_Off")
-        self.actionExport_Original = QtWidgets.QAction(self)
-        self.actionExport_Original.setCheckable(True)
-        self.actionExport_Original.setChecked(True)
-        self.actionExport_Original.setObjectName("actionExport_Original")
-        self.actionExport_Cropped = QtWidgets.QAction(self)
-        self.actionExport_Cropped.setCheckable(True)
-        self.actionExport_Cropped.setChecked(False)
-        self.actionExport_Cropped.setObjectName("actionExport_Cropped")
-        a = self.actionGroup_Export.addAction(self.actionExport_Off)
-        self.menuExport.addAction(a)
-        a = self.actionGroup_Export.addAction(self.actionExport_Original)
-        self.menuExport.addAction(a)
-        a = self.actionGroup_Export.addAction(self.actionExport_Cropped)
-        self.menuExport.addAction(a)
-
-
-        self.actionGroup_ZoomOrder = QtWidgets.QActionGroup(self,exclusive=True)
-        self.actionOrder0 = QtWidgets.QAction(self)
-        self.actionOrder0.setCheckable(True)
-        self.actionOrder0.setChecked(True)
-        self.actionOrder0.setObjectName("actionOrder0")
-        self.actionOrder1 = QtWidgets.QAction(self)
-        self.actionOrder1.setCheckable(True)
-        self.actionOrder1.setChecked(False)
-        self.actionOrder1.setObjectName("actionOrder1")
-        self.actionOrder2 = QtWidgets.QAction(self)
-        self.actionOrder2.setCheckable(True)
-        self.actionOrder2.setChecked(False)
-        self.actionOrder2.setObjectName("actionOrder2")
-        self.actionOrder3 = QtWidgets.QAction(self)
-        self.actionOrder3.setCheckable(True)
-        self.actionOrder3.setChecked(False)
-        self.actionOrder3.setObjectName("actionOrder3")
-        self.actionOrder4 = QtWidgets.QAction(self)
-        self.actionOrder4.setCheckable(True)
-        self.actionOrder4.setChecked(False)
-        self.actionOrder4.setObjectName("actionOrder4")
-        self.actionOrder5 = QtWidgets.QAction(self)
-        self.actionOrder5.setCheckable(True)
-        self.actionOrder5.setChecked(False)
-        self.actionOrder5.setObjectName("actionOrder5")
-
-        a = self.actionGroup_ZoomOrder.addAction(self.actionOrder0)
-        self.menuZoomOrder.addAction(a)
-        a = self.actionGroup_ZoomOrder.addAction(self.actionOrder1)
-        self.menuZoomOrder.addAction(a)
-        a = self.actionGroup_ZoomOrder.addAction(self.actionOrder2)
-        self.menuZoomOrder.addAction(a)
-        a = self.actionGroup_ZoomOrder.addAction(self.actionOrder3)
-        self.menuZoomOrder.addAction(a)
-        a = self.actionGroup_ZoomOrder.addAction(self.actionOrder4)
-        self.menuZoomOrder.addAction(a)
-        a = self.actionGroup_ZoomOrder.addAction(self.actionOrder5)
-        self.menuZoomOrder.addAction(a)
-        
-        self.actionGroup_Layout = QtWidgets.QActionGroup(self,exclusive=True)
-        self.actionLayout_Normal = QtWidgets.QAction(self)
-        self.actionLayout_Normal.setCheckable(True)
-        self.actionLayout_Normal.setObjectName("actionLayout_Normal")
-        self.actionLayout_Dark = QtWidgets.QAction(self)
-        self.actionLayout_Dark.setCheckable(True)
-        self.actionLayout_Dark.setObjectName("actionLayout_Dark")
-        self.actionLayout_DarkOrange = QtWidgets.QAction(self)
-        self.actionLayout_DarkOrange.setCheckable(True)
-        self.actionLayout_DarkOrange.setObjectName("actionLayout_DarkOrange")
-
-        if Default_dict["Layout"] == "Normal":
-            self.actionLayout_Normal.setChecked(True)
-        elif Default_dict["Layout"] == "Dark":
-            self.actionLayout_Dark.setChecked(True)
-        elif Default_dict["Layout"] == "DarkOrange":
-            self.actionLayout_DarkOrange.setChecked(True)
-
-        a = self.actionGroup_Layout.addAction(self.actionLayout_Normal)
-        self.menuLayout.addAction(a)
-        a = self.actionGroup_Layout.addAction(self.actionLayout_Dark)
-        self.menuLayout.addAction(a)
-        a = self.actionGroup_Layout.addAction(self.actionLayout_DarkOrange)
-        self.menuLayout.addAction(a)
-        self.menuLayout.addSeparator()
-        self.actionTooltipOnOff = QtWidgets.QAction(self,checkable=True)
-        self.actionTooltipOnOff.setChecked(True)
-        self.actionTooltipOnOff.setObjectName(_fromUtf8("actionDataToRam"))
-        self.menuLayout.addAction(self.actionTooltipOnOff)        
-
-        self.menuLayout.addSeparator()
-
-        self.actionGroup_IconTheme = QtWidgets.QActionGroup(self,exclusive=True)
-        self.actionIconTheme_1 = QtWidgets.QAction(self)
-        self.actionIconTheme_1.setCheckable(True)
-        self.actionIconTheme_1.setObjectName("actionIconTheme_1")
-        self.actionIconTheme_2 = QtWidgets.QAction(self)
-        self.actionIconTheme_2.setCheckable(True)
-        self.actionIconTheme_2.setObjectName("actionIconTheme_2")
-
-        if Default_dict["Icon theme"] == "Icon theme 1":
-            self.actionIconTheme_1.setChecked(True)
-        elif Default_dict["Icon theme"] == "Icon theme 2":
-            self.actionIconTheme_2.setChecked(True)
-
-        a = self.actionGroup_IconTheme.addAction(self.actionIconTheme_1)
-        self.menuLayout.addAction(a)
-        a = self.actionGroup_IconTheme.addAction(self.actionIconTheme_2)
-        self.menuLayout.addAction(a)
-
-        self.menuGPU_Options.addAction(self.actioncpu_merge)
-        self.menuGPU_Options.addAction(self.actioncpu_relocation)
-        self.menuGPU_Options.addAction(self.actioncpu_weightmerge)
-
-        self.menu_Options.addAction(self.menuLayout.menuAction())
-        self.menu_Options.addAction(self.menuExport.menuAction())
-        self.menu_Options.addAction(self.menuZoomOrder.menuAction())
-        self.menu_Options.addSeparator()
-        self.menu_Options.addAction(self.menuGPU_Options.menuAction())
-
-
-        self.menuFile.addAction(self.actionLoadSession)
-        self.menuFile.addSeparator()
-        self.menuFile.addAction(self.actionSaveSession)
-        self.menuFile.addSeparator()
-        self.menuFile.addAction(self.actionQuit)
-
-        self.menuEdit.addAction(self.actionDataToRamNow)        
-        self.menuEdit.addAction(self.actionDataToRam)
-        self.menuEdit.addSeparator()
-        self.menuEdit.addAction(self.actionClearList)
-        self.menuEdit.addAction(self.actionRemoveSelected)
-
-        self.menuEdit.addSeparator()
-        self.menuEdit.addAction(self.actionSaveToPng)
-
-        self.menuEdit.addSeparator()
-        self.menuEdit.addAction(self.actionClearMemory)
-        self.menuEdit.addAction(self.actionOpenTemp)
-
-        self.menuEdit.addSeparator()
-        self.menuEdit.addAction(self.actionVerbose)
-
-        self.menubar.addAction(self.menuFile.menuAction())
-        self.menubar.addAction(self.menuEdit.menuAction())
-        self.menubar.addAction(self.menu_Options.menuAction())
-        self.menubar.addAction(self.menu_Help.menuAction())
-
-        #Add Default values:
-        self.spinBox_imagecrop.setValue(Default_dict ["Input image size"])
-        default_norm = Default_dict["Normalization"]
-        index = self.comboBox_Normalization.findText(default_norm, QtCore.Qt.MatchFixedString)
-        if index >= 0:
-            self.comboBox_Normalization.setCurrentIndex(index)
-        self.spinBox_NrEpochs.setValue(Default_dict ["Nr. epochs"])
-        self.spinBox_RefreshAfterEpochs.setValue(Default_dict ["Keras refresh after nr. epochs"])
-        self.checkBox_HorizFlip.setChecked(Default_dict ["Horz. flip"])
-        self.checkBox_VertFlip.setChecked(Default_dict ["Vert. flip"])
-
-        self.lineEdit_Rotation.setText(str(Default_dict ["rotation"]))
- 
-        self.lineEdit_Rotation.setText(str(Default_dict ["rotation"]))
-        self.lineEdit_widthShift.setText(str(Default_dict ["width_shift"]))
-        self.lineEdit_heightShift.setText(str(Default_dict ["height_shift"]))
-        self.lineEdit_zoomRange.setText(str(Default_dict ["zoom"]))
-        self.lineEdit_shearRange.setText(str(Default_dict ["shear"]))
-        self.spinBox_RefreshAfterNrEpochs.setValue(Default_dict ["Brightness refresh after nr. epochs"])
-        self.spinBox_PlusLower.setValue(Default_dict ["Brightness add. lower"])
-        self.spinBox_PlusUpper.setValue(Default_dict ["Brightness add. upper"])
-        self.doubleSpinBox_MultLower.setValue(Default_dict ["Brightness mult. lower"])        
-        self.doubleSpinBox_MultUpper.setValue(Default_dict ["Brightness mult. upper"])
-        self.doubleSpinBox_GaussianNoiseMean.setValue(Default_dict ["Gaussnoise Mean"])
-        self.doubleSpinBox_GaussianNoiseScale.setValue(Default_dict ["Gaussnoise Scale"])
-
-
-        self.checkBox_contrast.setChecked(Default_dict["Contrast On"])
-        self.doubleSpinBox_contrastLower.setEnabled(Default_dict["Contrast On"])
-        self.doubleSpinBox_contrastHigher.setEnabled(Default_dict["Contrast On"])
-        self.doubleSpinBox_contrastLower.setValue(Default_dict["Contrast min"])
-        self.doubleSpinBox_contrastHigher.setValue(Default_dict["Contrast max"])
-        
-        self.checkBox_saturation.setChecked(Default_dict["Saturation On"])
-        self.doubleSpinBox_saturationLower.setEnabled(Default_dict["Saturation On"])
-        self.doubleSpinBox_saturationHigher.setEnabled(Default_dict["Saturation On"])
-        self.doubleSpinBox_saturationLower.setValue(Default_dict["Saturation min"])
-        self.doubleSpinBox_saturationHigher.setValue(Default_dict["Saturation max"])
-
-        self.checkBox_hue.setChecked(Default_dict["Hue On"])
-        self.doubleSpinBox_hueDelta.setEnabled(Default_dict["Hue On"])
-        self.doubleSpinBox_hueDelta.setValue(Default_dict["Hue range"])
-
-        self.checkBox_avgBlur.setChecked(Default_dict["AvgBlur On"])
-        self.label_avgBlurMin.setEnabled(Default_dict["AvgBlur On"])
-        self.spinBox_avgBlurMin.setEnabled(Default_dict["AvgBlur On"])
-        self.label_avgBlurMax.setEnabled(Default_dict["AvgBlur On"])
-        self.spinBox_avgBlurMax.setEnabled(Default_dict["AvgBlur On"])
-        self.spinBox_avgBlurMin.setValue(Default_dict["AvgBlur min"])
-        self.spinBox_avgBlurMax.setValue(Default_dict["AvgBlur max"])
-
-        self.checkBox_gaussBlur.setChecked(Default_dict["GaussBlur On"])
-        self.label_gaussBlurMin.setEnabled(Default_dict["GaussBlur On"])
-        self.spinBox_gaussBlurMin.setEnabled(Default_dict["GaussBlur On"])
-        self.label_gaussBlurMax.setEnabled(Default_dict["GaussBlur On"])
-        self.spinBox_gaussBlurMax.setEnabled(Default_dict["GaussBlur On"])
-        self.spinBox_gaussBlurMin.setValue(Default_dict["GaussBlur min"])
-        self.spinBox_gaussBlurMax.setValue(Default_dict["GaussBlur max"])
-
-        self.checkBox_motionBlur.setChecked(Default_dict["MotionBlur On"])
-        self.label_motionBlurKernel.setEnabled(Default_dict["MotionBlur On"])
-        self.lineEdit_motionBlurKernel.setEnabled(Default_dict["MotionBlur On"])
-        self.label_motionBlurAngle.setEnabled(Default_dict["MotionBlur On"])
-        self.lineEdit_motionBlurAngle.setEnabled(Default_dict["MotionBlur On"])
-        self.lineEdit_motionBlurKernel.setText(str(Default_dict["MotionBlur Kernel"]))
-        self.lineEdit_motionBlurAngle.setText(str(Default_dict["MotionBlur Angle"]))
-
-
-
-        self.actionLayout_Normal.triggered.connect(self.onLayoutChange)
-        self.actionLayout_Dark.triggered.connect(self.onLayoutChange)
-        self.actionLayout_DarkOrange.triggered.connect(self.onLayoutChange)
-
-        self.actionTooltipOnOff.triggered.connect(self.onTooltipOnOff)
-
-        self.actionIconTheme_1.triggered.connect(self.onIconThemeChange)
-        self.actionIconTheme_2.triggered.connect(self.onIconThemeChange)
-
-        self.retranslateUi()
-        
-#        self.checkBox_contrast.clicked['bool'].connect(self.doubleSpinBox_contrastLower.setEnabled)
-#        self.checkBox_contrast.clicked['bool'].connect(self.doubleSpinBox_contrastHigher.setEnabled)
-        self.checkBox_avgBlur.clicked['bool'].connect(self.spinBox_avgBlurMin.setEnabled)
-        self.checkBox_avgBlur.clicked['bool'].connect(self.spinBox_avgBlurMax.setEnabled)
-        self.checkBox_gaussBlur.clicked['bool'].connect(self.spinBox_gaussBlurMin.setEnabled)
-        self.checkBox_gaussBlur.clicked['bool'].connect(self.spinBox_gaussBlurMax.setEnabled)
-        self.checkBox_motionBlur.clicked['bool'].connect(self.label_motionBlurKernel.setEnabled)
-        self.checkBox_motionBlur.clicked['bool'].connect(self.lineEdit_motionBlurKernel.setEnabled)
-        self.checkBox_motionBlur.clicked['bool'].connect(self.label_motionBlurAngle.setEnabled)
-        self.checkBox_motionBlur.clicked['bool'].connect(self.lineEdit_motionBlurAngle.setEnabled)
-        self.checkBox_gaussBlur.clicked['bool'].connect(self.label_gaussBlurMin.setEnabled)
-        self.checkBox_gaussBlur.clicked['bool'].connect(self.label_gaussBlurMax.setEnabled)
-        self.checkBox_avgBlur.clicked['bool'].connect(self.label_avgBlurMin.setEnabled)
-        self.checkBox_avgBlur.clicked['bool'].connect(self.label_avgBlurMax.setEnabled)
-        self.checkBox_optimizer.toggled['bool'].connect(self.comboBox_optimizer.setEnabled)
-        self.checkBox_expt_loss.toggled['bool'].connect(self.comboBox_expt_loss.setEnabled)
-
-        #Start running show_cpu_ram function and run it all the time
-        worker_cpu_ram = Worker(self.cpu_ram_worker)
-        self.threadpool.start(worker_cpu_ram)
-
-        self.tabWidget_Modelbuilder.setCurrentIndex(0)
-        self.tabWidget_DefineModel.setCurrentIndex(0)
-        QtCore.QMetaObject.connectSlotsByName(self)
+        aid_frontend.setup_main_ui(self,gpu_nr)
     
     def retranslateUi(self):
-        self.setWindowTitle(_translate("MainWindow", "AIDeveloper v."+VERSION, None))
-        self.groupBox_dragdrop.setTitle(_translate("MainWindow", "Drag and drop data (.rtdc) here", None))
-        self.groupBox_dragdrop.setToolTip(_translate("MainWindow", tooltips["groupBox_dragdrop"],None))
-        self.groupBox_DataOverview.setTitle(_translate("MainWindow", "Data Overview", None))
-        self.groupBox_DataOverview.setToolTip(_translate("MainWindow", tooltips["groupBox_DataOverview"],None))
-
-        self.tab_ExampleImgs.setToolTip(_translate("MainWindow", tooltips["tab_ExampleImgs"],None))
-        self.comboBox_ModelSelection.setToolTip(_translate("MainWindow", tooltips["comboBox_ModelSelection"],None))
-        self.radioButton_NewModel.setToolTip(_translate("MainWindow",tooltips["radioButton_NewModel"] , None))
-        self.radioButton_NewModel.setText(_translate("MainWindow", "New", None))
-        self.radioButton_LoadRestartModel.setToolTip(_translate("MainWindow",tooltips["radioButton_LoadRestartModel"] , None))
-        self.radioButton_LoadRestartModel.setText(_translate("MainWindow", "Load and restart", None))
-        self.radioButton_LoadContinueModel.setToolTip(_translate("MainWindow",tooltips["radioButton_LoadContinueModel"] , None))
-        self.radioButton_LoadContinueModel.setText(_translate("MainWindow", "Load and continue", None))
-        self.lineEdit_LoadModelPath.setToolTip(_translate("MainWindow",tooltips["lineEdit_LoadModelPath"]  , None))
-        
-        self.groupBox_imgProc.setTitle(_translate("MainWindow", "Image processing", None))
-        self.label_CropIcon.setToolTip(_translate("MainWindow",tooltips["label_Crop"] , None))
-        self.label_Crop.setToolTip(_translate("MainWindow",tooltips["label_Crop"] , None))
-        self.label_Crop.setText(_translate("MainWindow", "<html><head/><body><p>Input image size</p></body></html>", None))
-        self.spinBox_imagecrop.setToolTip(_translate("MainWindow",tooltips["label_Crop"] , None))
-
-        self.label_padIcon.setToolTip(_translate("MainWindow", tooltips["label_paddingMode"], None))
-        self.label_paddingMode.setText(_translate("MainWindow", "Padding mode", None))
-        self.label_paddingMode.setToolTip(_translate("MainWindow", tooltips["label_paddingMode"], None))
-        self.comboBox_paddingMode.setToolTip(_translate("MainWindow", tooltips["label_paddingMode"], None))
-
-        self.comboBox_paddingMode.setItemText(0, _translate("MainWindow", "constant", None))
-        self.comboBox_paddingMode.setItemText(1, _translate("MainWindow", "edge", None))
-        self.comboBox_paddingMode.setItemText(2, _translate("MainWindow", "linear_ramp", None))
-        self.comboBox_paddingMode.setItemText(3, _translate("MainWindow", "maximum", None))
-        self.comboBox_paddingMode.setItemText(4, _translate("MainWindow", "mean", None))
-        self.comboBox_paddingMode.setItemText(5, _translate("MainWindow", "median", None))
-        self.comboBox_paddingMode.setItemText(6, _translate("MainWindow", "minimum", None))
-        self.comboBox_paddingMode.setItemText(7, _translate("MainWindow", "reflect", None))
-        self.comboBox_paddingMode.setItemText(8, _translate("MainWindow", "symmetric", None))
-        self.comboBox_paddingMode.setItemText(9, _translate("MainWindow", "wrap", None))
-
-        self.label_NormalizationIcon.setToolTip(_translate("MainWindow", tooltips["label_Normalization"], None))        
-        self.label_Normalization.setToolTip(_translate("MainWindow", tooltips["label_Normalization"], None))
-        self.label_Normalization.setText(_translate("MainWindow", "Normalization", None))
-        self.comboBox_Normalization.setToolTip(_translate("MainWindow", tooltips["label_Normalization"], None))
-
-        self.label_colorModeIcon.setToolTip(_translate("MainWindow", tooltips["label_colorMode"], None))
-        self.label_colorMode.setText(_translate("MainWindow", "Color Mode", None))
-        self.label_colorMode.setToolTip(_translate("MainWindow", tooltips["label_colorMode"],None))    
-        self.comboBox_GrayOrRGB.setToolTip(_translate("MainWindow", tooltips["label_colorMode"],None))
-
-
-        self.groupBox_system.setTitle(_translate("MainWindow", "Training", None))
-
-        #Add CPU elements to dropdown menu
-        self.comboBox_cpu.addItem("")
-        self.comboBox_cpu.setItemText(0, _translate("MainWindow", "Default CPU", None))
-
-#        for i in range(len(devices_cpu)):
-#            self.comboBox_cpu.addItem("")
-#            if len(devices_cpu[i].physical_device_desc)==0:
-#                self.comboBox_cpu.setItemText(i, _translate("MainWindow", "Default CPU", None))
-#            else:
-#                self.comboBox_cpu.setItemText(i, _translate("MainWindow", devices_cpu[i].physical_device_desc, None))
-                
-        if gpu_nr==0:
-            self.comboBox_gpu.addItem("")
-            self.comboBox_gpu.setItemText(0, _translate("MainWindow", "None", None))
-            self.radioButton_gpu.setEnabled(False)
-            self.radioButton_cpu.setChecked(True)
-        elif gpu_nr==1:
-            self.comboBox_gpu.addItem("")
-            self.comboBox_gpu.setItemText(0, _translate("MainWindow", "Single-GPU", None))
-            self.radioButton_gpu.setChecked(True)#If GPU available, use it by default.
-
-        else: #nr_gpu>1
-            self.comboBox_gpu.addItem("")
-            self.comboBox_gpu.addItem("")
-            self.comboBox_gpu.setItemText(0, _translate("MainWindow", "Single-GPU", None))
-            self.comboBox_gpu.setItemText(1, _translate("MainWindow", "Multi-GPU", None))
-            self.radioButton_gpu.setChecked(True)#If GPU available, use it by default.
-
-#            for i in range(len(devices_gpu)):
-#                self.comboBox_gpu.addItem("")
-#                self.comboBox_gpu.setItemText(i, _translate("MainWindow", devices_gpu[i].physical_device_desc, None))
-
-        self.label_memory.setText(_translate("MainWindow", "Memory", None))
-        self.label_memory.setToolTip(_translate("MainWindow", tooltips["label_memory"],None))
-        self.doubleSpinBox_memory.setToolTip(_translate("MainWindow", tooltips["label_memory"],None))
-
-        self.label_nrEpochsIcon.setToolTip(_translate("MainWindow",tooltips["label_nrEpochs"] , None))
-        self.label_nrEpochs.setToolTip(_translate("MainWindow",tooltips["label_nrEpochs"] , None))
-        self.label_nrEpochs.setText(_translate("MainWindow", "Nr. epochs", None))
-        self.spinBox_NrEpochs.setToolTip(_translate("MainWindow",tooltips["label_nrEpochs"] , None))
-        self.radioButton_cpu.setToolTip(_translate("MainWindow",tooltips["radioButton_cpu"] , None))
-        self.comboBox_cpu.setToolTip(_translate("MainWindow",tooltips["radioButton_cpu"] , None))
-        self.radioButton_gpu.setToolTip(_translate("MainWindow",tooltips["radioButton_gpu"] , None))
-        self.comboBox_gpu.setToolTip(_translate("MainWindow",tooltips["comboBox_gpu"] , None))
-
-        self.pushButton_modelname.setToolTip(_translate("MainWindow", tooltips["pushButton_modelname"], None))
-        self.pushButton_modelname.setText(_translate("MainWindow", "Model path:", None))
-        self.lineEdit_modelname.setToolTip(_translate("MainWindow", tooltips["pushButton_modelname"], None))
-
-        self.tabWidget_DefineModel.setTabText(self.tabWidget_DefineModel.indexOf(self.tab_DefineModel), _translate("MainWindow", "Define Model", None))
-        self.label_RefreshAfterEpochs.setToolTip(_translate("MainWindow", tooltips["label_RefreshAfterEpochs"], None))
-        self.label_RefreshAfterEpochs.setText(_translate("MainWindow", "Refresh after nr. epochs:", None))
-        self.tab_kerasAug.setToolTip(_translate("MainWindow",tooltips["tab_kerasAug"] , None))
-        self.checkBox_HorizFlip.setToolTip(_translate("MainWindow",tooltips["checkBox_HorizFlip"] , None))
-        self.checkBox_VertFlip.setToolTip(_translate("MainWindow",tooltips["checkBox_VertFlip"] , None))
-        self.label_Rotation.setToolTip(_translate("MainWindow",tooltips["label_Rotation"] , None))
-        self.label_width_shift.setToolTip(_translate("MainWindow",tooltips["label_width_shift"] , None))
-        self.label_height_shift.setToolTip(_translate("MainWindow",tooltips["label_height_shift"], None))
-        self.label_zoom.setToolTip(_translate("MainWindow",tooltips["label_zoom"] , None))
-        self.label_shear.setToolTip(_translate("MainWindow",tooltips["label_shear"] , None))        
-        self.lineEdit_Rotation.setToolTip(_translate("MainWindow",tooltips["label_Rotation"] , None))
-        self.lineEdit_widthShift.setToolTip(_translate("MainWindow",tooltips["label_width_shift"] , None))
-        self.lineEdit_heightShift.setToolTip(_translate("MainWindow",tooltips["label_height_shift"] , None))
-        self.lineEdit_zoomRange.setToolTip(_translate("MainWindow", tooltips["label_zoom"], None))
-        self.lineEdit_shearRange.setToolTip(_translate("MainWindow", tooltips["label_shear"], None))
-        self.spinBox_RefreshAfterEpochs.setToolTip(_translate("MainWindow",tooltips["spinBox_RefreshAfterEpochs"] , None))
-        self.checkBox_HorizFlip.setText(_translate("MainWindow", "Horiz. flip", None))
-        self.checkBox_VertFlip.setText(_translate("MainWindow", "Vert. flip", None))
-        self.label_Rotation.setText(_translate("MainWindow", "Rotation", None))
-        self.label_width_shift.setText(_translate("MainWindow", "Width shift", None))
-        self.label_height_shift.setText(_translate("MainWindow", "Height shift", None))
-        self.label_zoom.setText(_translate("MainWindow", "Zoom", None))
-        self.label_shear.setText(_translate("MainWindow", "Shear", None))
-        self.tabWidget_DefineModel.setTabText(self.tabWidget_DefineModel.indexOf(self.tab_kerasAug), _translate("MainWindow", "Affine img. augm.", None))
-        self.label_RefreshAfterNrEpochs.setToolTip(_translate("MainWindow",tooltips["label_RefreshAfterNrEpochs"] , None))
-        self.label_RefreshAfterNrEpochs.setText(_translate("MainWindow", "Refresh after nr. epochs:", None))
-        self.spinBox_RefreshAfterNrEpochs.setToolTip(_translate("MainWindow", tooltips["label_RefreshAfterNrEpochs"], None))
-        self.groupBox_BrightnessAugmentation.setTitle(_translate("MainWindow", "Brightness augmentation", None))
-
-        self.groupBox_BrightnessAugmentation.setToolTip(_translate("MainWindow",tooltips["groupBox_BrightnessAugmentation"] , None))
-
-        self.label_Plus.setText(_translate("MainWindow", "Add.", None))
-        self.label_Plus.setToolTip(_translate("MainWindow",tooltips["label_Plus"] , None))
-        self.spinBox_PlusLower.setToolTip(_translate("MainWindow",tooltips["spinBox_PlusLower"] , None))
-        self.spinBox_PlusUpper.setToolTip(_translate("MainWindow",tooltips["spinBox_PlusUpper"] , None))
-
-        self.label_Mult.setText(_translate("MainWindow", "Mult.", None))
-        self.label_Mult.setToolTip(_translate("MainWindow",tooltips["label_Mult"] , None))
-
-        self.doubleSpinBox_MultLower.setToolTip(_translate("MainWindow",tooltips["doubleSpinBox_MultLower"] , None))
-        self.doubleSpinBox_MultUpper.setToolTip(_translate("MainWindow", tooltips["doubleSpinBox_MultUpper"], None))
-
-        #self.label_Rotation_MultTo.setText(_translate("MainWindow", "...", None))
-        self.groupBox_GaussianNoise.setTitle(_translate("MainWindow", "Gaussian noise", None))
-        self.groupBox_GaussianNoise.setToolTip(_translate("MainWindow",tooltips["groupBox_GaussianNoise"] , None))
-        self.label_GaussianNoiseMean.setText(_translate("MainWindow", "Mean", None))
-        self.label_GaussianNoiseMean.setToolTip(_translate("MainWindow",tooltips["label_GaussianNoiseMean"]  , None))
-
-        self.label_GaussianNoiseScale.setText(_translate("MainWindow", "Scale", None))
-        self.label_GaussianNoiseScale.setToolTip(_translate("MainWindow",tooltips["label_GaussianNoiseScale"] , None))
-
-        self.groupBox_colorAugmentation.setTitle(_translate("Form", "Color augm.", None))
-        self.groupBox_colorAugmentation.setToolTip(_translate("MainWindow",tooltips["groupBox_colorAugmentation"] , None))
-        self.checkBox_contrast.setText(_translate("Form", "Contrast", None))
-        self.checkBox_contrast.setToolTip(_translate("Form",tooltips["checkBox_contrast"] , None))
-        self.checkBox_saturation.setText(_translate("Form", "Saturation", None))
-        self.checkBox_saturation.setToolTip(_translate("Form",tooltips["checkBox_saturation"] , None))
-        self.checkBox_hue.setText(_translate("Form", "Hue", None))
-        self.checkBox_hue.setToolTip(_translate("Form",tooltips["checkBox_hue"] , None))
-
-        self.groupBox_blurringAug.setTitle(_translate("MainWindow", "Blurring", None))
-        self.groupBox_blurringAug.setToolTip(_translate("MainWindow",tooltips["groupBox_blurringAug"] , None))
-        self.label_motionBlurKernel.setToolTip(_translate("MainWindow",tooltips["label_motionBlurKernel"]  , None))
-        self.label_motionBlurKernel.setText(_translate("MainWindow", "Kernel", None))
-        self.lineEdit_motionBlurAngle.setToolTip(_translate("MainWindow",tooltips["lineEdit_motionBlurAngle"] , None))
-        self.label_avgBlurMin.setToolTip(_translate("MainWindow",tooltips["label_avgBlurMin"] , None))
-        self.label_avgBlurMin.setText(_translate("MainWindow", "Min", None))
-        self.spinBox_gaussBlurMax.setToolTip(_translate("MainWindow", tooltips["spinBox_gaussBlurMax"], None))
-        self.checkBox_motionBlur.setToolTip(_translate("MainWindow",tooltips["checkBox_motionBlur"] , None))
-        self.checkBox_motionBlur.setText(_translate("MainWindow", "Motion", None))
-        self.spinBox_avgBlurMin.setToolTip(_translate("MainWindow",tooltips["spinBox_avgBlurMin"] , None))
-        self.spinBox_gaussBlurMin.setToolTip(_translate("MainWindow", tooltips["spinBox_gaussBlurMin"], None))
-        self.label_motionBlurAngle.setToolTip(_translate("MainWindow", tooltips["label_motionBlurAngle"], None))
-        self.label_motionBlurAngle.setText(_translate("MainWindow", "Angle", None))
-        self.label_gaussBlurMin.setToolTip(_translate("MainWindow",tooltips["label_gaussBlurMin"] , None))
-        self.label_gaussBlurMin.setText(_translate("MainWindow", "Min", None))
-        self.checkBox_gaussBlur.setToolTip(_translate("MainWindow",tooltips["checkBox_gaussBlur"] , None))
-        self.checkBox_gaussBlur.setText(_translate("MainWindow", "Gauss", None))
-        self.spinBox_avgBlurMax.setToolTip(_translate("MainWindow",tooltips["spinBox_avgBlurMax"] , None))
-        self.label_gaussBlurMax.setToolTip(_translate("MainWindow",tooltips["label_gaussBlurMax"] , None))
-        self.label_gaussBlurMax.setText(_translate("MainWindow", "Max", None))
-        self.label_gaussBlurMax.setToolTip(_translate("MainWindow", tooltips["label_gaussBlurMax"], None))
-        self.checkBox_avgBlur.setToolTip(_translate("MainWindow",tooltips["checkBox_avgBlur"] , None))        
-        self.checkBox_avgBlur.setText(_translate("MainWindow", "Average", None))
-        
-        self.label_avgBlurMax.setToolTip(_translate("MainWindow",tooltips["label_avgBlurMax"] , None))
-        self.label_avgBlurMax.setText(_translate("MainWindow", "Max", None))
-        self.spinBox_avgBlurMin.setToolTip(_translate("MainWindow",tooltips["spinBox_avgBlurMin"] , None))
-        self.spinBox_avgBlurMax.setToolTip(_translate("MainWindow", tooltips["spinBox_avgBlurMax"], None))
-        self.lineEdit_motionBlurKernel.setToolTip(_translate("MainWindow",tooltips["lineEdit_motionBlurKernel"] , None))
-
-        self.tabWidget_DefineModel.setTabText(self.tabWidget_DefineModel.indexOf(self.tab_BrightnessAug), _translate("MainWindow", "Brightn/Color augm.", None))
-        self.label_ShowIndex.setText(_translate("MainWindow", "Class", None))
-        self.pushButton_ShowExamleImgs.setText(_translate("MainWindow", "Show", None))
-        self.tabWidget_DefineModel.setTabText(self.tabWidget_DefineModel.indexOf(self.tab_ExampleImgs), _translate("MainWindow", "Example imgs.", None))
-        
-        self.groupBox_expertMode.setTitle(_translate("MainWindow", "Expert Mode", None))
-        self.groupBox_modelKerasFit.setTitle(_translate("MainWindow", "In model_keras.fit()", None))
-        self.groupBox_regularization.setTitle(_translate("MainWindow", "Loss / Regularization", None))
-
-        self.label_batchSize.setText(_translate("MainWindow", "Batch size", None))
-        self.label_epochs.setText(_translate("MainWindow", "Epochs", None))
-        #self.label_others.setText(_translate("MainWindow", "Others", None))
-        self.checkBox_learningRate.setText(_translate("MainWindow", "Learning Rate", None))
-        self.checkBox_trainLastNOnly.setText(_translate("MainWindow", "Train only last N layers", None))
-        self.checkBox_trainDenseOnly.setText(_translate("MainWindow", "Train only Dense layers", None))
-        self.checkBox_dropout.setText(_translate("MainWindow", "Dropout", None))
-        self.tabWidget_DefineModel.setTabText(self.tabWidget_DefineModel.indexOf(self.tab_expert), _translate("MainWindow", "Expert", None))
-
-
-        self.groupBox_expertMode.setToolTip(_translate("MainWindow",tooltips["groupBox_expertMode"] , None))
-        self.checkBox_learningRate.setToolTip(_translate("MainWindow",tooltips["checkBox_learningRate"] , None))
-        self.doubleSpinBox_learningRate.setToolTip(_translate("MainWindow",tooltips["checkBox_learningRate"] , None))
-        self.checkBox_optimizer.setText(_translate("MainWindow", "Optimizer", None))
-        self.comboBox_optimizer.setItemText(0, _translate("MainWindow", "Adam", None))
-        self.comboBox_optimizer.setItemText(1, _translate("MainWindow", "SGD", None))
-        self.comboBox_optimizer.setItemText(2, _translate("MainWindow", "RMSprop", None))
-        self.comboBox_optimizer.setItemText(3, _translate("MainWindow", "Adagrad", None))
-        self.comboBox_optimizer.setItemText(4, _translate("MainWindow", "Adadelta", None))
-        self.comboBox_optimizer.setItemText(5, _translate("MainWindow", "Adamax", None))
-        self.comboBox_optimizer.setItemText(6, _translate("MainWindow", "Nadam", None))
-        self.checkBox_trainLastNOnly.setToolTip(_translate("MainWindow",tooltips["checkBox_trainLastNOnly"] , None))
-        self.spinBox_trainLastNOnly.setToolTip(_translate("MainWindow", tooltips["spinBox_trainLastNOnly"], None))
-        self.checkBox_trainDenseOnly.setToolTip(_translate("MainWindow",tooltips["checkBox_trainDenseOnly"] , None))
-        self.label_batchSize.setToolTip(_translate("MainWindow",tooltips["label_batchSize"] , None))
-        self.spinBox_batchSize.setToolTip(_translate("MainWindow",tooltips["label_batchSize"] , None))
-        self.label_epochs.setToolTip(_translate("MainWindow",tooltips["label_epochs"] , None))
-        self.spinBox_epochs.setToolTip(_translate("MainWindow",tooltips["label_epochs"] , None))
-        
-        self.checkBox_expt_loss.setText(_translate("MainWindow", "Loss", None))
-        self.comboBox_expt_loss.setItemText(0, _translate("MainWindow", "categorical_crossentropy", None))
-        #self.comboBox_expt_loss.setItemText(1, _translate("MainWindow", "sparse_categorical_crossentropy", None))
-        self.comboBox_expt_loss.setItemText(1, _translate("MainWindow", "mean_squared_error", None))
-        self.comboBox_expt_loss.setItemText(2, _translate("MainWindow", "mean_absolute_error", None))
-        self.comboBox_expt_loss.setItemText(3, _translate("MainWindow", "mean_absolute_percentage_error", None))
-        self.comboBox_expt_loss.setItemText(4, _translate("MainWindow", "mean_squared_logarithmic_error", None))
-        self.comboBox_expt_loss.setItemText(5, _translate("MainWindow", "squared_hinge", None))
-        self.comboBox_expt_loss.setItemText(6, _translate("MainWindow", "hinge", None))
-        self.comboBox_expt_loss.setItemText(7, _translate("MainWindow", "categorical_hinge", None))
-        self.comboBox_expt_loss.setItemText(8, _translate("MainWindow", "logcosh", None))
-        #self.comboBox_expt_loss.setItemText(9, _translate("MainWindow", "huber_loss", None))
-        self.comboBox_expt_loss.setItemText(9, _translate("MainWindow", "binary_crossentropy", None))
-        self.comboBox_expt_loss.setItemText(10, _translate("MainWindow", "kullback_leibler_divergence", None))
-        self.comboBox_expt_loss.setItemText(11, _translate("MainWindow", "poisson", None))
-        self.comboBox_expt_loss.setItemText(12, _translate("MainWindow", "cosine_proximity", None))
-        #self.comboBox_expt_loss.setItemText(13, _translate("MainWindow", "is_categorical_crossentropy", None))
-        
-        self.checkBox_dropout.setToolTip(_translate("MainWindow",tooltips["checkBox_dropout"] , None))
-        self.lineEdit_dropout.setToolTip(_translate("MainWindow", tooltips["checkBox_dropout"], None))
-        self.checkBox_partialTrainability.setText(_translate("MainWindow", "Partial trainablility", None))
-        self.checkBox_partialTrainability.setToolTip(_translate("MainWindow",tooltips["checkBox_partialTrainability"] , None))
-        self.lineEdit_partialTrainability.setToolTip(_translate("MainWindow", tooltips["checkBox_partialTrainability"], None))
-        self.pushButton_partialTrainability.setText(_translate("MainWindow", "...", None))
-        self.pushButton_partialTrainability.setToolTip(_translate("MainWindow", tooltips["checkBox_partialTrainability"], None))
-
-        self.checkBox_lossW.setText(_translate("MainWindow", "Loss weights", None))
-        self.checkBox_lossW.setToolTip(_translate("MainWindow",tooltips["checkBox_lossW"] , None))
-        self.lineEdit_lossW.setToolTip(_translate("MainWindow", tooltips["checkBox_lossW"], None))
-        self.pushButton_lossW.setText(_translate("MainWindow", "...", None))
-
-
-
-        self.groupBox_expertMetrics.setTitle(_translate("MainWindow", "Metrics", None))
-        self.groupBox_expertMetrics.setToolTip(_translate("MainWindow",tooltips["groupBox_expertMetrics"] , None))
-
-        self.checkBox_expertAccuracy.setText(_translate("MainWindow", "Accuracy", None))
-        self.checkBox_expertAccuracy.setToolTip(_translate("MainWindow",tooltips["checkBox_expertAccuracy"] , None))
-        
-        self.checkBox_expertF1.setText(_translate("MainWindow", "F1 score", None))
-        self.checkBox_expertF1.setToolTip(_translate("MainWindow",tooltips["checkBox_expertF1"],  None))
-        
-        self.checkBox_expertPrecision.setText(_translate("MainWindow", "Precision", None))
-        self.checkBox_expertPrecision.setToolTip(_translate("MainWindow", tooltips["checkBox_expertPrecision"], None))
-        
-        self.checkBox_expertRecall.setText(_translate("MainWindow", "Recall", None))
-        self.checkBox_expertRecall.setToolTip(_translate("MainWindow", tooltips["checkBox_expertRecall"], None))
-
-
-        self.groupBox_Finalize.setTitle(_translate("MainWindow", "Model summary and Fit", None))
-        self.pushButton_FitModel.setText(_translate("MainWindow", "Initialize/Fit\nModel", None))
-        self.pushButton_FitModel.setToolTip(_translate("MainWindow",tooltips["pushButton_FitModel"] , None))
-
-        self.tabWidget_Modelbuilder.setTabText(self.tabWidget_Modelbuilder.indexOf(self.tab_Build), _translate("MainWindow", "Build", None))
-        self.pushButton_Live.setToolTip(_translate("MainWindow",tooltips["pushButton_Live"] , None))
-        self.pushButton_Live.setText(_translate("MainWindow", "Live!", None))
-        self.pushButton_LoadHistory.setToolTip(_translate("MainWindow", tooltips["pushButton_LoadHistory"], None))
-        self.pushButton_LoadHistory.setText(_translate("MainWindow", "Load History", None))
-        self.lineEdit_LoadHistory.setToolTip(_translate("MainWindow",tooltips["lineEdit_LoadHistory"] , None))
-        self.tableWidget_HistoryItems.setToolTip(_translate("MainWindow", tooltips["tableWidget_HistoryItems"], None))
-        self.pushButton_UpdateHistoryPlot.setText(_translate("MainWindow", "Update plot", None))
-        self.checkBox_rollingMedian.setText(_translate("MainWindow", "Rolling Median", None))
-        self.checkBox_rollingMedian.setToolTip(_translate("MainWindow",tooltips["checkBox_rollingMedian"] , None))
-        self.horizontalSlider_rollmedi.setToolTip(_translate("MainWindow", tooltips["horizontalSlider_rollmedi"], None))
-        
-        self.checkBox_linearFit.setText(_translate("MainWindow", "Linear Fit", None))
-        self.checkBox_linearFit.setToolTip(_translate("MainWindow",tooltips["checkBox_linearFit"] , None))
-
-        self.pushButton_LoadModel.setText(_translate("MainWindow", "Load model", None))
-        
-        self.pushButton_LoadModel.setToolTip(_translate("MainWindow", tooltips["pushButton_LoadModel"] , None))
-
-        self.pushButton_convertModel.setText(_translate("MainWindow", "Convert", None))
-        self.pushButton_convertModel.setToolTip(_translate("MainWindow",tooltips["pushButton_convertModel"] , None))
-        self.tabWidget_Modelbuilder.setTabText(self.tabWidget_Modelbuilder.indexOf(self.tab_History), _translate("MainWindow", "History", None))
-
-        self.groupBox_loadModel.setTitle(_translate("MainWindow", "Load Model", None))
-        self.label_ModelIndex_2.setText(_translate("MainWindow", "Model index", None))
-        self.lineEdit_ModelSelection_2.setToolTip(_translate("MainWindow",tooltips["lineEdit_ModelSelection_2"] , None))
-        self.label_Normalization_2.setText(_translate("MainWindow", "Normalization", None))
-        self.label_Crop_2.setText(_translate("MainWindow", "Input size", None))
-        self.label_OutClasses_2.setText(_translate("MainWindow", "Output Nr. of classes", None))
-        self.pushButton_LoadModel_2.setText(_translate("MainWindow", "Load model", None))
-        self.lineEdit_LoadModel_2.setToolTip(_translate("MainWindow", tooltips["lineEdit_LoadModel_2"], None))
-        self.tableWidget_Info_2.setToolTip(_translate("MainWindow",tooltips["tableWidget_Info_2"] , None))
-
-        self.pushButton_ExportValidToNpy.setToolTip(_translate("MainWindow",tooltips["pushButton_ExportValidToNpy"] , None))
-        self.groupBox_validData.setTitle(_translate("MainWindow", "Data", None))
-        self.pushButton_ExportValidToNpy.setText(_translate("MainWindow", "To .rtdc", None))
-        self.pushButton_ImportValidFromNpy.setText(_translate("MainWindow", "From .rtdc",None))
-        self.pushButton_ImportValidFromNpy.setToolTip(_translate("MainWindow",tooltips["pushButton_ImportValidFromNpy"] , None))
-
-        self.groupBox_settings.setTitle(_translate("MainWindow", "Settings", None))
-        self.groupBox_InferenceTime.setTitle(_translate("MainWindow", "Inference time", None))
-        self.groupBox_InferenceTime.setToolTip(_translate("MainWindow",tooltips["groupBox_InferenceTime"] , None))
-  
-        self.pushButton_CompInfTime.setText(_translate("MainWindow", "Compute for N imgs", None))
-        self.groupBox_classify.setTitle(_translate("MainWindow", "Classify unlabeled data", None))
-        self.pushButton_classify.setText(_translate("MainWindow", "Classify", None))
-        self.radioButton_selectAll.setText(_translate("MainWindow", "all", None))
-        self.groupBox_settings.setTitle(_translate("MainWindow", "Settings", None))
-        
-        
-        self.groupBox_settings.setTitle(_translate("MainWindow", "Settings", None))
-        self.label_SortingIndex.setText(_translate("MainWindow", "Sorting class", None))
-        self.label_SortingIndex.setToolTip(_translate("MainWindow",tooltips["label_SortingIndex"] , None))
-        self.checkBox_SortingThresh.setText(_translate("MainWindow", "Sorting threshold", None))
-        self.checkBox_SortingThresh.setToolTip(_translate("MainWindow",tooltips["checkBox_SortingThresh"] , None))
-
-        self.pushButton_AssessModel.setText(_translate("MainWindow", "Update Plots", None))
-        
-        self.comboBox_probability_histogram.setToolTip(_translate("MainWindow",tooltips["comboBox_probability_histogram"] ,None))
-        
-        self.groupBox_3rdPlotSettings.setTitle(_translate("MainWindow", "3rd plot settings", None))
-        
-        self.groupBox_3rdPlot.setToolTip(_translate("MainWindow", tooltips["groupBox_3rdPlot"], None))
-
-        self.label_3rdPlot.setText(_translate("MainWindow", "What to plot", None))
-        self.comboBox_3rdPlot.setToolTip(_translate("MainWindow",tooltips["comboBox_3rdPlot"] , None))
-        self.label_Indx1.setToolTip(_translate("MainWindow",tooltips["label_Indx1"] , None))
-        self.label_Indx1.setText(_translate("MainWindow", "Indx1", None))
-        self.spinBox_Indx1.setToolTip(_translate("MainWindow", tooltips["label_Indx1"], None))
-        self.label_Indx2.setToolTip(_translate("MainWindow", tooltips["label_Indx1"], None))
-        self.label_Indx2.setText(_translate("MainWindow", "Indx2", None))
-        self.spinBox_Indx2.setToolTip(_translate("MainWindow", tooltips["label_Indx1"], None))
-        self.groupBox_confusionMatrixPlot.setTitle(_translate("MainWindow", "Classification Metrics", None))
-        self.tableWidget_CM1.setToolTip(_translate("MainWindow",tooltips["tableWidget_CM1"] , None))
-        self.label_True_CM1.setText(_translate("MainWindow", "T\n"
-"R\n"
-"U\n"
-"E",None))
-        self.pushButton_CM1_to_Clipboard.setText(_translate("MainWindow", "To Clipboard",None))
-        self.label_Pred_CM1.setText(_translate("MainWindow", "PREDICTED",None))
-        self.tableWidget_CM2.setToolTip(_translate("MainWindow",tooltips["tableWidget_CM2"] , None))
-
-        self.label_True_CM2.setText(_translate("MainWindow", "T\n"
-"R\n"
-"U\n"
-"E",None))
-        self.pushButton_CM2_to_Clipboard.setText(_translate("MainWindow", "To Clipboard",None))
-        self.label_Pred_CM2.setText(_translate("MainWindow", "PREDICTED",None))
-        
-        self.tableWidget_AccPrecSpec.setToolTip(_translate("MainWindow",tooltips["tableWidget_AccPrecSpec"] , None))
-        self.groupBox_probHistPlot.setTitle(_translate("MainWindow", "Probability histogram", None))
-        self.groupBox_probHistPlot.setToolTip(_translate("MainWindow",tooltips["groupBox_probHistPlot"] , None))
-
-        self.groupBox_3rdPlot.setTitle(_translate("MainWindow", "3rd plot", None))
-        self.tabWidget_Modelbuilder.setTabText(self.tabWidget_Modelbuilder.indexOf(self.tab_AssessModel), _translate("MainWindow", "Assess Model", None))
-
-
-        #Plotting Peakdet-Tab
-        self.groupBox_plottingregion.setTitle(_translate("MainWindow", "Plotting region", None))
-        self.groupBox_plottingOptions.setTitle(_translate("MainWindow", "Plotting options", None))
-        self.checkBox_fl1.setText(_translate("MainWindow", "FL1", None))
-        self.checkBox_fl2.setText(_translate("MainWindow", "FL2", None))
-        self.checkBox_fl3.setText(_translate("MainWindow", "FL3", None))
-        self.checkBox_centroid.setText(_translate("MainWindow", "Centroid", None))
-        self.label_coloring.setText(_translate("MainWindow", "Coloring", None))
-        self.checkBox_colorLog.setText(_translate("MainWindow", "Logscaled", None))
-        self.pushButton_updateScatterPlot.setText(_translate("MainWindow", "Update", None))
-        self.groupBox.setTitle(_translate("MainWindow", "Info", None))
-        self.tabWidget_filter_peakdet.setTabText(self.tabWidget_filter_peakdet.indexOf(self.tab_filter), _translate("MainWindow", "Placeholder", None))
-        self.groupBox_showCell.setTitle(_translate("MainWindow", "Show cell", None))
-        self.groupBox_showSelectedPeaks.setTitle(_translate("MainWindow", "Select peaks manually", None))
-        self.label_automatic.setText(_translate("MainWindow", "Automatic", None))
-        self.pushButton_highestXPercent.setText(_translate("MainWindow", "Highest x %", None))
-        self.label_remove.setText(_translate("MainWindow", "Remove", None))
-        self.pushButton_selectPeakPos.setText(_translate("MainWindow", "Peak", None))
-        self.pushButton_selectPeakRange.setText(_translate("MainWindow", "Range", None))
-        self.pushButton_removeSelectedPeaks.setText(_translate("MainWindow", "Selected", None))
-        self.pushButton_removeAllPeaks.setText(_translate("MainWindow", "All", None))
-        self.groupBox_peakDetModel.setTitle(_translate("MainWindow", "Peak detection Model", None))
-        self.pushButton_fitPeakDetModel.setText(_translate("MainWindow", "Fit model to peaks", None))
-        self.pushButton_SavePeakDetModel.setText(_translate("MainWindow", "Save model", None))
-        self.pushButton_loadPeakDetModel.setText(_translate("MainWindow", "Load model", None))
-        self.radioButton_exportSelected.setText(_translate("MainWindow", "only selected", None))
-        self.radioButton_exportAll.setText(_translate("MainWindow", "all", None))
-        self.pushButton_export.setText(_translate("MainWindow", "Export to...", None))
-        self.tabWidget_filter_peakdet.setTabText(self.tabWidget_filter_peakdet.indexOf(self.tab_peakdet), _translate("MainWindow", "Peakdetection", None))
-        self.tabWidget_filter_peakdet.setTabText(self.tabWidget_filter_peakdet.indexOf(self.tab_defineModel), _translate("MainWindow", "Placeholder", None))
-        self.tabWidget_Modelbuilder.setTabText(self.tabWidget_Modelbuilder.indexOf(self.tab_Plotting), _translate("MainWindow", "Plot/Peak", None))
-
-        ##############################Python Tab###############################
-        self.groupBox_pythonMenu.setTitle(_translate("MainWindow", "File", None))
-        self.label_pythonCurrentFile.setText(_translate("MainWindow", "Current file:", None))
-        self.groupBox_pythonEditor.setTitle(_translate("MainWindow", "Editor", None))
-        self.pushButton_pythonInOpen.setText(_translate("MainWindow", "Open file..", None))
-        self.pushButton_pythonSaveAs.setText(_translate("MainWindow", "Save as...", None))
-        self.pushButton_pythonInClear.setText(_translate("MainWindow", "Clear", None))
-        self.pushButton_pythonInRun.setText(_translate("MainWindow", "Run", None))
-        self.groupBox_pythonConsole.setTitle(_translate("MainWindow", "Console", None))
-        self.pushButton_pythonOutClear.setText(_translate("MainWindow", "Clear", None))
-        self.pushButton_pythonOutRun.setText(_translate("MainWindow", "Run", None))
-        self.tabWidget_Modelbuilder.setTabText(self.tabWidget_Modelbuilder.indexOf(self.tab_python), _translate("MainWindow", "Python", None))
-
-        self.comboBox_chooseRtdcFile.setToolTip(_translate("MainWindow",tooltips["comboBox_chooseRtdcFile"] , None))
-        self.comboBox_featurey.setToolTip(_translate("MainWindow",tooltips["comboBox_featurey"]  , None))
-        self.comboBox_featurex.setToolTip(_translate("MainWindow",tooltips["comboBox_featurey"]  , None))
-        self.widget_histx.setToolTip(_translate("MainWindow",tooltips["widget_histx"] , None))
-        self.widget_histy.setToolTip(_translate("MainWindow", tooltips["widget_histy"], None))
-        self.horizontalSlider_cellInd.setToolTip(_translate("MainWindow", tooltips["horizontalSlider_cellInd"] , None))
-        self.spinBox_cellInd.setToolTip(_translate("MainWindow",tooltips["spinBox_cellInd"] , None))
-        self.widget_scatter.setToolTip(_translate("MainWindow",tooltips["widget_scatter"] , None))
-        self.checkBox_fl1.setToolTip(_translate("MainWindow",tooltips["checkBox_fl1"], None))
-        self.checkBox_fl2.setToolTip(_translate("MainWindow", tooltips["checkBox_fl2"], None))
-        self.checkBox_fl3.setToolTip(_translate("MainWindow", tooltips["checkBox_fl3"], None))
-        self.checkBox_centroid.setToolTip(_translate("MainWindow",tooltips["checkBox_centroid"] , None))
-        self.pushButton_selectPeakPos.setToolTip(_translate("MainWindow",tooltips["pushButton_selectPeakPos"] , None))
-        self.pushButton_selectPeakRange.setToolTip(_translate("MainWindow",tooltips["pushButton_selectPeakRange"]  , None))
-        self.pushButton_highestXPercent.setToolTip(_translate("MainWindow",tooltips["pushButton_highestXPercent"] , None))
-        self.doubleSpinBox_highestXPercent.setToolTip(_translate("MainWindow",tooltips["pushButton_highestXPercent"]  , None))
-        self.pushButton_removeSelectedPeaks.setToolTip(_translate("MainWindow",tooltips["pushButton_removeSelectedPeaks"] , None))
-        self.pushButton_removeAllPeaks.setToolTip(_translate("MainWindow",tooltips["pushButton_removeAllPeaks"] , None))
-        self.widget_showSelectedPeaks.setToolTip(_translate("MainWindow", tooltips["widget_showSelectedPeaks"], None))
-        self.tableWidget_showSelectedPeaks.setToolTip(_translate("MainWindow",tooltips["tableWidget_showSelectedPeaks"] , None))
-        self.groupBox_showCell.setToolTip(_translate("MainWindow", tooltips["groupBox_showCell"] , None))
-        self.pushButton_updateScatterPlot.setToolTip(_translate("MainWindow",tooltips["pushButton_updateScatterPlot"] , None))
-        self.tableWidget_peakModelParameters.setToolTip(_translate("MainWindow",tooltips["tableWidget_peakModelParameters"] , None))
-
-        self.comboBox_peakDetModel.setToolTip(_translate("MainWindow",tooltips["tableWidget_peakModelParameters"] , None))
-        self.pushButton_fitPeakDetModel.setToolTip(_translate("MainWindow",tooltips["pushButton_fitPeakDetModel"] , None))
-        self.pushButton_SavePeakDetModel.setToolTip(_translate("MainWindow",tooltips["pushButton_SavePeakDetModel"] , None))
-        self.pushButton_loadPeakDetModel.setToolTip(_translate("MainWindow",tooltips["pushButton_loadPeakDetModel"] , None))
-        self.radioButton_exportSelected.setToolTip(_translate("MainWindow",tooltips["radioButton_exportSelected"] , None))
-        self.radioButton_exportAll.setToolTip(_translate("MainWindow",tooltips["radioButton_exportAll"] , None))
-
-
-        self.menuFile.setTitle(_translate("MainWindow", "File", None))
-        self.menuEdit.setTitle(_translate("MainWindow", "Edit", None))
-        self.menu_Options.setTitle(_translate("MainWindow", "Options",None))
-        self.menuLayout.setTitle(_translate("MainWindow", "Layout",None))
-        self.menuExport.setTitle(_translate("MainWindow", "Export",None))
-        self.menuZoomOrder.setTitle(_translate("MainWindow", "Zoom Order",None))
-        self.menuGPU_Options.setTitle(_translate("MainWindow", "Multi-GPU",None))
-
-        self.menu_Options.setToolTip(_translate("MainWindow", "<html><head/><body><p>menu_Options tooltip</p></body></html>", None))
-
-        self.menu_Help.setTitle(_translate("MainWindow", "Help",None))
-        self.actionDocumentation.setText(_translate("MainWindow", "Documentation",None))
-        self.actionSoftware.setText(_translate("MainWindow", "Software",None))
-        self.actionAbout.setText(_translate("MainWindow", "About",None))
-        self.actionUpdate.setText(_translate("MainWindow", "Check for updates...",None))
-
-
-        self.actionLoadSession.setText(_translate("MainWindow", "Load Session", None))
-        self.actionSaveSession.setText(_translate("MainWindow", "Save Session", None))
-        self.actionQuit.setText(_translate("MainWindow", "Quit", None))
-        self.actionDataToRam.setText(_translate("MainWindow", "Data to RAM upon Initialization of Model", None))
-        self.actionVerbose.setText(_translate("MainWindow", "Verbose", None))
-#        self.actionShowDataOverview.setText(_translate("MainWindow", "Show Data Overview", None))
-        self.actionClearList.setText(_translate("MainWindow", "Clear List", None))
-        self.actionDataToRamNow.setText(_translate("MainWindow", "Data to RAM now", None))
-        self.actionRemoveSelected.setText(_translate("MainWindow", "Remove selected", None))
-        self.actionSaveToPng.setText(_translate("MainWindow", "Export selected to .png/.jpg", None))
-        self.actionClearMemory.setText(_translate("MainWindow", "Clear memory (CPU/GPU)", None))
-        self.actionOpenTemp.setText(_translate("MainWindow", "Open temp directory", None))
-        
-        self.actionExport_Off.setText(_translate("MainWindow", "No exporting",None))
-        self.actionExport_Original.setText(_translate("MainWindow", "Export Original Images",None))
-        self.actionExport_Cropped.setText(_translate("MainWindow", "Export Cropped Images",None))
-        self.actionLayout_Normal.setText(_translate("MainWindow", "Normal layout",None))
-        self.actionLayout_Dark.setText(_translate("MainWindow", "Dark layout",None))
-        self.actionLayout_DarkOrange.setText(_translate("MainWindow", "DarkOrange layout",None))
-        self.actionIconTheme_1.setText(_translate("MainWindow", "Icon theme 1",None))
-        self.actionIconTheme_2.setText(_translate("MainWindow", "Icon theme 2",None))
-        self.actionOrder0.setText(_translate("MainWindow", "0 (nearest neighbor)",None))
-        self.actionOrder1.setText(_translate("MainWindow", "1 (linear interp.)",None))
-        self.actionOrder2.setText(_translate("MainWindow", "2 (quadratic interp.)",None))
-        self.actionOrder3.setText(_translate("MainWindow", "3 (cubic interp.)",None))
-        self.actionOrder4.setText(_translate("MainWindow", "4",None))
-        self.actionOrder5.setText(_translate("MainWindow", "5",None))
-
-        self.actioncpu_merge.setText(_translate("MainWindow", "cpu_merge",None))
-        self.actioncpu_merge.setToolTip(_translate("MainWindow", tooltips["actioncpu_merge"],None))
-        self.actioncpu_relocation.setText(_translate("MainWindow", "cpu_relocation",None))
-        self.actioncpu_relocation.setToolTip(_translate("MainWindow", tooltips["actioncpu_relocation"],None))
-        self.actioncpu_weightmerge.setText(_translate("MainWindow", "cpu_weight_merge",None))
-        self.actioncpu_weightmerge.setToolTip(_translate("MainWindow", tooltips["actioncpu_weightmerge"],None))
-
-        self.actionTooltipOnOff.setText(_translate("MainWindow", "Show tooltips",None))
-
-        #count the number of files in the temp. folder
-        nr_temp_files = aid_bin.count_temp_folder()
-        if nr_temp_files>0:
-            #inform user
-            self.statusbar.showMessage("Files are left in temporary folder. Find temp via: ->Edit->Open temp directory",10000)
+        aid_frontend.retranslate_main_ui(self,gpu_nr,VERSION)
 
     def dataDropped(self, l):
         #If there is data stored on ram tell user that RAM needs to be refreshed!
@@ -3946,25 +733,28 @@ class MainWindow(QtWidgets.QMainWindow):
             self.spinBox_epochs.setValue(1)
             self.checkBox_expt_loss.setChecked(False)
             self.expert_loss_off(0)
-            self.checkBox_learningRate.setChecked(False)        
+            self.groupBox_learningRate.setChecked(False)        
             self.expert_learningrate_off(0)
             self.checkBox_optimizer.setChecked(False)
             self.expert_optimizer_off(0)
-
+            
     def expert_loss_off(self,on_or_off):
         if on_or_off==0: #switch off
             #switch back to categorical_crossentropy 
             index = self.comboBox_expt_loss.findText("categorical_crossentropy", QtCore.Qt.MatchFixedString)
             if index >= 0:
                 self.comboBox_expt_loss.setCurrentIndex(index)
-        
+    
     def expert_learningrate_off(self,on_or_off):
         if on_or_off==0: #switch off
             #which optimizer is used? (there are different default learning-rates
             #for each optimizer!)
             optimizer = str(self.comboBox_optimizer.currentText())
             self.doubleSpinBox_learningRate.setValue(Default_dict["doubleSpinBox_learningRate_"+optimizer])
-
+            self.radioButton_LrCycl.setChecked(False)
+            self.radioButton_LrExpo.setChecked(False)
+            self.radioButton_LrConst.setChecked(True)
+    
     def expert_optimizer_off(self,on_or_off):
         if on_or_off==0: #switch off, set back to categorical_crossentropy
             optimizer = "Adam"
@@ -3973,7 +763,7 @@ class MainWindow(QtWidgets.QMainWindow):
                 self.comboBox_optimizer.setCurrentIndex(index)
                 #also reset the learning rate to the default
                 self.doubleSpinBox_learningRate.setValue(Default_dict["doubleSpinBox_learningRate_"+optimizer])
-
+    
     def expert_optimizer_changed(self,value):
         #set the learning rate to the default for this optimizer
         optimizer = value
@@ -3990,6 +780,7 @@ class MainWindow(QtWidgets.QMainWindow):
             msg.setStandardButtons(QtWidgets.QMessageBox.Ok)
             msg.exec_()
             return
+
 
         
     def update_hist1(self):
@@ -4150,7 +941,7 @@ class MainWindow(QtWidgets.QMainWindow):
             color = tuple(color)                
             pencolor = pg.mkColor(color)
             brush = pg.mkBrush(color=pencolor)
-            print(df)
+            #print(df)
             
             historyscatter = plt1.plot(range(len(df)), df.values, pen=None,symbol='o',symbolPen=None,symbolBrush=brush,name=key,clear=False)
             #self.fittingpopups_ui[listindex].historyscatters.append(historyscatter)
@@ -4270,14 +1061,213 @@ class MainWindow(QtWidgets.QMainWindow):
         t2 = time.time()
         dt = np.round(t2-t1,2)
         print("Comp. time = "+str(dt))
+
+
+    def accept_lr_range(self):
+        lr_start = str(self.popup_lrfinder_ui.lineEdit_LrMin.text())
+        lr_stop = str(self.popup_lrfinder_ui.lineEdit_LrMax.text())
+        self.lineEdit_cycLrMin.setText(lr_start)
+        self.lineEdit_cycLrMax.setText(lr_stop)
+        
+    def accept_lr_value(self):
+        lr_value = float(self.popup_lrfinder_ui.lineEdit_singleLr.text())
+        self.doubleSpinBox_learningRate.setValue(lr_value)
+        self.doubleSpinBox_expDecInitLr.setValue(lr_value)
+        
+    def popup_lr_finder(self):
+        SelectedFiles = self.items_clicked()
             
+        self.popup_lrfinder = MyPopup()
+        self.popup_lrfinder_ui = aid_frontend.popup_lrfinder()
+        self.popup_lrfinder_ui.setupUi(self.popup_lrfinder) #open a popup for lr finder
+
+        #Get information about the model
+        #check, which radiobutton is clicked and just copy paste the text from there
+        if self.radioButton_NewModel.isChecked():
+            modelname = str(self.comboBox_ModelSelection.currentText())
+            if modelname==None:
+                msg = QtWidgets.QMessageBox()
+                msg.setIcon(QtWidgets.QMessageBox.Information)       
+                msg.setText("No model specified!")
+                msg.setWindowTitle("No model specified!")
+                msg.setStandardButtons(QtWidgets.QMessageBox.Ok)
+                msg.exec_()
+                return       
+        elif self.radioButton_LoadContinueModel.isChecked():
+            modelname = str(self.lineEdit_LoadModelPath.text())
+        elif self.radioButton_LoadRestartModel.isChecked():
+            modelname = str(self.lineEdit_LoadModelPath.text())
+        else:
+            msg = QtWidgets.QMessageBox()
+            msg.setIcon(QtWidgets.QMessageBox.Information)       
+            msg.setText("Please specify a model using the radiobuttons on the 'Define Model' -tab")
+            msg.setWindowTitle("No model specified!")
+            msg.setStandardButtons(QtWidgets.QMessageBox.Ok)
+            msg.exec_()
+            return 
+        
+        in_dim = int(self.spinBox_imagecrop.value())
+
+        #Put information onto UI
+        self.popup_lrfinder_ui.lineEdit_loadModel.setText(modelname)
+        self.popup_lrfinder_ui.spinBox_Crop_inpImgSize.setValue(in_dim)
+        color_mode = self.get_color_mode()
+        self.popup_lrfinder_ui.comboBox_colorMode.addItem(color_mode)
+        loss_str = str(self.comboBox_expt_loss.currentText())
+        self.popup_lrfinder_ui.comboBox_expt_loss.addItem(loss_str)
+        optimizer_str = str(self.comboBox_optimizer.currentText())
+        self.popup_lrfinder_ui.comboBox_optimizer.addItem(optimizer_str)
+
+        batch_size = self.spinBox_batchSize.value()
+        self.popup_lrfinder_ui.spinBox_batchSize.setValue(batch_size)
+
+        #Connect action_lr_finder function to button
+        self.popup_lrfinder_ui.pushButton_LrFindRun.clicked.connect(lambda: self.action_initialize_model(duties="initialize_lrfind"))
+        self.popup_lrfinder_ui.pushButton_rangeAccept.clicked.connect(self.accept_lr_range)
+        self.popup_lrfinder_ui.pushButton_singleAccept.clicked.connect(self.accept_lr_value)
+
+        #compute the number of steps/epoch
+        ind = [selectedfile["TrainOrValid"] == "Train" for selectedfile in SelectedFiles]
+        ind = np.where(np.array(ind)==True)[0]
+        SelectedFiles_train = np.array(SelectedFiles)[ind]
+        SelectedFiles_train = list(SelectedFiles_train)
+        nr_events_train_total = np.sum([int(selectedfile["nr_events_epoch"]) for selectedfile in SelectedFiles_train])
+
+        batch_size = self.popup_lrfinder_ui.spinBox_batchSize.value()
+        perc_data = self.popup_lrfinder_ui.doubleSpinBox_percData.value()
+        nr_events = (perc_data/100)*nr_events_train_total
+        stepsPerEpoch=np.ceil(nr_events / float(batch_size))
+        self.popup_lrfinder_ui.spinBox_stepsPerEpoch.setValue(stepsPerEpoch)
+
+        self.popup_lrfinder.show()
+
+
+    def popup_clr_settings(self):
+        self.popup_clrsettings = MyPopup()
+        self.popup_clrsettings_ui = aid_frontend.Ui_Clr_settings()
+        self.popup_clrsettings_ui.setupUi(self.popup_clrsettings) #open a popup for lr plotting
+
+        ##Manual insertion##        
+        self.popup_clrsettings_ui.spinBox_stepSize.setProperty("value", self.clr_settings["step_size"])
+        self.popup_clrsettings_ui.doubleSpinBox_gamma.setProperty("value", self.clr_settings["gamma"])
+
+        def clr_settings_ok():
+            step_size = int(self.popup_clrsettings_ui.spinBox_stepSize.value())
+            gamma = float(self.popup_clrsettings_ui.doubleSpinBox_gamma.value())
+            self.clr_settings["step_size"] = step_size #Number of epochs to fulfill half a cycle
+            self.clr_settings["gamma"] = gamma #gamma factor for Exponential decrease method (exp_range)
+            print("Settings for cyclical learning rates were changed.")
+        def clr_settings_cancel():
+            self.popup_clrsettings = None
+            self.popup_clrsettings_ui = None
+
+
+        self.popup_clrsettings_ui.pushButton_ok.clicked.connect(clr_settings_ok)
+        self.popup_clrsettings_ui.pushButton_cancel.clicked.connect(clr_settings_cancel)
+        
+        self.popup_clrsettings.show()
+        
+        
+        
+    def popup_lr_plot(self):
+        self.popup_lrplot = MyPopup()
+        self.popup_lrplot_ui = aid_frontend.popup_lrplot()
+        self.popup_lrplot_ui.setupUi(self.popup_lrplot) #open a popup for lr plotting
+        
+        #compute total number of epochs that will be fitted
+        spinBox_NrEpochs = self.spinBox_NrEpochs.value() #my own loop
+        spinBox_epochs = self.spinBox_epochs.value() #inside model.fit()
+        nr_epochs = spinBox_NrEpochs*spinBox_epochs
+        self.popup_lrplot_ui.spinBox_totalEpochs.setValue(nr_epochs)
+        
+        #Get the number of training examples
+        SelectedFiles = self.items_clicked()
+        ind = [selectedfile["TrainOrValid"] == "Train" for selectedfile in SelectedFiles]
+        ind = np.where(np.array(ind)==True)[0]
+        SelectedFiles_train = np.array(SelectedFiles)[ind]
+        SelectedFiles_train = list(SelectedFiles_train)
+        nr_events_train_total = np.sum([int(selectedfile["nr_events_epoch"]) for selectedfile in SelectedFiles_train])
+
+        text_info = ""
+        if self.radioButton_LrConst.isChecked():
+            text_info+="Constant learning rate\n"
+            epochs_plot = np.array(range(nr_epochs))
+            const_lr = float(self.doubleSpinBox_learningRate.value())
+            learningrates = np.repeat(const_lr,nr_epochs)
             
+        elif self.radioButton_LrCycl.isChecked():
+            text_info+="Cyclical learning rates\n"
+            base_lr = float(self.lineEdit_cycLrMin.text())
+            max_lr = float(self.lineEdit_cycLrMax.text())
+            batch_size = int(self.spinBox_batchSize.value())
+            step_size = self.clr_settings["step_size"] #batch updates in a half cycle
+            step_size_ = step_size*int(np.round(nr_events_train_total / batch_size))#number of steps in one epoch
+            mode = str(self.comboBox_cycLrMethod.currentText())
+            clr_iterations = nr_epochs*int(np.round(nr_events_train_total / batch_size))#number of cycles
+            nr_cycles = (clr_iterations/step_size_)/2.0#number of cycles
+            gamma = self.clr_settings["gamma"] #gamma factor for the exp_range
             
+            #Generate text to diplay the settings used
+            text_info+="base_lr: "+str(base_lr)+"\n"
+            text_info+="max_lr: "+str(max_lr)+"\n"
+            text_info+="batch_size: "+str(batch_size)+"\n"
+            text_info+="mode: "+str(mode)+"\n"
+            text_info+="gamma: "+str(gamma)+"\n"
+
+            text_info+="Nr. of epochs to fulfill one cycle: "+str(2*step_size)+"\n"
+            #text_info+="Total nr. of lr adjustmend: "+str(step_size_)+"\n"
+            text_info+="Total nr. of lr adjustments: "+str(clr_iterations)+"\n"
+            text_info+="Total nr. of cycles: "+str(nr_cycles)+"\n"
             
-    def partialtrainability_activated_pop(self,listindex):#same function like partialTrainability but on fitting popup
-        print("Not implemented yet")
-        print("Placeholder")
-        print("Building site")
+            #Request the learning rates from the class cyclicLR
+            clr_iterations = np.arange(clr_iterations) 
+            clr_1 = aid_dl.cyclicLR(base_lr=base_lr,max_lr=max_lr,step_size=step_size_,mode=mode,gamma=gamma)
+            clr_1.clr_iterations=clr_iterations#pass the number of clr iterations to the class
+            
+            learningrates = clr_1.clr() #compute the learning rates for each iteration
+            #convert clr_iterations back to "epochs"
+            epochs_plot = clr_iterations/int(np.round(nr_events_train_total / batch_size))
+          
+        
+        elif self.radioButton_LrExpo.isChecked():
+            text_info+="Exponentially decreased learning rates\n"
+            initial_lr = float(self.doubleSpinBox_expDecInitLr.value())
+            decay_steps = int(self.spinBox_expDecSteps.value())
+            decay_rate = float(self.doubleSpinBox_expDecRate.value())
+
+            text_info+="initial_lr: "+str(initial_lr)+"\n"
+            text_info+="decay_steps: "+str(decay_steps)+"\n"
+            text_info+="decay_rate: "+str(decay_rate)+"\n"
+        
+            epochs_plot = np.array(range(nr_epochs))
+            exp_decay = aid_dl.exponentialDecay(initial_lr=initial_lr, decay_steps=decay_steps, decay_rate=decay_rate)
+            exp_decay.iterations=epochs_plot#pass the number of clr iterations to the class
+            learningrates = exp_decay.exp_decay()
+            #learningrates = aid_dl.exponentialDecay(epochs_plot,initial_lr=initial_lr, decay_steps=decay_steps, decay_rate=decay_rate)
+        
+        
+        def refreshPlot():
+            try: # try to empty the plot
+                self.popup_lrplot_ui.lr_plot.removeItem(self.lr_line2)   
+            except:
+                pass
+            #Get design settings
+            color = self.popup_lrplot_ui.pushButton_color.palette().button().color()
+            width = int(self.popup_lrplot_ui.spinBox_lineWidth.value())
+            color = list(color.getRgb())
+            color = tuple(color)                
+            pencolor=pg.mkPen(color, width=width)
+            #define curve and add to plot  
+            self.lr_line2 = pg.PlotCurveItem(x=epochs_plot, y=learningrates,pen=pencolor)
+            self.popup_lrplot_ui.lr_plot.addItem(self.lr_line2)            
+
+        refreshPlot()
+        self.popup_lrplot_ui.pushButton_refreshPlot.clicked.connect(refreshPlot)
+        self.popup_lrplot_ui.textBrowser_lrSettings.setText(text_info)
+        self.popup_lrplot.show()
+        
+        
+        
 
     def lossWeights_activated(self,on_or_off,listindex):
         if listindex==-1:
@@ -4539,6 +1529,7 @@ class MainWindow(QtWidgets.QMainWindow):
                 nr_images = rtdc_ds["image"].len()
                 SelectedFiles.append({"rtdc_ds":rtdc_ds,"rtdc_path":rtdc_path,"features":features,"nr_images":nr_images,"class":index,"TrainOrValid":"Valid","nr_events":nr_events,"nr_events_epoch":nr_events_epoch,"shuffle":shuffle,"zoom_factor":zoom_factor,"hash":hash_,"xtra_in":xtra_in})
         return SelectedFiles
+
 
     def items_available(self):
         """
@@ -6113,7 +3104,7 @@ class MainWindow(QtWidgets.QMainWindow):
         elif on_or_off==True:#2 means switched ON
             #Has the user already chosen a model?
             if self.model_keras == None: #if there is no model yet chosen
-                self.action_initialize_model(only_initialize=True)
+                self.action_initialize_model(duties="initialize")
             #If there is still no model...
             if self.model_keras == None:# or self.model_keras_path==None: #if there is no model yet chosen
                 #Tell the user to initiate a model first!
@@ -6170,7 +3161,7 @@ class MainWindow(QtWidgets.QMainWindow):
         #self.model_keras has to exist!!!
 
         if self.model_keras == None: #if there is no model yet chosen
-            self.action_initialize_model()
+            self.action_initialize_model(duties="initialize")
 
         if self.model_keras == None: #if there is still no model...            
             msg = QtWidgets.QMessageBox()
@@ -6775,8 +3766,12 @@ class MainWindow(QtWidgets.QMainWindow):
         return tmp_df
         
                  
-    def action_initialize_model(self,only_initialize=False):
-
+    def action_initialize_model(self,duties="initialize_train"):
+        """
+        duties: which tasks should be performed: "initialize", "initialize_train", "initialize_lrfind"
+        """
+        print("duties: "+str(duties))
+        
         #Create config (define which device to use)
         if self.radioButton_cpu.isChecked():
             deviceSelected = str(self.comboBox_cpu.currentText())
@@ -7075,8 +4070,8 @@ class MainWindow(QtWidgets.QMainWindow):
             #If expert mode is on, apply the requested options
             #This affects learning rate, trainability of layers and dropout rate
             expert_mode = bool(self.groupBox_expertMode.isChecked())
-            learning_rate_expert = float(self.doubleSpinBox_learningRate.value())
-            learning_rate_expert_on = bool(self.checkBox_learningRate.isChecked())   
+            learning_rate_const = float(self.doubleSpinBox_learningRate.value())
+            learning_rate_expert_on = bool(self.groupBox_learningRate.isChecked())   
             train_last_layers = bool(self.checkBox_trainLastNOnly.isChecked())             
             train_last_layers_n = int(self.spinBox_trainLastNOnly.value())              
             train_dense_layers = bool(self.checkBox_trainDenseOnly.isChecked())             
@@ -7136,7 +4131,7 @@ class MainWindow(QtWidgets.QMainWindow):
                 if train_last_layers==True:#Train only the last n layers
                     print("Train only the last "+str(train_last_layers_n)+ " layer(s)")
                     trainable_new = (len(trainable_original)-train_last_layers_n)*[False]+train_last_layers_n*[True]
-                    aid_dl.model_change_trainability(model_keras,trainable_new,model_metrics,out_dim,loss_expert,optimizer_expert,learning_rate_expert)
+                    aid_dl.model_change_trainability(model_keras,trainable_new,model_metrics,out_dim,loss_expert,optimizer_expert,learning_rate_const)
     
                 if train_dense_layers==True:#Train only dense layers
                     print("Train only dense layers")
@@ -7146,7 +4141,7 @@ class MainWindow(QtWidgets.QMainWindow):
                     trainable_new = len(trainable_original)*[False]
                     for index in layer_dense_ind:
                         trainable_new[index] = True
-                    aid_dl.model_change_trainability(model_keras,trainable_new,model_metrics,out_dim,loss_expert,optimizer_expert,learning_rate_expert)
+                    aid_dl.model_change_trainability(model_keras,trainable_new,model_metrics,out_dim,loss_expert,optimizer_expert,learning_rate_const)
     
                 if dropout_expert_on==True:
                     #The user apparently want to change the dropout rates
@@ -7176,7 +4171,7 @@ class MainWindow(QtWidgets.QMainWindow):
                         dropout_expert_list = []
                      
                     if len(dropout_expert_list)>0 and do_list!=dropout_expert_list:#if the dropout rates of the current model is not equal to the required do_list from user...
-                        do_changed = aid_dl.change_dropout(model_keras,dropout_expert_list,model_metrics,nr_classes,loss_expert,optimizer_expert,learning_rate_expert)
+                        do_changed = aid_dl.change_dropout(model_keras,dropout_expert_list,model_metrics,nr_classes,loss_expert,optimizer_expert,learning_rate_const)
                         if do_changed==1:
                             text_do = "Dropout rate(s) in model was/were changed to: "+str(dropout_expert_list)
                         else:
@@ -7194,11 +4189,11 @@ class MainWindow(QtWidgets.QMainWindow):
             else:
                 lr_current = K.eval(model_keras[1][0].optimizer.lr)
             print("Current learning rate: "+str(lr_current))
-            lr_diff = learning_rate_expert-lr_current
+            lr_diff = learning_rate_const-lr_current
             print("Current learning rate: "+str(lr_current))
             if  abs(lr_diff) > 1e-6:
-                K.set_value(model_keras.optimizer.lr, learning_rate_expert)
-                text_updates +=  "Changed the learning rate to: "+ str(learning_rate_expert)+"\n"
+                K.set_value(model_keras.optimizer.lr, learning_rate_const)
+                text_updates +=  "Changed the learning rate to: "+ str(learning_rate_const)+"\n"
     
             recompile = False
             #Compare current optimizer and the optimizer on expert tab:
@@ -7224,11 +4219,11 @@ class MainWindow(QtWidgets.QMainWindow):
             if recompile==True:
                 if collection==False:
                     print("Recompiling...")
-                    aid_dl.model_compile(model_keras,loss_expert,optimizer_expert,learning_rate_expert,model_metrics,nr_classes)
+                    aid_dl.model_compile(model_keras,loss_expert,optimizer_expert,learning_rate_const,model_metrics,nr_classes)
                 if collection==True:
                     for m in model_keras[1]:
                         print("Recompiling...")
-                        aid_dl.model_compile(m,loss_expert,optimizer_expert,learning_rate_expert,model_metrics,nr_classes)
+                        aid_dl.model_compile(m,loss_expert,optimizer_expert,learning_rate_const,model_metrics,nr_classes)
             self.model_keras = model_keras #overwrite the model in self
     
             if collection == False:
@@ -7264,8 +4259,8 @@ class MainWindow(QtWidgets.QMainWindow):
                 if dropout_expert_on:
                     text4 = text4+text_do+"\n"
     #            if learning_rate_expert_on==True:
-    #                if K.eval(model_keras.optimizer.lr) != learning_rate_expert: #if the learning rate in UI is NOT equal to the lr of the model...
-    #                    text_lr = "Changed the learning rate to: "+ str(learning_rate_expert)+"\n"
+    #                if K.eval(model_keras.optimizer.lr) != learning_rate_const: #if the learning rate in UI is NOT equal to the lr of the model...
+    #                    text_lr = "Changed the learning rate to: "+ str(learning_rate_const)+"\n"
     #                    text4 = text4+text_lr
     
             text5 = "Model summary:\n"
@@ -7314,16 +4309,11 @@ class MainWindow(QtWidgets.QMainWindow):
             nr_imgs = np.sum([np.array(list(SelectedFiles)[i]["nr_images"]) for i in range(len(list(SelectedFiles)))])
             ram_needed = np.round(nr_imgs * aid_bin.calc_ram_need(cropsize2),2)
      
-            if only_initialize==True:#Stop here if the model just needs to be intialized (for expert mode->partial trainability)
+            if duties=="initialize":#Stop here if the model just needs to be intialized (for expert mode->partial trainability)
                 return
             
-            #Tell the user if the data is stored and read from ram or not
-            if self.actionDataToRam.isChecked():
-                color_mode = self.get_color_mode()
-                zoom_factors = [selectedfile["zoom_factor"] for selectedfile in SelectedFiles]
-                zoom_order = [self.actionOrder0.isChecked(),self.actionOrder1.isChecked(),self.actionOrder2.isChecked(),self.actionOrder3.isChecked(),self.actionOrder4.isChecked(),self.actionOrder5.isChecked()]
-                zoom_order = int(np.where(np.array(zoom_order)==True)[0])
-    
+            elif duties=="initialize_train":
+                #Tell the user if the data is stored and read from ram or not
                 msg = QtWidgets.QMessageBox()
                 msg.setIcon(QtWidgets.QMessageBox.Question)
                 text = "<html><head/><body><p>Should the model only be initialized,\
@@ -7335,39 +4325,36 @@ class MainWindow(QtWidgets.QMainWindow):
                 msg.addButton(QtGui.QPushButton('Stop after model initialization'), QtGui.QMessageBox.RejectRole)
                 msg.addButton(QtGui.QPushButton('Start fitting'), QtGui.QMessageBox.ApplyRole)
                 retval = msg.exec_()
-                if retval==0: #yes role: Only initialize model
-                    print("Closing session")
-                    del model_keras
-                    sess.close()
-                    return
-                
-                elif retval == 1:
+            
+            elif duties=="initialize_lrfind":
+                retval = 1
+            
+            else:
+                print("Invalid duties: "+duties)
+                return
+            
+            if retval==0: #yes role: Only initialize model
+                print("Closing session")
+                del model_keras
+                sess.close()
+                return
+            
+            elif retval == 1:
+                if self.actionDataToRam.isChecked():
+                    color_mode = self.get_color_mode()
+                    zoom_factors = [selectedfile["zoom_factor"] for selectedfile in SelectedFiles]
+                    zoom_order = [self.actionOrder0.isChecked(),self.actionOrder1.isChecked(),self.actionOrder2.isChecked(),self.actionOrder3.isChecked(),self.actionOrder4.isChecked(),self.actionOrder5.isChecked()]
+                    zoom_order = int(np.where(np.array(zoom_order)==True)[0])
                     dic = aid_img.crop_imgs_to_ram(list(SelectedFiles),cropsize2,zoom_factors=zoom_factors,zoom_order=zoom_order,color_mode=color_mode)
                     self.ram = dic 
                     #Finally, activate the 'Fit model' button again
                     #self.pushButton_FitModel.setEnabled(True)
+                
+                if duties=="initialize_train":
                     self.action_fit_model()
-            else:
-                msg = QtWidgets.QMessageBox()
-                msg.setIcon(QtWidgets.QMessageBox.Question)
-                text = "<html><head/><body><p>Should the model only be initialized,\
-                or do you want to start fitting right after? For fitting, data will\
-                be loaded to RAM (since Edit->Data to RAM is enabled), which will\
-                require "+str(ram_needed)+"MB of RAM.</p></body></html>"
-                msg.setText(text) 
-                msg.setWindowTitle("Initialize model or initialize and fit model?")
-                msg.addButton(QtGui.QPushButton('Stop after model initialization'), QtGui.QMessageBox.RejectRole)
-                msg.addButton(QtGui.QPushButton('Start fitting'), QtGui.QMessageBox.ApplyRole)
-                retval = msg.exec_()
-                if retval==0: #yes role: Only initialize model
-                    print("Closing session")
-                    del model_keras
-                    sess.close()
+                if duties=="initialize_lrfind":
+                    self.action_lr_finder()
     
-                    return
-                elif retval == 1:
-                    self.action_fit_model()
-
             del model_keras
 
     def action_fit_model_worker(self,progress_callback,history_callback):
@@ -7466,7 +4453,7 @@ class MainWindow(QtWidgets.QMainWindow):
                 return
             
             #Original learning rate:
-            learning_rate_original = self.learning_rate_original#K.eval(model_keras.optimizer.lr)
+            #learning_rate_original = self.learning_rate_original#K.eval(model_keras.optimizer.lr)
             #Original trainable states of layers with parameters
             trainable_original, layer_names = self.trainable_original, self.layer_names
             do_list_original = self.do_list_original
@@ -7539,8 +4526,28 @@ class MainWindow(QtWidgets.QMainWindow):
     
             batchSize_expert = int(self.spinBox_batchSize.value())
             epochs_expert = int(self.spinBox_epochs.value())
-            learning_rate_expert = float(self.doubleSpinBox_learningRate.value())
-            learning_rate_expert_on = bool(self.checkBox_learningRate.isChecked()) 
+            
+            learning_rate_expert_on = bool(self.groupBox_learningRate.isChecked()) 
+            learning_rate_const_on = bool(self.radioButton_LrConst.isChecked()) 
+            learning_rate_const = float(self.doubleSpinBox_learningRate.value())
+            learning_rate_cycLR_on = bool(self.radioButton_LrCycl.isChecked())
+            try:
+                cycLrMin = float(self.lineEdit_cycLrMin.text())
+                cycLrMax = float(self.lineEdit_cycLrMax.value())
+            except:
+                cycLrMin = []
+                cycLrMax = []
+            cycLrMethod = str(self.comboBox_cycLrMethod.currentText())
+            cycLrGamma = self.clr_settings["gamma"]
+            #to compute cycLrStepSize, the number of training images is needed            
+            SelectedFiles = self.items_clicked()
+            cycLrStepSize = aid_dl.get_cyclStepSize(SelectedFiles,self.clr_settings["step_size"],batchSize_expert)
+            
+            learning_rate_expo_on = bool(self.radioButton_LrExpo.isChecked()) 
+            expDecInitLr = float(self.doubleSpinBox_expDecInitLr.value())
+            expDecSteps = int(self.spinBox_expDecSteps.value())
+            expDecRate = float(self.doubleSpinBox_expDecRate.value())
+
             loss_expert_on = bool(self.checkBox_expt_loss.isChecked())
             loss_expert = str(self.comboBox_expt_loss.currentText()).lower()
             optimizer_expert_on = bool(self.checkBox_optimizer.isChecked())
@@ -7561,7 +4568,7 @@ class MainWindow(QtWidgets.QMainWindow):
             lossW_expert = str(self.lineEdit_lossW.text())
     
             #To get the class weights (loss), the SelectedFiles are required 
-            SelectedFiles = self.items_clicked()
+            #SelectedFiles = self.items_clicked()
             #Check if xtra_data should be used for training
             xtra_in = [s["xtra_in"] for s in SelectedFiles]
             if len(set(xtra_in))==1:
@@ -7579,19 +4586,25 @@ class MainWindow(QtWidgets.QMainWindow):
                 #There has been a mismatch between the classes described in class_weight and the classes available in SelectedFiles!
                 lossW_expert = class_weight[0] #overwrite 
                 class_weight = class_weight[1]
-                print(class_weight)
+                print("class_weight:" +str(class_weight))
                 print("There has been a mismatch between the classes described in \
                       Loss weights and the classes available in the selected files! \
                       Hence, the Loss weights are set to Balanced")
-    #                #Notify user
-    #                msg = QtWidgets.QMessageBox()
-    #                msg.setIcon(QtWidgets.QMessageBox.Information)       
-    #                text = "<html><head/><body><p>There has been a mismatch between the classes described in Loss weights and the classes available in the selected files! Hence, the 'Loss weights' are set to 'Balanced'.</p></body></html>"
-    #                msg.setText(text) 
-    #                msg.setWindowTitle("Loss weights set to Balanced")
-    #                msg.setStandardButtons(QtWidgets.QMessageBox.Ok)
-    #                msg.exec_()
-                
+
+            #Get callback for the learning rate scheduling
+            callback_lr = aid_dl.get_lr_callback(learning_rate_const_on,learning_rate_const,
+                                               learning_rate_cycLR_on,cycLrMin,cycLrMax,
+                                               cycLrMethod,cycLrStepSize,
+                                               learning_rate_expo_on,
+                                               expDecInitLr,expDecSteps,expDecRate,cycLrGamma)
+            #save a dictionary with initial values
+            lr_dict_original = aid_dl.get_lr_dict(learning_rate_const_on,learning_rate_const,
+                                               learning_rate_cycLR_on,cycLrMin,cycLrMax,
+                                               cycLrMethod,cycLrStepSize,
+                                               learning_rate_expo_on,
+                                               expDecInitLr,expDecSteps,expDecRate,cycLrGamma)
+
+
             if collection==False:    
                 #Create an excel file
                 writer = pd.ExcelWriter(new_modelname.split(".model")[0]+'_meta.xlsx', engine='openpyxl')
@@ -7604,94 +4617,8 @@ class MainWindow(QtWidgets.QMainWindow):
                 DataOverview_df.to_excel(writer,sheet_name='DataOverview') #write data overview to separate sheet            
                 pd.DataFrame().to_excel(writer,sheet_name='Parameters') #initialize empty Sheet
                 pd.DataFrame().to_excel(writer,sheet_name='History') #initialize empty Sheet
-        
-                #create a dictionary for the metafiles (Parameters and History)
-                Para_dict = pd.DataFrame()
-                Para_dict["AIDeveloper_Version"]=VERSION,
-                Para_dict["model_zoo_version"]=model_zoo_version,
-                try:
-                    Para_dict["OS"]=platform.platform(),
-                    Para_dict["CPU"]=platform.processor(),
-                except:
-                    Para_dict["OS"]="Unknown",
-                    Para_dict["CPU"]="Unknown",
-                    
-                Para_dict["Modelname"]=new_modelname,
-                Para_dict["Chosen Model"]=chosen_model,
-                Para_dict["Input image size"]=crop,
-                Para_dict["Color Mode"]=color_mode,
-                Para_dict["Device"]=deviceSelected,
-                Para_dict["gpu_used"]=gpu_used,
-                Para_dict["gpu_memory"]=gpu_memory,
-        
-                Para_dict["new_model"]=new_model,
-                Para_dict["loadrestart_model"]=loadrestart_model,
-                Para_dict["loadcontinue_model"]=loadcontinue_model,
-                Para_dict["Continued_Fitting_From"]=load_modelname,
-        
-                Para_dict["Output Nr. classes"]=nr_classes,
-        
-                Para_dict["Normalization"]=norm,
-                Para_dict["Nr. epochs"]=nr_epochs,
-                Para_dict["Keras refresh after nr. epochs"]=keras_refresh_nr_epochs,
-                Para_dict["Horz. flip"]=h_flip,
-                Para_dict["Vert. flip"]=v_flip,
-                Para_dict["rotation"]=rotation,
-                Para_dict["width_shift"]=width_shift,
-                Para_dict["height_shift"]=height_shift,
-                Para_dict["zoom"]=zoom,
-                Para_dict["shear"]=shear,
-                Para_dict["Brightness refresh after nr. epochs"]=brightness_refresh_nr_epochs,
-                Para_dict["Brightness add. lower"]=brightness_add_lower,
-                Para_dict["Brightness add. upper"]=brightness_add_upper,
-                Para_dict["Brightness mult. lower"]=brightness_mult_lower,  
-                Para_dict["Brightness mult. upper"]=brightness_mult_upper,
-                Para_dict["Gaussnoise Mean"]=gaussnoise_mean,
-                Para_dict["Gaussnoise Scale"]=gaussnoise_scale,
                 
-                Para_dict["Contrast on"]=contrast_on,                
-                Para_dict["Contrast Lower"]=contrast_lower,
-                Para_dict["Contrast Higher"]=contrast_higher,
-                Para_dict["Saturation on"]=saturation_on,
-                Para_dict["Saturation Lower"]=saturation_lower,
-                Para_dict["Saturation Higher"]=saturation_higher,
-                Para_dict["Hue on"]=hue_on,                
-                Para_dict["Hue delta"]=hue_delta,                
-    
-                Para_dict["Average blur on"]=avgBlur_on,                
-                Para_dict["Average blur Lower"]=avgBlur_min,
-                Para_dict["Average blur Higher"]=avgBlur_max,
-                Para_dict["Gauss blur on"]=gaussBlur_on,                
-                Para_dict["Gauss blur Lower"]=gaussBlur_min,
-                Para_dict["Gauss blur Higher"]=gaussBlur_max,
-                Para_dict["Motion blur on"]=motionBlur_on,                
-                Para_dict["Motion blur Kernel"]=motionBlur_kernel,                
-                Para_dict["Motion blur Angle"]=motionBlur_angle,                
-    
-                Para_dict["Epoch_Started_Using_These_Settings"]=0,
-    
-                Para_dict["expert_mode"]=expert_mode,
-                Para_dict["batchSize_expert"]=batchSize_expert,
-                Para_dict["epochs_expert"]=epochs_expert,
-                Para_dict["learning_rate_expert"]=learning_rate_expert,
-                Para_dict["learning_rate_expert_on"]=learning_rate_expert_on,
-    
-                Para_dict["loss_expert_on"]=loss_expert_on,
-                Para_dict["loss_expert"]=loss_expert,
-                Para_dict["optimizer_expert_on"]=optimizer_expert_on,
-                Para_dict["optimizer_expert"]=optimizer_expert,
-                Para_dict["paddingMode"]=paddingMode,
-    
-                Para_dict["train_last_layers"]=train_last_layers,
-                Para_dict["train_last_layers_n"]=train_last_layers_n,
-                Para_dict["train_dense_layers"]=train_dense_layers,
-                Para_dict["dropout_expert_on"]=dropout_expert_on,
-                Para_dict["dropout_expert"]=dropout_expert,
-                Para_dict["lossW_expert_on"]=lossW_expert_on,
-                Para_dict["lossW_expert"]=lossW_expert,
-                Para_dict["class_weight"]=class_weight,
-                Para_dict["metrics"]=model_metrics,
-                
+
             elif collection==True: 
                 SelectedFiles_df = pd.DataFrame(SelectedFiles)
     
@@ -7709,91 +4636,108 @@ class MainWindow(QtWidgets.QMainWindow):
                     pd.DataFrame().to_excel(writer,sheet_name='Parameters') #initialize empty Sheet
                     pd.DataFrame().to_excel(writer,sheet_name='History') #initialize empty Sheet
             
-                #create a dictionary for the metafiles (Parameters and History)
-                Para_dict = pd.DataFrame()
-                Para_dict["AIDeveloper_Version"]=VERSION,
-                Para_dict["model_zoo_version"]=model_zoo_version,
-                try:
-                    Para_dict["OS"]=platform.platform(),
-                    Para_dict["CPU"]=platform.processor(),
-                except:
-                    Para_dict["OS"]="Unknown",
-                    Para_dict["CPU"]="Unknown",
-                
-                Para_dict["Modelname"]=model_keras_path[i],
-                Para_dict["Chosen Model"]=model_architecture_names[i],
-                Para_dict["Input image size"]=crop,
-                Para_dict["Color Mode"]=color_mode,
-                Para_dict["Device"]=deviceSelected,
-                Para_dict["gpu_used"]=gpu_used,
-                Para_dict["gpu_memory"]=gpu_memory,
-        
-                Para_dict["new_model"]=new_model,
-                Para_dict["loadrestart_model"]=loadrestart_model,
-                Para_dict["loadcontinue_model"]=loadcontinue_model,
-                Para_dict["Continued_Fitting_From"]=load_modelname,
-        
-                Para_dict["Output Nr. classes"]=nr_classes,
-        
-                Para_dict["Normalization"]=norm,
-                Para_dict["Nr. epochs"]=nr_epochs,
-                Para_dict["Keras refresh after nr. epochs"]=keras_refresh_nr_epochs,
-                Para_dict["Horz. flip"]=h_flip,
-                Para_dict["Vert. flip"]=v_flip,
-                Para_dict["rotation"]=rotation,
-                Para_dict["width_shift"]=width_shift,
-                Para_dict["height_shift"]=height_shift,
-                Para_dict["zoom"]=zoom,
-                Para_dict["shear"]=shear,
-                Para_dict["Brightness refresh after nr. epochs"]=brightness_refresh_nr_epochs,
-                Para_dict["Brightness add. lower"]=brightness_add_lower,
-                Para_dict["Brightness add. upper"]=brightness_add_upper,
-                Para_dict["Brightness mult. lower"]=brightness_mult_lower,  
-                Para_dict["Brightness mult. upper"]=brightness_mult_upper,
-                Para_dict["Gaussnoise Mean"]=gaussnoise_mean,
-                Para_dict["Gaussnoise Scale"]=gaussnoise_scale,
-                
-                Para_dict["Contrast on"]=contrast_on,                
-                Para_dict["Contrast Lower"]=contrast_lower,
-                Para_dict["Contrast Higher"]=contrast_higher,
-                Para_dict["Saturation on"]=saturation_on,
-                Para_dict["Saturation Lower"]=saturation_lower,
-                Para_dict["Saturation Higher"]=saturation_higher,
-                Para_dict["Hue on"]=hue_on,                
-                Para_dict["Hue delta"]=hue_delta,                
-    
-                Para_dict["Average blur on"]=avgBlur_on,                
-                Para_dict["Average blur Lower"]=avgBlur_min,
-                Para_dict["Average blur Higher"]=avgBlur_max,
-                Para_dict["Gauss blur on"]=gaussBlur_on,                
-                Para_dict["Gauss blur Lower"]=gaussBlur_min,
-                Para_dict["Gauss blur Higher"]=gaussBlur_max,
-                Para_dict["Motion blur on"]=motionBlur_on,                
-                Para_dict["Motion blur Kernel"]=motionBlur_kernel,                
-                Para_dict["Motion blur Angle"]=motionBlur_angle,                
-    
-                Para_dict["Epoch_Started_Using_These_Settings"]=0,
-    
-                Para_dict["expert_mode"]=expert_mode,
-                Para_dict["batchSize_expert"]=batchSize_expert,
-                Para_dict["epochs_expert"]=epochs_expert,
-                Para_dict["learning_rate_expert"]=learning_rate_expert,
-                Para_dict["learning_rate_expert_on"]=learning_rate_expert_on,
-                Para_dict["loss_expert_on"]=loss_expert_on,
-                Para_dict["loss_expert"]=loss_expert,
-                Para_dict["optimizer_expert_on"]=optimizer_expert_on,
-                Para_dict["optimizer_expert"]=optimizer_expert,
-                Para_dict["paddingMode"]=paddingMode,
-                
-                Para_dict["train_last_layers"]=train_last_layers,
-                Para_dict["train_last_layers_n"]=train_last_layers_n,
-                Para_dict["train_dense_layers"]=train_dense_layers,
-                Para_dict["dropout_expert_on"]=dropout_expert_on,
-                Para_dict["dropout_expert"]=dropout_expert,
-                Para_dict["lossW_expert_on"]=lossW_expert_on,
-                Para_dict["lossW_expert"]=lossW_expert,
-                Para_dict["class_weight"]=class_weight,
-                Para_dict["metrics"]=model_metrics,
+            
+#            create a dictionary for the metafiles (Parameters and History)
+#            Para_dict = pd.DataFrame()
+#            Para_dict["AIDeveloper_Version"]=VERSION,
+#            Para_dict["model_zoo_version"]=model_zoo_version,
+#            try:
+#                Para_dict["OS"]=platform.platform(),
+#                Para_dict["CPU"]=platform.processor(),
+#            except:
+#                Para_dict["OS"]="Unknown",
+#                Para_dict["CPU"]="Unknown",
+#
+#            if collection:
+#                Para_dict["Modelname"]=model_keras_path[0],
+#                Para_dict["Chosen Model"]=model_architecture_names[0],
+#
+#            else:
+#                Para_dict["Modelname"]=new_modelname,
+#                Para_dict["Chosen Model"]=chosen_model,
+#
+#            Para_dict["Input image size"]=crop,
+#            Para_dict["Color Mode"]=color_mode,
+#            Para_dict["Device"]=deviceSelected,
+#            Para_dict["gpu_used"]=gpu_used,
+#            Para_dict["gpu_memory"]=gpu_memory,
+#    
+#            Para_dict["new_model"]=new_model,
+#            Para_dict["loadrestart_model"]=loadrestart_model,
+#            Para_dict["loadcontinue_model"]=loadcontinue_model,
+#            Para_dict["Continued_Fitting_From"]=load_modelname,
+#    
+#            Para_dict["Output Nr. classes"]=nr_classes,
+#    
+#            Para_dict["Normalization"]=norm,
+#            Para_dict["Nr. epochs"]=nr_epochs,
+#            Para_dict["Keras refresh after nr. epochs"]=keras_refresh_nr_epochs,
+#            Para_dict["Horz. flip"]=h_flip,
+#            Para_dict["Vert. flip"]=v_flip,
+#            Para_dict["rotation"]=rotation,
+#            Para_dict["width_shift"]=width_shift,
+#            Para_dict["height_shift"]=height_shift,
+#            Para_dict["zoom"]=zoom,
+#            Para_dict["shear"]=shear,
+#            Para_dict["Brightness refresh after nr. epochs"]=brightness_refresh_nr_epochs,
+#            Para_dict["Brightness add. lower"]=brightness_add_lower,
+#            Para_dict["Brightness add. upper"]=brightness_add_upper,
+#            Para_dict["Brightness mult. lower"]=brightness_mult_lower,  
+#            Para_dict["Brightness mult. upper"]=brightness_mult_upper,
+#            Para_dict["Gaussnoise Mean"]=gaussnoise_mean,
+#            Para_dict["Gaussnoise Scale"]=gaussnoise_scale,
+#            
+#            Para_dict["Contrast on"]=contrast_on,                
+#            Para_dict["Contrast Lower"]=contrast_lower,
+#            Para_dict["Contrast Higher"]=contrast_higher,
+#            Para_dict["Saturation on"]=saturation_on,
+#            Para_dict["Saturation Lower"]=saturation_lower,
+#            Para_dict["Saturation Higher"]=saturation_higher,
+#            Para_dict["Hue on"]=hue_on,                
+#            Para_dict["Hue delta"]=hue_delta,                
+#
+#            Para_dict["Average blur on"]=avgBlur_on,                
+#            Para_dict["Average blur Lower"]=avgBlur_min,
+#            Para_dict["Average blur Higher"]=avgBlur_max,
+#            Para_dict["Gauss blur on"]=gaussBlur_on,                
+#            Para_dict["Gauss blur Lower"]=gaussBlur_min,
+#            Para_dict["Gauss blur Higher"]=gaussBlur_max,
+#            Para_dict["Motion blur on"]=motionBlur_on,                
+#            Para_dict["Motion blur Kernel"]=motionBlur_kernel,                
+#            Para_dict["Motion blur Angle"]=motionBlur_angle,                
+#
+#            Para_dict["Epoch_Started_Using_These_Settings"]=0,
+#
+#            Para_dict["expert_mode"]=expert_mode,
+#            Para_dict["batchSize_expert"]=batchSize_expert,
+#            Para_dict["epochs_expert"]=epochs_expert,
+#            
+#            Para_dict["learning_rate_expert_on"]=learning_rate_expert_on,
+#            Para_dict["learning_rate_const_on"]=learning_rate_const_on,
+#            Para_dict["learning_rate_const"]=learning_rate_const,
+#            Para_dict["learning_rate_cycLR_on"]=learning_rate_cycLR_on,
+#            Para_dict["cycLrMin"]=cycLrMin,
+#            Para_dict["cycLrMax"]=cycLrMax,
+#            Para_dict["learning_rate_expo_on"]=learning_rate_expo_on,
+#            Para_dict["expDecInitLr"]=expDecInitLr,
+#            Para_dict["expDecSteps"]=expDecSteps,
+#            Para_dict["expDecRate"]=expDecRate,
+#
+#            Para_dict["loss_expert_on"]=loss_expert_on,
+#            Para_dict["loss_expert"]=loss_expert,
+#            Para_dict["optimizer_expert_on"]=optimizer_expert_on,
+#            Para_dict["optimizer_expert"]=optimizer_expert,
+#            Para_dict["paddingMode"]=paddingMode,
+#
+#            Para_dict["train_last_layers"]=train_last_layers,
+#            Para_dict["train_last_layers_n"]=train_last_layers_n,
+#            Para_dict["train_dense_layers"]=train_dense_layers,
+#            Para_dict["dropout_expert_on"]=dropout_expert_on,
+#            Para_dict["dropout_expert"]=dropout_expert,
+#            Para_dict["lossW_expert_on"]=lossW_expert_on,
+#            Para_dict["lossW_expert"]=lossW_expert,
+#            Para_dict["class_weight"]=class_weight,
+#            Para_dict["metrics"]=model_metrics,
                 
             ###############################Expert Mode values##################
             expert_mode_before = False #There was no expert mode used before.
@@ -7807,9 +4751,9 @@ class MainWindow(QtWidgets.QMainWindow):
                 if train_last_layers==True:#Train only the last n layers
                     print("Train only the last "+str(train_last_layers_n)+ " layer(s)")
                     trainable_new = (len(trainable_original)-train_last_layers_n)*[False]+train_last_layers_n*[True]
-                    summary = aid_dl.model_change_trainability(model_keras,trainable_new,model_metrics,nr_classes,loss_expert,optimizer_expert,learning_rate_expert)
+                    summary = aid_dl.model_change_trainability(model_keras,trainable_new,model_metrics,nr_classes,loss_expert,optimizer_expert,learning_rate_const)
                     if model_keras_p!=None:#if this is NOT None, there exists a parallel model, which also needs to be re-compiled
-                        aid_dl.model_compile(model_keras_p,loss_expert,optimizer_expert,learning_rate_expert,model_metrics,nr_classes)
+                        aid_dl.model_compile(model_keras_p,loss_expert,optimizer_expert,learning_rate_const,model_metrics,nr_classes)
                         print("Recompiled parallel model for train_last_layers==True")
                     text1 = "Expert mode: Request for custom trainability states: train only the last "+str(train_last_layers_n)+ " layer(s)\n"
                     #text2 = "\n--------------------\n"
@@ -7822,9 +4766,9 @@ class MainWindow(QtWidgets.QMainWindow):
                     trainable_new = len(trainable_original)*[False]
                     for index in layer_dense_ind:
                         trainable_new[index] = True
-                    summary = aid_dl.model_change_trainability(model_keras,trainable_new,model_metrics,nr_classes,loss_expert,optimizer_expert,learning_rate_expert)                  
+                    summary = aid_dl.model_change_trainability(model_keras,trainable_new,model_metrics,nr_classes,loss_expert,optimizer_expert,learning_rate_const)                  
                     if model_keras_p!=None:#if this is NOT None, there exists a parallel model, which also needs to be re-compiled
-                        aid_dl.model_compile(model_keras_p,loss_expert,optimizer_expert,learning_rate_expert,model_metrics,nr_classes)
+                        aid_dl.model_compile(model_keras_p,loss_expert,optimizer_expert,learning_rate_const,model_metrics,nr_classes)
                         print("Recompiled parallel model for train_dense_layers==True")
                     text1 = "Expert mode: Request for custom trainability states: train only dense layer(s)\n"
                     #text2 = "\n--------------------\n"
@@ -7846,9 +4790,9 @@ class MainWindow(QtWidgets.QMainWindow):
                         self.fittingpopups_ui[listindex].textBrowser_FittingInfo_pop.append(text)
                         dropout_expert_list = []
                     if len(dropout_expert_list)>0 and do_list!=dropout_expert_list:#if the dropout rates of the current model is not equal to the required do_list from user...
-                        do_changed = aid_dl.change_dropout(model_keras,dropout_expert_list,model_metrics,nr_classes,loss_expert,optimizer_expert,learning_rate_expert)
+                        do_changed = aid_dl.change_dropout(model_keras,dropout_expert_list,model_metrics,nr_classes,loss_expert,optimizer_expert,learning_rate_const)
                         if model_keras_p!=None:#if this is NOT None, there exists a parallel model, which also needs to be re-compiled
-                            aid_dl.model_compile(model_keras_p,loss_expert,optimizer_expert,learning_rate_expert,model_metrics,nr_classes)
+                            aid_dl.model_compile(model_keras_p,loss_expert,optimizer_expert,learning_rate_const,model_metrics,nr_classes)
                             print("Recompiled parallel model to change dropout. I'm not sure if this works already!")
                         if do_changed==1:
                             text_do = "Dropout rate(s) in model was/were changed to: "+str(dropout_expert_list)
@@ -7867,14 +4811,14 @@ class MainWindow(QtWidgets.QMainWindow):
             else:
                 lr_current = K.eval(model_keras[0].optimizer.lr)
     
-            lr_diff = learning_rate_expert-lr_current
+            lr_diff = learning_rate_const-lr_current
             if  abs(lr_diff) > 1e-6:
                 if collection == False:
-                    K.set_value(model_keras.optimizer.lr, learning_rate_expert)
+                    K.set_value(model_keras.optimizer.lr, learning_rate_const)
                 if collection == True:
                     for m in model_keras:
-                        K.set_value(m.optimizer.lr, learning_rate_expert)
-                text_updates +=  "Changed the learning rate to "+ str(learning_rate_expert)+"\n"
+                        K.set_value(m.optimizer.lr, learning_rate_const)
+                text_updates +=  "Changed the learning rate to "+ str(learning_rate_const)+"\n"
             recompile = False
             #Compare current optimizer and the optimizer on expert tab:
             if collection==False:
@@ -7900,12 +4844,12 @@ class MainWindow(QtWidgets.QMainWindow):
             if recompile==True:
                 print("Recompiling...")
                 if collection==False:
-                    aid_dl.model_compile(model_keras,loss_expert,optimizer_expert,learning_rate_expert,model_metrics,nr_classes)
+                    aid_dl.model_compile(model_keras,loss_expert,optimizer_expert,learning_rate_const,model_metrics,nr_classes)
                 if collection==True:
                     for m in model_keras[1]:
-                        aid_dl.model_compile(m, loss_expert, optimizer_expert, learning_rate_expert,model_metrics, nr_classes)
+                        aid_dl.model_compile(m, loss_expert, optimizer_expert, learning_rate_const,model_metrics, nr_classes)
                 if model_keras_p!=None:#if this is NOT None, there exists a parallel model, which also needs to be re-compiled
-                    aid_dl.model_compile(model_keras_p,loss_expert,optimizer_expert,learning_rate_expert,model_metrics,nr_classes)
+                    aid_dl.model_compile(model_keras_p,loss_expert,optimizer_expert,learning_rate_const,model_metrics,nr_classes)
                     print("Recompiled parallel model to adjust learning rate, loss, optimizer")
     
             self.fittingpopups_ui[listindex].textBrowser_FittingInfo_pop.append(text_updates)
@@ -7970,25 +4914,26 @@ class MainWindow(QtWidgets.QMainWindow):
                     msg.setStandardButtons(QtWidgets.QMessageBox.Ok)
                     msg.exec_()
     
-                #This needs to be saved into Para_dict since it will be required for inference
-                Para_dict["Mean of training data used for scaling"]=mean_trainingdata,
-                Para_dict["Std of training data used for scaling"]=std_trainingdata,
-            if collection==False:
-                Para_dict.to_excel(writer,sheet_name='Parameters')
-                #self.model_meta = writer
-                if os.path.isfile(new_modelname.split(".model")[0]+'_meta.xlsx'):
-                    os.chmod(new_modelname.split(".model")[0]+'_meta.xlsx', S_IREAD|S_IRGRP|S_IROTH|S_IWRITE|S_IWGRP|S_IWOTH)#change to writable
-                writer.save()
-                os.chmod(new_modelname.split(".model")[0]+'_meta.xlsx', S_IREAD|S_IRGRP|S_IROTH)#change to readable, non-writable
-            if collection==True:
-                for i in range(len(Writers)):
-                    Para_dict.to_excel(Writers[i],sheet_name='Parameters')
-                    #self.model_meta = writer
-                    if os.path.isfile(model_keras_path[i].split(".model")[0]+'_meta.xlsx'):
-                        os.chmod(model_keras_path[i].split(".model")[0]+'_meta.xlsx', S_IREAD|S_IRGRP|S_IROTH|S_IWRITE|S_IWGRP|S_IWOTH)
-                    Writers[i].save()
-                    os.chmod(model_keras_path[i].split(".model")[0]+'_meta.xlsx', S_IREAD|S_IRGRP|S_IROTH)
+#                #This needs to be saved into Para_dict since it will be required for inference
+#                Para_dict["Mean of training data used for scaling"]=mean_trainingdata,
+#                Para_dict["Std of training data used for scaling"]=std_trainingdata,
+#            if collection==False:
+#                Para_dict.to_excel(writer,sheet_name='Parameters')
+#                #self.model_meta = writer
+#                if os.path.isfile(new_modelname.split(".model")[0]+'_meta.xlsx'):
+#                    os.chmod(new_modelname.split(".model")[0]+'_meta.xlsx', S_IREAD|S_IRGRP|S_IROTH|S_IWRITE|S_IWGRP|S_IWOTH)#change to writable
+#                writer.save()
+#                os.chmod(new_modelname.split(".model")[0]+'_meta.xlsx', S_IREAD|S_IRGRP|S_IROTH)#change to readable, non-writable
+#            if collection==True:
+#                for i in range(len(Writers)):
+#                    Para_dict.to_excel(Writers[i],sheet_name='Parameters')
+#                    #self.model_meta = writer
+#                    if os.path.isfile(model_keras_path[i].split(".model")[0]+'_meta.xlsx'):
+#                        os.chmod(model_keras_path[i].split(".model")[0]+'_meta.xlsx', S_IREAD|S_IRGRP|S_IROTH|S_IWRITE|S_IWGRP|S_IWOTH)
+#                    Writers[i].save()
+#                    os.chmod(model_keras_path[i].split(".model")[0]+'_meta.xlsx', S_IREAD|S_IRGRP|S_IROTH)
     
+            Para_dict = pd.DataFrame()
             def update_para_dict():
                 norm = str(self.fittingpopups_ui[listindex].comboBox_Normalization_pop.currentText())
                 nr_epochs = int(self.fittingpopups_ui[listindex].spinBox_NrEpochs_pop.value())
@@ -8034,9 +4979,26 @@ class MainWindow(QtWidgets.QMainWindow):
                 expert_mode = bool(self.fittingpopups_ui[listindex].groupBox_expertMode_pop.isChecked())
                 batchSize_expert = int(self.fittingpopups_ui[listindex].spinBox_batchSize_pop.value())
                 epochs_expert = int(self.fittingpopups_ui[listindex].spinBox_epochs_pop.value())
-                learning_rate_expert = float(self.fittingpopups_ui[listindex].doubleSpinBox_learningRate_pop.value())
                 
-                learning_rate_expert_on = bool(self.fittingpopups_ui[listindex].checkBox_learningRate_pop.isChecked())
+                learning_rate_expert_on = bool(self.fittingpopups_ui[listindex].groupBox_learningRate_pop.isChecked())
+
+                learning_rate_const_on = bool(self.fittingpopups_ui[listindex].radioButton_LrConst.isChecked())
+                learning_rate_const = float(self.fittingpopups_ui[listindex].doubleSpinBox_learningRate_pop.value())
+
+                learning_rate_cycLR_on = bool(self.fittingpopups_ui[listindex].radioButton_LrCycl.isChecked())
+                try:
+                    cycLrMin = float(self.fittingpopups_ui[listindex].lineEdit_cycLrMin.text())
+                    cycLrMax = float(self.fittingpopups_ui[listindex].lineEdit_cycLrMax.text())
+                except:
+                    cycLrMin = []
+                    cycLrMax = []
+                cycLrMethod = str(self.fittingpopups_ui[listindex].comboBox_cycLrMethod.currentText())
+
+                learning_rate_expo_on = bool(self.fittingpopups_ui[listindex].radioButton_LrExpo.isChecked())
+                expDecInitLr = float(self.fittingpopups_ui[listindex].doubleSpinBox_expDecInitLr.value())
+                expDecSteps = int(self.fittingpopups_ui[listindex].spinBox_expDecSteps.value())
+                expDecRate = float(self.fittingpopups_ui[listindex].doubleSpinBox_expDecRate.value())
+
                 loss_expert_on = bool(self.fittingpopups_ui[listindex].checkBox_expt_loss_pop.isChecked())
                 loss_expert = str(self.fittingpopups_ui[listindex].comboBox_expt_loss_pop.currentText())
                 optimizer_expert_on = bool(self.fittingpopups_ui[listindex].checkBox_optimizer_pop.isChecked())
@@ -8059,7 +5021,8 @@ class MainWindow(QtWidgets.QMainWindow):
                 lossW_expert = str(self.fittingpopups_ui[listindex].lineEdit_lossW.text())             
                 class_weight = self.get_class_weight(self.fittingpopups_ui[listindex].SelectedFiles,lossW_expert)
                 
-                #Document this change in the meta-file
+                
+                #Document changes in the meta-file
                 Para_dict["AIDeveloper_Version"]=VERSION,
                 Para_dict["model_zoo_version"]=model_zoo_version,
                 try:
@@ -8123,9 +5086,20 @@ class MainWindow(QtWidgets.QMainWindow):
                 Para_dict["expert_mode"]=expert_mode,
                 Para_dict["batchSize_expert"]=batchSize_expert,
                 Para_dict["epochs_expert"]=epochs_expert,
-                
-                Para_dict["learning_rate_expert"]=learning_rate_expert,
+
                 Para_dict["learning_rate_expert_on"]=learning_rate_expert_on,
+                Para_dict["learning_rate_const_on"]=learning_rate_const_on,
+                Para_dict["learning_rate_const"]=learning_rate_const,
+                Para_dict["learning_rate_cycLR_on"]=learning_rate_cycLR_on,
+                Para_dict["cycLrMin"]=cycLrMin,
+                Para_dict["cycLrMax"]=cycLrMax,
+                Para_dict["cycLrMethod"] = cycLrMethod,
+                
+                Para_dict["learning_rate_expo_on"]=learning_rate_expo_on,
+                Para_dict["expDecInitLr"]=expDecInitLr,
+                Para_dict["expDecSteps"]=expDecSteps,
+                Para_dict["expDecRate"]=expDecRate,
+                
                 Para_dict["loss_expert_on"]=loss_expert_on,
                 Para_dict["loss_expert"]=loss_expert,
                 Para_dict["optimizer_expert_on"]=optimizer_expert_on,
@@ -8150,8 +5124,11 @@ class MainWindow(QtWidgets.QMainWindow):
                     Para_dict["Std of training data used for scaling"]=std_trainingdata,
     
                 if collection==False:
-                    Para_dict.to_excel(self.writer,sheet_name='Parameters',startrow=self.writer.sheets['Parameters'].max_row,header= False)
-                    #self.model_meta = writer
+                    if counter == 0:
+                        Para_dict.to_excel(self.writer,sheet_name='Parameters')
+                    else:
+                        Para_dict.to_excel(self.writer,sheet_name='Parameters',startrow=self.writer.sheets['Parameters'].max_row,header= False)
+
                     if os.path.isfile(new_modelname.split(".model")[0]+'_meta.xlsx'):
                         os.chmod(new_modelname.split(".model")[0]+'_meta.xlsx', S_IREAD|S_IRGRP|S_IROTH|S_IWRITE|S_IWGRP|S_IWOTH)#change to read/write
                     try:
@@ -8164,8 +5141,11 @@ class MainWindow(QtWidgets.QMainWindow):
                     for i in range(len(Writers)):
                         Para_dict["Chosen Model"]=model_architecture_names[i],
                         writer = Writers[i]
-                        Para_dict.to_excel(writer,sheet_name='Parameters',startrow=writer.sheets['Parameters'].max_row,header= False)
-                        #self.model_meta = writer
+                        if counter==0:
+                            Para_dict.to_excel(Writers[i],sheet_name='Parameters')
+                        else:
+                            Para_dict.to_excel(writer,sheet_name='Parameters',startrow=writer.sheets['Parameters'].max_row,header= False)
+
                         if os.path.isfile(model_keras_path[i].split(".model")[0]+'_meta.xlsx'):
                             os.chmod(model_keras_path[i].split(".model")[0]+'_meta.xlsx', S_IREAD|S_IRGRP|S_IROTH|S_IWRITE|S_IWGRP|S_IWOTH) #read/write
                         try:
@@ -8174,8 +5154,7 @@ class MainWindow(QtWidgets.QMainWindow):
                             pass
                         os.chmod(model_keras_path[i].split(".model")[0]+'_meta.xlsx', S_IREAD|S_IRGRP|S_IROTH) #read only
     
-    
-    
+                
             ######################Load the Validation Data################################
             ind = [selectedfile["TrainOrValid"] == "Valid" for selectedfile in SelectedFiles]
             ind = np.where(np.array(ind)==True)[0]
@@ -8372,7 +5351,22 @@ class MainWindow(QtWidgets.QMainWindow):
             self.fittingpopups_ui[listindex].spinBox_batchSize_pop.setValue(batchSize_expert)
             self.fittingpopups_ui[listindex].spinBox_epochs_pop.setValue(epochs_expert)
     
-            self.fittingpopups_ui[listindex].checkBox_learningRate_pop.setChecked(learning_rate_expert_on)
+            self.fittingpopups_ui[listindex].groupBox_learningRate_pop.setChecked(learning_rate_expert_on)
+            self.fittingpopups_ui[listindex].radioButton_LrConst.setChecked(learning_rate_const_on)
+            self.fittingpopups_ui[listindex].doubleSpinBox_learningRate_pop.setValue(learning_rate_const)
+            self.fittingpopups_ui[listindex].radioButton_LrCycl.setChecked(learning_rate_cycLR_on)
+            self.fittingpopups_ui[listindex].lineEdit_cycLrMin.setText(str(cycLrMin))
+            self.fittingpopups_ui[listindex].lineEdit_cycLrMax.setText(str(cycLrMax))
+            index = self.fittingpopups_ui[listindex].comboBox_cycLrMethod.findText(cycLrMethod, QtCore.Qt.MatchFixedString)
+            if index >= 0:
+                self.fittingpopups_ui[listindex].comboBox_cycLrMethod.setCurrentIndex(index)
+            self.fittingpopups_ui[listindex].radioButton_LrExpo.setChecked(learning_rate_expo_on)
+            self.fittingpopups_ui[listindex].doubleSpinBox_expDecInitLr.setValue(expDecInitLr)
+            self.fittingpopups_ui[listindex].spinBox_expDecSteps.setValue(expDecSteps)
+            self.fittingpopups_ui[listindex].doubleSpinBox_expDecRate.setValue(expDecRate) 
+
+            self.fittingpopups_ui[listindex].checkBox_expt_loss_pop.setChecked(loss_expert_on)
+
             self.fittingpopups_ui[listindex].checkBox_expt_loss_pop.setChecked(loss_expert_on)
             index = self.fittingpopups_ui[listindex].comboBox_expt_loss_pop.findText(loss_expert, QtCore.Qt.MatchFixedString)
             if index >= 0:
@@ -8381,7 +5375,7 @@ class MainWindow(QtWidgets.QMainWindow):
             index = self.fittingpopups_ui[listindex].comboBox_optimizer_pop.findText(optimizer_expert, QtCore.Qt.MatchFixedString)
             if index >= 0:
                 self.fittingpopups_ui[listindex].comboBox_optimizer_pop.setCurrentIndex(index)
-            self.fittingpopups_ui[listindex].doubleSpinBox_learningRate_pop.setValue(learning_rate_expert)
+            self.fittingpopups_ui[listindex].doubleSpinBox_learningRate_pop.setValue(learning_rate_const)
     
             index = self.fittingpopups_ui[listindex].comboBox_paddingMode_pop.findText(paddingMode, QtCore.Qt.MatchFixedString)
             if index >= 0:
@@ -8412,13 +5406,16 @@ class MainWindow(QtWidgets.QMainWindow):
             #Dictionary defining affine image augmentation options:
             aug_paras = {"v_flip":v_flip,"h_flip":h_flip,"rotation":rotation,"width_shift":width_shift,"height_shift":height_shift,"zoom":zoom,"shear":shear}
                          
-            Histories,Index,Saved,Stopwatch = [],[],[],[]
+            Histories,Index,Saved,Stopwatch,LearningRate = [],[],[],[],[]
             if collection==True:
                HISTORIES = [ [] for model in model_keras]
                SAVED = [ [] for model in model_keras]
     
             counter = 0
-            
+
+            #Save the initial values (Epoch 1)
+            update_para_dict()
+
             model_metrics_names = []
             for met in model_metrics:
                 if type(met)==str:
@@ -8491,7 +5488,7 @@ class MainWindow(QtWidgets.QMainWindow):
     
                     t3 = time.time()
                     #Some parallellization: use nr_threads (number of CPUs)
-                    nr_threads = 1 #Somehow for MNIST and CIFAR, processing always takes longer. I tried nr_threads=2,4,8,16,24
+                    nr_threads = 1 #Somehow for MNIST and CIFAR, processing always took longer for nr_threads>1 . I tried nr_threads=2,4,8,16,24
                     if nr_threads == 1:
                         X_batch = aid_img.affine_augm(X_train,v_flip,h_flip,rotation,width_shift,height_shift,zoom,shear) #Affine image augmentation
                         y_batch = np.copy(y_train)
@@ -8616,14 +5613,30 @@ class MainWindow(QtWidgets.QMainWindow):
                                 motionBlur_kernel = tuple(ast.literal_eval(motionBlur_kernel)) #translate string in the lineEdits to a tuple
                                 motionBlur_angle = tuple(ast.literal_eval(motionBlur_angle)) #translate string in the lineEdits to a tuple
     
-    
                                 #Expert mode stuff
                                 expert_mode = bool(self.fittingpopups_ui[listindex].groupBox_expertMode_pop.isChecked())
                                 batchSize_expert = int(self.fittingpopups_ui[listindex].spinBox_batchSize_pop.value())
                                 epochs_expert = int(self.fittingpopups_ui[listindex].spinBox_epochs_pop.value())
                                 
-                                learning_rate_expert_on = bool(self.fittingpopups_ui[listindex].checkBox_learningRate_pop.isChecked())
-                                learning_rate_expert = float(self.fittingpopups_ui[listindex].doubleSpinBox_learningRate_pop.value())
+                                learning_rate_expert_on = bool(self.fittingpopups_ui[listindex].groupBox_learningRate_pop.isChecked())
+                
+                                learning_rate_const_on = bool(self.fittingpopups_ui[listindex].radioButton_LrConst.isChecked())
+                                learning_rate_const = float(self.fittingpopups_ui[listindex].doubleSpinBox_learningRate_pop.value())
+                
+                                learning_rate_cycLR_on = bool(self.fittingpopups_ui[listindex].radioButton_LrCycl.isChecked())
+                                try:
+                                    cycLrMin = float(self.fittingpopups_ui[listindex].lineEdit_cycLrMin.text())
+                                    cycLrMax = float(self.fittingpopups_ui[listindex].lineEdit_cycLrMax.text())
+                                except:
+                                    cycLrMin = []
+                                    cycLrMax = []
+                                cycLrMethod = str(self.fittingpopups_ui[listindex].comboBox_cycLrMethod.currentText())
+                
+                                learning_rate_expo_on = bool(self.fittingpopups_ui[listindex].radioButton_LrExpo.isChecked())
+                                expDecInitLr = float(self.fittingpopups_ui[listindex].doubleSpinBox_expDecInitLr.value())
+                                expDecSteps = int(self.fittingpopups_ui[listindex].spinBox_expDecSteps.value())
+                                expDecRate = float(self.fittingpopups_ui[listindex].doubleSpinBox_expDecRate.value())
+
                                 loss_expert_on = bool(self.fittingpopups_ui[listindex].checkBox_expt_loss_pop.isChecked())
                                 loss_expert = str(self.fittingpopups_ui[listindex].comboBox_expt_loss_pop.currentText())
                                 optimizer_expert_on = bool(self.fittingpopups_ui[listindex].checkBox_optimizer_pop.isChecked())
@@ -8643,11 +5656,11 @@ class MainWindow(QtWidgets.QMainWindow):
                                 lossW_expert_on = bool(self.fittingpopups_ui[listindex].checkBox_lossW.isChecked())             
                                 lossW_expert = str(self.fittingpopups_ui[listindex].lineEdit_lossW.text())             
                                 class_weight = self.get_class_weight(self.fittingpopups_ui[listindex].SelectedFiles,lossW_expert) #
-                                
+
                                 print("Updating parameter file (meta.xlsx)!")
                                 update_para_dict()
     
-                                #Changes in expert mode can affect the model: apply changed now:
+                                #Changes in expert mode can affect the model: apply changes now:
                                 if expert_mode==True:
                                     if collection==False: #Expert mode is currently not supported for Collections
                                         expert_mode_before = True
@@ -8658,9 +5671,9 @@ class MainWindow(QtWidgets.QMainWindow):
                                                 print("Train only the last "+str(train_last_layers_n)+ " layer(s)")
                                             trainable_new = (len(trainable_original)-train_last_layers_n)*[False]+train_last_layers_n*[True]
                                             #Change the trainability states. Model compilation is done inside model_change_trainability
-                                            summary = aid_dl.model_change_trainability(model_keras,trainable_new,model_metrics,nr_classes,loss_expert,optimizer_expert,learning_rate_expert)
+                                            summary = aid_dl.model_change_trainability(model_keras,trainable_new,model_metrics,nr_classes,loss_expert,optimizer_expert,learning_rate_const)
                                             if model_keras_p!=None:#if this is NOT None, there exists a parallel model, which also needs to be re-compiled
-                                                aid_dl.model_compile(model_keras_p,loss_expert,optimizer_expert,learning_rate_expert,model_metrics,nr_classes)
+                                                aid_dl.model_compile(model_keras_p,loss_expert,optimizer_expert,learning_rate_const,model_metrics,nr_classes)
                                                 print("Recompiled parallel model due to train_last_layers==True")
                                             text1 = "Expert mode: Request for custom trainability states: train only the last "+str(train_last_layers_n)+ " layer(s)\n"
                                             #text2 = "\n--------------------\n"
@@ -8675,9 +5688,9 @@ class MainWindow(QtWidgets.QMainWindow):
                                             for index in layer_dense_ind:
                                                 trainable_new[index] = True
                                             #Change the trainability states. Model compilation is done inside model_change_trainability
-                                            summary = aid_dl.model_change_trainability(model_keras,trainable_new,model_metrics,nr_classes,loss_expert,optimizer_expert,learning_rate_expert)                 
+                                            summary = aid_dl.model_change_trainability(model_keras,trainable_new,model_metrics,nr_classes,loss_expert,optimizer_expert,learning_rate_const)                 
                                             if model_keras_p!=None:#if this is NOT None, there exists a parallel model, which also needs to be re-compiled
-                                                aid_dl.model_compile(model_keras_p,loss_expert,optimizer_expert,learning_rate_expert,model_metrics,nr_classes)
+                                                aid_dl.model_compile(model_keras_p,loss_expert,optimizer_expert,learning_rate_const,model_metrics,nr_classes)
                                                 print("Recompiled parallel model due to train_dense_layers==True")
                                             text1 = "Expert mode: Request for custom trainability states: train only dense layer(s)\n"
                                             #text2 = "\n--------------------\n"
@@ -8701,9 +5714,9 @@ class MainWindow(QtWidgets.QMainWindow):
     
                                             if len(dropout_expert_list)>0 and do_list!=dropout_expert_list:#if the dropout rates of the current model is not equal to the required do_list from user...
                                                 #Change dropout. Model .compile happens inside change_dropout function
-                                                do_changed = aid_dl.change_dropout(model_keras,dropout_expert_list,model_metrics,nr_classes,loss_expert,optimizer_expert,learning_rate_expert)
+                                                do_changed = aid_dl.change_dropout(model_keras,dropout_expert_list,model_metrics,nr_classes,loss_expert,optimizer_expert,learning_rate_const)
                                                 if model_keras_p!=None:#if model_keras_p is NOT None, there exists a parallel model, which also needs to be re-compiled
-                                                    aid_dl.model_compile(model_keras_p,loss_expert,optimizer_expert,learning_rate_expert,model_metrics,nr_classes)
+                                                    aid_dl.model_compile(model_keras_p,loss_expert,optimizer_expert,learning_rate_const,model_metrics,nr_classes)
                                                     print("Recompiled parallel model due to changed dropout. I'm not sure if this works already!")
     
                                                 if do_changed==1:
@@ -8715,8 +5728,24 @@ class MainWindow(QtWidgets.QMainWindow):
                                             if verbose:
                                                 print(text_do)
                                             self.fittingpopups_ui[listindex].textBrowser_FittingInfo_pop.append(text_do)
-    
-    
+                                        if learning_rate_expert_on==True:
+                                            #get the current lr_dict
+                                            lr_dict_now = aid_dl.get_lr_dict(learning_rate_const_on,learning_rate_const,
+                                                                               learning_rate_cycLR_on,cycLrMin,cycLrMax,
+                                                                               cycLrMethod,cycLrStepSize,
+                                                                               learning_rate_expo_on,
+                                                                               expDecInitLr,expDecSteps,expDecRate,cycLrGamma)
+                                            if not lr_dict_now.equals(lr_dict_original):#in case the dataframes dont equal...
+                                                #generate a new callback
+                                                callback_lr = aid_dl.get_lr_callback(learning_rate_const_on,learning_rate_const,
+                                                                                   learning_rate_cycLR_on,cycLrMin,cycLrMax,
+                                                                                   cycLrMethod,cycLrStepSize,
+                                                                                   learning_rate_expo_on,
+                                                                                   expDecInitLr,expDecSteps,expDecRate,cycLrGamma)
+                                        else:
+                                            callback_lr = None
+
+
                                 ############################Invert 'expert' settings#########################
                                 if expert_mode==False and expert_mode_before==True: #if the expert mode was selected before, change the parameters back to original vlaues
                                     if verbose:
@@ -8725,9 +5754,9 @@ class MainWindow(QtWidgets.QMainWindow):
                                     #Re-set trainable states back to original state                                    
                                     if verbose:
                                         print("Change 'trainable' layers back to original state")
-                                    summary = aid_dl.model_change_trainability(model_keras,trainable_original,model_metrics,nr_classes,loss_expert,optimizer_expert,learning_rate_expert)                 
+                                    summary = aid_dl.model_change_trainability(model_keras,trainable_original,model_metrics,nr_classes,loss_expert,optimizer_expert,learning_rate_const)                 
                                     if model_keras_p!=None:#if model_keras_p is NOT None, there exists a parallel model, which also needs to be re-compiled
-                                        aid_dl.model_compile(model_keras_p,loss_expert,optimizer_expert,learning_rate_expert,model_metrics,nr_classes)
+                                        aid_dl.model_compile(model_keras_p,loss_expert,optimizer_expert,learning_rate_const,model_metrics,nr_classes)
                                         print("Recompiled parallel model to change 'trainable' layers back to original state")
     
                                     text1 = "Expert mode turns off: Request for orignal trainability states:\n"
@@ -8735,10 +5764,13 @@ class MainWindow(QtWidgets.QMainWindow):
                                     self.fittingpopups_ui[listindex].textBrowser_FittingInfo_pop.append(text1+summary)
                                     if verbose:
                                         print("Change dropout rates in dropout layers back to original values")
+                                    callback_lr = None
+                                    if verbose:
+                                        print("Set learning rate callback to None")
                                     if len(do_list_original)>0:
-                                        do_changed = aid_dl.change_dropout(model_keras,do_list_original,model_metrics,nr_classes,loss_expert,optimizer_expert,learning_rate_expert)
+                                        do_changed = aid_dl.change_dropout(model_keras,do_list_original,model_metrics,nr_classes,loss_expert,optimizer_expert,learning_rate_const)
                                         if model_keras_p!=None:#if model_keras_p is NOT None, there exists a parallel model, which also needs to be re-compiled
-                                            aid_dl.model_compile(model_keras_p,loss_expert,optimizer_expert,learning_rate_expert,model_metrics,nr_classes)
+                                            aid_dl.model_compile(model_keras_p,loss_expert,optimizer_expert,learning_rate_const,model_metrics,nr_classes)
                                             print("Recompiled parallel model to change dropout values back to original state. I'm not sure if this works!")
     
                                         if do_changed==1:
@@ -8755,14 +5787,15 @@ class MainWindow(QtWidgets.QMainWindow):
                                 else:
                                     lr_current = K.eval(model_keras[0].optimizer.lr)
     
-                                lr_diff = learning_rate_expert-lr_current
+                                lr_diff = learning_rate_const-lr_current
                                 if  abs(lr_diff) > 1e-6:
                                     if collection==False:
-                                        K.set_value(model_keras.optimizer.lr, learning_rate_expert)
+                                        K.set_value(model_keras.optimizer.lr, learning_rate_const)
                                     else:
-                                        K.set_value(model_keras[0].optimizer.lr, learning_rate_expert)
+                                        K.set_value(model_keras[0].optimizer.lr, learning_rate_const)
     
-                                    text_updates +=  "Changed the learning rate to "+ str(learning_rate_expert)+"\n"
+                                    text_updates +=  "Changed the learning rate to "+ str(learning_rate_const)+"\n"
+                                
                                 recompile = False
                                 #Compare current optimizer and the optimizer on expert tab:
                                 if collection==False:
@@ -8787,9 +5820,9 @@ class MainWindow(QtWidgets.QMainWindow):
     
                                 if recompile==True and collection==False:
                                     print("Recompiling...")
-                                    aid_dl.model_compile(model_keras,loss_expert,optimizer_expert,learning_rate_expert,model_metrics,nr_classes)
+                                    aid_dl.model_compile(model_keras,loss_expert,optimizer_expert,learning_rate_const,model_metrics,nr_classes)
                                     if model_keras_p!=None:#if model_keras_p is NOT None, there exists a parallel model, which also needs to be re-compiled
-                                        aid_dl.model_compile(model_keras_p,loss_expert,optimizer_expert,learning_rate_expert,model_metrics,nr_classes)
+                                        aid_dl.model_compile(model_keras_p,loss_expert,optimizer_expert,learning_rate_const,model_metrics,nr_classes)
                                         print("Recompiled parallel model to change optimizer, loss and learninig rate.")
     
                                 elif recompile==True and collection==True:
@@ -8798,7 +5831,7 @@ class MainWindow(QtWidgets.QMainWindow):
                                         return
                                     print("Recompiling...")
                                     for m in model_keras:
-                                        aid_dl.model_compile(m,loss_expert,optimizer_expert,learning_rate_expert,model_metrics,nr_classes)
+                                        aid_dl.model_compile(m,loss_expert,optimizer_expert,learning_rate_const,model_metrics,nr_classes)
     
                                 self.fittingpopups_ui[listindex].textBrowser_FittingInfo_pop.append(text_updates)
     
@@ -8876,28 +5909,32 @@ class MainWindow(QtWidgets.QMainWindow):
                                 print("Add Xtra Data to X_batch")
                                 X_batch = [X_batch,xtra_train]
 
+                            #generate a list of callbacks, get empty list if callback_lr is none
+                            callbacks = []
+                            if callback_lr!=None:
+                                callbacks.append(callback_lr)
+
                             ###################################################
                             ###############Actual fitting######################
                             ###################################################
     
                             if collection==False:
-                                if expert_mode == False and model_keras_p == None:
-                                    history = model_keras.fit(X_batch, Y_batch, batch_size=32, epochs=1,verbose=verbose, validation_data=(X_valid, Y_valid),class_weight=None)
-                                elif expert_mode == False and model_keras_p != None:
-                                    history = model_keras_p.fit(X_batch, Y_batch, batch_size=32, epochs=1,verbose=verbose, validation_data=(X_valid, Y_valid),class_weight=None)
-                                elif expert_mode == True and model_keras_p == None:
-                                    #Here the user can determine batch size epochs and learning rate of the model
-                                    #Fit model in with 'expert'-settings
-                                    history = model_keras.fit(X_batch, Y_batch, batch_size=batchSize_expert, epochs=epochs_expert,verbose=verbose, validation_data=(X_valid, Y_valid),class_weight=class_weight)
-                                elif expert_mode == True and model_keras_p != None:
-                                    history = model_keras_p.fit(X_batch, Y_batch, batch_size=batchSize_expert, epochs=epochs_expert,verbose=verbose, validation_data=(X_valid, Y_valid),class_weight=class_weight)
+                                if model_keras_p == None:
+                                    history = model_keras.fit(X_batch, Y_batch, batch_size=batchSize_expert, epochs=epochs_expert,verbose=verbose, validation_data=(X_valid, Y_valid),class_weight=class_weight,callbacks=callbacks)
+                                elif model_keras_p != None:
+                                    history = model_keras_p.fit(X_batch, Y_batch, batch_size=batchSize_expert, epochs=epochs_expert,verbose=verbose, validation_data=(X_valid, Y_valid),class_weight=class_weight,callbacks=callbacks)
                                 
                                 Histories.append(history.history)
                                 Stopwatch.append(time.time()-time_start)
-    
+                                learningrate = K.get_value(history.model.optimizer.lr)
+                                LearningRate.append(learningrate)
                                 #Check if any metric broke a record
                                 record_broken = False #initially, assume there is no new record
-                                for key in history.history.keys():
+                                
+                                history_keys = list(history.history.keys())
+                                if "lr" in history_keys: history_keys.remove("lr")
+                                
+                                for key in history_keys:
                                     value = history.history[key][-1]
                                     record = model_metrics_records[key]
                                     if 'val_acc' in key or 'val_precision' in key or 'val_recall' in key or 'val_f1_score' in key:
@@ -8972,21 +6009,20 @@ class MainWindow(QtWidgets.QMainWindow):
     
                             elif collection==True:
                                 for i in range(len(model_keras)):
-                                    if expert_mode==False:
-                                        history = model_keras[i].fit(X_batch, Y_batch, batch_size=32, epochs=1,verbose=verbose, validation_data=(X_valid, Y_valid),class_weight=None)
-                                        HISTORIES[i].append(history.history)
-                                    elif expert_mode==True:
-                                        #Here the user can determine batch size epochs and learning rate of the model
-                                        #Fit model in with 'expert'-settings
-                                        history = model_keras[i].fit(X_batch, Y_batch, batch_size=batchSize_expert, epochs=epochs_expert,verbose=verbose, validation_data=(X_valid, Y_valid),class_weight=class_weight)
-                                        HISTORIES[i].append(history.history)
+                                    #Expert-settings return automatically to default values when Expert-mode is unchecked
+                                    history = model_keras[i].fit(X_batch, Y_batch, batch_size=batchSize_expert, epochs=epochs_expert,verbose=verbose, validation_data=(X_valid, Y_valid),class_weight=class_weight,callbacks=callbacks)
+                                    HISTORIES[i].append(history.history)
                                     
                                     print("model_keras_path[i]")
                                     print(model_keras_path[i])
     
                                     #Check if any metric broke a record
                                     record_broken = False #initially, assume there is no new record
-                                    for key in history.history.keys():
+                                    
+                                    history_keys = list(history.history.keys())
+                                    if "lr" in history_keys: history_keys.remove("lr")
+                                    
+                                    for key in history_keys:
                                         value = history.history[key][-1]
                                         record = model_metrics_records[key]
                                         if 'val_acc' in key or 'val_precision' in key or 'val_recall' in key or 'val_f1_score' in key:
@@ -9018,7 +6054,9 @@ class MainWindow(QtWidgets.QMainWindow):
     
                             callback_progessbar = float(counter)/nr_epochs
                             progress_callback.emit(100.0*callback_progessbar)
-                            history_callback.emit(history.history)
+                            history_emit = history.history
+                            history_emit["LearningRate"] = [learningrate]
+                            history_callback.emit(history_emit)
                             Index.append(counter)
                             
                             t2 =  time.time()
@@ -9030,6 +6068,7 @@ class MainWindow(QtWidgets.QMainWindow):
                                     DF1 = pd.concat(DF1)
                                     DF1["Saved"] = Saved
                                     DF1["Time"] = Stopwatch
+                                    DF1["LearningRate"] = LearningRate
                                     DF1.index = Index
     
                                     #If this runs the first time, create the file with header
@@ -9039,7 +6078,7 @@ class MainWindow(QtWidgets.QMainWindow):
                                     writer.save()
                                     os.chmod(new_modelname.split(".model")[0]+'_meta.xlsx', S_IREAD|S_IRGRP|S_IROTH)
                                     print("meta.xlsx was saved")
-                                    Index,Histories,Saved,Stopwatch = [],[],[],[]#reset the lists
+                                    Index,Histories,Saved,Stopwatch,LearningRate = [],[],[],[],[]#reset the lists
                                     
                                 #Get a sensible frequency for saving the dataframe (every 20s)
                                 elif t2-t1>20:                                   
@@ -9048,6 +6087,7 @@ class MainWindow(QtWidgets.QMainWindow):
                                     DF1 = pd.concat(DF1)
                                     DF1["Saved"] = Saved
                                     DF1["Time"] = Stopwatch
+                                    DF1["LearningRate"] = LearningRate
                                     DF1.index = Index
 
                                     #Saving
@@ -9058,7 +6098,7 @@ class MainWindow(QtWidgets.QMainWindow):
                                         writer.save()
                                         os.chmod(new_modelname.split(".model")[0]+'_meta.xlsx', S_IREAD|S_IRGRP|S_IROTH)  #make read only
                                         print("meta.xlsx was saved")
-                                        Index,Histories,Saved,Stopwatch = [],[],[],[]#reset the lists
+                                        Index,Histories,Saved,Stopwatch,LearningRate = [],[],[],[],[]#reset the lists
                                         t1 = time.time()
                                         print("Saved to: "+new_modelname)
                                     else:#If folder not available, create a folder in temp
@@ -9102,7 +6142,7 @@ class MainWindow(QtWidgets.QMainWindow):
                                         writer.save()
                                         os.chmod(new_modelname.split(".model")[0]+'_meta.xlsx', S_IREAD|S_IRGRP|S_IROTH)
                                         print("meta.xlsx was saved")
-                                        Index,Histories,Saved,Stopwatch = [],[],[],[]#reset the lists
+                                        Index,Histories,Saved,Stopwatch,LearningRate = [],[],[],[],[]#reset the lists
                                         
                                         
                             if collection==True:
@@ -9158,6 +6198,7 @@ class MainWindow(QtWidgets.QMainWindow):
                     DF1 = pd.concat(DF1)
                     DF1["Saved"] = Saved
                     DF1["Time"] = Stopwatch
+                    DF1["LearningRate"] = LearningRate
                     DF1.index = Index
                     Index = []#reset the Index list
                     Histories = []#reset the Histories list
@@ -9224,9 +6265,10 @@ class MainWindow(QtWidgets.QMainWindow):
            msg.setStandardButtons(QtWidgets.QMessageBox.Ok)
            msg.exec_()
            return
-       
-        if model_keras==None:
-            self.action_initialize_model()
+
+        if model_keras==None:#in case the model got deleted in another task
+            self.action_initialize_model(duties="initialize_train")
+
             print("Had to re-run action_initialize_model!")
             model_keras = self.model_keras
             self.model_keras = None#delete this copy
@@ -9336,9 +6378,6 @@ class MainWindow(QtWidgets.QMainWindow):
 
 
 
-
-
-
         worker = Worker(self.action_fit_model_worker)
         #Get a signal from the worker to update the progressbar
         worker.signals.progress.connect(self.fittingpopups_ui[listindex].progressBar_Fitting_pop.setValue)
@@ -9371,7 +6410,7 @@ class MainWindow(QtWidgets.QMainWindow):
                         keys.insert(i,keys_first[i])
     
             for key in keys:
-                if "precision" in key or "f1" in key or "recall" in key:
+                if "precision" in key or "f1" in key or "recall" in key or "LearningRate" in key:
                     if not key in OtherMetrics_keys: #if this key is missing in self.fittingpopups_ui[listindex].RealTime_OtherMetrics attach it!
                         self.fittingpopups_ui[listindex].RealTime_OtherMetrics[key] = []
                     self.fittingpopups_ui[listindex].RealTime_OtherMetrics[key].append(dic[key])
@@ -9429,7 +6468,7 @@ class MainWindow(QtWidgets.QMainWindow):
                                 y = np.array(self.fittingpopups_ui[listindex].RealTime_Loss).astype(float)
                             elif key=="val_loss":
                                 y = np.array(self.fittingpopups_ui[listindex].RealTime_ValLoss).astype(float)
-                            elif "precision" in key or "f1" in key or "recall" in key:
+                            elif "precision" in key or "f1" in key or "recall" in key or "LearningRate" in key:
                                y = np.array(self.fittingpopups_ui[listindex].RealTime_OtherMetrics[key]).astype(float).reshape(-1,)
                             else:
                                 return
@@ -9449,6 +6488,831 @@ class MainWindow(QtWidgets.QMainWindow):
         #Finally start the worker!
         self.threadpool.start(worker)
         self.fittingpopups[listindex].show()
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+    def action_lr_finder(self):
+        #lr_find
+        model_keras = self.model_keras
+        if type(model_keras)==tuple:
+            collection=True
+            msg = QtWidgets.QMessageBox()
+            msg.setIcon(QtWidgets.QMessageBox.Warning)       
+            msg.setText("LR screening is not supported for Collections of models. Please select single model")
+            msg.setWindowTitle("LR screening not supported for Collections!")
+            msg.setStandardButtons(QtWidgets.QMessageBox.Ok)
+            msg.exec_()
+            return
+        else:
+            collection=False
+            
+        #Check if there was a model initialized:
+        new_modelname = str(self.lineEdit_modelname.text())
+        
+        if len(new_modelname)==0:
+           msg = QtWidgets.QMessageBox()
+           msg.setIcon(QtWidgets.QMessageBox.Information)       
+           msg.setText("Please define a path/filename for the model to be fitted!")
+           msg.setWindowTitle("Model path/ filename missing!")
+           msg.setStandardButtons(QtWidgets.QMessageBox.Ok)
+           msg.exec_()
+           return
+
+        if model_keras==None:#in case the model got deleted in another task
+            self.action_initialize_model(duties="initialize_train")
+            print("Had to re-run action_initialize_model!")
+            model_keras = self.model_keras
+            self.model_keras = None#delete this copy
+            
+            if model_keras==None:
+                return
+            if not model_keras==None:
+                msg = QtWidgets.QMessageBox()
+                msg.setIcon(QtWidgets.QMessageBox.Information)       
+                msg.setText("Model is now initialized for you, Please check Model summary window below if everything is correct and then press Fit again!")
+                msg.setWindowTitle("No initilized model found!")
+                msg.setStandardButtons(QtWidgets.QMessageBox.Ok)
+                msg.exec_()
+                return
+
+        nr_classes = int(model_keras.output.shape.dims[1])
+
+        if nr_classes<2:
+           msg = QtWidgets.QMessageBox()
+           msg.setIcon(QtWidgets.QMessageBox.Information)       
+           msg.setText("Please define at least two classes")
+           msg.setWindowTitle("Not enough classes")
+           msg.setStandardButtons(QtWidgets.QMessageBox.Ok)
+           msg.exec_()
+           return
+        
+        #define a variable on self which allows the fit_model_worker to load this model and fit
+        #(sorry, this is necessary since TensorFlow does not support passing models between threads)
+        self.model_keras_path = new_modelname.split(".model")[0]+"_0.model"
+        #save a first version of the .model
+        model_keras.save(self.model_keras_path)
+        #Delete the variable to save RAM
+        model_keras = None #Since this uses TensorFlow, I have to reload the model action_fit_model_worker anyway
+
+        #Check that Data is on RAM
+        DATA_len = len(self.ram) #this returns the len of a dictionary. The dictionary is supposed to contain the training/validation data; otherwise the data is read from .rtdc data directly (SLOW unless you have ultra-good SSD)
+
+        def popup_data_to_ram(button):
+            yes_or_no = button.text()
+            if yes_or_no == "&Yes":
+                print("Moving data to ram")
+                self.actionDataToRamNow_function()
+            elif yes_or_no == "&No":
+                pass
+            
+        if DATA_len==0:
+           msg = QtWidgets.QMessageBox()
+           msg.setIcon(QtWidgets.QMessageBox.Information)       
+           msg.setText("Would you like transfer the Data to RAM now?\n(Currently the data is not in RAM and would be read from .rtdc, which slows down fitting dramatically unless you have a super-fast SSD.)")
+           msg.setWindowTitle("Data to RAM now?")
+           msg.setStandardButtons(QtWidgets.QMessageBox.Yes | QtWidgets.QMessageBox.No)
+           msg.buttonClicked.connect(popup_data_to_ram)
+           msg.exec_()
+
+        worker = Worker(self.action_lr_finder_worker)
+        #Get a signal from the worker to update the progressbar
+        worker.signals.progress.connect(print)
+        worker.signals.history.connect(print)
+        #Finally start the worker!
+        self.threadpool.start(worker)
+
+
+    def action_lr_finder_worker(self,progress_callback,history_callback):        
+        if self.radioButton_cpu.isChecked():
+            gpu_used = False
+            deviceSelected = str(self.comboBox_cpu.currentText())
+        elif self.radioButton_gpu.isChecked():
+            gpu_used = True
+            deviceSelected = str(self.comboBox_gpu.currentText())
+        gpu_memory = float(self.doubleSpinBox_memory.value())
+
+        #Retrieve more Multi-GPU Options from Menubar:
+        cpu_merge = bool(self.actioncpu_merge.isEnabled())
+        cpu_relocation = bool(self.actioncpu_relocation.isEnabled())
+        cpu_weight_merge = bool(self.actioncpu_weightmerge.isEnabled())    
+
+        #Create config (define which device to use)
+        config_gpu = aid_dl.get_config(cpu_nr,gpu_nr,deviceSelected,gpu_memory)
+        
+        with tf.Session(graph = tf.Graph(), config=config_gpu) as sess:                   
+            #get an index of the fitting popup
+            #listindex = self.popupcounter-1
+            #Get user-specified filename for the new model
+            model_keras_path = self.model_keras_path
+            
+            if type(model_keras_path)==list:
+                collection = True
+                msg = QtWidgets.QMessageBox()
+                msg.setIcon(QtWidgets.QMessageBox.Warning)       
+                msg.setText("LR screening is currently not supported for Collections of models. Please use single model")
+                msg.setWindowTitle("LR screening not supported for Collections")
+                msg.setStandardButtons(QtWidgets.QMessageBox.Ok)
+                msg.exec_()                        
+                return
+    
+            else:
+                collection = False
+    
+                if deviceSelected=="Multi-GPU" and cpu_weight_merge==True:
+                    with tf.device("/cpu:0"):
+                        model_keras = load_model(model_keras_path,custom_objects=aid_dl.get_custom_metrics()) 
+                else:
+                    model_keras = load_model(model_keras_path,custom_objects=aid_dl.get_custom_metrics())
+                
+            #Initialize a variable for the parallel model
+            model_keras_p = None
+    
+            #Multi-GPU
+            if deviceSelected=="Multi-GPU":
+                if collection==False:
+                    print("Adjusting the model for Multi-GPU")
+                    model_keras_p = multi_gpu_model(model_keras, gpus=gpu_nr, cpu_merge=cpu_merge, cpu_relocation=cpu_relocation)#indicate the numbers of gpus that you have
+                    if self.radioButton_LoadContinueModel.isChecked():#calling multi_gpu_model resets the weights. Hence, they need to be put in place again
+                        model_keras_p.layers[-2].set_weights(model_keras.get_weights())
+                elif collection==True:
+                    print("Collection & Multi-GPU is not supported yet")
+                    return
+    
+            ##############Main function after hitting FIT MODEL####################
+            if self.radioButton_LoadRestartModel.isChecked():
+                load_modelname = str(self.lineEdit_LoadModelPath.text())
+            elif self.radioButton_LoadContinueModel.isChecked():
+                load_modelname = str(self.lineEdit_LoadModelPath.text())
+            elif self.radioButton_NewModel.isChecked():
+                load_modelname = "" #No model is loaded
+    
+            if collection==False:    
+                #model_config = model_keras.get_config()#["layers"] 
+                nr_classes = int(model_keras.output.shape.dims[1])
+            if collection==True:
+                #model_config = model_keras.get_config()#["layers"] 
+                nr_classes = int(model_keras[0].output.shape.dims[1])
+            
+            #Metrics to be displayed during fitting (real-time)
+            model_metrics = self.get_metrics(nr_classes)
+    
+            #Compile model
+            if  deviceSelected=="Single-GPU":
+                model_keras.compile(loss='categorical_crossentropy',optimizer='adam',metrics=model_metrics)#dont specify loss and optimizer yet...expert stuff will follow and model will be recompiled
+            elif deviceSelected=="Multi-GPU":
+                model_keras_p.compile(loss='categorical_crossentropy',optimizer='adam',metrics=model_metrics)#dont specify loss and optimizer yet...expert stuff will follow and model will be recompiled
+
+            #Collect all information about the fitting routine that was user
+            #defined
+            if self.actionVerbose.isChecked()==True:
+                verbose = 1
+            else:
+                verbose = 0
+    
+            trainable_original, layer_names = self.trainable_original, self.layer_names
+                
+            crop = int(self.spinBox_imagecrop.value())      
+            norm = str(self.comboBox_Normalization.currentText())
+    
+            nr_epochs = int(self.spinBox_NrEpochs.value())
+            h_flip = bool(self.checkBox_HorizFlip.isChecked())
+            v_flip = bool(self.checkBox_VertFlip.isChecked())
+            rotation = float(self.lineEdit_Rotation.text())
+     
+            width_shift = float(self.lineEdit_widthShift.text())
+            height_shift = float(self.lineEdit_heightShift.text())
+            zoom = float(self.lineEdit_zoomRange.text())
+            shear = float(self.lineEdit_shearRange.text())
+            
+            brightness_add_lower = float(self.spinBox_PlusLower.value())
+            brightness_add_upper = float(self.spinBox_PlusUpper.value())
+            brightness_mult_lower = float(self.doubleSpinBox_MultLower.value())
+            brightness_mult_upper = float(self.doubleSpinBox_MultUpper.value())
+            gaussnoise_mean = float(self.doubleSpinBox_GaussianNoiseMean.value())
+            gaussnoise_scale = float(self.doubleSpinBox_GaussianNoiseScale.value())
+    
+            contrast_on = bool(self.checkBox_contrast.isChecked())        
+            contrast_lower = float(self.doubleSpinBox_contrastLower.value())
+            contrast_higher = float(self.doubleSpinBox_contrastHigher.value())
+            saturation_on = bool(self.checkBox_saturation.isChecked())        
+            saturation_lower = float(self.doubleSpinBox_saturationLower.value())
+            saturation_higher = float(self.doubleSpinBox_saturationHigher.value())
+            hue_on = bool(self.checkBox_hue.isChecked())        
+            hue_delta = float(self.doubleSpinBox_hueDelta.value())
+    
+            avgBlur_on = bool(self.checkBox_avgBlur.isChecked())        
+            avgBlur_min = int(self.spinBox_avgBlurMin.value())
+            avgBlur_max = int(self.spinBox_avgBlurMax.value())
+            gaussBlur_on = bool(self.checkBox_gaussBlur.isChecked())        
+            gaussBlur_min = int(self.spinBox_gaussBlurMin.value())
+            gaussBlur_max = int(self.spinBox_gaussBlurMax.value())
+            motionBlur_on = bool(self.checkBox_motionBlur.isChecked())        
+            motionBlur_kernel = str(self.lineEdit_motionBlurKernel.text())
+            motionBlur_angle = str(self.lineEdit_motionBlurAngle.text())
+            motionBlur_kernel = tuple(ast.literal_eval(motionBlur_kernel)) #translate string in the lineEdits to a tuple
+            motionBlur_angle = tuple(ast.literal_eval(motionBlur_angle)) #translate string in the lineEdits to a tuple
+    
+            if collection==False:
+                expert_mode = bool(self.groupBox_expertMode.isChecked())
+            elif collection==True:
+                expert_mode = self.groupBox_expertMode.setChecked(False)
+                print("Expert mode was switched off. Not implemented yet for collections")
+                expert_mode = False
+    
+            learning_rate_const = float(self.doubleSpinBox_learningRate.value())
+            loss_expert = str(self.comboBox_expt_loss.currentText()).lower()
+            optimizer_expert = str(self.comboBox_optimizer.currentText()).lower()
+            paddingMode = str(self.comboBox_paddingMode.currentText()).lower()
+    
+            train_last_layers = bool(self.checkBox_trainLastNOnly.isChecked())             
+            train_last_layers_n = int(self.spinBox_trainLastNOnly.value())              
+            train_dense_layers = bool(self.checkBox_trainDenseOnly.isChecked())             
+            dropout_expert_on = bool(self.checkBox_dropout.isChecked())             
+            try:
+                dropout_expert = str(self.lineEdit_dropout.text()) #due to the validator, there are no squ.brackets
+                dropout_expert = "["+dropout_expert+"]"
+                dropout_expert = ast.literal_eval(dropout_expert)        
+            except:
+                dropout_expert = []
+            lossW_expert = str(self.lineEdit_lossW.text())
+    
+            #To get the class weights (loss), the SelectedFiles are required 
+            SelectedFiles = self.items_clicked()
+            #Check if xtra_data should be used for training
+            xtra_in = [s["xtra_in"] for s in SelectedFiles]
+            if len(set(xtra_in))==1:
+                xtra_in = list(set(xtra_in))[0]
+            elif len(set(xtra_in))>1:# False and True is present. Not supported
+                print("Xtra data is used only for some files. Xtra data needs to be used either by all or by none!")
+                return
+
+            #Get the class weights. This function runs now the first time in the fitting routine. 
+            #It is possible that the user chose Custom weights and then changed the classes. Hence first check if 
+            #there is a weight for each class available.
+            class_weight = self.get_class_weight(SelectedFiles,lossW_expert,custom_check_classes=True)
+            if type(class_weight)==list:
+                #There has been a mismatch between the classes described in class_weight and the classes available in SelectedFiles!
+                lossW_expert = class_weight[0] #overwrite 
+                class_weight = class_weight[1]
+                print(class_weight)
+                print("There has been a mismatch between the classes described in \
+                      Loss weights and the classes available in the selected files! \
+                      Hence, the Loss weights are set to Balanced")
+                
+                
+            ###############################Expert Mode values##################
+            if expert_mode==True:
+                #Some settings only need to be changed once, after user clicked apply at next epoch
+
+                #Apply the changes to trainable states:
+                if train_last_layers==True:#Train only the last n layers
+                    print("Train only the last "+str(train_last_layers_n)+ " layer(s)")
+                    trainable_new = (len(trainable_original)-train_last_layers_n)*[False]+train_last_layers_n*[True]
+                    summary = aid_dl.model_change_trainability(model_keras,trainable_new,model_metrics,nr_classes,loss_expert,optimizer_expert,learning_rate_const)
+                    if model_keras_p!=None:#if this is NOT None, there exists a parallel model, which also needs to be re-compiled
+                        aid_dl.model_compile(model_keras_p,loss_expert,optimizer_expert,learning_rate_const,model_metrics,nr_classes)
+                        print("Recompiled parallel model for train_last_layers==True")
+                    text1 = "Expert mode: Request for custom trainability states: train only the last "+str(train_last_layers_n)+ " layer(s)\n"
+                    #text2 = "\n--------------------\n"
+                    print(text1+summary)
+                if train_dense_layers==True:#Train only dense layers
+                    print("Train only dense layers")
+                    layer_dense_ind = ["Dense" in x for x in layer_names]
+                    layer_dense_ind = np.where(np.array(layer_dense_ind)==True)[0] #at which indices are dropout layers?
+                    #create a list of trainable states
+                    trainable_new = len(trainable_original)*[False]
+                    for index in layer_dense_ind:
+                        trainable_new[index] = True
+                    summary = aid_dl.model_change_trainability(model_keras,trainable_new,model_metrics,nr_classes,loss_expert,optimizer_expert,learning_rate_const)                  
+                    if model_keras_p!=None:#if this is NOT None, there exists a parallel model, which also needs to be re-compiled
+                        aid_dl.model_compile(model_keras_p,loss_expert,optimizer_expert,learning_rate_const,model_metrics,nr_classes)
+                        print("Recompiled parallel model for train_dense_layers==True")
+                    text1 = "Expert mode: Request for custom trainability states: train only dense layer(s)\n"
+                    #text2 = "\n--------------------\n"
+                    print(text1+summary)
+    
+                if dropout_expert_on==True:
+                    #The user apparently want to change the dropout rates
+                    do_list = aid_dl.get_dropout(model_keras)#Get a list of dropout values of the current model
+                    #Compare the dropout values in the model to the dropout values requested by user
+                    if len(dropout_expert)==1:#if the user gave a single float
+                        dropout_expert_list = len(do_list)*dropout_expert #convert to list
+                    elif len(dropout_expert)>1:
+                        dropout_expert_list = dropout_expert
+                        if not len(dropout_expert_list)==len(do_list):
+                            text = "Issue with dropout: you defined "+str(len(dropout_expert_list))+" dropout rates, but model has "+str(len(do_list))+" dropout layers"
+                            print(text)
+                    else:
+                        text = "Could not understand user input at Expert->Dropout"
+                        print(text)
+                        dropout_expert_list = []
+                    if len(dropout_expert_list)>0 and do_list!=dropout_expert_list:#if the dropout rates of the current model is not equal to the required do_list from user...
+                        do_changed = aid_dl.change_dropout(model_keras,dropout_expert_list,model_metrics,nr_classes,loss_expert,optimizer_expert,learning_rate_const)
+                        if model_keras_p!=None:#if this is NOT None, there exists a parallel model, which also needs to be re-compiled
+                            aid_dl.model_compile(model_keras_p,loss_expert,optimizer_expert,learning_rate_const,model_metrics,nr_classes)
+                            print("Recompiled parallel model to change dropout. I'm not sure if this works already!")
+                        if do_changed==1:
+                            text_do = "Dropout rate(s) in model was/were changed to: "+str(dropout_expert_list)
+                        else:
+                            text_do = "Dropout rate(s) in model was/were not changed"
+                    else:
+                        text_do = "Dropout rate(s) in model was/were not changed"
+                    print(text_do)    
+    
+            text_updates = ""
+            #Compare current lr and the lr on expert tab:
+            if collection == False:
+                lr_current = K.eval(model_keras.optimizer.lr)
+            else:
+                lr_current = K.eval(model_keras[0].optimizer.lr)
+    
+            lr_diff = learning_rate_const-lr_current
+            if  abs(lr_diff) > 1e-6:
+                if collection == False:
+                    K.set_value(model_keras.optimizer.lr, learning_rate_const)
+                if collection == True:
+                    for m in model_keras:
+                        K.set_value(m.optimizer.lr, learning_rate_const)
+                text_updates +=  "Changed the learning rate to "+ str(learning_rate_const)+"\n"
+            recompile = False
+            #Compare current optimizer and the optimizer on expert tab:
+            if collection==False:
+                optimizer_current = aid_dl.get_optimizer_name(model_keras).lower()#get the current optimizer of the model
+            if collection==True:
+                optimizer_current = aid_dl.get_optimizer_name(model_keras[0]).lower()#get the current optimizer of the model
+    
+            if optimizer_current!=optimizer_expert.lower():#if the current model has a different optimizer
+                recompile = True
+                text_updates+="Changed the optimizer to "+optimizer_expert+"\n"
+    
+            #Compare current loss function and the loss-function on expert tab:
+            if collection==False:
+                if model_keras.loss!=loss_expert:
+                    recompile = True
+                    text_updates+="Changed the loss function to "+loss_expert+"\n"
+            if collection==True:
+                if model_keras[0].loss!=loss_expert:
+                    recompile = True
+                    text_updates+="Changed the loss function to "+loss_expert+"\n"
+    
+    
+            if recompile==True:
+                print("Recompiling...")
+                if collection==False:
+                    aid_dl.model_compile(model_keras,loss_expert,optimizer_expert,learning_rate_const,model_metrics,nr_classes)
+                if collection==True:
+                    for m in model_keras[1]:
+                        aid_dl.model_compile(m, loss_expert, optimizer_expert, learning_rate_const,model_metrics, nr_classes)
+                if model_keras_p!=None:#if this is NOT None, there exists a parallel model, which also needs to be re-compiled
+                    aid_dl.model_compile(model_keras_p,loss_expert,optimizer_expert,learning_rate_const,model_metrics,nr_classes)
+                    print("Recompiled parallel model to adjust learning rate, loss, optimizer")
+    
+            print(text_updates)
+        
+            ######################Load the Training Data################################
+            ind = [selectedfile["TrainOrValid"] == "Train" for selectedfile in SelectedFiles]
+            ind = np.where(np.array(ind)==True)[0]
+            SelectedFiles_train = np.array(SelectedFiles)[ind]
+            SelectedFiles_train = list(SelectedFiles_train)
+            indices_train = [selectedfile["class"] for selectedfile in SelectedFiles_train]
+            nr_events_epoch_train = [selectedfile["nr_events_epoch"] for selectedfile in SelectedFiles_train]
+            rtdc_path_train = [selectedfile["rtdc_path"] for selectedfile in SelectedFiles_train]
+            zoom_factors_train = [selectedfile["zoom_factor"] for selectedfile in SelectedFiles_train]
+            zoom_order = [self.actionOrder0.isChecked(),self.actionOrder1.isChecked(),self.actionOrder2.isChecked(),self.actionOrder3.isChecked(),self.actionOrder4.isChecked(),self.actionOrder5.isChecked()]
+            zoom_order = int(np.where(np.array(zoom_order)==True)[0])
+            shuffle_train = [selectedfile["shuffle"] for selectedfile in SelectedFiles_train]
+            xtra_in = set([selectedfile["xtra_in"] for selectedfile in SelectedFiles_train])   
+            if len(xtra_in)>1:# False and True is present. Not supported
+                print("Xtra data is used only for some files. Xtra data needs to be used either by all or by none!")
+                return
+            xtra_in = list(xtra_in)[0]#this is either True or False
+            
+            #read self.ram to new variable ; next clear ram. This is required for multitasking (training multiple models with maybe different data)
+            DATA = self.ram
+            if verbose==1:
+                print("Length of DATA (in RAM) = "+str(len(DATA)))
+            #clear the ram again 
+            self.ram = dict()
+            #If the scaling method is "divide by mean and std of the whole training set":
+            if norm == "StdScaling using mean and std of all training data":
+                mean_trainingdata,std_trainingdata = [],[]
+                for i in range(len(SelectedFiles_train)):
+                    if len(DATA)==0: #Here, the entire training set needs to be used! Not only random images!
+                        #Replace=true: means individual cells could occur several times
+                        gen_train = aid_img.gen_crop_img(crop,rtdc_path_train[i],random_images=False,zoom_factor=zoom_factors_train[i],zoom_order=zoom_order,color_mode=self.get_color_mode(),padding_mode=paddingMode) 
+                    else:
+                        gen_train = aid_img.gen_crop_img_ram(DATA,rtdc_path_train[i],random_images=False) #Replace true means that individual cells could occur several times
+                        if self.actionVerbose.isChecked():
+                            print("Loaded data from RAM")
+                        
+                    images = next(gen_train)[0]
+                    mean_trainingdata.append(np.mean(images))
+                    std_trainingdata.append(np.std(images))
+                mean_trainingdata = np.mean(np.array(mean_trainingdata))
+                std_trainingdata = np.mean(np.array(std_trainingdata))
+                
+                if np.allclose(std_trainingdata,0):
+                    std_trainingdata = 0.0001
+    
+                    msg = QtWidgets.QMessageBox()
+                    msg.setIcon(QtWidgets.QMessageBox.Information)       
+                    text = "<html><head/><body><p>The standard deviation of your training data is zero! This would lead to division by zero. To avoid this, I will divide by 0.0001 instead.</p></body></html>"
+                    msg.setText(text) 
+                    msg.setWindowTitle("Std. is zero")
+                    msg.setStandardButtons(QtWidgets.QMessageBox.Ok)
+                    msg.exec_()
+    
+    
+            ######################Load the Validation Data################################
+            ind = [selectedfile["TrainOrValid"] == "Valid" for selectedfile in SelectedFiles]
+            ind = np.where(np.array(ind)==True)[0]
+            SelectedFiles_valid = np.array(SelectedFiles)[ind]
+            SelectedFiles_valid = list(SelectedFiles_valid)
+            indices_valid = [selectedfile["class"] for selectedfile in SelectedFiles_valid]
+            nr_events_epoch_valid = [selectedfile["nr_events_epoch"] for selectedfile in SelectedFiles_valid]
+            rtdc_path_valid = [selectedfile["rtdc_path"] for selectedfile in SelectedFiles_valid]
+            zoom_factors_valid = [selectedfile["zoom_factor"] for selectedfile in SelectedFiles_valid]
+            zoom_order = [self.actionOrder0.isChecked(),self.actionOrder1.isChecked(),self.actionOrder2.isChecked(),self.actionOrder3.isChecked(),self.actionOrder4.isChecked(),self.actionOrder5.isChecked()]
+            zoom_order = int(np.where(np.array(zoom_order)==True)[0])
+            shuffle_valid = [selectedfile["shuffle"] for selectedfile in SelectedFiles_valid]
+            xtra_in = set([selectedfile["xtra_in"] for selectedfile in SelectedFiles_valid])   
+            if len(xtra_in)>1:# False and True is present. Not supported
+                print("Xtra data is used only for some files. Xtra data needs to be used either by all or by none!")
+                return
+            xtra_in = list(xtra_in)[0]#this is either True or False
+
+            ############Cropping#####################
+            X_valid,y_valid,Indices,xtra_valid = [],[],[],[]
+            for i in range(len(SelectedFiles_valid)):
+                if not self.actionDataToRam.isChecked():
+                    #Replace=true means individual cells could occur several times
+                    gen_valid = aid_img.gen_crop_img(crop,rtdc_path_valid[i],nr_events_epoch_valid[i],random_images=shuffle_valid[i],replace=True,zoom_factor=zoom_factors_valid[i],zoom_order=zoom_order,color_mode=self.get_color_mode(),padding_mode=paddingMode,xtra_in=xtra_in)
+                else: #get a similar generator, using the ram-data
+                    if len(DATA)==0:
+                        #Replace=true means individual cells could occur several times
+                        gen_valid = aid_img.gen_crop_img(crop,rtdc_path_valid[i],nr_events_epoch_valid[i],random_images=shuffle_valid[i],replace=True,zoom_factor=zoom_factors_valid[i],zoom_order=zoom_order,color_mode=self.get_color_mode(),padding_mode=paddingMode,xtra_in=xtra_in)
+                    else:
+                        gen_valid = aid_img.gen_crop_img_ram(DATA,rtdc_path_valid[i],nr_events_epoch_valid[i],random_images=shuffle_valid[i],replace=True,xtra_in=xtra_in) #Replace true means that individual cells could occur several times
+                        if self.actionVerbose.isChecked():
+                            print("Loaded data from RAM")
+                generator_cropped_out = next(gen_valid)
+                X_valid.append(generator_cropped_out[0])
+                #y_valid.append(np.repeat(indices_valid[i],nr_events_epoch_valid[i]))
+                y_valid.append(np.repeat(indices_valid[i],X_valid[-1].shape[0]))
+                Indices.append(generator_cropped_out[1])
+                xtra_valid.append(generator_cropped_out[2])
+                del generator_cropped_out
+                
+            X_valid = np.concatenate(X_valid)
+            y_valid = np.concatenate(y_valid)
+            Y_valid = np_utils.to_categorical(y_valid, nr_classes)# * 2 - 1
+            xtra_valid = np.concatenate(xtra_valid)
+    
+            if len(X_valid.shape)==4:
+                channels=3
+            elif len(X_valid.shape)==3:
+                channels=1
+            else:
+                print("Invalid data dimension:" +str(X_valid.shape))
+            if channels==1:
+                #Add the "channels" dimension
+                X_valid = np.expand_dims(X_valid,3)
+    
+            #get it to theano image format (channels first)
+            #X_valid = X_valid.swapaxes(-1,-2).swapaxes(-2,-3)
+            if norm == "StdScaling using mean and std of all training data":
+                X_valid = aid_img.norm_imgs(X_valid,norm,mean_trainingdata,std_trainingdata)
+            else:
+                X_valid = aid_img.norm_imgs(X_valid,norm)
+    
+            #Validation data can be cropped to final size already since no augmentation
+            #will happen on this data set
+            dim_val = X_valid.shape
+            print("Current dim. of validation set (pixels x pixels)="+str(dim_val[2]))
+            if dim_val[2]!=crop:
+                print("Change dim. (pixels x pixels) of validation set to ="+str(crop))
+                remove = int(dim_val[2]/2.0 - crop/2.0)
+                X_valid = X_valid[:,remove:remove+crop,remove:remove+crop,:] #crop to crop x crop pixels #TensorFlow
+            
+            if xtra_in==True:
+                print("Add Xtra Data to X_valid")
+                X_valid = [X_valid,xtra_valid]
+    
+    
+    
+            ###############Continue with training data:augmentation############
+            #Rotating could create edge effects. Avoid this by making crop a bit larger for now
+            #Worst case would be a 45degree rotation:
+            cropsize2 = np.sqrt(crop**2+crop**2)
+            cropsize2 = np.ceil(cropsize2 / 2.) * 2 #round to the next even number
+
+            model_metrics_names = []
+            for met in model_metrics:
+                if type(met)==str:
+                    model_metrics_names.append(met) 
+                else:
+                    metname = met.name
+                    metlabel = met.label
+                    if metlabel>0:
+                        metname = metname+"_"+str(metlabel)
+                    model_metrics_names.append(metname) 
+
+            ############Keras image augmentation#####################
+            #Start the first iteration:                
+            X_train,y_train,xtra_train = [],[],[]
+            t3 = time.time()
+            for i in range(len(SelectedFiles_train)):
+                if len(DATA)==0:
+                    #Replace true means that individual cells could occur several times
+                    gen_train = aid_img.gen_crop_img(cropsize2,rtdc_path_train[i],nr_events_epoch_train[i],random_images=shuffle_train[i],replace=True,zoom_factor=zoom_factors_train[i],zoom_order=zoom_order,color_mode=self.get_color_mode(),padding_mode=paddingMode,xtra_in=xtra_in) 
+                else:
+                    gen_train = aid_img.gen_crop_img_ram(DATA,rtdc_path_train[i],nr_events_epoch_train[i],random_images=shuffle_train[i],replace=True,xtra_in=xtra_in) #Replace true means that individual cells could occur several times
+                    if self.actionVerbose.isChecked():
+                        print("Loaded data from RAM")
+                data_ = next(gen_train)
+                X_train.append(data_[0])
+                y_train.append(np.repeat(indices_train[i],X_train[-1].shape[0]))
+                if xtra_in==True:
+                    xtra_train.append(data_[2])
+                del data_
+                
+            X_train = np.concatenate(X_train)
+            X_train = X_train.astype(np.uint8)
+            y_train = np.concatenate(y_train)
+            if xtra_in==True:
+                print("Retrieve Xtra Data...")
+                xtra_train = np.concatenate(xtra_train)
+            
+            t4 = time.time()
+            if verbose == 1:
+                print("Time to load data (from .rtdc or RAM) and crop="+str(t4-t3))
+            
+            if len(X_train.shape)==4:
+                channels=3
+            elif len(X_train.shape)==3:
+                channels=1
+            else:
+                print("Invalid data dimension:" +str(X_train.shape))
+            if channels==1:
+                #Add the "channels" dimension
+                X_train = np.expand_dims(X_train,3)
+
+            t3 = time.time()
+            
+            #Affine augmentation
+            X_batch = aid_img.affine_augm(X_train,v_flip,h_flip,rotation,width_shift,height_shift,zoom,shear) #Affine image augmentation
+            y_batch = np.copy(y_train)
+   
+            Y_batch = np_utils.to_categorical(y_batch, nr_classes)# * 2 - 1
+            t4 = time.time()
+            if verbose == 1:
+                print("Time to perform affine augmentation ="+str(t4-t3))
+                    
+            t3 = time.time()            
+            #Now do the final cropping to the actual size that was set by user
+            dim = X_batch.shape
+            if dim[2]!=crop:
+                remove = int(dim[2]/2.0 - crop/2.0)
+                X_batch = X_batch[:,remove:remove+crop,remove:remove+crop,:] #crop to crop x crop pixels #TensorFlow
+            t4 = time.time()
+
+            X_batch_orig = np.copy(X_batch) #save into new array and do some iterations with varying noise/brightness
+            #reuse this X_batch_orig a few times since this augmentation was costly
+
+            if self.actionVerbose.isChecked()==True:
+                verbose = 1
+            else:
+                verbose = 0                            
+                                                            
+            #In each iteration, start with non-augmented data
+            X_batch = np.copy(X_batch_orig)#copy from X_batch_orig, X_batch will be altered without altering X_batch_orig            
+            X_batch = X_batch.astype(np.uint8)                            
+            
+            ##########Contrast/Saturation/Hue augmentation#########
+            #is there any of contrast/saturation/hue augmentation to do?
+            X_batch = X_batch.astype(np.uint8)
+
+            if contrast_on:
+                t_con_aug_1 = time.time()
+                X_batch = aid_img.contrast_augm_cv2(X_batch,contrast_lower,contrast_higher) #this function is almost 15 times faster than random_contrast from tf!
+                t_con_aug_2 = time.time()
+                if verbose == 1:
+                    print("Time to augment contrast="+str(t_con_aug_2-t_con_aug_1))
+
+            if saturation_on or hue_on:
+                t_sat_aug_1 = time.time()
+                X_batch = aid_img.satur_hue_augm_cv2(X_batch.astype(np.uint8),saturation_on,saturation_lower,saturation_higher,hue_on,hue_delta) #Gray and RGB; both values >0!
+                t_sat_aug_2 = time.time()
+                if verbose == 1:
+                    print("Time to augment saturation/hue="+str(t_sat_aug_2-t_sat_aug_1))
+
+            ##########Average/Gauss/Motion blurring#########
+            #is there any of blurring to do?
+            if avgBlur_on:
+                t_avgBlur_1 = time.time()
+                X_batch = aid_img.avg_blur_cv2(X_batch,avgBlur_min,avgBlur_max)
+                t_avgBlur_2 = time.time()
+                if verbose == 1:
+                    print("Time to perform average blurring="+str(t_avgBlur_2-t_avgBlur_1))
+
+            if gaussBlur_on:
+                t_gaussBlur_1 = time.time()
+                X_batch = aid_img.gauss_blur_cv(X_batch,gaussBlur_min,gaussBlur_max)
+                t_gaussBlur_2 = time.time()
+                if verbose == 1:
+                    print("Time to perform gaussian blurring="+str(t_gaussBlur_2-t_gaussBlur_1))
+
+            if motionBlur_on:
+                t_motionBlur_1 = time.time()
+                X_batch = aid_img.motion_blur_cv(X_batch,motionBlur_kernel,motionBlur_angle)
+                t_motionBlur_2 = time.time()
+                if verbose == 1:
+                    print("Time to perform motion blurring="+str(t_motionBlur_2-t_motionBlur_1))
+
+            ##########Brightness noise#########
+            t3 = time.time()
+            X_batch = aid_img.brightn_noise_augm_cv2(X_batch,brightness_add_lower,brightness_add_upper,brightness_mult_lower,brightness_mult_upper,gaussnoise_mean,gaussnoise_scale)
+            t4 = time.time()
+            if verbose == 1:
+                print("Time to augment brightness="+str(t4-t3))
+
+            t3 = time.time()
+            if norm == "StdScaling using mean and std of all training data":
+                X_batch = aid_img.norm_imgs(X_batch,norm,mean_trainingdata,std_trainingdata)
+            else:
+                X_batch = aid_img.norm_imgs(X_batch,norm)
+            t4 = time.time()
+            if verbose == 1:
+                print("Time to apply normalization="+str(t4-t3))
+            
+            if verbose == 1: 
+                print("X_batch.shape")
+                print(X_batch.shape)
+
+            if xtra_in==True:
+                print("Add Xtra Data to X_batch")
+                X_batch = [X_batch,xtra_train]
+
+            ###################################################
+            ###############Actual fitting######################
+            ###################################################
+
+            batch_size = int(self.popup_lrfinder_ui.spinBox_batchSize.value())
+            stepsPerEpoch = int(self.popup_lrfinder_ui.spinBox_stepsPerEpoch.value())
+            epochs = int(self.popup_lrfinder_ui.spinBox_epochs.value())
+            start_lr = float(self.popup_lrfinder_ui.lineEdit_startLr.text())
+            stop_lr = float(self.popup_lrfinder_ui.lineEdit_stopLr.text())
+            
+            #color = self.popup_lrfinder_ui.pushButton_color.background()
+            color = self.popup_lrfinder_ui.pushButton_color.palette().button().color()
+            width = int(self.popup_lrfinder_ui.spinBox_lineWidth.value())
+            color = list(color.getRgb())
+            #color[-1] = int(0.6*color[-1])
+            color = tuple(color)                
+            #pencolor = pg.mkColor(color)
+            pencolor=pg.mkPen(color, width=width)
+            
+            
+            ####################lr_find algorithm####################
+            if model_keras_p == None:
+                #history = model_keras.fit(X_batch, Y_batch, batch_size=32, epochs=1,verbose=verbose, validation_data=(X_valid, Y_valid),class_weight=None)
+                lrf = aid_dl.LearningRateFinder(model_keras)
+            elif model_keras_p != None:
+                lrf = aid_dl.LearningRateFinder(model_keras_p)
+
+            lrf.find([X_batch,Y_batch],start_lr,stop_lr,stepsPerEpoch=stepsPerEpoch,batchSize=batch_size,epochs=epochs)
+            
+            skipBegin,skipEnd=10,1
+            learning_rates = lrf.lrs[skipBegin:-skipEnd]
+            losses = lrf.losses[skipBegin:-skipEnd]
+            self.learning_rates = learning_rates
+            self.losses = losses
+            
+            # Enable the groupboxes
+            self.popup_lrfinder_ui.groupBox_singleLr.setEnabled(True)
+            self.popup_lrfinder_ui.groupBox_LrRange.setEnabled(True)
+            
+            try:# try to empty the plot
+                self.popup_lrfinder_ui.lr_plot.removeItem(self.lr_line)   
+                self.popup_lrfinder_ui.lr_plot.removeItem(self.lr_region)
+            except:
+                pass
+            
+            self.lr_line = pg.PlotCurveItem(x=np.log10(learning_rates), y=losses,pen=pencolor)
+            self.popup_lrfinder_ui.lr_plot.addItem(self.lr_line)            
+
+            #LR single value when groupbox is toggled
+            self.popup_lrfinder_ui.groupBox_singleLr.toggled.connect(self.get_lr_single)
+            #In case the groupBox_singleLr is already checked, carry out the function:
+            if self.popup_lrfinder_ui.groupBox_singleLr.isChecked():
+                self.get_lr_single(on_or_off=True)
+
+            #LR range when groupbox is toggled
+            self.popup_lrfinder_ui.groupBox_LrRange.toggled.connect(self.get_lr_range)
+            #In case the groupBox_LrRange is already checked, carry out the function:
+            if self.popup_lrfinder_ui.groupBox_LrRange.isChecked():
+                self.get_lr_range(on_or_off=True)
+
+    def get_lr_single(self,on_or_off):
+        if on_or_off==True: #bool(self.popup_lrfinder_ui.groupBox_LrRange.isChecked()):
+            ind = np.argmin(self.losses)#find location of loss-minimum
+            mini_x = self.learning_rates[ind]
+            mini_x = np.log10(mini_x)
+            pen = pg.mkPen(color="w")
+            self.lr_single = pg.InfiniteLine(pos=mini_x, angle=90, pen=pen, movable=True)
+            self.popup_lrfinder_ui.lr_plot.addItem(self.lr_single)
+            
+            def position_changed():
+                #where did the user drag the region_linfit to?
+                new_position = 10**(self.lr_single.value())
+                self.popup_lrfinder_ui.lineEdit_singleLr.setText(str(new_position))
+
+            self.lr_single.sigPositionChangeFinished.connect(position_changed)
+
+        if on_or_off==False: #user unchecked the groupbox->remove the InfiniteLine if possible
+            try:
+                self.popup_lrfinder_ui.lr_plot.removeItem(self.lr_single)
+            except:
+                pass
+        
+    
+    def get_lr_range(self,on_or_off):
+        #print(on_or_off)
+        #start_lr = float(self.popup_lrfinder_ui.lineEdit_startLr.text())
+        #stop_lr = float(self.popup_lrfinder_ui.lineEdit_stopLr.text())
+        if on_or_off==True: #bool(self.popup_lrfinder_ui.groupBox_LrRange.isChecked()):
+            start_x = 0.00001
+            start_x = np.log10(start_x)
+            ind = np.argmin(self.losses)#find location of loss-minimum
+            end_x = self.learning_rates[ind]
+            end_x = np.log10(end_x)
+            self.lr_region = pg.LinearRegionItem([start_x, end_x], movable=True)
+            self.popup_lrfinder_ui.lr_plot.addItem(self.lr_region)
+
+            def region_changed():
+                #where did the user drag the region_linfit to?
+                new_region = self.lr_region.getRegion()
+                new_region_left = 10**(new_region[0])
+                new_region_right = 10**(new_region[1])
+                self.popup_lrfinder_ui.lineEdit_LrMin.setText(str(new_region_left))
+                self.popup_lrfinder_ui.lineEdit_LrMax.setText(str(new_region_right))
+
+            self.lr_region.sigRegionChangeFinished.connect(region_changed)
+
+        if on_or_off==False: #bool(self.popup_lrfinder_ui.groupBox_LrRange.isChecked()):
+            try:
+                self.popup_lrfinder_ui.lr_plot.removeItem(self.lr_region)
+            except:
+                pass
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
         
     def action_show_example_imgs(self): #this function is only for the main window
