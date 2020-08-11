@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-aideveloper_bin
+aid_bin
 some useful functions that I want to keep separate to
 make the main script a bit shorter
 ---------
@@ -536,6 +536,7 @@ def count_temp_folder():
 def open_temp():
     temp_path = create_temp_folder()
     os.startfile(temp_path)
+
     
 
 #################Some functions that are not used anymore######################
