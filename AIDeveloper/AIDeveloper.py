@@ -1072,7 +1072,30 @@ class MainWindow(QtWidgets.QMainWindow):
         lr_value = float(self.popup_lrfinder_ui.lineEdit_singleLr.text())
         self.doubleSpinBox_learningRate.setValue(lr_value)
         self.doubleSpinBox_expDecInitLr.setValue(lr_value)
+    
+    def reset_lr_settings(self):
+        self.popup_lrfinder_ui.lineEdit_startLr.setText(_translate("Form_LrFinder", "1e-10", None))
+        self.popup_lrfinder_ui.lineEdit_stopLr.setText(_translate("Form_LrFinder", "0.1", None))
+        self.popup_lrfinder_ui.doubleSpinBox_percData.setProperty("value", 100.0)
+        self.popup_lrfinder_ui.spinBox_batchSize.setValue(Default_dict["spinBox_batchSize"])       
+        self.popup_lrfinder_ui.spinBox_lineWidth.setProperty("value", 6)
+        self.popup_lrfinder_ui.spinBox_epochs.setProperty("value", 5)
         
+    def reset_lr_value(self):
+        self.popup_lrfinder_ui.lineEdit_singleLr.setText()
+        try:# try to empty the plot
+            self.popup_lrfinder_ui.lr_plot.removeItem(self.lr_line)   
+        except:
+            pass
+
+    def reset_lr_range(self):
+        self.popup_lrfinder_ui.lineEdit_LrMin.setText()
+        self.popup_lrfinder_ui.lineEdit_LrMax.setText()
+        try:# try to empty the plot
+            self.popup_lrfinder_ui.lr_plot.removeItem(self.lr_region)
+        except:
+            pass
+          
     def popup_lr_finder(self):
         SelectedFiles = self.items_clicked()
             
@@ -1124,6 +1147,9 @@ class MainWindow(QtWidgets.QMainWindow):
         self.popup_lrfinder_ui.pushButton_LrFindRun.clicked.connect(lambda: self.action_initialize_model(duties="initialize_lrfind"))
         self.popup_lrfinder_ui.pushButton_rangeAccept.clicked.connect(self.accept_lr_range)
         self.popup_lrfinder_ui.pushButton_singleAccept.clicked.connect(self.accept_lr_value)
+        self.popup_lrfinder_ui.pushButton_LrReset.clicked.connect(self.reset_lr_settings)
+
+        self.popup_lrfinder_ui.pushButton_singleReset.clicked.connect(self.reset_lr_value)
 
         #compute the number of steps/epoch
         ind = [selectedfile["TrainOrValid"] == "Train" for selectedfile in SelectedFiles]
@@ -1160,12 +1186,10 @@ class MainWindow(QtWidgets.QMainWindow):
             self.popup_clrsettings = None
             self.popup_clrsettings_ui = None
 
-
         self.popup_clrsettings_ui.pushButton_ok.clicked.connect(clr_settings_ok)
         self.popup_clrsettings_ui.pushButton_cancel.clicked.connect(clr_settings_cancel)
         
         self.popup_clrsettings.show()
-        
         
         
     def popup_lr_plot(self):
@@ -1266,8 +1290,6 @@ class MainWindow(QtWidgets.QMainWindow):
         self.popup_lrplot.show()
         
         
-        
-
     def lossWeights_activated(self,on_or_off,listindex):
         if listindex==-1:
             item_ui = self
