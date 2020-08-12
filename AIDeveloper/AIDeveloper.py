@@ -119,7 +119,7 @@ import aid_img, aid_dl, aid_bin
 import aid_frontend
 from partial_trainability import partial_trainability
 
-VERSION = "0.1.0_dev2" #Python 3.5.6 Version
+VERSION = "0.1.0_dev3" #Python 3.5.6 Version
 model_zoo_version = model_zoo.__version__()
 print("AIDeveloper Version: "+VERSION)
 print("model_zoo.py Version: "+model_zoo.__version__())
@@ -1020,9 +1020,8 @@ class MainWindow(QtWidgets.QMainWindow):
             return None
         elif lossW_expert=="":
             return None
-        elif lossW_expert=="Balanced": 
-#Definition of SelectedFiles:SelectedFiles.append({"rtdc_ds":rtdc_ds,"rtdc_path":rtdc_path,"features":features,"nr_images":nr_images,"class":index,"TrainOrValid":"Train","nr_events":nr_events,"nr_events_epoch":nr_events_epoch,"shuffle":shuffle,"zoom_factor":zoom_factor,"hash":hash_}) 
-            #Which are training files
+        elif lossW_expert=="Balanced":
+            #Which are training files?
             ind = [selectedfile["TrainOrValid"] == "Train" for selectedfile in SelectedFiles]
             ind = np.where(np.array(ind)==True)[0]
             SelectedFiles_train = list(np.array(SelectedFiles)[ind])
@@ -4533,7 +4532,7 @@ class MainWindow(QtWidgets.QMainWindow):
             learning_rate_cycLR_on = bool(self.radioButton_LrCycl.isChecked())
             try:
                 cycLrMin = float(self.lineEdit_cycLrMin.text())
-                cycLrMax = float(self.lineEdit_cycLrMax.value())
+                cycLrMax = float(self.lineEdit_cycLrMax.text())
             except:
                 cycLrMin = []
                 cycLrMax = []
@@ -5931,10 +5930,7 @@ class MainWindow(QtWidgets.QMainWindow):
                                 #Check if any metric broke a record
                                 record_broken = False #initially, assume there is no new record
                                 
-                                history_keys = list(history.history.keys())
-                                if "lr" in history_keys: history_keys.remove("lr")
-                                
-                                for key in history_keys:
+                                for key in history.history.keys():
                                     value = history.history[key][-1]
                                     record = model_metrics_records[key]
                                     if 'val_acc' in key or 'val_precision' in key or 'val_recall' in key or 'val_f1_score' in key:
@@ -6018,11 +6014,8 @@ class MainWindow(QtWidgets.QMainWindow):
     
                                     #Check if any metric broke a record
                                     record_broken = False #initially, assume there is no new record
-                                    
-                                    history_keys = list(history.history.keys())
-                                    if "lr" in history_keys: history_keys.remove("lr")
-                                    
-                                    for key in history_keys:
+                                                                        
+                                    for key in history.history.keys():
                                         value = history.history[key][-1]
                                         record = model_metrics_records[key]
                                         if 'val_acc' in key or 'val_precision' in key or 'val_recall' in key or 'val_f1_score' in key:
