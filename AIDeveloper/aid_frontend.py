@@ -3104,8 +3104,10 @@ def retranslate_main_ui(self,gpu_nr,VERSION):
     self.label_batchSize.setText(_translate("MainWindow", "Batch size", None))
     self.label_epochs.setText(_translate("MainWindow", "Epochs", None))
     self.pushButton_LR_finder.setText(_translate("MainWindow", "LR Screening", None))
+    self.pushButton_LR_finder.setTooltip(_translate("MainWindow", tooltips["groupBox_LrSettings"], None))    
     self.pushButton_LR_finder.clicked.connect(self.popup_lr_finder)
     self.pushButton_LR_plot.setText(_translate("MainWindow", "Plot", None))
+    self.pushButton_LR_plot.setTooltip(_translate("MainWindow", tooltips["pushButton_LR_plot"], None))
     self.pushButton_LR_plot.clicked.connect(self.popup_lr_plot)
     self.pushButton_cycLrPopup.clicked.connect(self.popup_clr_settings)
     
@@ -4613,7 +4615,7 @@ class Fitting_Ui(QtWidgets.QWidget):
         self.radioButton_LrCycl.toggled['bool'].connect(self.lineEdit_cycLrMin.setEnabled)
         self.radioButton_LrCycl.toggled['bool'].connect(self.lineEdit_cycLrMax.setEnabled)
         self.radioButton_LrCycl.toggled['bool'].connect(self.comboBox_cycLrMethod.setEnabled)
-        self.radioButton_LrCycl.toggled['bool'].connect(self.pushButton_cycLrPopup.setEnabled)
+        #self.radioButton_LrCycl.toggled['bool'].connect(self.pushButton_cycLrPopup.setEnabled)
         self.radioButton_LrExpo.toggled['bool'].connect(self.doubleSpinBox_expDecInitLr.setEnabled)
         self.radioButton_LrExpo.toggled['bool'].connect(self.spinBox_expDecSteps.setEnabled)
         self.radioButton_LrExpo.toggled['bool'].connect(self.doubleSpinBox_expDecRate.setEnabled)
@@ -5880,7 +5882,7 @@ class popup_lrfinder(QtWidgets.QWidget):
 
         self.spinBox_batchSize = QtWidgets.QSpinBox(self.groupBox_LrSettings)
         self.spinBox_batchSize.setMaximum(999999999)
-        self.spinBox_batchSize.setProperty("value", 32)
+        self.spinBox_batchSize.setProperty("value", Default_dict["spinBox_batchSize"])
         self.spinBox_batchSize.setObjectName("spinBox_batchSize")
         self.gridLayout_2.addWidget(self.spinBox_batchSize, 1, 3, 1, 1)
         self.label_stepsPerEpoch = QtWidgets.QLabel(self.groupBox_LrSettings)
@@ -5997,6 +5999,7 @@ class popup_lrfinder(QtWidgets.QWidget):
         self.pushButton_LrFindRun.setIcon(icon1)
         self.pushButton_rangeAccept.setIcon(icon1)
         self.pushButton_singleAccept.setIcon(icon1)
+        
 
         self.retranslateUi(Form_LrFinder)
         QtCore.QMetaObject.connectSlotsByName(Form_LrFinder)
@@ -6043,7 +6046,6 @@ class popup_lrfinder(QtWidgets.QWidget):
         self.pushButton_color.setText(_translate("Form_LrFinder", "Color", None))
         self.label_lineWidth.setText(_translate("Form_LrFinder", "Line width", None))
         
-        
         self.label_stepsPerEpoch.setText(_translate("Form_LrFinder", "Steps/Epoch", None))
         self.pushButton_LrReset.setText(_translate("Form_LrFinder", "Reset", None))
         self.pushButton_LrFindRun.setText(_translate("Form_LrFinder", "Run", None))
@@ -6058,7 +6060,50 @@ class popup_lrfinder(QtWidgets.QWidget):
         self.label_LrMax.setText(_translate("Form_LrFinder", "Max", None))
         self.pushButton_rangeAccept.setText(_translate("Form_LrFinder", "Accept", None))
         self.pushButton_rangeReset.setText(_translate("Form_LrFinder", "Reset", None))
-     
+
+        ###############Tooltips##################
+        self.groupBox_model.setToolTip(_translate("MainWindow", tooltips["groupBox_model"],None))
+        self.label_inpImgSize.setToolTip(_translate("MainWindow", tooltips["label_inpImgSize"],None))
+        self.spinBox_Crop_inpImgSize.setToolTip(_translate("MainWindow", tooltips["label_inpImgSize"],None))
+        self.label_colorMode.setToolTip(_translate("MainWindow", tooltips["label_colorMode"],None))
+        self.comboBox_colorMode.setToolTip(_translate("MainWindow", tooltips["label_colorMode"],None))
+        self.checkBox_expt_loss.setToolTip(_translate("MainWindow", tooltips["label_expt_loss"],None))
+        self.comboBox_expt_loss.setToolTip(_translate("MainWindow", tooltips["label_expt_loss"],None))
+        self.checkBox_optimizer.setToolTip(_translate("MainWindow", tooltips["label_optimizer"],None))
+        self.comboBox_optimizer.setToolTip(_translate("MainWindow", tooltips["label_optimizer"],None))
+
+        self.label_startLR.setToolTip(_translate("MainWindow", tooltips["label_startLR"],None))
+        self.lineEdit_startLr.setToolTip(_translate("MainWindow", tooltips["label_startLR"],None))
+        self.label_stopLr.setToolTip(_translate("MainWindow", tooltips["label_stopLr"],None))
+        self.lineEdit_stopLr.setToolTip(_translate("MainWindow", tooltips["label_stopLr"],None))
+
+        self.label_percData.setToolTip(_translate("MainWindow", tooltips["label_percData"],None))
+        self.doubleSpinBox_percData.setToolTip(_translate("MainWindow", tooltips["label_percData"],None))
+
+        self.label_batchSize.setToolTip(_translate("MainWindow", tooltips["label_batchSize"],None))
+        self.spinBox_batchSize.setToolTip(_translate("MainWindow", tooltips["label_batchSize"],None))
+        
+        self.label_stepsPerEpoch.setToolTip(_translate("MainWindow", tooltips["label_stepsPerEpoch"],None))
+        self.spinBox_stepsPerEpoch.setToolTip(_translate("MainWindow", tooltips["label_stepsPerEpoch"],None))
+
+
+        self.pushButton_LrReset.setToolTip(_translate("MainWindow", tooltips["pushButton_LrReset"],None))
+        self.pushButton_color.setToolTip(_translate("MainWindow", tooltips["pushButton_color"],None))
+        self.label_lineWidth.setToolTip(_translate("MainWindow", tooltips["label_lineWidth"],None))
+        self.spinBox_lineWidth.setToolTip(_translate("MainWindow", tooltips["label_lineWidth"],None))
+
+        self.label_epochs.setToolTip(_translate("MainWindow", tooltips["label_epochs"],None))
+        self.spinBox_epochs.setToolTip(_translate("MainWindow", tooltips["label_epochs"],None))
+        self.pushButton_LrFindRun.setToolTip(_translate("MainWindow", tooltips["pushButton_LrFindRun"],None))
+        self.groupBox_LrSettings.setToolTip(_translate("MainWindow", tooltips["groupBox_LrSettings"],None))
+        self.widget_LrPlotting.setToolTip(_translate("MainWindow", tooltips["groupBox_LrSettings"],None))
+
+        self.groupBox_singleLr.setToolTip(_translate("MainWindow", tooltips["groupBox_singleLr"],None))
+        self.groupBox_LrRange.setToolTip(_translate("MainWindow", tooltips["groupBox_LrRange"],None))
+
+
+
+
     def lr_color_picker(self):
         color = QtGui.QColorDialog.getColor()
         if color.getRgb()==(0, 0, 0, 255):#no black!
@@ -6066,7 +6111,8 @@ class popup_lrfinder(QtWidgets.QWidget):
         else:
             #self.pushButton_color.setBackground(color)
             self.pushButton_color.setStyleSheet("background-color: "+ color.name()+";")
-
+    
+        
 
 class popup_lrplot(QtWidgets.QWidget):
     def setupUi(self, LearningRatePlot):
