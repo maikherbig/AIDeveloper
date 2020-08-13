@@ -267,15 +267,11 @@ def get_tooltips():
     tooltips["label_expDecSteps"] = "<html><head/><body><p>Decay steps: Nr. of epochs it should take till LR decreases to decay_rate*inital_LR. Equation: LR = initial_LR * decay_rate ^ (epoch / decay_steps).</p></body></html>"    
     tooltips["label_expDecRate"] = "<html><head/><body><p>Decay rate: choose value between 0 and 1. Lower means earlier drop of LR. 1 means never decrease learning rate.</p></body></html>"    
 
-
-
-
-
-
-    
-    
     tooltips["checkBox_dropout"] = "<html><head/><body><p>If your model has one or more dropout layers, you can change the dropout rates here. Insert into the lineEdit one value (e.g. 0.5) to apply this one value to all dropout layers, or insert a list of values to specify the dropout rates for each dropout layer individually (e.g. for three dropout layers: [ 0.2 , 0.5 , 0.25 ]. The model will be recompiled, but the optimizer weights are not deleted.</p></body></html>"
     tooltips["checkBox_partialTrainability"] = "<html><head/><body><p>Partial trainability allows you to make parts of a layer non-trainable. Hence, this option makes most sense in combination with 'Load and continue' training a model. After checking this box, the model you chose on 'Define model'-tab is initialized. The line on the right shows the trainability of each layer in the model. Use the button on the right ('...') to open a popup menu, which allows you to specify individual trainabilities for each layer.</p></body></html>"
+    tooltips["label_expt_loss"] = "<html><head/><body><p>Specify which loss function should be used. From Keras documentation: 'The purpose of loss functions is to compute the quantity that a model should seek to minimize during training.'</p></body></html>"
+    tooltips["label_optimizer"] = "<html><head/><body><p>Specify which optimizer should be used.'</p></body></html>"
+
     tooltips["checkBox_lossW"] = "<html><head/><body><p>Specify scalar coefficients to weight the loss contributions of different classes.</p></body></html>"
     tooltips["groupBox_expertMetrics"] = "<html><head/><body><p>Define metrics, that are computed after each training iteration ('epoch'). Those metrics are can then also be displayed in real-time during training and are tracked/saved in the meta.xlsx file. Each model where any metric for the validation set breaks a new record is saved (minimum val. loss achived -> model is saved. maximum val. accuracy achieved-> model is saved).</p></body></html>"
     tooltips["checkBox_expertAccuracy"] = "<html><head/><body><p>Compute accuracy and validation accuracy after each epoch. Each model, where the corresponding metric for the validatio-set achieves a new record will be saved.</p></body></html>"
@@ -372,23 +368,34 @@ def get_tooltips():
     tooltips["label_inpImgSize"] = "<html><head/><body><p>Input image size.</p></body></html>"
     tooltips["label_outpSize"] = "<html><head/><body><p>Output dimension of model. Typically, the number of classes.</p></body></html>"
     tooltips["pushButton_toTensorB"] = "<html><head/><body><p>Show model architecture in Tensorboard (web browser will be started).</p></body></html>"
-
     tooltips["groupBox_imageShow"] = "<html><head/><body><p>Our image will be shown here.</p></body></html>"
     tooltips["groupBox_image_Settings"] = "<html><head/><body><p>Plotting options.</p></body></html>"
     tooltips["label_image_alpha"] = "<html><head/><body><p>Alpha value for the image.</p></body></html>"
-
     tooltips["groupBox_gradCAM_Settings"] = "<html><head/><body><p>Settings for Grad-CAM activation heatmap. Title of original paper: Grad-CAM: Visual Explanations from Deep Networks via Gradient-based Localization; URL: https://arxiv.org/abs/1610.02391 </p></body></html>"
     tooltips["label_gradCAM_targetClass"] = "<html><head/><body><p>Determine the class for which the activation heatmap should be shown.</p></body></html>"
     tooltips["label_gradCAM_targetLayer"] = "<html><head/><body><p>Determine the layer for which the activation heatmap should be show. Typically, the last convolutional layer is used.</p></body></html>"
-
     tooltips["label_gradCAM_colorMap"] = "<html><head/><body><p>Colormap for the Grad-CAM activation heatmap.</p></body></html>"
     tooltips["label_gradCAM_alpha"] = "<html><head/><body><p>Alpha value for the Grad-CAM heatmap.</p></body></html>"
     tooltips["pushButton_reset"] = "<html><head/><body><p>Reset settings.</p></body></html>"
     tooltips["pushButton_update"] = "<html><head/><body><p>Apply the settings and update the image.</p></body></html>"
+    tooltips["groupBox_model"] = "<html><head/><body><p>Information about the model for which learning rates should be screened.</p></body></html>"
+    tooltips["label_startLR"] = "<html><head/><body><p>Define the lower bound for screening learning rates.</p></body></html>"
+    tooltips["label_stopLr"] = "<html><head/><body><p>Define the upper bound for screening learning rates.</p></body></html>"
+    tooltips["label_percData"] = "<html><head/><body><p>Carrying out the screening for learning rates, requires to actually fit the model for some epochs. In case your loaded dataset is huge that might take very long. With this option here, you can choose to only use a subset of your data to speed up the process.</p></body></html>"
+    tooltips["label_stepsPerEpoch"] = "<html><head/><body><p>The number of screening steps per epoch is calculated using nr_training_images / batch_size.</p></body></html>"
+    tooltips["pushButton_LrReset"] = "<html><head/><body><p>Reset the LR screening settings to initial values.</p></body></html>"
+    tooltips["pushButton_color"] = "<html><head/><body><p>Click to open a menu to choose a color for the LR screening plot.</p></body></html>"
+    tooltips["label_lineWidth"] = "<html><head/><body><p>Define the width of the line in the LR screening plot.</p></body></html>"
+    tooltips["label_epochs"] = "<html><head/><body><p>Number of epochs to train. Higher will give more precise result. Typically, 3-5 epochs are sufficient.</p></body></html>"
+    tooltips["pushButton_LrFindRun"] = "<html><head/><body><p>Run a LR screening. This might take some minutes since data has to be loaded and a model is actually trained for some epochs. Note that all parameters (image augmentation etc) are used as indicated in the corresponding menus. Hence, make sure to first set these values as it affects training.</p></body></html>"
+    tooltips["groupBox_LrSettings"] = "<html><head/><body><p>Carry out a screening of different learning rates as introduced in https://arxiv.org/abs/1506.01186.<br>Very low learning rates will not allow the model to learn anything and the resulting loss stays constant. Too high learning rates will cause large updates of model weights which prevents finding a minumum. You may consult this page to learn more how to choose good learning rates and how it is implemented:<br>https://www.pyimagesearch.com/2019/08/05/keras-learning-rate-finder </p></body></html>"    
+    tooltips["groupBox_singleLr"] = "<html><head/><body><p>When activating the box, a line will appear in the plot above, which you can drag to define a single learning rate value. You should choose a point where the loss is very low (minimum), but does yet start to fluctuate.</p></body></html>"
+    tooltips["groupBox_LrRange"] = "<html><head/><body><p>When activating this box, a range will appear in the plot above, which you can drag to define a range of learning rates. The left edge should be located where the loss starts to decrease and the right edge close to the minumum.</p></body></html>"
+    tooltips["pushButton_LR_plot"] = "<html><head/><body><p>Plot the learning rate vs epochs. The plot depends on the parameters defined in this menu. The plot allows you to decide whether you like the leanring rate schedule.</p></body></html>"
 
 
 
-    ####outdated!
+    ####deprecated!
     tooltips["checkBox_learningRate"] = "<html><head/><body><p>Change the learning rate. The default optimizer is \'adam\' with a learning rate of 0.001</p></body></html>"
 
     return tooltips
