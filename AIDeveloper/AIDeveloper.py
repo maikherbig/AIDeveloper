@@ -119,7 +119,7 @@ import aid_img, aid_dl, aid_bin
 import aid_frontend
 from partial_trainability import partial_trainability
 
-VERSION = "0.1.0_dev4" #Python 3.5.6 Version
+VERSION = "0.1.1" #Python 3.5.6 Version
 model_zoo_version = model_zoo.__version__()
 print("AIDeveloper Version: "+VERSION)
 print("model_zoo.py Version: "+model_zoo.__version__())
@@ -1184,7 +1184,7 @@ class MainWindow(QtWidgets.QMainWindow):
         SelectedFiles_train = list(SelectedFiles_train)
         nr_events_train_total = np.sum([int(selectedfile["nr_events_epoch"]) for selectedfile in SelectedFiles_train])
 
-        def update_stepsPerEpoch(value_not_used):
+        def update_stepsPerEpoch():
             batch_size = self.popup_lrfinder_ui.spinBox_batchSize.value()
             perc_data = self.popup_lrfinder_ui.doubleSpinBox_percData.value()
             nr_events = (perc_data/100)*nr_events_train_total
@@ -1462,7 +1462,6 @@ class MainWindow(QtWidgets.QMainWindow):
         elif optimizer_name=='nadam':
             item_ui.popup_optim_ui.radioButton_nadam.setChecked(True)        
 
-        #item_ui.optimizer_settings.to_csv("test.csv")
         item_ui.popup_optim_ui.doubleSpinBox_lr_sgd.setValue(item_ui.optimizer_settings["doubleSpinBox_lr_sgd"])        
         item_ui.popup_optim_ui.doubleSpinBox_sgd_momentum.setValue(item_ui.optimizer_settings["doubleSpinBox_sgd_momentum"])  
         item_ui.popup_optim_ui.checkBox_sgd_nesterov.setChecked(item_ui.optimizer_settings["checkBox_sgd_nesterov"])  
