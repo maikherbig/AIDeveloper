@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-aid_bin.py
+aid_start.py
 some functions that I want to keep separate to make the main script a bit shorter
 ---------
 @author: maikherbig
@@ -177,6 +177,8 @@ def keras_json_check(keras_json_path):
              ")
         keras_json_replace(keras_json_path,False)
 
+
+
 def get_tooltips():
     tooltips = {}
     tooltips["groupBox_dragdrop"] = "<html><head/><body><p>Drag and drop files (.rtdc) or folders with images here. Valid .rtdc files have to contain at least 'images', 'pos_x' and 'pos_y'. If folders with images are dropped, the contents will be converted to a single .rtdc file (speeds up loading in the future).<br>After dropping data, you can specify the ‘Class’ of the images and if it should be used for training (T) or validation (V).<br>Double-click on the filename to show a random image of the data set. The original and cropped (using 'Input image size') image is shown<br>Click on the button 'Plot' to open a popup where you can get a histogram or scatterplot of enclosed data.<br>'Cells/Epoch' defines the nr. of images that are used in each epoch for training. Random images are drawn in each epoch during training. For the validation set, images are drawn once at the beginning and kept constant.<br>Deactivate 'Shuffle' if you don't want to use random data. Then all images of this file are used.<br>Zoom allows you to increase or decrease resolution. Zoom=1 does nothing; Zoom=2 zooms in; Zoom=0.5 zooms out. This is useful if you have data acquired at 40x but you want to use it to train a model for 20x data. Use 'Options'->'Zooming order' to define the method used for zooming.<br>Hint for RT-DC users: Use ShapeOut to gate for particular subpopulations and save the filtered data as .rtdc. Make sure to export at least 'images', 'pos_x' and 'pos_y'.</p></body></html>"
@@ -253,24 +255,25 @@ def get_tooltips():
     tooltips["label_batchSize"] = "<html><head/><body><p>Number of samples per gradient update. If unspecified, batch_size will default to 32. (Source: Keras documentation)</p></body></html>"
     tooltips["label_epochs"] = "<html><head/><body><p>Number of epochs to train the model on an identical batch.</p></body></html>"    
  
-    tooltips["groupBox_learningRate"] = "<html><head/><body><p>The learning rate defines how strong parameters are changed in each training iteration.</p></body></html>"    
+    tooltips["groupBox_learningRate"] = "<html><head/><body><p>The learning rate defines how much model weights are changed in each training iteration.</p></body></html>"    
     tooltips["radioButton_LrConst"] = "<html><head/><body><p>Define a constant learning rate.</p></body></html>"    
     tooltips["doubleSpinBox_learningRate"] = "<html><head/><body><p>Define a constant value for the learning rate. The learning rate defines how strong parameters are changed in each training iteration.</p></body></html>"    
     tooltips["radioButton_LrCycl"] = "<html><head/><body><p>Apply cyclical learning rate schedule. Here, the learning rate oszillates between two bounds (Min/Max). After each processed batch, the lr is adjusted. Button (...) leads to functions that allow to find sensible bounds. Cyclical learning rate was orignally defined in the paper 'Cyclical Learning Rates for Training Neural Networks': https://arxiv.org/abs/1506.01186.</p></body></html>"    
     tooltips["label_cycLrMin"] = "<html><head/><body><p>Lower bound for cyclical learning rate.</p></body></html>"    
     tooltips["label_cycLrMax"] = "<html><head/><body><p>Upper bound for cyclical learning rate.</p></body></html>"    
     tooltips["comboBox_cycLrMethod"] = "<html><head/><body><p>Method for changing the learning rate.</p></body></html>"    
-    tooltips["pushButton_cycLrPopup"] = "<html><head/><body><p>Methods to find sensible bounds for cyclicyal learning rates.</p></body></html>"    
+    tooltips["pushButton_cycLrPopup"] = "<html><head/><body><p>Advanced settings for cyclical learning rates.</p></body></html>"    
     
-    tooltips["radioButton_LrExpo"] = "<html><head/><body><p>Apply exponentially decreasing learning rates. Equation: LR = initial_LR * decay_rate ^ (epoch / decay_steps).</p></body></html>"    
-    tooltips["label_expDecInitLr"] = "<html><head/><body><p>Apply exponentially decreasing learning rates. Equation: LR = initial_LR * decay_rate ^ (epoch / decay_steps).</p></body></html>"    
-    tooltips["label_expDecSteps"] = "<html><head/><body><p>Decay steps: Nr. of epochs it should take till LR decreases to decay_rate*inital_LR. Equation: LR = initial_LR * decay_rate ^ (epoch / decay_steps).</p></body></html>"    
-    tooltips["label_expDecRate"] = "<html><head/><body><p>Decay rate: choose value between 0 and 1. Lower means earlier drop of LR. 1 means never decrease learning rate.</p></body></html>"    
+    tooltips["radioButton_LrExpo"] = "<html><head/><body><p>Apply exponentially decreasing learning rates.<br>Equation: LR = initial_LR * decay_rate ^ (epoch / decay_steps).</p></body></html>"    
+    tooltips["label_expDecInitLr"] = "<html><head/><body><p>Apply exponentially decreasing learning rates.<br>Equation: LR = initial_LR * decay_rate ^ (epoch / decay_steps).</p></body></html>"    
+    tooltips["label_expDecSteps"] = "<html><head/><body><p>Decay steps: Nr. of epochs it should take till LR decreases to decay_rate*inital_LR.<br>Equation: LR = initial_LR * decay_rate ^ (epoch / decay_steps).</p></body></html>"    
+    tooltips["label_expDecRate"] = "<html><head/><body><p>Decay rate: choose value between 0 and 1. Lower means earlier drop of LR. 1 means never decrease learning rate.<br>Equation: LR = initial_LR * decay_rate ^ (epoch / decay_steps).</p></body></html>"    
 
     tooltips["checkBox_dropout"] = "<html><head/><body><p>If your model has one or more dropout layers, you can change the dropout rates here. Insert into the lineEdit one value (e.g. 0.5) to apply this one value to all dropout layers, or insert a list of values to specify the dropout rates for each dropout layer individually (e.g. for three dropout layers: [ 0.2 , 0.5 , 0.25 ]. The model will be recompiled, but the optimizer weights are not deleted.</p></body></html>"
     tooltips["checkBox_partialTrainability"] = "<html><head/><body><p>Partial trainability allows you to make parts of a layer non-trainable. Hence, this option makes most sense in combination with 'Load and continue' training a model. After checking this box, the model you chose on 'Define model'-tab is initialized. The line on the right shows the trainability of each layer in the model. Use the button on the right ('...') to open a popup menu, which allows you to specify individual trainabilities for each layer.</p></body></html>"
     tooltips["label_expt_loss"] = "<html><head/><body><p>Specify which loss function should be used. From Keras documentation: 'The purpose of loss functions is to compute the quantity that a model should seek to minimize during training.'</p></body></html>"
     tooltips["label_optimizer"] = "<html><head/><body><p>Specify which optimizer should be used.'</p></body></html>"
+    tooltips["groupBox_lossOptimizer"] = "<html><head/><body><p>The loss function defines how much error the neural net does in prediction. This error depends on the weights of the neural net and upon updating the weights the error should be decreased. Hence, the loss is seen as a function of the model weights. Typical function to compute loss is categorical_crossentropy. Optimizing the weights requires to perform updates of the model weights in a reasonable magnitude and the so called 'Optimizer' is responsible for this task.'</p></body></html>"
 
     tooltips["checkBox_lossW"] = "<html><head/><body><p>Specify scalar coefficients to weight the loss contributions of different classes.</p></body></html>"
     tooltips["groupBox_expertMetrics"] = "<html><head/><body><p>Define metrics, that are computed after each training iteration ('epoch'). Those metrics are can then also be displayed in real-time during training and are tracked/saved in the meta.xlsx file. Each model where any metric for the validation set breaks a new record is saved (minimum val. loss achived -> model is saved. maximum val. accuracy achieved-> model is saved).</p></body></html>"
@@ -291,6 +294,8 @@ def get_tooltips():
     tooltips["lineEdit_ModelSelection_2"] = "<html><head/><body><p>Model architecture name, read from meta.xlsx ('Chosen Model') is displayed here</p></body></html>"
     tooltips["tableWidget_Info_2"] = "<html><head/><body><p>Specify validation data via 'Build'-tab or load .rtdc file (->From .rtdc).<br>Use column 'Name' to specify proper cell names (for presentation purposes).<br>Use column 'clr' to specify plotting color of that cell-type</p></body></html>"
     tooltips["lineEdit_LoadModel_2"] = "<html><head/><body><p>Enter path/filename of a model (.model)</p></body></html>"
+    tooltips["lineEdit_LoadModel_3"] = "<html><head/><body><p>Model architecture for (when using 'New' model) or path/filename of a model (.model) when using (load and continue/restart)</p></body></html>"
+
     tooltips["pushButton_ExportValidToNpy"] = "<html><head/><body><p>Export the validation data (images and labels). Optionally the cropped images can exported->use 'Options'->'Export' to change. Normalization method of the chosen model is not yet applied. Please use the \'Build\' tab to define data</p></body></html>"
     tooltips["pushButton_ImportValidFromNpy"] = "<html><head/><body><p>Import validation data (images from .rtdc and labels from .txt) file. Cropped and non-cropped images can be imported. If necessary they will be cropped to the correct format. If the loaded images are smaller than the required size, there will be zero-padding.</p></body></html>"
     tooltips["groupBox_InferenceTime"] = "<html><head/><body><p>Inference time is the time required to predict a single image. To get a meaningful value, several (define how many using spinbox->) images are predicted one by one. The given Nr. (spinbox->) is divided by 10. The resulting nr. of images is predicted one by one and an average computing time is obtained. This process is repqeated 10 times</p></body></html>"
@@ -392,6 +397,20 @@ def get_tooltips():
     tooltips["groupBox_singleLr"] = "<html><head/><body><p>When activating the box, a line will appear in the plot above, which you can drag to define a single learning rate value. You should choose a point where the loss is very low (minimum), but does yet start to fluctuate.</p></body></html>"
     tooltips["groupBox_LrRange"] = "<html><head/><body><p>When activating this box, a range will appear in the plot above, which you can drag to define a range of learning rates. The left edge should be located where the loss starts to decrease and the right edge close to the minumum.</p></body></html>"
     tooltips["pushButton_LR_plot"] = "<html><head/><body><p>Plot the learning rate vs epochs. The plot depends on the parameters defined in this menu. The plot allows you to decide whether you like the leanring rate schedule.</p></body></html>"
+
+    tooltips["tableWidget_pop_pTr_layersTable"] = "<html><head/><body><p>The table shows all Dense and Conv2D layers and their trainablilities. To decrease the trainability, use the spinbox and a value between 0 and 1 and hit 'Update'. Then, the layers where you chose decrease the trainabliity are split into a layer that stays trainable and another layer that is set to not-trainable. Next, a Concatenation-layer is inserted, which combines both aforementioned layers again. Of course the weights are copied from the initial model, to the customized model, but you cannot specify, which particular nodes/filters of a layer are trainable or non-trainable. If you set for example a trainabliity of 0.25, the first 75% of the nodes are set to not-trainable and the rest 25% are left trainable.</p></body></html>"
+    tooltips["pushButton_pop_pTr_update"] = "<html><head/><body><p>Apply the requested changes in trainability.</p></body></html>"
+    tooltips["pushButton_pop_pTr_ok"] = "<html><head/><body><p>Save the customized model to a user-defined location. This model will automaticlly be selected for 'Load and continue' in the 'Define model'-tab. Just determine a 'Model path' before training. Training will then start using your customized model.</p></body></html>"
+
+
+
+
+
+
+
+
+
+
 
 
 
