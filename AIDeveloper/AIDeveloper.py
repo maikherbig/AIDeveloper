@@ -764,24 +764,51 @@ class MainWindow(QtWidgets.QMainWindow):
                 #also reset the learning rate to the default
                 self.doubleSpinBox_learningRate.setValue(Default_dict["doubleSpinBox_learningRate_"+optimizer])
     
-    def expert_optimizer_changed(self,value):
+
+    def expert_optimizer_changed(self,optimizer_text,listindex):
+#        print("optimizer_text: "+str(optimizer_text))
+#        print("listindex: "+str(listindex))
+        
+        if optimizer_text=="":
+            return
+        if listindex==-1:
+            item_ui = self
+        else:
+            item_ui = self.fittingpopups_ui[listindex]
         #set the learning rate to the default for this optimizer
-        optimizer = value
-        value_current = float(self.doubleSpinBox_learningRate.value())
-        value_wanted = Default_dict["doubleSpinBox_learningRate_"+optimizer]
-        if value_current!=value_wanted:
-            print("Update learning rate spinbox")
-            self.doubleSpinBox_learningRate.setValue(value_wanted)
+        value_current = float(item_ui.doubleSpinBox_learningRate.value())
+        value_wanted = Default_dict["doubleSpinBox_learningRate_"+optimizer_text]
+        
+        #insert the current value in the optimizer_settings:
+        item_ui.optimizer_settings["doubleSpinBox_lr_"+optimizer_text.lower()] = value_current    
+        item_ui.optimizer_settings["comboBox_optimizer"] = optimizer_text    
+
+        try: #only works on the fitting-popup
+            text = str(item_ui.textBrowser_FittingInfo.toPlainText())
+        except:
+            text = "Epoch"
+#        print("text: "+str(text))
+
+        if value_current!=value_wanted and "Epoch" in text:#avoid that the message pops up when window is created
+            item_ui.doubleSpinBox_learningRate.setValue(value_wanted)
+            item_ui.doubleSpinBox_expDecInitLr.setValue(value_wanted)
+
             #Inform user
             msg = QtWidgets.QMessageBox()
             msg.setIcon(QtWidgets.QMessageBox.Information)       
             msg.setWindowTitle("Learning rate to default")
-            msg.setText("Learning rate was set to the default for "+optimizer)
+            msg.setText("Learning rate was set to the default for "+optimizer_text)
             msg.setStandardButtons(QtWidgets.QMessageBox.Ok)
             msg.exec_()
             return
 
+    def expert_lr_changed(self,value,optimizer_text,listindex):
 
+        if listindex==-1:
+            item_ui = self
+        else:
+            item_ui = self.fittingpopups_ui[listindex]
+        item_ui.optimizer_settings["doubleSpinBox_lr_"+optimizer_text.lower()] = value
         
     def update_hist1(self):
         feature = str(self.comboBox_feat1.currentText())
@@ -976,8 +1003,8 @@ class MainWindow(QtWidgets.QMainWindow):
 
 
     def saveTextWindow_pop(self,listindex):
-        #Get the entire content of textBrowser_FittingInfo_pop
-        text = str(self.fittingpopups_ui[listindex].textBrowser_FittingInfo_pop.toPlainText())
+        #Get the entire content of textBrowser_FittingInfo
+        text = str(self.fittingpopups_ui[listindex].textBrowser_FittingInfo.toPlainText())
         #Ask the user where to save the stuff
         filename = QtWidgets.QFileDialog.getSaveFileName(self, 'Fitting info', Default_dict["Path of last model"]," (*.txt)")
         filename = filename[0]
@@ -988,7 +1015,7 @@ class MainWindow(QtWidgets.QMainWindow):
             f.close()                
 
     def clearTextWindow_pop(self,listindex):
-        self.fittingpopups_ui[listindex].textBrowser_FittingInfo_pop.clear()
+        self.fittingpopups_ui[listindex].textBrowser_FittingInfo.clear()
         
     def showModelSumm_pop(self,listindex):
         text5 = "Model summary:\n"
@@ -996,7 +1023,7 @@ class MainWindow(QtWidgets.QMainWindow):
         self.model_keras.summary(print_fn=summary.append)
         summary = "\n".join(summary)
         text = text5+summary
-        self.fittingpopups_ui[listindex].textBrowser_FittingInfo_pop.append(text)
+        self.fittingpopups_ui[listindex].textBrowser_FittingInfo.append(text)
 
     def saveModelSumm_pop(self,listindex):
         text5 = "Model summary:\n"
@@ -1148,7 +1175,6 @@ class MainWindow(QtWidgets.QMainWindow):
         self.popup_lrfinder_ui.pushButton_rangeAccept.clicked.connect(self.accept_lr_range)
         self.popup_lrfinder_ui.pushButton_singleAccept.clicked.connect(self.accept_lr_value)
         self.popup_lrfinder_ui.pushButton_LrReset.clicked.connect(self.reset_lr_settings)
-
         self.popup_lrfinder_ui.pushButton_singleReset.clicked.connect(self.reset_lr_value)
 
         #compute the number of steps/epoch
@@ -1158,38 +1184,51 @@ class MainWindow(QtWidgets.QMainWindow):
         SelectedFiles_train = list(SelectedFiles_train)
         nr_events_train_total = np.sum([int(selectedfile["nr_events_epoch"]) for selectedfile in SelectedFiles_train])
 
-        batch_size = self.popup_lrfinder_ui.spinBox_batchSize.value()
-        perc_data = self.popup_lrfinder_ui.doubleSpinBox_percData.value()
-        nr_events = (perc_data/100)*nr_events_train_total
-        stepsPerEpoch=np.ceil(nr_events / float(batch_size))
-        self.popup_lrfinder_ui.spinBox_stepsPerEpoch.setValue(stepsPerEpoch)
+        def update_stepsPerEpoch(value_not_used):
+            batch_size = self.popup_lrfinder_ui.spinBox_batchSize.value()
+            perc_data = self.popup_lrfinder_ui.doubleSpinBox_percData.value()
+            nr_events = (perc_data/100)*nr_events_train_total
+            stepsPerEpoch = np.ceil(nr_events / float(batch_size))
+            self.popup_lrfinder_ui.spinBox_stepsPerEpoch.setValue(stepsPerEpoch)
+
+        update_stepsPerEpoch()
+        self.popup_lrfinder_ui.spinBox_batchSize.valueChanged.connect(update_stepsPerEpoch)
+        self.popup_lrfinder_ui.doubleSpinBox_percData.valueChanged.connect(update_stepsPerEpoch)
 
         self.popup_lrfinder.show()
 
-
-    def popup_clr_settings(self):
-        self.popup_clrsettings = MyPopup()
-        self.popup_clrsettings_ui = aid_frontend.Ui_Clr_settings()
-        self.popup_clrsettings_ui.setupUi(self.popup_clrsettings) #open a popup for lr plotting
+    def popup_clr_settings(self,listindex):
+        if listindex==-1:
+            item_ui = self
+        else:
+            item_ui = self.fittingpopups_ui[listindex]
+            
+        item_ui.popup_clrsettings = MyPopup()
+        item_ui.popup_clrsettings_ui = aid_frontend.Ui_Clr_settings()
+        item_ui.popup_clrsettings_ui.setupUi(item_ui.popup_clrsettings) #open a popup for lr plotting
 
         ##Manual insertion##        
-        self.popup_clrsettings_ui.spinBox_stepSize.setProperty("value", self.clr_settings["step_size"])
-        self.popup_clrsettings_ui.doubleSpinBox_gamma.setProperty("value", self.clr_settings["gamma"])
+        item_ui.popup_clrsettings_ui.spinBox_stepSize.setProperty("value", item_ui.clr_settings["step_size"])
+        item_ui.popup_clrsettings_ui.doubleSpinBox_gamma.setProperty("value", item_ui.clr_settings["gamma"])
 
         def clr_settings_ok():
-            step_size = int(self.popup_clrsettings_ui.spinBox_stepSize.value())
-            gamma = float(self.popup_clrsettings_ui.doubleSpinBox_gamma.value())
-            self.clr_settings["step_size"] = step_size #Number of epochs to fulfill half a cycle
-            self.clr_settings["gamma"] = gamma #gamma factor for Exponential decrease method (exp_range)
+            step_size = int(item_ui.popup_clrsettings_ui.spinBox_stepSize.value())
+            gamma = float(item_ui.popup_clrsettings_ui.doubleSpinBox_gamma.value())
+            item_ui.clr_settings["step_size"] = step_size #Number of epochs to fulfill half a cycle
+            item_ui.clr_settings["gamma"] = gamma #gamma factor for Exponential decrease method (exp_range)
             print("Settings for cyclical learning rates were changed.")
-        def clr_settings_cancel():
-            self.popup_clrsettings = None
-            self.popup_clrsettings_ui = None
+            #close the popup
+            item_ui.popup_clrsettings = None
+            item_ui.popup_clrsettings_ui = None
 
-        self.popup_clrsettings_ui.pushButton_ok.clicked.connect(clr_settings_ok)
-        self.popup_clrsettings_ui.pushButton_cancel.clicked.connect(clr_settings_cancel)
+        def clr_settings_cancel():#close the popup
+            item_ui.popup_clrsettings = None
+            item_ui.popup_clrsettings_ui = None
+
+        item_ui.popup_clrsettings_ui.pushButton_ok.clicked.connect(clr_settings_ok)
+        item_ui.popup_clrsettings_ui.pushButton_cancel.clicked.connect(clr_settings_cancel)
         
-        self.popup_clrsettings.show()
+        item_ui.popup_clrsettings.show()
         
         
     def popup_lr_plot(self):
@@ -1395,6 +1434,184 @@ class MainWindow(QtWidgets.QMainWindow):
         item_ui.popup_lossW_ui.pushButton_pop_lossW_ok.clicked.connect(lambda: self.lossW_ok(listindex))
         item_ui.popup_lossW_ui.comboBox_lossW.currentIndexChanged.connect(lambda on_or_off: self.lossW_comboB(on_or_off,listindex))
 
+
+    def optimizer_change_settings_popup(self,listindex):
+        if listindex==-1:
+            item_ui = self
+        else:
+            item_ui = self.fittingpopups_ui[listindex]
+
+        item_ui.popup_optim = MyPopup()
+        item_ui.popup_optim_ui = aid_frontend.Ui_Form_expt_optim()
+        item_ui.popup_optim_ui.setupUi(item_ui.popup_optim) #open a popup to show advances settings for optimizer
+        
+        ##Manual insertion##
+        optimizer_name = item_ui.optimizer_settings["comboBox_optimizer"].lower()
+        if optimizer_name=='sgd':
+            item_ui.popup_optim_ui.radioButton_sgd.setChecked(True)        
+        elif optimizer_name=='rmsprop':
+            item_ui.popup_optim_ui.radioButton_rms.setChecked(True)        
+        elif optimizer_name=='adagrad':
+            item_ui.popup_optim_ui.radioButton_adagrad.setChecked(True)        
+        elif optimizer_name=='adadelta':
+            item_ui.popup_optim_ui.radioButton_adadelta.setChecked(True)        
+        elif optimizer_name=='adam':
+            item_ui.popup_optim_ui.radioButton_adam.setChecked(True)        
+        elif optimizer_name=='adamax':
+            item_ui.popup_optim_ui.radioButton_adamax.setChecked(True)        
+        elif optimizer_name=='nadam':
+            item_ui.popup_optim_ui.radioButton_nadam.setChecked(True)        
+
+        #item_ui.optimizer_settings.to_csv("test.csv")
+        item_ui.popup_optim_ui.doubleSpinBox_lr_sgd.setValue(item_ui.optimizer_settings["doubleSpinBox_lr_sgd"])        
+        item_ui.popup_optim_ui.doubleSpinBox_sgd_momentum.setValue(item_ui.optimizer_settings["doubleSpinBox_sgd_momentum"])  
+        item_ui.popup_optim_ui.checkBox_sgd_nesterov.setChecked(item_ui.optimizer_settings["checkBox_sgd_nesterov"])  
+
+        item_ui.popup_optim_ui.doubleSpinBox_lr_rmsprop.setValue(item_ui.optimizer_settings["doubleSpinBox_lr_rmsprop"])  
+        item_ui.popup_optim_ui.doubleSpinBox_rms_rho.setValue(item_ui.optimizer_settings["doubleSpinBox_rms_rho"])  
+
+        item_ui.popup_optim_ui.doubleSpinBox_lr_adam.setValue(item_ui.optimizer_settings["doubleSpinBox_lr_adam"])  
+        item_ui.popup_optim_ui.doubleSpinBox_adam_beta1.setValue(item_ui.optimizer_settings["doubleSpinBox_adam_beta1"])  
+        item_ui.popup_optim_ui.doubleSpinBox_adam_beta2.setValue(item_ui.optimizer_settings["doubleSpinBox_adam_beta2"])  
+        item_ui.popup_optim_ui.checkBox_adam_amsgrad.setChecked(item_ui.optimizer_settings["checkBox_adam_amsgrad"])  
+
+        item_ui.popup_optim_ui.doubleSpinBox_lr_nadam.setValue(item_ui.optimizer_settings["doubleSpinBox_lr_nadam"])          
+        item_ui.popup_optim_ui.doubleSpinBox_nadam_beta1.setValue(item_ui.optimizer_settings["doubleSpinBox_nadam_beta1"])  
+        item_ui.popup_optim_ui.doubleSpinBox_nadam_beta2.setValue(item_ui.optimizer_settings["doubleSpinBox_nadam_beta2"])  
+
+        item_ui.popup_optim_ui.doubleSpinBox_lr_adadelta.setValue(item_ui.optimizer_settings["doubleSpinBox_lr_adadelta"])  
+        item_ui.popup_optim_ui.doubleSpinBox_adadelta_rho.setValue(item_ui.optimizer_settings["doubleSpinBox_adadelta_rho"])  
+
+        item_ui.popup_optim_ui.doubleSpinBox_lr_adagrad.setValue(item_ui.optimizer_settings["doubleSpinBox_lr_adagrad"])  
+
+        item_ui.popup_optim_ui.doubleSpinBox_lr_adamax.setValue(item_ui.optimizer_settings["doubleSpinBox_lr_adamax"])  
+        item_ui.popup_optim_ui.doubleSpinBox_adamax_beta1.setValue(item_ui.optimizer_settings["doubleSpinBox_adamax_beta1"])  
+        item_ui.popup_optim_ui.doubleSpinBox_adamax_beta2.setValue(item_ui.optimizer_settings["doubleSpinBox_adamax_beta2"])
+
+        def change_lr(lr):
+            item_ui.doubleSpinBox_learningRate.setValue(lr)
+            item_ui.doubleSpinBox_expDecInitLr.setValue(lr)
+
+        item_ui.popup_optim_ui.doubleSpinBox_lr_adam.valueChanged.connect(change_lr)
+        item_ui.popup_optim_ui.doubleSpinBox_lr_sgd.valueChanged.connect(change_lr)
+        item_ui.popup_optim_ui.doubleSpinBox_lr_rmsprop.valueChanged.connect(change_lr)
+        item_ui.popup_optim_ui.doubleSpinBox_lr_adagrad.valueChanged.connect(change_lr)
+        item_ui.popup_optim_ui.doubleSpinBox_lr_adadelta.valueChanged.connect(change_lr)
+        item_ui.popup_optim_ui.doubleSpinBox_lr_adamax.valueChanged.connect(change_lr)
+        item_ui.popup_optim_ui.doubleSpinBox_lr_nadam.valueChanged.connect(change_lr)
+
+        def change_optimizer(optimizer_name):
+            index = item_ui.comboBox_optimizer.findText(optimizer_name, QtCore.Qt.MatchFixedString)
+            if index >= 0:
+                item_ui.comboBox_optimizer.setCurrentIndex(index)
+            #get the learning rate for that optimizer
+            lr = item_ui.optimizer_settings["doubleSpinBox_lr_"+optimizer_name.lower()]
+            change_lr(lr)
+            
+        item_ui.popup_optim_ui.radioButton_adam.toggled.connect(lambda: change_optimizer("Adam"))
+        item_ui.popup_optim_ui.radioButton_sgd.toggled.connect(lambda: change_optimizer("SGD"))
+        item_ui.popup_optim_ui.radioButton_rms.toggled.connect(lambda: change_optimizer("RMSprop"))
+        item_ui.popup_optim_ui.radioButton_adagrad.toggled.connect(lambda: change_optimizer("Adagrad"))
+        item_ui.popup_optim_ui.radioButton_adadelta.toggled.connect(lambda: change_optimizer("Adadelta"))
+        item_ui.popup_optim_ui.radioButton_adamax.toggled.connect(lambda: change_optimizer("Adamax"))
+        item_ui.popup_optim_ui.radioButton_nadam.toggled.connect(lambda: change_optimizer("Nadam"))
+
+            
+
+
+        def ok():
+            doubleSpinBox_lr_sgd = float(item_ui.popup_optim_ui.doubleSpinBox_lr_sgd.value())
+            doubleSpinBox_sgd_momentum = float(item_ui.popup_optim_ui.doubleSpinBox_sgd_momentum.value())
+            checkBox_sgd_nesterov = bool(item_ui.popup_optim_ui.checkBox_sgd_nesterov.isChecked())
+
+            doubleSpinBox_lr_rmsprop = float(item_ui.popup_optim_ui.doubleSpinBox_lr_rmsprop.value())            
+            doubleSpinBox_rms_rho = float(item_ui.popup_optim_ui.doubleSpinBox_rms_rho.value())
+
+            doubleSpinBox_lr_adam = float(item_ui.popup_optim_ui.doubleSpinBox_lr_adam.value())
+            doubleSpinBox_adam_beta1 = float(item_ui.popup_optim_ui.doubleSpinBox_adam_beta1.value())
+            doubleSpinBox_adam_beta2 = float(item_ui.popup_optim_ui.doubleSpinBox_adam_beta2.value())
+            checkBox_adam_amsgrad = bool(item_ui.popup_optim_ui.checkBox_adam_amsgrad.isChecked())
+            
+            doubleSpinBox_lr_adadelta = float(item_ui.popup_optim_ui.doubleSpinBox_lr_adadelta.value())
+            doubleSpinBox_adadelta_rho = float(item_ui.popup_optim_ui.doubleSpinBox_adadelta_rho.value())
+
+            doubleSpinBox_lr_nadam = float(item_ui.popup_optim_ui.doubleSpinBox_lr_nadam.value())
+            doubleSpinBox_nadam_beta1 = float(item_ui.popup_optim_ui.doubleSpinBox_nadam_beta1.value())
+            doubleSpinBox_nadam_beta2 = float(item_ui.popup_optim_ui.doubleSpinBox_nadam_beta2.value())
+
+            doubleSpinBox_lr_adagrad = float(item_ui.popup_optim_ui.doubleSpinBox_lr_adagrad.value())
+
+            doubleSpinBox_lr_adamax = float(item_ui.popup_optim_ui.doubleSpinBox_lr_adamax.value())
+            doubleSpinBox_adamax_beta2 = float(item_ui.popup_optim_ui.doubleSpinBox_adamax_beta2.value())
+            doubleSpinBox_adamax_beta1 = float(item_ui.popup_optim_ui.doubleSpinBox_adamax_beta1.value())
+
+            item_ui.optimizer_settings["doubleSpinBox_lr_sgd"] = doubleSpinBox_lr_sgd
+            item_ui.optimizer_settings["doubleSpinBox_sgd_momentum"] = doubleSpinBox_sgd_momentum
+            item_ui.optimizer_settings["checkBox_sgd_nesterov"] = checkBox_sgd_nesterov
+
+            item_ui.optimizer_settings["doubleSpinBox_lr_rmsprop"] = doubleSpinBox_lr_rmsprop
+            item_ui.optimizer_settings["doubleSpinBox_rms_rho"] = doubleSpinBox_rms_rho
+
+            item_ui.optimizer_settings["doubleSpinBox_lr_adam"] = doubleSpinBox_lr_adam
+            item_ui.optimizer_settings["doubleSpinBox_adam_beta1"] = doubleSpinBox_adam_beta1
+            item_ui.optimizer_settings["doubleSpinBox_adam_beta2"] = doubleSpinBox_adam_beta2
+            item_ui.optimizer_settings["checkBox_adam_amsgrad"] = checkBox_adam_amsgrad
+
+            item_ui.optimizer_settings["doubleSpinBox_lr_adadelta"] = doubleSpinBox_lr_adadelta
+            item_ui.optimizer_settings["doubleSpinBox_adadelta_rho"] = doubleSpinBox_adadelta_rho
+
+            item_ui.optimizer_settings["doubleSpinBox_lr_nadam"] = doubleSpinBox_lr_nadam
+            item_ui.optimizer_settings["doubleSpinBox_nadam_beta1"] = doubleSpinBox_nadam_beta1
+            item_ui.optimizer_settings["doubleSpinBox_nadam_beta2"] = doubleSpinBox_nadam_beta2
+
+            item_ui.optimizer_settings["doubleSpinBox_lr_adagrad"] = doubleSpinBox_lr_adagrad
+
+            item_ui.optimizer_settings["doubleSpinBox_lr_adamax"] = doubleSpinBox_lr_adamax
+            item_ui.optimizer_settings["doubleSpinBox_adamax_beta1"] = doubleSpinBox_adamax_beta1
+            item_ui.optimizer_settings["doubleSpinBox_adamax_beta2"] = doubleSpinBox_adamax_beta2
+            
+            #close the popup
+            item_ui.popup_optim = None
+            item_ui.popup_optim_ui = None
+            print("Advanced settings for optimizer were changed.")
+
+        def cancel():#close the popup
+            item_ui.popup_optim = None
+            item_ui.popup_optim_ui = None
+        def reset():
+            print("Reset optimizer settings (in UI). To accept, click OK")
+            optimizer_default = aid_dl.get_optimizer_settings()
+            item_ui.popup_optim_ui.doubleSpinBox_lr_sgd.setValue(optimizer_default["doubleSpinBox_lr_sgd"])        
+            item_ui.popup_optim_ui.doubleSpinBox_sgd_momentum.setValue(optimizer_default["doubleSpinBox_sgd_momentum"])  
+            item_ui.popup_optim_ui.checkBox_sgd_nesterov.setChecked(optimizer_default["checkBox_sgd_nesterov"])  
+    
+            item_ui.popup_optim_ui.doubleSpinBox_lr_rmsprop.setValue(optimizer_default["doubleSpinBox_lr_rmsprop"])  
+            item_ui.popup_optim_ui.doubleSpinBox_rms_rho.setValue(optimizer_default["doubleSpinBox_rms_rho"])  
+    
+            item_ui.popup_optim_ui.doubleSpinBox_lr_adam.setValue(optimizer_default["doubleSpinBox_lr_adam"])  
+            item_ui.popup_optim_ui.doubleSpinBox_adam_beta1.setValue(optimizer_default["doubleSpinBox_adam_beta1"])  
+            item_ui.popup_optim_ui.doubleSpinBox_adam_beta2.setValue(optimizer_default["doubleSpinBox_adam_beta2"])  
+            item_ui.popup_optim_ui.checkBox_adam_amsgrad.setChecked(optimizer_default["checkBox_adam_amsgrad"])  
+    
+            item_ui.popup_optim_ui.doubleSpinBox_lr_nadam.setValue(optimizer_default["doubleSpinBox_lr_nadam"])          
+            item_ui.popup_optim_ui.doubleSpinBox_nadam_beta1.setValue(optimizer_default["doubleSpinBox_nadam_beta1"])  
+            item_ui.popup_optim_ui.doubleSpinBox_nadam_beta2.setValue(optimizer_default["doubleSpinBox_nadam_beta2"])  
+    
+            item_ui.popup_optim_ui.doubleSpinBox_lr_adadelta.setValue(optimizer_default["doubleSpinBox_lr_adadelta"])  
+            item_ui.popup_optim_ui.doubleSpinBox_adadelta_rho.setValue(optimizer_default["doubleSpinBox_adadelta_rho"])  
+    
+            item_ui.popup_optim_ui.doubleSpinBox_lr_adagrad.setValue(optimizer_default["doubleSpinBox_lr_adagrad"])  
+    
+            item_ui.popup_optim_ui.doubleSpinBox_lr_adamax.setValue(optimizer_default["doubleSpinBox_lr_adamax"])  
+            item_ui.popup_optim_ui.doubleSpinBox_adamax_beta1.setValue(optimizer_default["doubleSpinBox_adamax_beta1"])  
+            item_ui.popup_optim_ui.doubleSpinBox_adamax_beta2.setValue(optimizer_default["doubleSpinBox_adamax_beta2"])
+
+
+        item_ui.popup_optim_ui.pushButton_ok.clicked.connect(ok)
+        item_ui.popup_optim_ui.pushButton_cancel.clicked.connect(cancel)
+        item_ui.popup_optim_ui.pushButton_reset.clicked.connect(reset)
+        
+        item_ui.popup_optim.show()
 
 
     def onLayoutChange(self):
@@ -4101,6 +4318,7 @@ class MainWindow(QtWidgets.QMainWindow):
             loss_expert = str(self.comboBox_expt_loss.currentText()).lower()
             optimizer_expert_on = bool(self.checkBox_optimizer.isChecked())
             optimizer_expert = str(self.comboBox_optimizer.currentText()).lower()
+            optimizer_settings = self.optimizer_settings.copy() #get the current optimizer settings
             paddingMode = str(self.comboBox_paddingMode.currentText()).lower()
     
             try:
@@ -4152,7 +4370,7 @@ class MainWindow(QtWidgets.QMainWindow):
                 if train_last_layers==True:#Train only the last n layers
                     print("Train only the last "+str(train_last_layers_n)+ " layer(s)")
                     trainable_new = (len(trainable_original)-train_last_layers_n)*[False]+train_last_layers_n*[True]
-                    aid_dl.model_change_trainability(model_keras,trainable_new,model_metrics,out_dim,loss_expert,optimizer_expert,learning_rate_const)
+                    aid_dl.model_change_trainability(model_keras,trainable_new,model_metrics,out_dim,loss_expert,optimizer_settings,learning_rate_const)
     
                 if train_dense_layers==True:#Train only dense layers
                     print("Train only dense layers")
@@ -4162,7 +4380,7 @@ class MainWindow(QtWidgets.QMainWindow):
                     trainable_new = len(trainable_original)*[False]
                     for index in layer_dense_ind:
                         trainable_new[index] = True
-                    aid_dl.model_change_trainability(model_keras,trainable_new,model_metrics,out_dim,loss_expert,optimizer_expert,learning_rate_const)
+                    aid_dl.model_change_trainability(model_keras,trainable_new,model_metrics,out_dim,loss_expert,optimizer_settings,learning_rate_const)
     
                 if dropout_expert_on==True:
                     #The user apparently want to change the dropout rates
@@ -4192,7 +4410,7 @@ class MainWindow(QtWidgets.QMainWindow):
                         dropout_expert_list = []
                      
                     if len(dropout_expert_list)>0 and do_list!=dropout_expert_list:#if the dropout rates of the current model is not equal to the required do_list from user...
-                        do_changed = aid_dl.change_dropout(model_keras,dropout_expert_list,model_metrics,nr_classes,loss_expert,optimizer_expert,learning_rate_const)
+                        do_changed = aid_dl.change_dropout(model_keras,dropout_expert_list,model_metrics,nr_classes,loss_expert,optimizer_settings,learning_rate_const)
                         if do_changed==1:
                             text_do = "Dropout rate(s) in model was/were changed to: "+str(dropout_expert_list)
                         else:
@@ -4240,11 +4458,11 @@ class MainWindow(QtWidgets.QMainWindow):
             if recompile==True:
                 if collection==False:
                     print("Recompiling...")
-                    aid_dl.model_compile(model_keras,loss_expert,optimizer_expert,learning_rate_const,model_metrics,nr_classes)
+                    aid_dl.model_compile(model_keras,loss_expert,optimizer_settings,learning_rate_const,model_metrics,nr_classes)
                 if collection==True:
                     for m in model_keras[1]:
                         print("Recompiling...")
-                        aid_dl.model_compile(m,loss_expert,optimizer_expert,learning_rate_const,model_metrics,nr_classes)
+                        aid_dl.model_compile(m,loss_expert,optimizer_settings,learning_rate_const,model_metrics,nr_classes)
             self.model_keras = model_keras #overwrite the model in self
     
             if collection == False:
@@ -4559,10 +4777,13 @@ class MainWindow(QtWidgets.QMainWindow):
                 cycLrMin = []
                 cycLrMax = []
             cycLrMethod = str(self.comboBox_cycLrMethod.currentText())
-            cycLrGamma = self.clr_settings["gamma"]
-            #to compute cycLrStepSize, the number of training images is needed            
-            SelectedFiles = self.items_clicked()
+            cycLrGamma = self.clr_settings["gamma"]            
+            SelectedFiles = self.items_clicked()#to compute cycLrStepSize, the number of training images is needed
             cycLrStepSize = aid_dl.get_cyclStepSize(SelectedFiles,self.clr_settings["step_size"],batchSize_expert)
+            #put clr_settings onto fittingpopup,
+            self.fittingpopups_ui[listindex].clr_settings = self.clr_settings.copy()#assign a copy. Otherwise values in both dicts are changed when manipulating one dict            
+            #put optimizer_settings onto fittingpopup,
+            self.fittingpopups_ui[listindex].optimizer_settings = self.optimizer_settings.copy()#assign a copy. Otherwise values in both dicts are changed when manipulating one dict            
             
             learning_rate_expo_on = bool(self.radioButton_LrExpo.isChecked()) 
             expDecInitLr = float(self.doubleSpinBox_expDecInitLr.value())
@@ -4573,6 +4794,8 @@ class MainWindow(QtWidgets.QMainWindow):
             loss_expert = str(self.comboBox_expt_loss.currentText()).lower()
             optimizer_expert_on = bool(self.checkBox_optimizer.isChecked())
             optimizer_expert = str(self.comboBox_optimizer.currentText()).lower()
+            optimizer_settings = self.fittingpopups_ui[listindex].optimizer_settings.copy()#make a copy to make sure that changes in the UI are not immediately used
+
             paddingMode = str(self.comboBox_paddingMode.currentText()).lower()
     
             train_last_layers = bool(self.checkBox_trainLastNOnly.isChecked())             
@@ -4624,8 +4847,7 @@ class MainWindow(QtWidgets.QMainWindow):
                                                cycLrMethod,cycLrStepSize,
                                                learning_rate_expo_on,
                                                expDecInitLr,expDecSteps,expDecRate,cycLrGamma)
-
-
+            
             if collection==False:    
                 #Create an excel file
                 writer = pd.ExcelWriter(new_modelname.split(".model")[0]+'_meta.xlsx', engine='openpyxl')
@@ -4657,109 +4879,6 @@ class MainWindow(QtWidgets.QMainWindow):
                     pd.DataFrame().to_excel(writer,sheet_name='Parameters') #initialize empty Sheet
                     pd.DataFrame().to_excel(writer,sheet_name='History') #initialize empty Sheet
             
-            
-#            create a dictionary for the metafiles (Parameters and History)
-#            Para_dict = pd.DataFrame()
-#            Para_dict["AIDeveloper_Version"]=VERSION,
-#            Para_dict["model_zoo_version"]=model_zoo_version,
-#            try:
-#                Para_dict["OS"]=platform.platform(),
-#                Para_dict["CPU"]=platform.processor(),
-#            except:
-#                Para_dict["OS"]="Unknown",
-#                Para_dict["CPU"]="Unknown",
-#
-#            if collection:
-#                Para_dict["Modelname"]=model_keras_path[0],
-#                Para_dict["Chosen Model"]=model_architecture_names[0],
-#
-#            else:
-#                Para_dict["Modelname"]=new_modelname,
-#                Para_dict["Chosen Model"]=chosen_model,
-#
-#            Para_dict["Input image size"]=crop,
-#            Para_dict["Color Mode"]=color_mode,
-#            Para_dict["Device"]=deviceSelected,
-#            Para_dict["gpu_used"]=gpu_used,
-#            Para_dict["gpu_memory"]=gpu_memory,
-#    
-#            Para_dict["new_model"]=new_model,
-#            Para_dict["loadrestart_model"]=loadrestart_model,
-#            Para_dict["loadcontinue_model"]=loadcontinue_model,
-#            Para_dict["Continued_Fitting_From"]=load_modelname,
-#    
-#            Para_dict["Output Nr. classes"]=nr_classes,
-#    
-#            Para_dict["Normalization"]=norm,
-#            Para_dict["Nr. epochs"]=nr_epochs,
-#            Para_dict["Keras refresh after nr. epochs"]=keras_refresh_nr_epochs,
-#            Para_dict["Horz. flip"]=h_flip,
-#            Para_dict["Vert. flip"]=v_flip,
-#            Para_dict["rotation"]=rotation,
-#            Para_dict["width_shift"]=width_shift,
-#            Para_dict["height_shift"]=height_shift,
-#            Para_dict["zoom"]=zoom,
-#            Para_dict["shear"]=shear,
-#            Para_dict["Brightness refresh after nr. epochs"]=brightness_refresh_nr_epochs,
-#            Para_dict["Brightness add. lower"]=brightness_add_lower,
-#            Para_dict["Brightness add. upper"]=brightness_add_upper,
-#            Para_dict["Brightness mult. lower"]=brightness_mult_lower,  
-#            Para_dict["Brightness mult. upper"]=brightness_mult_upper,
-#            Para_dict["Gaussnoise Mean"]=gaussnoise_mean,
-#            Para_dict["Gaussnoise Scale"]=gaussnoise_scale,
-#            
-#            Para_dict["Contrast on"]=contrast_on,                
-#            Para_dict["Contrast Lower"]=contrast_lower,
-#            Para_dict["Contrast Higher"]=contrast_higher,
-#            Para_dict["Saturation on"]=saturation_on,
-#            Para_dict["Saturation Lower"]=saturation_lower,
-#            Para_dict["Saturation Higher"]=saturation_higher,
-#            Para_dict["Hue on"]=hue_on,                
-#            Para_dict["Hue delta"]=hue_delta,                
-#
-#            Para_dict["Average blur on"]=avgBlur_on,                
-#            Para_dict["Average blur Lower"]=avgBlur_min,
-#            Para_dict["Average blur Higher"]=avgBlur_max,
-#            Para_dict["Gauss blur on"]=gaussBlur_on,                
-#            Para_dict["Gauss blur Lower"]=gaussBlur_min,
-#            Para_dict["Gauss blur Higher"]=gaussBlur_max,
-#            Para_dict["Motion blur on"]=motionBlur_on,                
-#            Para_dict["Motion blur Kernel"]=motionBlur_kernel,                
-#            Para_dict["Motion blur Angle"]=motionBlur_angle,                
-#
-#            Para_dict["Epoch_Started_Using_These_Settings"]=0,
-#
-#            Para_dict["expert_mode"]=expert_mode,
-#            Para_dict["batchSize_expert"]=batchSize_expert,
-#            Para_dict["epochs_expert"]=epochs_expert,
-#            
-#            Para_dict["learning_rate_expert_on"]=learning_rate_expert_on,
-#            Para_dict["learning_rate_const_on"]=learning_rate_const_on,
-#            Para_dict["learning_rate_const"]=learning_rate_const,
-#            Para_dict["learning_rate_cycLR_on"]=learning_rate_cycLR_on,
-#            Para_dict["cycLrMin"]=cycLrMin,
-#            Para_dict["cycLrMax"]=cycLrMax,
-#            Para_dict["learning_rate_expo_on"]=learning_rate_expo_on,
-#            Para_dict["expDecInitLr"]=expDecInitLr,
-#            Para_dict["expDecSteps"]=expDecSteps,
-#            Para_dict["expDecRate"]=expDecRate,
-#
-#            Para_dict["loss_expert_on"]=loss_expert_on,
-#            Para_dict["loss_expert"]=loss_expert,
-#            Para_dict["optimizer_expert_on"]=optimizer_expert_on,
-#            Para_dict["optimizer_expert"]=optimizer_expert,
-#            Para_dict["paddingMode"]=paddingMode,
-#
-#            Para_dict["train_last_layers"]=train_last_layers,
-#            Para_dict["train_last_layers_n"]=train_last_layers_n,
-#            Para_dict["train_dense_layers"]=train_dense_layers,
-#            Para_dict["dropout_expert_on"]=dropout_expert_on,
-#            Para_dict["dropout_expert"]=dropout_expert,
-#            Para_dict["lossW_expert_on"]=lossW_expert_on,
-#            Para_dict["lossW_expert"]=lossW_expert,
-#            Para_dict["class_weight"]=class_weight,
-#            Para_dict["metrics"]=model_metrics,
-                
             ###############################Expert Mode values##################
             expert_mode_before = False #There was no expert mode used before.
             if expert_mode==True:
@@ -4772,13 +4891,13 @@ class MainWindow(QtWidgets.QMainWindow):
                 if train_last_layers==True:#Train only the last n layers
                     print("Train only the last "+str(train_last_layers_n)+ " layer(s)")
                     trainable_new = (len(trainable_original)-train_last_layers_n)*[False]+train_last_layers_n*[True]
-                    summary = aid_dl.model_change_trainability(model_keras,trainable_new,model_metrics,nr_classes,loss_expert,optimizer_expert,learning_rate_const)
+                    summary = aid_dl.model_change_trainability(model_keras,trainable_new,model_metrics,nr_classes,loss_expert,optimizer_settings,learning_rate_const)
                     if model_keras_p!=None:#if this is NOT None, there exists a parallel model, which also needs to be re-compiled
-                        aid_dl.model_compile(model_keras_p,loss_expert,optimizer_expert,learning_rate_const,model_metrics,nr_classes)
+                        aid_dl.model_compile(model_keras_p,loss_expert,optimizer_settings,learning_rate_const,model_metrics,nr_classes)
                         print("Recompiled parallel model for train_last_layers==True")
                     text1 = "Expert mode: Request for custom trainability states: train only the last "+str(train_last_layers_n)+ " layer(s)\n"
                     #text2 = "\n--------------------\n"
-                    self.fittingpopups_ui[listindex].textBrowser_FittingInfo_pop.append(text1+summary)
+                    self.fittingpopups_ui[listindex].textBrowser_FittingInfo.append(text1+summary)
                 if train_dense_layers==True:#Train only dense layers
                     print("Train only dense layers")
                     layer_dense_ind = ["Dense" in x for x in layer_names]
@@ -4787,13 +4906,13 @@ class MainWindow(QtWidgets.QMainWindow):
                     trainable_new = len(trainable_original)*[False]
                     for index in layer_dense_ind:
                         trainable_new[index] = True
-                    summary = aid_dl.model_change_trainability(model_keras,trainable_new,model_metrics,nr_classes,loss_expert,optimizer_expert,learning_rate_const)                  
+                    summary = aid_dl.model_change_trainability(model_keras,trainable_new,model_metrics,nr_classes,loss_expert,optimizer_settings,learning_rate_const)                  
                     if model_keras_p!=None:#if this is NOT None, there exists a parallel model, which also needs to be re-compiled
-                        aid_dl.model_compile(model_keras_p,loss_expert,optimizer_expert,learning_rate_const,model_metrics,nr_classes)
+                        aid_dl.model_compile(model_keras_p,loss_expert,optimizer_settings,learning_rate_const,model_metrics,nr_classes)
                         print("Recompiled parallel model for train_dense_layers==True")
                     text1 = "Expert mode: Request for custom trainability states: train only dense layer(s)\n"
                     #text2 = "\n--------------------\n"
-                    self.fittingpopups_ui[listindex].textBrowser_FittingInfo_pop.append(text1+summary)
+                    self.fittingpopups_ui[listindex].textBrowser_FittingInfo.append(text1+summary)
     
                 if dropout_expert_on==True:
                     #The user apparently want to change the dropout rates
@@ -4805,15 +4924,15 @@ class MainWindow(QtWidgets.QMainWindow):
                         dropout_expert_list = dropout_expert
                         if not len(dropout_expert_list)==len(do_list):
                             text = "Issue with dropout: you defined "+str(len(dropout_expert_list))+" dropout rates, but model has "+str(len(do_list))+" dropout layers"
-                            self.fittingpopups_ui[listindex].textBrowser_FittingInfo_pop.append(text)
+                            self.fittingpopups_ui[listindex].textBrowser_FittingInfo.append(text)
                     else:
                         text = "Could not understand user input at Expert->Dropout"
-                        self.fittingpopups_ui[listindex].textBrowser_FittingInfo_pop.append(text)
+                        self.fittingpopups_ui[listindex].textBrowser_FittingInfo.append(text)
                         dropout_expert_list = []
                     if len(dropout_expert_list)>0 and do_list!=dropout_expert_list:#if the dropout rates of the current model is not equal to the required do_list from user...
-                        do_changed = aid_dl.change_dropout(model_keras,dropout_expert_list,model_metrics,nr_classes,loss_expert,optimizer_expert,learning_rate_const)
+                        do_changed = aid_dl.change_dropout(model_keras,dropout_expert_list,model_metrics,nr_classes,loss_expert,optimizer_settings,learning_rate_const)
                         if model_keras_p!=None:#if this is NOT None, there exists a parallel model, which also needs to be re-compiled
-                            aid_dl.model_compile(model_keras_p,loss_expert,optimizer_expert,learning_rate_const,model_metrics,nr_classes)
+                            aid_dl.model_compile(model_keras_p,loss_expert,optimizer_settings,learning_rate_const,model_metrics,nr_classes)
                             print("Recompiled parallel model to change dropout. I'm not sure if this works already!")
                         if do_changed==1:
                             text_do = "Dropout rate(s) in model was/were changed to: "+str(dropout_expert_list)
@@ -4822,7 +4941,7 @@ class MainWindow(QtWidgets.QMainWindow):
                     else:
                         text_do = "Dropout rate(s) in model was/were not changed"
                     print(text_do)
-                    self.fittingpopups_ui[listindex].textBrowser_FittingInfo_pop.append(text_do)
+                    self.fittingpopups_ui[listindex].textBrowser_FittingInfo.append(text_do)
     
     
             text_updates = ""
@@ -4865,15 +4984,15 @@ class MainWindow(QtWidgets.QMainWindow):
             if recompile==True:
                 print("Recompiling...")
                 if collection==False:
-                    aid_dl.model_compile(model_keras,loss_expert,optimizer_expert,learning_rate_const,model_metrics,nr_classes)
+                    aid_dl.model_compile(model_keras,loss_expert,optimizer_settings,learning_rate_const,model_metrics,nr_classes)
                 if collection==True:
                     for m in model_keras[1]:
-                        aid_dl.model_compile(m, loss_expert, optimizer_expert, learning_rate_const,model_metrics, nr_classes)
+                        aid_dl.model_compile(m, loss_expert, optimizer_settings, learning_rate_const,model_metrics, nr_classes)
                 if model_keras_p!=None:#if this is NOT None, there exists a parallel model, which also needs to be re-compiled
-                    aid_dl.model_compile(model_keras_p,loss_expert,optimizer_expert,learning_rate_const,model_metrics,nr_classes)
+                    aid_dl.model_compile(model_keras_p,loss_expert,optimizer_settings,learning_rate_const,model_metrics,nr_classes)
                     print("Recompiled parallel model to adjust learning rate, loss, optimizer")
     
-            self.fittingpopups_ui[listindex].textBrowser_FittingInfo_pop.append(text_updates)
+            self.fittingpopups_ui[listindex].textBrowser_FittingInfo.append(text_updates)
     
             #self.model_keras = model_keras #overwrite the model on self
     
@@ -4934,113 +5053,94 @@ class MainWindow(QtWidgets.QMainWindow):
                     msg.setWindowTitle("Std. is zero")
                     msg.setStandardButtons(QtWidgets.QMessageBox.Ok)
                     msg.exec_()
-    
-#                #This needs to be saved into Para_dict since it will be required for inference
-#                Para_dict["Mean of training data used for scaling"]=mean_trainingdata,
-#                Para_dict["Std of training data used for scaling"]=std_trainingdata,
-#            if collection==False:
-#                Para_dict.to_excel(writer,sheet_name='Parameters')
-#                #self.model_meta = writer
-#                if os.path.isfile(new_modelname.split(".model")[0]+'_meta.xlsx'):
-#                    os.chmod(new_modelname.split(".model")[0]+'_meta.xlsx', S_IREAD|S_IRGRP|S_IROTH|S_IWRITE|S_IWGRP|S_IWOTH)#change to writable
-#                writer.save()
-#                os.chmod(new_modelname.split(".model")[0]+'_meta.xlsx', S_IREAD|S_IRGRP|S_IROTH)#change to readable, non-writable
-#            if collection==True:
-#                for i in range(len(Writers)):
-#                    Para_dict.to_excel(Writers[i],sheet_name='Parameters')
-#                    #self.model_meta = writer
-#                    if os.path.isfile(model_keras_path[i].split(".model")[0]+'_meta.xlsx'):
-#                        os.chmod(model_keras_path[i].split(".model")[0]+'_meta.xlsx', S_IREAD|S_IRGRP|S_IROTH|S_IWRITE|S_IWGRP|S_IWOTH)
-#                    Writers[i].save()
-#                    os.chmod(model_keras_path[i].split(".model")[0]+'_meta.xlsx', S_IREAD|S_IRGRP|S_IROTH)
-    
+        
             Para_dict = pd.DataFrame()
             def update_para_dict():
-                norm = str(self.fittingpopups_ui[listindex].comboBox_Normalization_pop.currentText())
-                nr_epochs = int(self.fittingpopups_ui[listindex].spinBox_NrEpochs_pop.value())
-                keras_refresh_nr_epochs = int(self.fittingpopups_ui[listindex].spinBox_RefreshAfterEpochs_pop.value())
-                h_flip = bool(self.fittingpopups_ui[listindex].checkBox_HorizFlip_pop.isChecked())
-                v_flip = bool(self.fittingpopups_ui[listindex].checkBox_VertFlip_pop.isChecked())
-                rotation = float(self.fittingpopups_ui[listindex].lineEdit_Rotation_pop.text())
-         
-                width_shift = float(self.fittingpopups_ui[listindex].lineEdit_widthShift_pop.text())
-                height_shift = float(self.fittingpopups_ui[listindex].lineEdit_heightShift_pop.text())
-                zoom = float(self.fittingpopups_ui[listindex].lineEdit_zoomRange_pop.text())
-                shear = float(self.fittingpopups_ui[listindex].lineEdit_shearRange_pop.text())
-                
-                brightness_refresh_nr_epochs = int(self.fittingpopups_ui[listindex].spinBox_RefreshAfterNrEpochs_pop.value())
-                brightness_add_lower = float(self.fittingpopups_ui[listindex].spinBox_PlusLower_pop.value())
-                brightness_add_upper = float(self.fittingpopups_ui[listindex].spinBox_PlusUpper_pop.value())
-                brightness_mult_lower = float(self.fittingpopups_ui[listindex].doubleSpinBox_MultLower_pop.value())
-                brightness_mult_upper = float(self.fittingpopups_ui[listindex].doubleSpinBox_MultUpper_pop.value())
-                gaussnoise_mean = float(self.fittingpopups_ui[listindex].doubleSpinBox_GaussianNoiseMean_pop.value())
-                gaussnoise_scale = float(self.fittingpopups_ui[listindex].doubleSpinBox_GaussianNoiseScale_pop.value())
-    
-                contrast_on = bool(self.fittingpopups_ui[listindex].checkBox_contrast_pop.isChecked())
-                contrast_lower = float(self.fittingpopups_ui[listindex].doubleSpinBox_contrastLower_pop.value())
-                contrast_higher = float(self.fittingpopups_ui[listindex].doubleSpinBox_contrastHigher_pop.value())
-                saturation_on = bool(self.fittingpopups_ui[listindex].checkBox_saturation_pop.isChecked())
-                saturation_lower = float(self.fittingpopups_ui[listindex].doubleSpinBox_saturationLower_pop.value())
-                saturation_higher = float(self.fittingpopups_ui[listindex].doubleSpinBox_saturationHigher_pop.value())
-                hue_on = bool(self.fittingpopups_ui[listindex].checkBox_hue_pop.isChecked())
-                hue_delta = float(self.fittingpopups_ui[listindex].doubleSpinBox_hueDelta_pop.value())
-    
-                avgBlur_on = bool(self.fittingpopups_ui[listindex].checkBox_avgBlur_pop.isChecked())        
-                avgBlur_min = int(self.fittingpopups_ui[listindex].spinBox_avgBlurMin_pop.value())
-                avgBlur_max = int(self.fittingpopups_ui[listindex].spinBox_avgBlurMax_pop.value())
-                gaussBlur_on = bool(self.fittingpopups_ui[listindex].checkBox_gaussBlur_pop.isChecked())        
-                gaussBlur_min = int(self.fittingpopups_ui[listindex].spinBox_gaussBlurMin_pop.value())
-                gaussBlur_max = int(self.fittingpopups_ui[listindex].spinBox_gaussBlurMax_pop.value())
-                motionBlur_on = bool(self.fittingpopups_ui[listindex].checkBox_motionBlur_pop.isChecked())        
-                motionBlur_kernel = str(self.fittingpopups_ui[listindex].lineEdit_motionBlurKernel_pop.text())
-                motionBlur_angle = str(self.fittingpopups_ui[listindex].lineEdit_motionBlurAngle_pop.text())
-                motionBlur_kernel = tuple(ast.literal_eval(motionBlur_kernel)) #translate string in the lineEdits to a tuple
-                motionBlur_angle = tuple(ast.literal_eval(motionBlur_angle)) #translate string in the lineEdits to a tuple
-    
-                expert_mode = bool(self.fittingpopups_ui[listindex].groupBox_expertMode_pop.isChecked())
-                batchSize_expert = int(self.fittingpopups_ui[listindex].spinBox_batchSize_pop.value())
-                epochs_expert = int(self.fittingpopups_ui[listindex].spinBox_epochs_pop.value())
-                
-                learning_rate_expert_on = bool(self.fittingpopups_ui[listindex].groupBox_learningRate_pop.isChecked())
-
-                learning_rate_const_on = bool(self.fittingpopups_ui[listindex].radioButton_LrConst.isChecked())
-                learning_rate_const = float(self.fittingpopups_ui[listindex].doubleSpinBox_learningRate_pop.value())
-
-                learning_rate_cycLR_on = bool(self.fittingpopups_ui[listindex].radioButton_LrCycl.isChecked())
-                try:
-                    cycLrMin = float(self.fittingpopups_ui[listindex].lineEdit_cycLrMin.text())
-                    cycLrMax = float(self.fittingpopups_ui[listindex].lineEdit_cycLrMax.text())
-                except:
-                    cycLrMin = []
-                    cycLrMax = []
-                cycLrMethod = str(self.fittingpopups_ui[listindex].comboBox_cycLrMethod.currentText())
-
-                learning_rate_expo_on = bool(self.fittingpopups_ui[listindex].radioButton_LrExpo.isChecked())
-                expDecInitLr = float(self.fittingpopups_ui[listindex].doubleSpinBox_expDecInitLr.value())
-                expDecSteps = int(self.fittingpopups_ui[listindex].spinBox_expDecSteps.value())
-                expDecRate = float(self.fittingpopups_ui[listindex].doubleSpinBox_expDecRate.value())
-
-                loss_expert_on = bool(self.fittingpopups_ui[listindex].checkBox_expt_loss_pop.isChecked())
-                loss_expert = str(self.fittingpopups_ui[listindex].comboBox_expt_loss_pop.currentText())
-                optimizer_expert_on = bool(self.fittingpopups_ui[listindex].checkBox_optimizer_pop.isChecked())
-                optimizer_expert = str(self.fittingpopups_ui[listindex].comboBox_optimizer_pop.currentText())
-    
-                paddingMode = str(self.fittingpopups_ui[listindex].comboBox_paddingMode_pop.currentText())
-    
-                train_last_layers = bool(self.fittingpopups_ui[listindex].checkBox_trainLastNOnly_pop.isChecked())             
-                train_last_layers_n = int(self.fittingpopups_ui[listindex].spinBox_trainLastNOnly_pop.value())              
-                train_dense_layers = bool(self.fittingpopups_ui[listindex].checkBox_trainDenseOnly_pop.isChecked())             
-                dropout_expert_on = bool(self.fittingpopups_ui[listindex].checkBox_dropout_pop.isChecked())             
-                try:
-                    dropout_expert = str(self.fittingpopups_ui[listindex].lineEdit_dropout_pop.text()) #due to the validator, there are no squ.brackets
-                    dropout_expert = "["+dropout_expert+"]"
-                    dropout_expert = ast.literal_eval(dropout_expert)
-                except:
-                    dropout_expert = []
-                #Issue here! This toggles call of lossweights_popup! Can this be prevented?
-                lossW_expert_on = bool(self.fittingpopups_ui[listindex].checkBox_lossW.isChecked())             
-                lossW_expert = str(self.fittingpopups_ui[listindex].lineEdit_lossW.text())             
-                class_weight = self.get_class_weight(self.fittingpopups_ui[listindex].SelectedFiles,lossW_expert)
+#                norm = str(self.fittingpopups_ui[listindex].comboBox_Normalization_pop.currentText())
+#                nr_epochs = int(self.fittingpopups_ui[listindex].spinBox_NrEpochs_pop.value())
+#                keras_refresh_nr_epochs = int(self.fittingpopups_ui[listindex].spinBox_RefreshAfterEpochs_pop.value())
+#                h_flip = bool(self.fittingpopups_ui[listindex].checkBox_HorizFlip_pop.isChecked())
+#                v_flip = bool(self.fittingpopups_ui[listindex].checkBox_VertFlip_pop.isChecked())
+#                rotation = float(self.fittingpopups_ui[listindex].lineEdit_Rotation_pop.text())
+#         
+#                width_shift = float(self.fittingpopups_ui[listindex].lineEdit_widthShift_pop.text())
+#                height_shift = float(self.fittingpopups_ui[listindex].lineEdit_heightShift_pop.text())
+#                zoom = float(self.fittingpopups_ui[listindex].lineEdit_zoomRange_pop.text())
+#                shear = float(self.fittingpopups_ui[listindex].lineEdit_shearRange_pop.text())
+#                
+#                brightness_refresh_nr_epochs = int(self.fittingpopups_ui[listindex].spinBox_RefreshAfterNrEpochs_pop.value())
+#                brightness_add_lower = float(self.fittingpopups_ui[listindex].spinBox_PlusLower_pop.value())
+#                brightness_add_upper = float(self.fittingpopups_ui[listindex].spinBox_PlusUpper_pop.value())
+#                brightness_mult_lower = float(self.fittingpopups_ui[listindex].doubleSpinBox_MultLower_pop.value())
+#                brightness_mult_upper = float(self.fittingpopups_ui[listindex].doubleSpinBox_MultUpper_pop.value())
+#                gaussnoise_mean = float(self.fittingpopups_ui[listindex].doubleSpinBox_GaussianNoiseMean_pop.value())
+#                gaussnoise_scale = float(self.fittingpopups_ui[listindex].doubleSpinBox_GaussianNoiseScale_pop.value())
+#    
+#                contrast_on = bool(self.fittingpopups_ui[listindex].checkBox_contrast_pop.isChecked())
+#                contrast_lower = float(self.fittingpopups_ui[listindex].doubleSpinBox_contrastLower_pop.value())
+#                contrast_higher = float(self.fittingpopups_ui[listindex].doubleSpinBox_contrastHigher_pop.value())
+#                saturation_on = bool(self.fittingpopups_ui[listindex].checkBox_saturation_pop.isChecked())
+#                saturation_lower = float(self.fittingpopups_ui[listindex].doubleSpinBox_saturationLower_pop.value())
+#                saturation_higher = float(self.fittingpopups_ui[listindex].doubleSpinBox_saturationHigher_pop.value())
+#                hue_on = bool(self.fittingpopups_ui[listindex].checkBox_hue_pop.isChecked())
+#                hue_delta = float(self.fittingpopups_ui[listindex].doubleSpinBox_hueDelta_pop.value())
+#    
+#                avgBlur_on = bool(self.fittingpopups_ui[listindex].checkBox_avgBlur_pop.isChecked())        
+#                avgBlur_min = int(self.fittingpopups_ui[listindex].spinBox_avgBlurMin_pop.value())
+#                avgBlur_max = int(self.fittingpopups_ui[listindex].spinBox_avgBlurMax_pop.value())
+#                gaussBlur_on = bool(self.fittingpopups_ui[listindex].checkBox_gaussBlur_pop.isChecked())        
+#                gaussBlur_min = int(self.fittingpopups_ui[listindex].spinBox_gaussBlurMin_pop.value())
+#                gaussBlur_max = int(self.fittingpopups_ui[listindex].spinBox_gaussBlurMax_pop.value())
+#                motionBlur_on = bool(self.fittingpopups_ui[listindex].checkBox_motionBlur_pop.isChecked())        
+#                motionBlur_kernel = str(self.fittingpopups_ui[listindex].lineEdit_motionBlurKernel_pop.text())
+#                motionBlur_angle = str(self.fittingpopups_ui[listindex].lineEdit_motionBlurAngle_pop.text())
+#                motionBlur_kernel = tuple(ast.literal_eval(motionBlur_kernel)) #translate string in the lineEdits to a tuple
+#                motionBlur_angle = tuple(ast.literal_eval(motionBlur_angle)) #translate string in the lineEdits to a tuple
+#    
+#                expert_mode = bool(self.fittingpopups_ui[listindex].groupBox_expertMode_pop.isChecked())
+#                batchSize_expert = int(self.fittingpopups_ui[listindex].spinBox_batchSize_pop.value())
+#                epochs_expert = int(self.fittingpopups_ui[listindex].spinBox_epochs_pop.value())
+#                
+#                learning_rate_expert_on = bool(self.fittingpopups_ui[listindex].groupBox_learningRate_pop.isChecked())
+#
+#                learning_rate_const_on = bool(self.fittingpopups_ui[listindex].radioButton_LrConst.isChecked())
+#                learning_rate_const = float(self.fittingpopups_ui[listindex].doubleSpinBox_learningRate.value())
+#
+#                learning_rate_cycLR_on = bool(self.fittingpopups_ui[listindex].radioButton_LrCycl.isChecked())
+#                try:
+#                    cycLrMin = float(self.fittingpopups_ui[listindex].lineEdit_cycLrMin.text())
+#                    cycLrMax = float(self.fittingpopups_ui[listindex].lineEdit_cycLrMax.text())
+#                except:
+#                    cycLrMin = []
+#                    cycLrMax = []
+#                cycLrMethod = str(self.fittingpopups_ui[listindex].comboBox_cycLrMethod.currentText())
+#
+#                learning_rate_expo_on = bool(self.fittingpopups_ui[listindex].radioButton_LrExpo.isChecked())
+#                expDecInitLr = float(self.fittingpopups_ui[listindex].doubleSpinBox_expDecInitLr.value())
+#                expDecSteps = int(self.fittingpopups_ui[listindex].spinBox_expDecSteps.value())
+#                expDecRate = float(self.fittingpopups_ui[listindex].doubleSpinBox_expDecRate.value())
+#
+#                loss_expert_on = bool(self.fittingpopups_ui[listindex].checkBox_expt_loss_pop.isChecked())
+#                loss_expert = str(self.fittingpopups_ui[listindex].comboBox_expt_loss_pop.currentText())
+#                optimizer_expert_on = bool(self.fittingpopups_ui[listindex].checkBox_optimizer_pop.isChecked())
+#                optimizer_expert = str(self.fittingpopups_ui[listindex].comboBox_optimizer.currentText())
+#                #optimizer_settings = self.fittingpopups_ui[listindex].optimizer_settings.copy()#make a copy, to make sure that changed in the UI are not used immediately, but only after hitting apply at next epoch
+#                paddingMode = str(self.fittingpopups_ui[listindex].comboBox_paddingMode_pop.currentText())
+#    
+#                train_last_layers = bool(self.fittingpopups_ui[listindex].checkBox_trainLastNOnly_pop.isChecked())             
+#                train_last_layers_n = int(self.fittingpopups_ui[listindex].spinBox_trainLastNOnly_pop.value())              
+#                train_dense_layers = bool(self.fittingpopups_ui[listindex].checkBox_trainDenseOnly_pop.isChecked())             
+#                dropout_expert_on = bool(self.fittingpopups_ui[listindex].checkBox_dropout_pop.isChecked())             
+#                try:
+#                    dropout_expert = str(self.fittingpopups_ui[listindex].lineEdit_dropout_pop.text()) #due to the validator, there are no squ.brackets
+#                    dropout_expert = "["+dropout_expert+"]"
+#                    dropout_expert = ast.literal_eval(dropout_expert)
+#                except:
+#                    dropout_expert = []
+#                #Issue here! This toggles call of lossweights_popup! Can this be prevented?
+#                lossW_expert_on = bool(self.fittingpopups_ui[listindex].checkBox_lossW.isChecked())             
+#                lossW_expert = str(self.fittingpopups_ui[listindex].lineEdit_lossW.text())             
+#                class_weight = self.get_class_weight(self.fittingpopups_ui[listindex].SelectedFiles,lossW_expert)
                 
                 
                 #Document changes in the meta-file
@@ -5125,6 +5225,7 @@ class MainWindow(QtWidgets.QMainWindow):
                 Para_dict["loss_expert"]=loss_expert,
                 Para_dict["optimizer_expert_on"]=optimizer_expert_on,
                 Para_dict["optimizer_expert"]=optimizer_expert,                
+                Para_dict["optimizer_settings"]=optimizer_settings,                
     
                 Para_dict["paddingMode"]=paddingMode,                
                 
@@ -5374,7 +5475,7 @@ class MainWindow(QtWidgets.QMainWindow):
     
             self.fittingpopups_ui[listindex].groupBox_learningRate_pop.setChecked(learning_rate_expert_on)
             self.fittingpopups_ui[listindex].radioButton_LrConst.setChecked(learning_rate_const_on)
-            self.fittingpopups_ui[listindex].doubleSpinBox_learningRate_pop.setValue(learning_rate_const)
+            self.fittingpopups_ui[listindex].doubleSpinBox_learningRate.setValue(learning_rate_const)
             self.fittingpopups_ui[listindex].radioButton_LrCycl.setChecked(learning_rate_cycLR_on)
             self.fittingpopups_ui[listindex].lineEdit_cycLrMin.setText(str(cycLrMin))
             self.fittingpopups_ui[listindex].lineEdit_cycLrMax.setText(str(cycLrMax))
@@ -5393,10 +5494,10 @@ class MainWindow(QtWidgets.QMainWindow):
             if index >= 0:
                 self.fittingpopups_ui[listindex].comboBox_expt_loss_pop.setCurrentIndex(index)
             self.fittingpopups_ui[listindex].checkBox_optimizer_pop.setChecked(optimizer_expert_on)
-            index = self.fittingpopups_ui[listindex].comboBox_optimizer_pop.findText(optimizer_expert, QtCore.Qt.MatchFixedString)
+            index = self.fittingpopups_ui[listindex].comboBox_optimizer.findText(optimizer_expert, QtCore.Qt.MatchFixedString)
             if index >= 0:
-                self.fittingpopups_ui[listindex].comboBox_optimizer_pop.setCurrentIndex(index)
-            self.fittingpopups_ui[listindex].doubleSpinBox_learningRate_pop.setValue(learning_rate_const)
+                self.fittingpopups_ui[listindex].comboBox_optimizer.setCurrentIndex(index)
+            self.fittingpopups_ui[listindex].doubleSpinBox_learningRate.setValue(learning_rate_const)
     
             index = self.fittingpopups_ui[listindex].comboBox_paddingMode_pop.findText(paddingMode, QtCore.Qt.MatchFixedString)
             if index >= 0:
@@ -5640,9 +5741,8 @@ class MainWindow(QtWidgets.QMainWindow):
                                 epochs_expert = int(self.fittingpopups_ui[listindex].spinBox_epochs_pop.value())
                                 
                                 learning_rate_expert_on = bool(self.fittingpopups_ui[listindex].groupBox_learningRate_pop.isChecked())
-                
                                 learning_rate_const_on = bool(self.fittingpopups_ui[listindex].radioButton_LrConst.isChecked())
-                                learning_rate_const = float(self.fittingpopups_ui[listindex].doubleSpinBox_learningRate_pop.value())
+                                learning_rate_const = float(self.fittingpopups_ui[listindex].doubleSpinBox_learningRate.value())
                 
                                 learning_rate_cycLR_on = bool(self.fittingpopups_ui[listindex].radioButton_LrCycl.isChecked())
                                 try:
@@ -5661,7 +5761,8 @@ class MainWindow(QtWidgets.QMainWindow):
                                 loss_expert_on = bool(self.fittingpopups_ui[listindex].checkBox_expt_loss_pop.isChecked())
                                 loss_expert = str(self.fittingpopups_ui[listindex].comboBox_expt_loss_pop.currentText())
                                 optimizer_expert_on = bool(self.fittingpopups_ui[listindex].checkBox_optimizer_pop.isChecked())
-                                optimizer_expert = str(self.fittingpopups_ui[listindex].comboBox_optimizer_pop.currentText())
+                                optimizer_expert = str(self.fittingpopups_ui[listindex].comboBox_optimizer.currentText())
+                                optimizer_settings = self.fittingpopups_ui[listindex].optimizer_settings.copy() #Get a copy of the current optimizer_settings. .copy prevents that changes in the UI have immediate effect
                                 paddingMode = str(self.fittingpopups_ui[listindex].comboBox_paddingMode_pop.currentText())
     
                                 train_last_layers = bool(self.fittingpopups_ui[listindex].checkBox_trainLastNOnly_pop.isChecked())             
@@ -5692,13 +5793,13 @@ class MainWindow(QtWidgets.QMainWindow):
                                                 print("Train only the last "+str(train_last_layers_n)+ " layer(s)")
                                             trainable_new = (len(trainable_original)-train_last_layers_n)*[False]+train_last_layers_n*[True]
                                             #Change the trainability states. Model compilation is done inside model_change_trainability
-                                            summary = aid_dl.model_change_trainability(model_keras,trainable_new,model_metrics,nr_classes,loss_expert,optimizer_expert,learning_rate_const)
+                                            summary = aid_dl.model_change_trainability(model_keras,trainable_new,model_metrics,nr_classes,loss_expert,optimizer_settings,learning_rate_const)
                                             if model_keras_p!=None:#if this is NOT None, there exists a parallel model, which also needs to be re-compiled
-                                                aid_dl.model_compile(model_keras_p,loss_expert,optimizer_expert,learning_rate_const,model_metrics,nr_classes)
+                                                aid_dl.model_compile(model_keras_p,loss_expert,optimizer_settings,learning_rate_const,model_metrics,nr_classes)
                                                 print("Recompiled parallel model due to train_last_layers==True")
                                             text1 = "Expert mode: Request for custom trainability states: train only the last "+str(train_last_layers_n)+ " layer(s)\n"
                                             #text2 = "\n--------------------\n"
-                                            self.fittingpopups_ui[listindex].textBrowser_FittingInfo_pop.append(text1+summary)
+                                            self.fittingpopups_ui[listindex].textBrowser_FittingInfo.append(text1+summary)
                                         if train_dense_layers==True:#Train only dense layers
                                             if verbose:
                                                 print("Train only dense layers")
@@ -5709,13 +5810,13 @@ class MainWindow(QtWidgets.QMainWindow):
                                             for index in layer_dense_ind:
                                                 trainable_new[index] = True
                                             #Change the trainability states. Model compilation is done inside model_change_trainability
-                                            summary = aid_dl.model_change_trainability(model_keras,trainable_new,model_metrics,nr_classes,loss_expert,optimizer_expert,learning_rate_const)                 
+                                            summary = aid_dl.model_change_trainability(model_keras,trainable_new,model_metrics,nr_classes,loss_expert,optimizer_settings,learning_rate_const)                 
                                             if model_keras_p!=None:#if this is NOT None, there exists a parallel model, which also needs to be re-compiled
-                                                aid_dl.model_compile(model_keras_p,loss_expert,optimizer_expert,learning_rate_const,model_metrics,nr_classes)
+                                                aid_dl.model_compile(model_keras_p,loss_expert,optimizer_settings,learning_rate_const,model_metrics,nr_classes)
                                                 print("Recompiled parallel model due to train_dense_layers==True")
                                             text1 = "Expert mode: Request for custom trainability states: train only dense layer(s)\n"
                                             #text2 = "\n--------------------\n"
-                                            self.fittingpopups_ui[listindex].textBrowser_FittingInfo_pop.append(text1+summary)
+                                            self.fittingpopups_ui[listindex].textBrowser_FittingInfo.append(text1+summary)
     
                                         if dropout_expert_on==True:
                                             #The user apparently want to change the dropout rates
@@ -5727,17 +5828,17 @@ class MainWindow(QtWidgets.QMainWindow):
                                                 dropout_expert_list = dropout_expert
                                                 if not len(dropout_expert_list)==len(do_list):
                                                     text = "Issue with dropout: you defined "+str(len(dropout_expert_list))+" dropout rates, but model has "+str(len(do_list))+" dropout layers"
-                                                    self.fittingpopups_ui[listindex].textBrowser_FittingInfo_pop.append(text)
+                                                    self.fittingpopups_ui[listindex].textBrowser_FittingInfo.append(text)
                                             else:
                                                 text = "Could not understand user input at Expert->Dropout"
-                                                self.fittingpopups_ui[listindex].textBrowser_FittingInfo_pop.append(text)
+                                                self.fittingpopups_ui[listindex].textBrowser_FittingInfo.append(text)
                                                 dropout_expert_list = []
     
                                             if len(dropout_expert_list)>0 and do_list!=dropout_expert_list:#if the dropout rates of the current model is not equal to the required do_list from user...
                                                 #Change dropout. Model .compile happens inside change_dropout function
-                                                do_changed = aid_dl.change_dropout(model_keras,dropout_expert_list,model_metrics,nr_classes,loss_expert,optimizer_expert,learning_rate_const)
+                                                do_changed = aid_dl.change_dropout(model_keras,dropout_expert_list,model_metrics,nr_classes,loss_expert,optimizer_settings,learning_rate_const)
                                                 if model_keras_p!=None:#if model_keras_p is NOT None, there exists a parallel model, which also needs to be re-compiled
-                                                    aid_dl.model_compile(model_keras_p,loss_expert,optimizer_expert,learning_rate_const,model_metrics,nr_classes)
+                                                    aid_dl.model_compile(model_keras_p,loss_expert,optimizer_settings,learning_rate_const,model_metrics,nr_classes)
                                                     print("Recompiled parallel model due to changed dropout. I'm not sure if this works already!")
     
                                                 if do_changed==1:
@@ -5748,7 +5849,7 @@ class MainWindow(QtWidgets.QMainWindow):
                                                 text_do = "Dropout rate(s) in model was/were not changed"
                                             if verbose:
                                                 print(text_do)
-                                            self.fittingpopups_ui[listindex].textBrowser_FittingInfo_pop.append(text_do)
+                                            self.fittingpopups_ui[listindex].textBrowser_FittingInfo.append(text_do)
                                         if learning_rate_expert_on==True:
                                             #get the current lr_dict
                                             lr_dict_now = aid_dl.get_lr_dict(learning_rate_const_on,learning_rate_const,
@@ -5763,10 +5864,17 @@ class MainWindow(QtWidgets.QMainWindow):
                                                                                    cycLrMethod,cycLrStepSize,
                                                                                    learning_rate_expo_on,
                                                                                    expDecInitLr,expDecSteps,expDecRate,cycLrGamma)
+                                                #update lr_dict_original
+                                                lr_dict_original = lr_dict_now.copy()
                                         else:
                                             callback_lr = None
 
-
+                                        if optimizer_expert_on==True:
+                                            optimizer_settings_now = self.fittingpopups_ui[listindex].optimizer_settings.copy()
+                                            if not optimizer_settings_now == optimizer_settings:#in case the dataframes dont equal...
+                                                #grab these new optimizer values
+                                                optimizer_settings = optimizer_settings_now.copy()
+                                            
                                 ############################Invert 'expert' settings#########################
                                 if expert_mode==False and expert_mode_before==True: #if the expert mode was selected before, change the parameters back to original vlaues
                                     if verbose:
@@ -5775,30 +5883,32 @@ class MainWindow(QtWidgets.QMainWindow):
                                     #Re-set trainable states back to original state                                    
                                     if verbose:
                                         print("Change 'trainable' layers back to original state")
-                                    summary = aid_dl.model_change_trainability(model_keras,trainable_original,model_metrics,nr_classes,loss_expert,optimizer_expert,learning_rate_const)                 
+                                    summary = aid_dl.model_change_trainability(model_keras,trainable_original,model_metrics,nr_classes,loss_expert,optimizer_settings,learning_rate_const)                 
                                     if model_keras_p!=None:#if model_keras_p is NOT None, there exists a parallel model, which also needs to be re-compiled
-                                        aid_dl.model_compile(model_keras_p,loss_expert,optimizer_expert,learning_rate_const,model_metrics,nr_classes)
+                                        aid_dl.model_compile(model_keras_p,loss_expert,optimizer_settings,learning_rate_const,model_metrics,nr_classes)
                                         print("Recompiled parallel model to change 'trainable' layers back to original state")
     
                                     text1 = "Expert mode turns off: Request for orignal trainability states:\n"
                                     #text2 = "\n--------------------\n"
-                                    self.fittingpopups_ui[listindex].textBrowser_FittingInfo_pop.append(text1+summary)
+                                    self.fittingpopups_ui[listindex].textBrowser_FittingInfo.append(text1+summary)
                                     if verbose:
                                         print("Change dropout rates in dropout layers back to original values")
-                                    callback_lr = None
+                                    
+                                    callback_lr = None#remove learning rate callback
                                     if verbose:
                                         print("Set learning rate callback to None")
+                                    
                                     if len(do_list_original)>0:
-                                        do_changed = aid_dl.change_dropout(model_keras,do_list_original,model_metrics,nr_classes,loss_expert,optimizer_expert,learning_rate_const)
+                                        do_changed = aid_dl.change_dropout(model_keras,do_list_original,model_metrics,nr_classes,loss_expert,optimizer_settings,learning_rate_const)
                                         if model_keras_p!=None:#if model_keras_p is NOT None, there exists a parallel model, which also needs to be re-compiled
-                                            aid_dl.model_compile(model_keras_p,loss_expert,optimizer_expert,learning_rate_const,model_metrics,nr_classes)
+                                            aid_dl.model_compile(model_keras_p,loss_expert,optimizer_settings,learning_rate_const,model_metrics,nr_classes)
                                             print("Recompiled parallel model to change dropout values back to original state. I'm not sure if this works!")
     
                                         if do_changed==1:
                                             text_do = "Dropout rate(s) in model was/were changed to original values: "+str(do_list_original)
                                         else:
                                             text_do = "Dropout rate(s) in model was/were not changed"                                        
-                                        self.fittingpopups_ui[listindex].textBrowser_FittingInfo_pop.append(text_do+"\n")
+                                        self.fittingpopups_ui[listindex].textBrowser_FittingInfo.append(text_do+"\n")
     
     
                                 text_updates = ""
@@ -5841,9 +5951,9 @@ class MainWindow(QtWidgets.QMainWindow):
     
                                 if recompile==True and collection==False:
                                     print("Recompiling...")
-                                    aid_dl.model_compile(model_keras,loss_expert,optimizer_expert,learning_rate_const,model_metrics,nr_classes)
+                                    aid_dl.model_compile(model_keras,loss_expert,optimizer_settings,learning_rate_const,model_metrics,nr_classes)
                                     if model_keras_p!=None:#if model_keras_p is NOT None, there exists a parallel model, which also needs to be re-compiled
-                                        aid_dl.model_compile(model_keras_p,loss_expert,optimizer_expert,learning_rate_const,model_metrics,nr_classes)
+                                        aid_dl.model_compile(model_keras_p,loss_expert,optimizer_settings,learning_rate_const,model_metrics,nr_classes)
                                         print("Recompiled parallel model to change optimizer, loss and learninig rate.")
     
                                 elif recompile==True and collection==True:
@@ -5852,9 +5962,9 @@ class MainWindow(QtWidgets.QMainWindow):
                                         return
                                     print("Recompiling...")
                                     for m in model_keras:
-                                        aid_dl.model_compile(m,loss_expert,optimizer_expert,learning_rate_const,model_metrics,nr_classes)
+                                        aid_dl.model_compile(m,loss_expert,optimizer_settings,learning_rate_const,model_metrics,nr_classes)
     
-                                self.fittingpopups_ui[listindex].textBrowser_FittingInfo_pop.append(text_updates)
+                                self.fittingpopups_ui[listindex].textBrowser_FittingInfo.append(text_updates)
     
                                 #self.model_keras = model_keras #overwrite the model in self
                                 self.fittingpopups_ui[listindex].checkBox_ApplyNextEpoch.setChecked(False)
@@ -5998,9 +6108,9 @@ class MainWindow(QtWidgets.QMainWindow):
                                         #inform user!
                                         text = "Could not find original folder. Files are now saved to "+new_modelname
                                         text = "<span style=\' color: red;\'>" +text+"</span>"
-                                        self.fittingpopups_ui[listindex].textBrowser_FittingInfo_pop.append(text)
+                                        self.fittingpopups_ui[listindex].textBrowser_FittingInfo.append(text)
                                         text = "<span style=\' color: black;\'>" +""+"</span>"
-                                        self.fittingpopups_ui[listindex].textBrowser_FittingInfo_pop.append(text)
+                                        self.fittingpopups_ui[listindex].textBrowser_FittingInfo.append(text)
 
                                         #Save the  model
                                         model_keras.save(new_modelname.split(".model")[0]+"_"+str(counter)+".model")
@@ -6137,9 +6247,9 @@ class MainWindow(QtWidgets.QMainWindow):
                                         #inform user!
                                         text = "Could not find original folder. Files are now saved to "+new_modelname
                                         text = "<span style=\' color: red;\'>" +text+"</span>"
-                                        self.fittingpopups_ui[listindex].textBrowser_FittingInfo_pop.append(text)
+                                        self.fittingpopups_ui[listindex].textBrowser_FittingInfo.append(text)
                                         text = "<span style=\' color: black;\'>" +""+"</span>"
-                                        self.fittingpopups_ui[listindex].textBrowser_FittingInfo_pop.append(text)
+                                        self.fittingpopups_ui[listindex].textBrowser_FittingInfo.append(text)
 
 
                                         #update the excel writer
@@ -6390,6 +6500,14 @@ class MainWindow(QtWidgets.QMainWindow):
         self.fittingpopups_ui[listindex].progressBar_Fitting_pop.setValue(0) #set the progress bar to zero
         self.fittingpopups_ui[listindex].pushButton_ShowExamleImgs_pop.clicked.connect(lambda: self.action_show_example_imgs_pop(listindex))
         self.fittingpopups_ui[listindex].tableWidget_HistoryInfo_pop.doubleClicked.connect(lambda item: self.tableWidget_HistoryInfo_pop_dclick(item,listindex))
+        #Cyclical learning rate extra settings
+        self.fittingpopups_ui[listindex].pushButton_cycLrPopup.clicked.connect(lambda: self.popup_clr_settings(listindex))
+        self.fittingpopups_ui[listindex].comboBox_optimizer.currentTextChanged.connect(lambda: self.expert_optimizer_changed(optimizer_text=self.fittingpopups_ui[listindex].comboBox_optimizer.currentText(),listindex=listindex))
+
+        self.fittingpopups_ui[listindex].doubleSpinBox_learningRate.valueChanged.connect(lambda: self.expert_lr_changed(value=self.fittingpopups_ui[listindex].doubleSpinBox_learningRate.value(),optimizer_text=self.fittingpopups_ui[listindex].comboBox_optimizer.currentText(),listindex=listindex))
+        self.fittingpopups_ui[listindex].doubleSpinBox_expDecInitLr.valueChanged.connect(lambda: self.expert_lr_changed(value=self.fittingpopups_ui[listindex].doubleSpinBox_learningRate.value(),optimizer_text=self.fittingpopups_ui[listindex].comboBox_optimizer.currentText(),listindex=listindex))
+
+        self.fittingpopups_ui[listindex].pushButton_optimizer_pop.clicked.connect(lambda: self.optimizer_change_settings_popup(listindex))
 
 
 
@@ -6431,7 +6549,7 @@ class MainWindow(QtWidgets.QMainWindow):
                     self.fittingpopups_ui[listindex].RealTime_OtherMetrics[key].append(dic[key])
             dic_text = [("{} {}".format(item, np.round(amount[0],4))) for item, amount in dic.items()]
             text = "Epoch "+str(self.fittingpopups_ui[listindex].epoch_counter)+"\n"+" ".join(dic_text)
-            self.fittingpopups_ui[listindex].textBrowser_FittingInfo_pop.append(text)
+            self.fittingpopups_ui[listindex].textBrowser_FittingInfo.append(text)
             self.fittingpopups_ui[listindex].epoch_counter+=1
             if self.fittingpopups_ui[listindex].epoch_counter==1:
 
@@ -6749,6 +6867,7 @@ class MainWindow(QtWidgets.QMainWindow):
             learning_rate_const = float(self.doubleSpinBox_learningRate.value())
             loss_expert = str(self.comboBox_expt_loss.currentText()).lower()
             optimizer_expert = str(self.comboBox_optimizer.currentText()).lower()
+            optimizer_settings = self.optimizer_settings.copy()
             paddingMode = str(self.comboBox_paddingMode.currentText()).lower()
     
             train_last_layers = bool(self.checkBox_trainLastNOnly.isChecked())             
@@ -6795,9 +6914,9 @@ class MainWindow(QtWidgets.QMainWindow):
                 if train_last_layers==True:#Train only the last n layers
                     print("Train only the last "+str(train_last_layers_n)+ " layer(s)")
                     trainable_new = (len(trainable_original)-train_last_layers_n)*[False]+train_last_layers_n*[True]
-                    summary = aid_dl.model_change_trainability(model_keras,trainable_new,model_metrics,nr_classes,loss_expert,optimizer_expert,learning_rate_const)
+                    summary = aid_dl.model_change_trainability(model_keras,trainable_new,model_metrics,nr_classes,loss_expert,optimizer_settings,learning_rate_const)
                     if model_keras_p!=None:#if this is NOT None, there exists a parallel model, which also needs to be re-compiled
-                        aid_dl.model_compile(model_keras_p,loss_expert,optimizer_expert,learning_rate_const,model_metrics,nr_classes)
+                        aid_dl.model_compile(model_keras_p,loss_expert,optimizer_settings,learning_rate_const,model_metrics,nr_classes)
                         print("Recompiled parallel model for train_last_layers==True")
                     text1 = "Expert mode: Request for custom trainability states: train only the last "+str(train_last_layers_n)+ " layer(s)\n"
                     #text2 = "\n--------------------\n"
@@ -6810,9 +6929,9 @@ class MainWindow(QtWidgets.QMainWindow):
                     trainable_new = len(trainable_original)*[False]
                     for index in layer_dense_ind:
                         trainable_new[index] = True
-                    summary = aid_dl.model_change_trainability(model_keras,trainable_new,model_metrics,nr_classes,loss_expert,optimizer_expert,learning_rate_const)                  
+                    summary = aid_dl.model_change_trainability(model_keras,trainable_new,model_metrics,nr_classes,loss_expert,optimizer_settings,learning_rate_const)                  
                     if model_keras_p!=None:#if this is NOT None, there exists a parallel model, which also needs to be re-compiled
-                        aid_dl.model_compile(model_keras_p,loss_expert,optimizer_expert,learning_rate_const,model_metrics,nr_classes)
+                        aid_dl.model_compile(model_keras_p,loss_expert,optimizer_settings,learning_rate_const,model_metrics,nr_classes)
                         print("Recompiled parallel model for train_dense_layers==True")
                     text1 = "Expert mode: Request for custom trainability states: train only dense layer(s)\n"
                     #text2 = "\n--------------------\n"
@@ -6834,9 +6953,9 @@ class MainWindow(QtWidgets.QMainWindow):
                         print(text)
                         dropout_expert_list = []
                     if len(dropout_expert_list)>0 and do_list!=dropout_expert_list:#if the dropout rates of the current model is not equal to the required do_list from user...
-                        do_changed = aid_dl.change_dropout(model_keras,dropout_expert_list,model_metrics,nr_classes,loss_expert,optimizer_expert,learning_rate_const)
+                        do_changed = aid_dl.change_dropout(model_keras,dropout_expert_list,model_metrics,nr_classes,loss_expert,optimizer_settings,learning_rate_const)
                         if model_keras_p!=None:#if this is NOT None, there exists a parallel model, which also needs to be re-compiled
-                            aid_dl.model_compile(model_keras_p,loss_expert,optimizer_expert,learning_rate_const,model_metrics,nr_classes)
+                            aid_dl.model_compile(model_keras_p,loss_expert,optimizer_settings,learning_rate_const,model_metrics,nr_classes)
                             print("Recompiled parallel model to change dropout. I'm not sure if this works already!")
                         if do_changed==1:
                             text_do = "Dropout rate(s) in model was/were changed to: "+str(dropout_expert_list)
@@ -6886,12 +7005,12 @@ class MainWindow(QtWidgets.QMainWindow):
             if recompile==True:
                 print("Recompiling...")
                 if collection==False:
-                    aid_dl.model_compile(model_keras,loss_expert,optimizer_expert,learning_rate_const,model_metrics,nr_classes)
+                    aid_dl.model_compile(model_keras,loss_expert,optimizer_settings,learning_rate_const,model_metrics,nr_classes)
                 if collection==True:
                     for m in model_keras[1]:
-                        aid_dl.model_compile(m, loss_expert, optimizer_expert, learning_rate_const,model_metrics, nr_classes)
+                        aid_dl.model_compile(m, loss_expert, optimizer_settings, learning_rate_const,model_metrics, nr_classes)
                 if model_keras_p!=None:#if this is NOT None, there exists a parallel model, which also needs to be re-compiled
-                    aid_dl.model_compile(model_keras_p,loss_expert,optimizer_expert,learning_rate_const,model_metrics,nr_classes)
+                    aid_dl.model_compile(model_keras_p,loss_expert,optimizer_settings,learning_rate_const,model_metrics,nr_classes)
                     print("Recompiled parallel model to adjust learning rate, loss, optimizer")
     
             print(text_updates)
