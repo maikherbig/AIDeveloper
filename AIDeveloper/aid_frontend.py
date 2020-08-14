@@ -243,7 +243,8 @@ def setup_main_ui(self,gpu_nr):
     self.clr_settings = {}
     self.clr_settings["step_size"] = 8 #Number of epochs to fulfill half a cycle
     self.clr_settings["gamma"] = 0.99995 #gamma factor for Exponential decrease method (exp_range)
-
+    self.optimizer_settings = aid_dl.get_optimizer_settings() #the full set of optimizer settings is saved in this variable and might be changed usiung pushButton_optimizer
+    
     #self.clip = QtGui.QApplication.clipboard() #This is how one defines a clipboard variable; one can put text on it via:#self.clip.setText("SomeText") 
     self.new_peaks = [] #list to store used defined peaks
     #######################################################################
@@ -1060,6 +1061,28 @@ def setup_main_ui(self,gpu_nr):
     self.comboBox_optimizer.addItem("")
     self.comboBox_optimizer.addItem("")
     self.gridLayout_51.addWidget(self.comboBox_optimizer, 0, 3, 1, 1)
+    self.pushButton_optimizer = QtWidgets.QPushButton(self.groupBox_lossOptimizer)
+    self.pushButton_optimizer.setEnabled(False)
+    self.pushButton_optimizer.setMaximumSize(QtCore.QSize(40, 16777215))
+    self.pushButton_optimizer.setObjectName("pushButton_optimizer")
+    self.gridLayout_51.addWidget(self.pushButton_optimizer, 0, 5, 1, 1)
+
+    self.checkBox_lossW = QtWidgets.QCheckBox(self.groupBox_lossOptimizer)
+    self.checkBox_lossW.setLayoutDirection(QtCore.Qt.RightToLeft)
+    self.checkBox_lossW.setObjectName("checkBox_lossW")
+    self.gridLayout_51.addWidget(self.checkBox_lossW, 1, 0, 1, 1)
+    self.pushButton_lossW = QtWidgets.QPushButton(self.groupBox_lossOptimizer)
+    self.pushButton_lossW.setEnabled(False)
+    self.pushButton_lossW.setMaximumSize(QtCore.QSize(40, 16777215))
+    self.pushButton_lossW.setObjectName("pushButton_lossW")
+    self.pushButton_lossW.setMinimumSize(QtCore.QSize(0, 0))
+    self.pushButton_lossW.setMaximumSize(QtCore.QSize(40, 16777215))
+    self.gridLayout_51.addWidget(self.pushButton_lossW, 1, 5, 1, 1)
+    self.lineEdit_lossW = QtWidgets.QLineEdit(self.groupBox_lossOptimizer)
+    self.lineEdit_lossW.setEnabled(False)
+    self.lineEdit_lossW.setObjectName("lineEdit_lossW")
+    self.gridLayout_51.addWidget(self.lineEdit_lossW, 1, 1, 1, 3)
+
     self.gridLayout_37.addWidget(self.groupBox_lossOptimizer, 2, 0, 1, 1)
     self.groupBox_learningRate = QtWidgets.QGroupBox(self.scrollAreaWidgetContents)
     self.groupBox_learningRate.setEnabled(True)
@@ -1071,6 +1094,33 @@ def setup_main_ui(self,gpu_nr):
     self.radioButton_LrCycl = QtWidgets.QRadioButton(self.groupBox_learningRate)
     self.radioButton_LrCycl.setObjectName("radioButton_LrCycl")
     self.gridLayout_50.addWidget(self.radioButton_LrCycl, 1, 0, 1, 1)       
+
+
+
+
+#    self.doubleSpinBox_expDecInitLr = QtWidgets.QDoubleSpinBox(self.groupBox_learningRate)
+#    self.doubleSpinBox_expDecInitLr.setEnabled(False)
+#    self.doubleSpinBox_expDecInitLr.setMaximumSize(QtCore.QSize(63, 16777215))
+#    self.doubleSpinBox_expDecInitLr.setDecimals(6)
+#    self.doubleSpinBox_expDecInitLr.setSingleStep(0.0001)
+#    self.doubleSpinBox_expDecInitLr.setProperty("value", 0.001)
+#    self.doubleSpinBox_expDecInitLr.setObjectName("doubleSpinBox_expDecInitLr")
+#    self.gridLayout_50.addWidget(self.doubleSpinBox_expDecInitLr, 2, 2, 1, 1)
+#    self.spinBox_expDecSteps = QtWidgets.QSpinBox(self.groupBox_learningRate)
+#    self.spinBox_expDecSteps.setEnabled(False)
+#    self.spinBox_expDecSteps.setMaximumSize(QtCore.QSize(63, 16777215))
+#    self.spinBox_expDecSteps.setMaximum(999999999)
+#    self.spinBox_expDecSteps.setProperty("value", 100)
+#    self.spinBox_expDecSteps.setObjectName("spinBox_expDecSteps")
+#    self.gridLayout_50.addWidget(self.spinBox_expDecSteps, 2, 4, 1, 1)
+ 
+    self.radioButton_LrExpo = QtWidgets.QRadioButton(self.groupBox_learningRate)
+    self.radioButton_LrExpo.setObjectName("radioButton_LrExpo")
+    self.gridLayout_50.addWidget(self.radioButton_LrExpo, 2, 0, 1, 1)
+    self.label_expDecInitLr = QtWidgets.QLabel(self.groupBox_learningRate)
+    self.label_expDecInitLr.setAlignment(QtCore.Qt.AlignRight|QtCore.Qt.AlignTrailing|QtCore.Qt.AlignVCenter)
+    self.label_expDecInitLr.setObjectName("label_expDecInitLr")
+    self.gridLayout_50.addWidget(self.label_expDecInitLr, 2, 1, 1, 1)
     self.doubleSpinBox_expDecInitLr = QtWidgets.QDoubleSpinBox(self.groupBox_learningRate)
     self.doubleSpinBox_expDecInitLr.setEnabled(False)
     self.doubleSpinBox_expDecInitLr.setMaximumSize(QtCore.QSize(63, 16777215))
@@ -1079,14 +1129,44 @@ def setup_main_ui(self,gpu_nr):
     self.doubleSpinBox_expDecInitLr.setProperty("value", 0.001)
     self.doubleSpinBox_expDecInitLr.setObjectName("doubleSpinBox_expDecInitLr")
     self.gridLayout_50.addWidget(self.doubleSpinBox_expDecInitLr, 2, 2, 1, 1)
+    self.label_expDecSteps = QtWidgets.QLabel(self.groupBox_learningRate)
+    self.label_expDecSteps.setAlignment(QtCore.Qt.AlignRight|QtCore.Qt.AlignTrailing|QtCore.Qt.AlignVCenter)
+    self.label_expDecSteps.setObjectName("label_expDecSteps")
+    self.gridLayout_50.addWidget(self.label_expDecSteps, 2, 3, 1, 1)
     self.spinBox_expDecSteps = QtWidgets.QSpinBox(self.groupBox_learningRate)
     self.spinBox_expDecSteps.setEnabled(False)
     self.spinBox_expDecSteps.setMaximumSize(QtCore.QSize(63, 16777215))
     self.spinBox_expDecSteps.setMaximum(999999999)
-    self.spinBox_expDecSteps.setProperty("value", 100)
-
     self.spinBox_expDecSteps.setObjectName("spinBox_expDecSteps")
     self.gridLayout_50.addWidget(self.spinBox_expDecSteps, 2, 4, 1, 1)
+    self.label_expDecRate = QtWidgets.QLabel(self.groupBox_learningRate)
+    self.label_expDecRate.setAlignment(QtCore.Qt.AlignRight|QtCore.Qt.AlignTrailing|QtCore.Qt.AlignVCenter)
+    self.label_expDecRate.setObjectName("label_expDecRate")
+    self.gridLayout_50.addWidget(self.label_expDecRate, 2, 6, 1, 1)
+    self.doubleSpinBox_expDecRate = QtWidgets.QDoubleSpinBox(self.groupBox_learningRate)
+    self.doubleSpinBox_expDecRate.setEnabled(False)
+    self.doubleSpinBox_expDecRate.setMaximumSize(QtCore.QSize(63, 16777215))
+    self.doubleSpinBox_expDecRate.setDecimals(6)
+    self.doubleSpinBox_expDecRate.setMaximum(1.0)
+    self.doubleSpinBox_expDecRate.setSingleStep(0.01)
+    self.doubleSpinBox_expDecRate.setProperty("value", 0.96)
+    self.doubleSpinBox_expDecRate.setObjectName("doubleSpinBox_expDecRate")
+    self.gridLayout_50.addWidget(self.doubleSpinBox_expDecRate, 2, 7, 1, 1)
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
     self.label_cycLrMin = QtWidgets.QLabel(self.groupBox_learningRate)
     self.label_cycLrMin.setAlignment(QtCore.Qt.AlignRight|QtCore.Qt.AlignTrailing|QtCore.Qt.AlignVCenter)
     self.label_cycLrMin.setObjectName("label_cycLrMin")
@@ -1102,32 +1182,11 @@ def setup_main_ui(self,gpu_nr):
     self.lineEdit_cycLrMax.setObjectName("lineEdit_cycLrMax")
     self.lineEdit_cycLrMax.setValidator(validator)
     self.gridLayout_50.addWidget(self.lineEdit_cycLrMax, 1, 3, 1, 1)
-    self.label_expDecSteps = QtWidgets.QLabel(self.groupBox_learningRate)
-    self.label_expDecSteps.setAlignment(QtCore.Qt.AlignRight|QtCore.Qt.AlignTrailing|QtCore.Qt.AlignVCenter)
-    self.label_expDecSteps.setObjectName("label_expDecSteps")
-    self.gridLayout_50.addWidget(self.label_expDecSteps, 2, 3, 1, 1)
-    self.label_expDecRate = QtWidgets.QLabel(self.groupBox_learningRate)
-    self.label_expDecRate.setAlignment(QtCore.Qt.AlignRight|QtCore.Qt.AlignTrailing|QtCore.Qt.AlignVCenter)
-    self.label_expDecRate.setObjectName("label_expDecRate")
-    self.gridLayout_50.addWidget(self.label_expDecRate, 2, 5, 1, 1)
-    self.label_expDecInitLr = QtWidgets.QLabel(self.groupBox_learningRate)
-    self.label_expDecInitLr.setAlignment(QtCore.Qt.AlignRight|QtCore.Qt.AlignTrailing|QtCore.Qt.AlignVCenter)
-    self.label_expDecInitLr.setObjectName("label_expDecInitLr")
-    self.gridLayout_50.addWidget(self.label_expDecInitLr, 2, 1, 1, 1)
-    self.doubleSpinBox_expDecRate = QtWidgets.QDoubleSpinBox(self.groupBox_learningRate)
-    self.doubleSpinBox_expDecRate.setEnabled(False)
-    self.doubleSpinBox_expDecRate.setMaximumSize(QtCore.QSize(63, 16777215))
-    self.doubleSpinBox_expDecRate.setDecimals(6)
-    self.doubleSpinBox_expDecRate.setMaximum(1.0)
-    self.doubleSpinBox_expDecRate.setSingleStep(0.01)
-    self.doubleSpinBox_expDecRate.setProperty("value", 0.96)
-    self.doubleSpinBox_expDecRate.setObjectName("doubleSpinBox_expDecRate")
-    self.gridLayout_50.addWidget(self.doubleSpinBox_expDecRate, 2, 6, 1, 1)
     self.pushButton_cycLrPopup = QtWidgets.QPushButton(self.groupBox_learningRate)
     self.pushButton_cycLrPopup.setEnabled(False)
     self.pushButton_cycLrPopup.setMaximumSize(QtCore.QSize(50, 16777215))
     self.pushButton_cycLrPopup.setObjectName("pushButton_cycLrPopup")
-    self.gridLayout_50.addWidget(self.pushButton_cycLrPopup, 1, 6, 1, 1)
+    self.gridLayout_50.addWidget(self.pushButton_cycLrPopup, 1, 7, 1, 1)
     self.comboBox_cycLrMethod = QtWidgets.QComboBox(self.groupBox_learningRate)
     self.comboBox_cycLrMethod.setEnabled(False)
     self.comboBox_cycLrMethod.setMinimumSize(QtCore.QSize(80, 0))
@@ -1135,13 +1194,10 @@ def setup_main_ui(self,gpu_nr):
     self.comboBox_cycLrMethod.addItem("")
     self.comboBox_cycLrMethod.addItem("")
     self.comboBox_cycLrMethod.addItem("")
-    self.gridLayout_50.addWidget(self.comboBox_cycLrMethod, 1, 5, 1, 1)
+    self.gridLayout_50.addWidget(self.comboBox_cycLrMethod, 1, 6, 1, 1)
     self.label_cycLrMethod = QtWidgets.QLabel(self.groupBox_learningRate)
     self.label_cycLrMethod.setObjectName("label_cycLrMethod")
     self.gridLayout_50.addWidget(self.label_cycLrMethod, 1, 4, 1, 1)
-    self.radioButton_LrExpo = QtWidgets.QRadioButton(self.groupBox_learningRate)
-    self.radioButton_LrExpo.setObjectName("radioButton_LrExpo")
-    self.gridLayout_50.addWidget(self.radioButton_LrExpo, 2, 0, 1, 1)
     self.radioButton_LrConst = QtWidgets.QRadioButton(self.groupBox_learningRate)
     self.radioButton_LrConst.setChecked(True)
     self.radioButton_LrConst.setObjectName("radioButton_LrConst")
@@ -1155,13 +1211,18 @@ def setup_main_ui(self,gpu_nr):
     self.doubleSpinBox_learningRate.setProperty("value", 0.001)
     self.doubleSpinBox_learningRate.setObjectName("doubleSpinBox_learningRate")
     self.gridLayout_50.addWidget(self.doubleSpinBox_learningRate, 0, 2, 1, 1)
+    self.line_2 = QtWidgets.QFrame(self.groupBox_learningRate)
+    self.line_2.setFrameShape(QtWidgets.QFrame.VLine)
+    self.line_2.setFrameShadow(QtWidgets.QFrame.Sunken)
+    self.line_2.setObjectName("line_2")
+    self.gridLayout_50.addWidget(self.line_2, 3, 5, 1, 1)
 
     self.pushButton_LR_finder = QtWidgets.QPushButton(self.groupBox_learningRate)
     self.pushButton_LR_finder.setObjectName("pushButton_LR_finder")
-    self.gridLayout_50.addWidget(self.pushButton_LR_finder, 3, 5, 1, 1)
+    self.gridLayout_50.addWidget(self.pushButton_LR_finder, 3, 6, 1, 1)
     self.pushButton_LR_plot = QtWidgets.QPushButton(self.groupBox_learningRate)
     self.pushButton_LR_plot.setObjectName("pushButton_LR_plot")
-    self.gridLayout_50.addWidget(self.pushButton_LR_plot, 3, 6, 1, 1)
+    self.gridLayout_50.addWidget(self.pushButton_LR_plot, 3, 7, 1, 1)
 
     self.label_LrConst = QtWidgets.QLabel(self.groupBox_learningRate)
     self.label_LrConst.setAlignment(QtCore.Qt.AlignRight|QtCore.Qt.AlignTrailing|QtCore.Qt.AlignVCenter)
@@ -1184,7 +1245,9 @@ def setup_main_ui(self,gpu_nr):
     self.checkBox_expt_loss.stateChanged.connect(self.expert_loss_off)
     self.groupBox_learningRate.toggled.connect(self.expert_learningrate_off)
     self.checkBox_optimizer.stateChanged.connect(self.expert_optimizer_off)
-    self.comboBox_optimizer.currentTextChanged.connect(self.expert_optimizer_changed)
+    #optimizer_text = str(self.comboBox_optimizer.currentText())
+    self.comboBox_optimizer.currentTextChanged.connect(lambda: self.expert_optimizer_changed(optimizer_text=self.comboBox_optimizer.currentText(),listindex=-1))
+    self.doubleSpinBox_learningRate.valueChanged.connect(lambda: self.expert_lr_changed(value=self.doubleSpinBox_learningRate.value(),optimizer_text=self.comboBox_optimizer.currentText(),listindex=-1))
 
 
 
@@ -1240,23 +1303,6 @@ def setup_main_ui(self,gpu_nr):
     self.pushButton_partialTrainability.setMaximumSize(QtCore.QSize(40, 16777215))
     self.pushButton_partialTrainability.clicked.connect(self.partialTrainability)
     
-    self.horizontalLayout_lossW = QtWidgets.QHBoxLayout()
-    self.horizontalLayout_lossW.setObjectName("horizontalLayout_lossW")
-    self.checkBox_lossW = QtWidgets.QCheckBox(self.scrollAreaWidgetContents)
-    self.checkBox_lossW.setObjectName("checkBox_lossW")
-    self.horizontalLayout_lossW.addWidget(self.checkBox_lossW)
-    self.lineEdit_lossW = QtWidgets.QLineEdit(self.scrollAreaWidgetContents)
-    self.lineEdit_lossW.setEnabled(False)
-    self.lineEdit_lossW.setObjectName("lineEdit_lossW")
-    self.horizontalLayout_lossW.addWidget(self.lineEdit_lossW)
-    self.pushButton_lossW = QtWidgets.QPushButton(self.scrollAreaWidgetContents)
-    self.pushButton_lossW.setObjectName("pushButton_lossW")
-    self.pushButton_lossW.setEnabled(False)
-    self.horizontalLayout_lossW.addWidget(self.pushButton_lossW)
-    self.gridLayout_46.addLayout(self.horizontalLayout_lossW, 6, 0, 1, 1)
-    self.pushButton_lossW.setMinimumSize(QtCore.QSize(0, 0))
-    self.pushButton_lossW.setMaximumSize(QtCore.QSize(40, 16777215))
-
     self.groupBox_expertMetrics = QtWidgets.QGroupBox(self.scrollAreaWidgetContents)
     self.groupBox_expertMetrics.setObjectName("groupBox_expertMetrics")
     self.gridLayout = QtWidgets.QGridLayout(self.groupBox_expertMetrics)
@@ -2279,6 +2325,7 @@ def setup_main_ui(self,gpu_nr):
     self.checkBox_partialTrainability.toggled.connect(self.partialtrainability_activated)
     self.checkBox_lossW.clicked.connect(lambda on_or_off: self.lossWeights_activated(on_or_off,-1))
     self.pushButton_lossW.clicked.connect(lambda: self.lossWeights_popup(-1))
+    self.pushButton_optimizer.clicked.connect(lambda: self.optimizer_change_settings_popup(-1))
 
 
     ###########################History Tab################################
@@ -2852,6 +2899,7 @@ def setup_main_ui(self,gpu_nr):
     self.checkBox_avgBlur.clicked['bool'].connect(self.label_avgBlurMin.setEnabled)
     self.checkBox_avgBlur.clicked['bool'].connect(self.label_avgBlurMax.setEnabled)
     self.checkBox_optimizer.toggled['bool'].connect(self.comboBox_optimizer.setEnabled)
+    self.checkBox_optimizer.toggled['bool'].connect(self.pushButton_optimizer.setEnabled)
     self.checkBox_expt_loss.toggled['bool'].connect(self.comboBox_expt_loss.setEnabled)
 
     #Start running show_cpu_ram function and run it all the time
@@ -3104,16 +3152,17 @@ def retranslate_main_ui(self,gpu_nr,VERSION):
     self.label_batchSize.setText(_translate("MainWindow", "Batch size", None))
     self.label_epochs.setText(_translate("MainWindow", "Epochs", None))
     self.pushButton_LR_finder.setText(_translate("MainWindow", "LR Screening", None))
-    self.pushButton_LR_finder.setTooltip(_translate("MainWindow", tooltips["groupBox_LrSettings"], None))    
+    self.pushButton_LR_finder.setToolTip(_translate("MainWindow", tooltips["groupBox_LrSettings"], None))    
     self.pushButton_LR_finder.clicked.connect(self.popup_lr_finder)
     self.pushButton_LR_plot.setText(_translate("MainWindow", "Plot", None))
-    self.pushButton_LR_plot.setTooltip(_translate("MainWindow", tooltips["pushButton_LR_plot"], None))
+    self.pushButton_LR_plot.setToolTip(_translate("MainWindow", tooltips["pushButton_LR_plot"], None))
     self.pushButton_LR_plot.clicked.connect(self.popup_lr_plot)
-    self.pushButton_cycLrPopup.clicked.connect(self.popup_clr_settings)
-    
+    self.pushButton_cycLrPopup.clicked.connect(lambda: self.popup_clr_settings(-1))
     
     
     self.groupBox_lossOptimizer.setTitle(_translate("MainWindow", "Loss / Optimizer", None))
+    self.groupBox_lossOptimizer.setToolTip(_translate("MainWindow", tooltips["groupBox_lossOptimizer"], None))
+
     #self.label_others.setText(_translate("MainWindow", "Others", None))
     self.groupBox_learningRate.setTitle(_translate("MainWindow", "Learning Rate (LR)", None))
     self.checkBox_trainLastNOnly.setText(_translate("MainWindow", "Train only last N layers", None))
@@ -3126,6 +3175,8 @@ def retranslate_main_ui(self,gpu_nr,VERSION):
     self.groupBox_learningRate.setToolTip(_translate("MainWindow",tooltips["groupBox_learningRate"] , None))
     self.doubleSpinBox_learningRate.setToolTip(_translate("MainWindow",tooltips["groupBox_learningRate"] , None))
     self.checkBox_optimizer.setText(_translate("MainWindow", "Optimizer", None))
+    self.checkBox_optimizer.setToolTip(_translate("MainWindow", tooltips["label_optimizer"] , None))
+
     self.comboBox_optimizer.setItemText(0, _translate("MainWindow", "Adam", None))
     self.comboBox_optimizer.setItemText(1, _translate("MainWindow", "SGD", None))
     self.comboBox_optimizer.setItemText(2, _translate("MainWindow", "RMSprop", None))
@@ -3133,6 +3184,11 @@ def retranslate_main_ui(self,gpu_nr,VERSION):
     self.comboBox_optimizer.setItemText(4, _translate("MainWindow", "Adadelta", None))
     self.comboBox_optimizer.setItemText(5, _translate("MainWindow", "Adamax", None))
     self.comboBox_optimizer.setItemText(6, _translate("MainWindow", "Nadam", None))
+    self.comboBox_optimizer.setToolTip(_translate("MainWindow", tooltips["label_optimizer"] , None))
+    
+    self.pushButton_optimizer.setText(_translate("MainWindow", "...", None))
+    self.pushButton_optimizer.setToolTip(_translate("MainWindow", "Show advanced options for optimizer", None))
+
     self.checkBox_trainLastNOnly.setToolTip(_translate("MainWindow",tooltips["checkBox_trainLastNOnly"] , None))
     self.spinBox_trainLastNOnly.setToolTip(_translate("MainWindow", tooltips["spinBox_trainLastNOnly"], None))
     self.checkBox_trainDenseOnly.setToolTip(_translate("MainWindow",tooltips["checkBox_trainDenseOnly"] , None))
@@ -3151,6 +3207,7 @@ def retranslate_main_ui(self,gpu_nr,VERSION):
     self.comboBox_cycLrMethod.setItemText(1, _translate("MainWindow", "triangular2", None))
     self.comboBox_cycLrMethod.setItemText(2, _translate("MainWindow", "exp_range", None))
     self.label_cycLrMethod.setText(_translate("MainWindow", "Method", None))
+    self.label_cycLrMethod.setToolTip(_translate("MainWindow", tooltips["comboBox_cycLrMethod"], None))
     
     self.pushButton_cycLrPopup.setText(_translate("MainWindow", "...", None))
     self.radioButton_LrExpo.setText(_translate("MainWindow", "Exponential", None))
@@ -3180,6 +3237,9 @@ def retranslate_main_ui(self,gpu_nr,VERSION):
 
 
     self.checkBox_expt_loss.setText(_translate("MainWindow", "Loss", None))
+    self.checkBox_expt_loss.setToolTip(_translate("MainWindow", tooltips["label_expt_loss"], None))
+    self.comboBox_expt_loss.setToolTip(_translate("MainWindow", tooltips["label_expt_loss"], None))
+
     self.comboBox_expt_loss.setItemText(0, _translate("MainWindow", "categorical_crossentropy", None))
     #self.comboBox_expt_loss.setItemText(1, _translate("MainWindow", "sparse_categorical_crossentropy", None))
     self.comboBox_expt_loss.setItemText(1, _translate("MainWindow", "mean_squared_error", None))
@@ -3469,7 +3529,7 @@ def retranslate_main_ui(self,gpu_nr,VERSION):
 
 
 
-##############################Function for Main UI#############################
+##############################Function for Main UI End#############################
 
 
 
@@ -3563,9 +3623,9 @@ class Fitting_Ui(QtWidgets.QWidget):
         self.progressBar_Fitting_pop.setProperty("value", 24)
         self.progressBar_Fitting_pop.setObjectName("progressBar_Fitting_pop")
         self.gridLayout_2_pop.addWidget(self.progressBar_Fitting_pop, 0, 0, 1, 1)
-        self.textBrowser_FittingInfo_pop = QtWidgets.QTextBrowser(self.groupBox_FittingInfo_pop)
-        self.textBrowser_FittingInfo_pop.setObjectName("textBrowser_FittingInfo_pop")
-        self.gridLayout_2_pop.addWidget(self.textBrowser_FittingInfo_pop, 1, 0, 1, 1)
+        self.textBrowser_FittingInfo = QtWidgets.QTextBrowser(self.groupBox_FittingInfo_pop)
+        self.textBrowser_FittingInfo.setObjectName("textBrowser_FittingInfo")
+        self.gridLayout_2_pop.addWidget(self.textBrowser_FittingInfo, 1, 0, 1, 1)
         self.horizontalLayout_saveClearText_pop = QtWidgets.QHBoxLayout()
         self.horizontalLayout_saveClearText_pop.setObjectName("horizontalLayout_saveClearText_pop")
         self.pushButton_saveTextWindow_pop = QtWidgets.QPushButton(self.groupBox_FittingInfo_pop)
@@ -4223,10 +4283,84 @@ class Fitting_Ui(QtWidgets.QWidget):
 #        self.horizontalLayout_pTr_pop.addWidget(self.pushButton_pTr_pop)
         self.gridLayout_12.addLayout(self.horizontalLayout_pTr_pop, 2, 0, 1, 1)
         self.gridLayout_4.addWidget(self.groupBox_regularization_pop, 3, 0, 1, 1)
+        
+        
+        
+        
+        
+#        self.groupBox_lossOptimizer = QtWidgets.QGroupBox(self.scrollAreaWidgetContents_pop)
+#        self.groupBox_lossOptimizer.setObjectName("groupBox_lossOptimizer")
+#        self.gridLayout_14 = QtWidgets.QGridLayout(self.groupBox_lossOptimizer)
+#        self.gridLayout_14.setObjectName("gridLayout_14")
+#        self.checkBox_expt_loss_pop = QtWidgets.QCheckBox(self.groupBox_lossOptimizer)
+#        self.checkBox_expt_loss_pop.setLayoutDirection(QtCore.Qt.RightToLeft)
+#        self.checkBox_expt_loss_pop.setObjectName("checkBox_expt_loss_pop")
+#        self.gridLayout_14.addWidget(self.checkBox_expt_loss_pop, 0, 0, 1, 1)
+#        self.comboBox_expt_loss_pop = QtWidgets.QComboBox(self.groupBox_lossOptimizer)
+#        self.comboBox_expt_loss_pop.setEnabled(False)
+#        self.comboBox_expt_loss_pop.setObjectName("comboBox_expt_loss_pop")
+#        self.comboBox_expt_loss_pop.addItem("")
+#        self.comboBox_expt_loss_pop.addItem("")
+#        self.comboBox_expt_loss_pop.addItem("")
+#        self.comboBox_expt_loss_pop.addItem("")
+#        self.comboBox_expt_loss_pop.addItem("")
+#        self.comboBox_expt_loss_pop.addItem("")
+#        self.comboBox_expt_loss_pop.addItem("")
+#        self.comboBox_expt_loss_pop.addItem("")
+#        self.comboBox_expt_loss_pop.addItem("")
+#        self.comboBox_expt_loss_pop.addItem("")
+#        self.comboBox_expt_loss_pop.addItem("")
+#        self.comboBox_expt_loss_pop.addItem("")
+#        self.comboBox_expt_loss_pop.addItem("")
+#        self.comboBox_expt_loss_pop.addItem("")
+#        self.comboBox_expt_loss_pop.addItem("")
+#        self.comboBox_expt_loss_pop.addItem("")
+#        self.gridLayout_14.addWidget(self.comboBox_expt_loss_pop, 0, 1, 1, 1)
+#        self.checkBox_optimizer_pop = QtWidgets.QCheckBox(self.groupBox_lossOptimizer)
+#        self.checkBox_optimizer_pop.setLayoutDirection(QtCore.Qt.RightToLeft)
+#        self.checkBox_optimizer_pop.setObjectName("checkBox_optimizer_pop")
+#        self.gridLayout_14.addWidget(self.checkBox_optimizer_pop, 0, 2, 1, 1)
+#        self.comboBox_optimizer = QtWidgets.QComboBox(self.groupBox_lossOptimizer)
+#        self.comboBox_optimizer.setEnabled(False)
+#        self.comboBox_optimizer.setObjectName("comboBox_optimizer")
+#        self.comboBox_optimizer.addItem("")
+#        self.comboBox_optimizer.addItem("")
+#        self.comboBox_optimizer.addItem("")
+#        self.comboBox_optimizer.addItem("")
+#        self.comboBox_optimizer.addItem("")
+#        self.comboBox_optimizer.addItem("")
+#        self.comboBox_optimizer.addItem("")
+#        self.gridLayout_14.addWidget(self.comboBox_optimizer, 0, 3, 1, 2)
+#        self.checkBox_lossW = QtWidgets.QCheckBox(self.groupBox_lossOptimizer)
+#        self.checkBox_lossW.setLayoutDirection(QtCore.Qt.RightToLeft)
+#        self.checkBox_lossW.setObjectName("checkBox_lossW")
+#        self.gridLayout_14.addWidget(self.checkBox_lossW, 1, 0, 1, 1)
+#        self.lineEdit_lossW = QtWidgets.QLineEdit(self.groupBox_lossOptimizer)
+#        self.lineEdit_lossW.setEnabled(False)
+#        self.lineEdit_lossW.setObjectName("lineEdit_lossW")
+#        self.gridLayout_14.addWidget(self.lineEdit_lossW, 1, 1, 1, 3)
+#        self.pushButton_lossW = QtWidgets.QPushButton(self.groupBox_lossOptimizer)
+#        self.pushButton_lossW.setEnabled(False)
+#        self.pushButton_lossW.setMaximumSize(QtCore.QSize(40, 16777215))
+#        self.pushButton_lossW.setObjectName("pushButton_lossW")
+#        self.gridLayout_14.addWidget(self.pushButton_lossW, 1, 4, 1, 1)
+#        self.gridLayout_4.addWidget(self.groupBox_lossOptimizer, 1, 0, 1, 1)
+        
+        
+        
         self.groupBox_lossOptimizer = QtWidgets.QGroupBox(self.scrollAreaWidgetContents_pop)
         self.groupBox_lossOptimizer.setObjectName("groupBox_lossOptimizer")
         self.gridLayout_14 = QtWidgets.QGridLayout(self.groupBox_lossOptimizer)
         self.gridLayout_14.setObjectName("gridLayout_14")
+        self.pushButton_optimizer_pop = QtWidgets.QPushButton(self.groupBox_lossOptimizer)
+        self.pushButton_optimizer_pop.setEnabled(False)
+        self.pushButton_optimizer_pop.setMaximumSize(QtCore.QSize(40, 16777215))
+        self.pushButton_optimizer_pop.setObjectName("pushButton_optimizer_pop")
+        self.gridLayout_14.addWidget(self.pushButton_optimizer_pop, 0, 4, 1, 1)
+        self.checkBox_lossW = QtWidgets.QCheckBox(self.groupBox_lossOptimizer)
+        self.checkBox_lossW.setLayoutDirection(QtCore.Qt.RightToLeft)
+        self.checkBox_lossW.setObjectName("checkBox_lossW")
+        self.gridLayout_14.addWidget(self.checkBox_lossW, 1, 0, 1, 1)
         self.checkBox_expt_loss_pop = QtWidgets.QCheckBox(self.groupBox_lossOptimizer)
         self.checkBox_expt_loss_pop.setLayoutDirection(QtCore.Qt.RightToLeft)
         self.checkBox_expt_loss_pop.setObjectName("checkBox_expt_loss_pop")
@@ -4255,21 +4389,17 @@ class Fitting_Ui(QtWidgets.QWidget):
         self.checkBox_optimizer_pop.setLayoutDirection(QtCore.Qt.RightToLeft)
         self.checkBox_optimizer_pop.setObjectName("checkBox_optimizer_pop")
         self.gridLayout_14.addWidget(self.checkBox_optimizer_pop, 0, 2, 1, 1)
-        self.comboBox_optimizer_pop = QtWidgets.QComboBox(self.groupBox_lossOptimizer)
-        self.comboBox_optimizer_pop.setEnabled(False)
-        self.comboBox_optimizer_pop.setObjectName("comboBox_optimizer_pop")
-        self.comboBox_optimizer_pop.addItem("")
-        self.comboBox_optimizer_pop.addItem("")
-        self.comboBox_optimizer_pop.addItem("")
-        self.comboBox_optimizer_pop.addItem("")
-        self.comboBox_optimizer_pop.addItem("")
-        self.comboBox_optimizer_pop.addItem("")
-        self.comboBox_optimizer_pop.addItem("")
-        self.gridLayout_14.addWidget(self.comboBox_optimizer_pop, 0, 3, 1, 2)
-        self.checkBox_lossW = QtWidgets.QCheckBox(self.groupBox_lossOptimizer)
-        self.checkBox_lossW.setLayoutDirection(QtCore.Qt.RightToLeft)
-        self.checkBox_lossW.setObjectName("checkBox_lossW")
-        self.gridLayout_14.addWidget(self.checkBox_lossW, 1, 0, 1, 1)
+        self.comboBox_optimizer = QtWidgets.QComboBox(self.groupBox_lossOptimizer)
+        self.comboBox_optimizer.setEnabled(False)
+        self.comboBox_optimizer.setObjectName("comboBox_optimizer")
+        self.comboBox_optimizer.addItem("")
+        self.comboBox_optimizer.addItem("")
+        self.comboBox_optimizer.addItem("")
+        self.comboBox_optimizer.addItem("")
+        self.comboBox_optimizer.addItem("")
+        self.comboBox_optimizer.addItem("")
+        self.comboBox_optimizer.addItem("")
+        self.gridLayout_14.addWidget(self.comboBox_optimizer, 0, 3, 1, 1)
         self.lineEdit_lossW = QtWidgets.QLineEdit(self.groupBox_lossOptimizer)
         self.lineEdit_lossW.setEnabled(False)
         self.lineEdit_lossW.setObjectName("lineEdit_lossW")
@@ -4280,6 +4410,22 @@ class Fitting_Ui(QtWidgets.QWidget):
         self.pushButton_lossW.setObjectName("pushButton_lossW")
         self.gridLayout_14.addWidget(self.pushButton_lossW, 1, 4, 1, 1)
         self.gridLayout_4.addWidget(self.groupBox_lossOptimizer, 1, 0, 1, 1)
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
         self.groupBox_learningRate_pop = QtWidgets.QGroupBox(self.scrollAreaWidgetContents_pop)
         self.groupBox_learningRate_pop.setEnabled(True)
         self.groupBox_learningRate_pop.setCheckable(True)
@@ -4296,15 +4442,15 @@ class Fitting_Ui(QtWidgets.QWidget):
         self.label_LrConst_pop.setAlignment(QtCore.Qt.AlignRight|QtCore.Qt.AlignTrailing|QtCore.Qt.AlignVCenter)
         self.label_LrConst_pop.setObjectName("label_LrConst_pop")
         self.gridLayout_16.addWidget(self.label_LrConst_pop, 0, 1, 1, 1)
-        self.doubleSpinBox_learningRate_pop = QtWidgets.QDoubleSpinBox(self.groupBox_learningRate_pop)
-        self.doubleSpinBox_learningRate_pop.setEnabled(False)
-        self.doubleSpinBox_learningRate_pop.setMaximumSize(QtCore.QSize(16777215, 16777215))
-        self.doubleSpinBox_learningRate_pop.setDecimals(6)
-        self.doubleSpinBox_learningRate_pop.setMaximum(999.0)
-        self.doubleSpinBox_learningRate_pop.setSingleStep(0.0001)
-        self.doubleSpinBox_learningRate_pop.setProperty("value", 0.001)
-        self.doubleSpinBox_learningRate_pop.setObjectName("doubleSpinBox_learningRate_pop")
-        self.gridLayout_16.addWidget(self.doubleSpinBox_learningRate_pop, 0, 2, 1, 1)
+        self.doubleSpinBox_learningRate = QtWidgets.QDoubleSpinBox(self.groupBox_learningRate_pop)
+        self.doubleSpinBox_learningRate.setEnabled(False)
+        self.doubleSpinBox_learningRate.setMaximumSize(QtCore.QSize(16777215, 16777215))
+        self.doubleSpinBox_learningRate.setDecimals(6)
+        self.doubleSpinBox_learningRate.setMaximum(999.0)
+        self.doubleSpinBox_learningRate.setSingleStep(0.0001)
+        self.doubleSpinBox_learningRate.setProperty("value", 0.001)
+        self.doubleSpinBox_learningRate.setObjectName("doubleSpinBox_learningRate")
+        self.gridLayout_16.addWidget(self.doubleSpinBox_learningRate, 0, 2, 1, 1)
         self.radioButton_LrCycl = QtWidgets.QRadioButton(self.groupBox_learningRate_pop)
         self.radioButton_LrCycl.setObjectName("radioButton_LrCycl")
         self.gridLayout_16.addWidget(self.radioButton_LrCycl, 1, 0, 1, 1)
@@ -4493,30 +4639,11 @@ class Fitting_Ui(QtWidgets.QWidget):
 
 
 
-        self.spinBox_realTimeEpochs.setSingleStep(1)
-        self.spinBox_realTimeEpochs.setMinimum(1)
-        self.spinBox_realTimeEpochs.setMaximum(9999999)
-        self.spinBox_realTimeEpochs.setValue(250)
-        self.spinBox_NrEpochs_pop.setMaximum(999999999)
-        self.pushButton_Pause_pop.setMinimumSize(QtCore.QSize(60, 30))
-        self.pushButton_Pause_pop.setMaximumSize(QtCore.QSize(60, 30))
-        self.pushButton_Stop_pop.setMinimumSize(QtCore.QSize(60, 30))
-        self.pushButton_Stop_pop.setMaximumSize(QtCore.QSize(60, 30))
-        self.doubleSpinBox_learningRate_pop.setDecimals(9)
-        self.doubleSpinBox_learningRate_pop.setMinimum(1e-06)
-        self.doubleSpinBox_learningRate_pop.setMaximum(9999999.0)
-        self.doubleSpinBox_learningRate_pop.setSingleStep(0.0001)
-        self.doubleSpinBox_learningRate_pop.setValue(0.001)
-        self.spinBox_trainLastNOnly_pop.setMaximum(9999)
-        self.spinBox_batchSize_pop.setMinimum(1)
-        self.spinBox_batchSize_pop.setMaximum(999999999)
-        self.spinBox_batchSize_pop.setValue(32)
-        self.spinBox_epochs_pop.setMinimum(1)
-        self.spinBox_epochs_pop.setMaximum(999999999)
-
 
 
         #####################Some manual settings##############################
+        #######################################################################        
+        ###########################Variables###################################
         self.Histories = [] #List container for the fitting histories, that are produced by the keras.fit function that is controlled by this popup
         self.RealTime_Acc,self.RealTime_ValAcc,self.RealTime_Loss,self.RealTime_ValLoss = [],[],[],[]
         self.RealTime_OtherMetrics = {} #provide dictionary where AID can save all other metrics in case there are some (like precision...)
@@ -4524,6 +4651,8 @@ class Fitting_Ui(QtWidgets.QWidget):
         self.threadpool_quad = QtCore.QThreadPool()#Threadpool for image augmentation
         self.threadpool_quad.setMaxThreadCount(4)#Maximum 4 threads
         self.threadpool_quad_count = 0 #count nr. of threads in queue; 
+        self.clr_settings = {} #variable to store step_size and gamma, will be filled with information when starting to fit
+        self.optimizer_settings = {} #dict to store advanced optimizer settings
         
         self.epoch_counter = 0 #Counts the nr. of epochs
         self.tableWidget_HistoryInfo_pop.setMinimumSize(QtCore.QSize(0, 100))
@@ -4537,8 +4666,6 @@ class Fitting_Ui(QtWidgets.QWidget):
         self.label_Normalization_pop.setAlignment(QtCore.Qt.AlignRight | QtCore.Qt.AlignVCenter)
         self.label_Crop_NrEpochs_pop.setAlignment(QtCore.Qt.AlignRight | QtCore.Qt.AlignVCenter)
 
-        self.spinBox_NrEpochs_pop.setMinimum(1)
-        self.spinBox_NrEpochs_pop.setMaximum(9E8)
         self.spinBox_RefreshAfterEpochs_pop.setMinimum(1)
         self.spinBox_RefreshAfterEpochs_pop.setMaximum(9E8)
         self.spinBox_RefreshAfterNrEpochs_pop.setMinimum(1)
@@ -4588,41 +4715,51 @@ class Fitting_Ui(QtWidgets.QWidget):
         self.spinBox_epochs_pop.setMinimum(1)       
         self.spinBox_epochs_pop.setMaximum(1E6)       
         self.spinBox_epochs_pop.setValue(1)       
-        self.doubleSpinBox_learningRate_pop.setDecimals(9)
-        self.doubleSpinBox_learningRate_pop.setMinimum(0.0)       
-        self.doubleSpinBox_learningRate_pop.setMaximum(1E6)       
-        self.doubleSpinBox_learningRate_pop.setValue(0.001)       
-        self.doubleSpinBox_learningRate_pop.setSingleStep(0.0001)
+        self.doubleSpinBox_learningRate.setDecimals(9)
+        self.doubleSpinBox_learningRate.setMinimum(0.0)       
+        self.doubleSpinBox_learningRate.setMaximum(1E6)       
+        self.doubleSpinBox_learningRate.setValue(0.001)       
+        self.doubleSpinBox_learningRate.setSingleStep(0.0001)
         self.spinBox_trainLastNOnly_pop.setMinimum(0)       
         self.spinBox_trainLastNOnly_pop.setMaximum(1E6)       
         self.spinBox_trainLastNOnly_pop.setValue(0)    
         self.checkBox_trainDenseOnly_pop.setChecked(False)
 
+        self.spinBox_realTimeEpochs.setSingleStep(1)
+        self.spinBox_realTimeEpochs.setMinimum(1)
+        
+        self.spinBox_NrEpochs_pop.setMinimum(1)
+        self.spinBox_NrEpochs_pop.setMaximum(9E8)
 
-
-
+        self.spinBox_realTimeEpochs.setValue(250)        
+        self.spinBox_realTimeEpochs.setMaximum(9999999)
+        self.pushButton_Pause_pop.setMinimumSize(QtCore.QSize(60, 30))
+        self.pushButton_Pause_pop.setMaximumSize(QtCore.QSize(60, 30))
+        self.pushButton_Stop_pop.setMinimumSize(QtCore.QSize(60, 30))
+        self.pushButton_Stop_pop.setMaximumSize(QtCore.QSize(60, 30))
 
         #######################################################################
         ######################Connections######################################
-        self.doubleSpinBox_learningRate_pop.setEnabled(False)
+        self.doubleSpinBox_learningRate.setEnabled(False)
         self.spinBox_trainLastNOnly_pop.setEnabled(False)
         self.lineEdit_dropout_pop.setEnabled(False)
         self.pushButton_LR_finder.setEnabled(False)
         self.pushButton_LR_plot.setEnabled(False)
 
 
-        self.radioButton_LrConst.toggled['bool'].connect(self.doubleSpinBox_learningRate_pop.setEnabled)
+        self.radioButton_LrConst.toggled['bool'].connect(self.doubleSpinBox_learningRate.setEnabled)
         self.radioButton_LrCycl.toggled['bool'].connect(self.lineEdit_cycLrMin.setEnabled)
         self.radioButton_LrCycl.toggled['bool'].connect(self.lineEdit_cycLrMax.setEnabled)
         self.radioButton_LrCycl.toggled['bool'].connect(self.comboBox_cycLrMethod.setEnabled)
-        #self.radioButton_LrCycl.toggled['bool'].connect(self.pushButton_cycLrPopup.setEnabled)
+        self.radioButton_LrCycl.toggled['bool'].connect(self.pushButton_cycLrPopup.setEnabled)
         self.radioButton_LrExpo.toggled['bool'].connect(self.doubleSpinBox_expDecInitLr.setEnabled)
         self.radioButton_LrExpo.toggled['bool'].connect(self.spinBox_expDecSteps.setEnabled)
         self.radioButton_LrExpo.toggled['bool'].connect(self.doubleSpinBox_expDecRate.setEnabled)
         
-        self.groupBox_learningRate_pop.toggled['bool'].connect(self.doubleSpinBox_learningRate_pop.setEnabled) 
+        self.groupBox_learningRate_pop.toggled['bool'].connect(self.doubleSpinBox_learningRate.setEnabled) 
         self.checkBox_expt_loss_pop.toggled['bool'].connect(self.comboBox_expt_loss_pop.setEnabled)
-        self.checkBox_optimizer_pop.toggled['bool'].connect(self.comboBox_optimizer_pop.setEnabled)
+        self.checkBox_optimizer_pop.toggled['bool'].connect(self.comboBox_optimizer.setEnabled)
+        self.checkBox_optimizer_pop.toggled['bool'].connect(self.pushButton_optimizer_pop.setEnabled)
 
         self.checkBox_trainLastNOnly_pop.toggled['bool'].connect(self.spinBox_trainLastNOnly_pop.setEnabled)
         self.checkBox_dropout_pop.toggled['bool'].connect(self.lineEdit_dropout_pop.setEnabled)
@@ -4640,9 +4777,9 @@ class Fitting_Ui(QtWidgets.QWidget):
         self.checkBox_avgBlur_pop.clicked['bool'].connect(self.label_avgBlurMin_pop.setEnabled)
         self.checkBox_avgBlur_pop.clicked['bool'].connect(self.label_avgBlurMax_pop.setEnabled)
 
-        self.checkBox_optimizer_pop.toggled['bool'].connect(self.comboBox_optimizer_pop.setEnabled)
+        self.checkBox_optimizer_pop.toggled['bool'].connect(self.comboBox_optimizer.setEnabled)
         self.checkBox_expt_loss_pop.toggled['bool'].connect(self.comboBox_expt_loss_pop.setEnabled)
-        self.comboBox_optimizer_pop.currentTextChanged.connect(self.expert_optimizer_changed_pop)
+        #self.comboBox_optimizer.currentTextChanged.connect(lambda: self.expert_optimizer_changed())
         self.checkBox_optimizer_pop.stateChanged.connect(self.expert_optimizer_off_pop)
         self.groupBox_learningRate_pop.toggled.connect(self.expert_learningrate_off_pop)
         self.checkBox_expt_loss_pop.stateChanged.connect(self.expert_loss_off_pop)
@@ -4835,9 +4972,9 @@ class Fitting_Ui(QtWidgets.QWidget):
         self.groupBox_modelKerasFit_pop.setTitle(_translate("Form", "In model_keras.fit()", None))       
         self.groupBox_learningRate_pop.setToolTip(_translate("Form", tooltips["checkBox_learningRate"], None))
         self.groupBox_learningRate_pop.setTitle(_translate("Form", "Learning Rate", None))
-        self.doubleSpinBox_learningRate_pop.setToolTip(_translate("Form", tooltips["checkBox_learningRate"], None))
+        self.doubleSpinBox_learningRate.setToolTip(_translate("Form", tooltips["checkBox_learningRate"], None))
         self.checkBox_trainLastNOnly_pop.setToolTip(_translate("Form", tooltips["checkBox_trainLastNOnly"], None))
-        self.checkBox_trainLastNOnly_pop.setText(_translate("Form", "Train last N layers only. N=", None))
+        self.checkBox_trainLastNOnly_pop.setText(_translate("Form", "Train only last N layers", None))
         self.spinBox_trainLastNOnly_pop.setToolTip(_translate("Form", tooltips["spinBox_trainLastNOnly"], None))
         self.checkBox_trainDenseOnly_pop.setToolTip(_translate("Form", tooltips["checkBox_trainDenseOnly"], None))
         self.checkBox_trainDenseOnly_pop.setText(_translate("Form", "Train Dense only", None))
@@ -4856,7 +4993,7 @@ class Fitting_Ui(QtWidgets.QWidget):
 
         self.radioButton_LrConst.setText(_translate("Form", "Constant", None))
         self.label_LrConst_pop.setText(_translate("Form", "LR", None))
-        self.doubleSpinBox_learningRate_pop.setToolTip(_translate("Form", "<html><head/><body><p>Change the learning rate. Optimizer is always \'adam\' and default value is 0.001</p></body></html>", None))
+        self.doubleSpinBox_learningRate.setToolTip(_translate("Form", "<html><head/><body><p>Change the learning rate. Optimizer is always \'adam\' and default value is 0.001</p></body></html>", None))
         self.radioButton_LrCycl.setText(_translate("Form", "Cyclical", None))
         self.label_cycLrMin.setText(_translate("Form", "Range", None))
         self.label_cycLrMethod.setText(_translate("Form", "Method", None))
@@ -4910,16 +5047,18 @@ class Fitting_Ui(QtWidgets.QWidget):
         self.lineEdit_lossW.setToolTip(_translate("Form", tooltips["checkBox_lossW"], None))
         self.pushButton_lossW.setToolTip(_translate("Form", tooltips["checkBox_lossW"], None))
         self.pushButton_lossW.setText(_translate("Form", "...", None))
+        self.pushButton_optimizer_pop.setText(_translate("MainWindow", "...", None))
+        self.pushButton_optimizer_pop.setToolTip(_translate("MainWindow", "Show advanced options for optimizer", None))
 
 
         self.checkBox_optimizer_pop.setText(_translate("Form", "Optimizer", None))
-        self.comboBox_optimizer_pop.setItemText(0, _translate("Form", "Adam", None))
-        self.comboBox_optimizer_pop.setItemText(1, _translate("Form", "SGD", None))
-        self.comboBox_optimizer_pop.setItemText(2, _translate("Form", "RMSprop", None))
-        self.comboBox_optimizer_pop.setItemText(3, _translate("Form", "Adagrad", None))
-        self.comboBox_optimizer_pop.setItemText(4, _translate("Form", "Adadelta", None))
-        self.comboBox_optimizer_pop.setItemText(5, _translate("Form", "Adamax", None))
-        self.comboBox_optimizer_pop.setItemText(6, _translate("Form", "Nadam", None))
+        self.comboBox_optimizer.setItemText(0, _translate("Form", "Adam", None))
+        self.comboBox_optimizer.setItemText(1, _translate("Form", "SGD", None))
+        self.comboBox_optimizer.setItemText(2, _translate("Form", "RMSprop", None))
+        self.comboBox_optimizer.setItemText(3, _translate("Form", "Adagrad", None))
+        self.comboBox_optimizer.setItemText(4, _translate("Form", "Adadelta", None))
+        self.comboBox_optimizer.setItemText(5, _translate("Form", "Adamax", None))
+        self.comboBox_optimizer.setItemText(6, _translate("Form", "Nadam", None))
 
 
         self.checkBox_dropout_pop.setToolTip(_translate("Form", tooltips["checkBox_dropout"], None))
@@ -5079,9 +5218,9 @@ class Fitting_Ui(QtWidgets.QWidget):
         if on_or_off==0: #switch off
             #which optimizer is used? (there are different default learning-rates
             #for each optimizer!)
-            optimizer = str(self.comboBox_optimizer_pop.currentText())
-            self.doubleSpinBox_learningRate_pop.setValue(Default_dict["doubleSpinBox_learningRate_"+optimizer])
-            self.doubleSpinBox_learningRate_pop.setEnabled(False)
+            optimizer = str(self.comboBox_optimizer.currentText())
+            self.doubleSpinBox_learningRate.setValue(Default_dict["doubleSpinBox_learningRate_"+optimizer])
+            self.doubleSpinBox_learningRate.setEnabled(False)
             self.radioButton_LrCycl.setChecked(False)
             self.radioButton_LrExpo.setChecked(False)
             self.radioButton_LrConst.setChecked(True)
@@ -5089,28 +5228,30 @@ class Fitting_Ui(QtWidgets.QWidget):
     def expert_optimizer_off_pop(self,on_or_off):
         if on_or_off==0: #switch off, set back to categorical_crossentropy
             optimizer = "Adam"
-            index = self.comboBox_optimizer_pop.findText(optimizer, QtCore.Qt.MatchFixedString)
+            index = self.comboBox_optimizer.findText(optimizer, QtCore.Qt.MatchFixedString)
             if index >= 0:
-                self.comboBox_optimizer_pop.setCurrentIndex(index)
+                self.comboBox_optimizer.setCurrentIndex(index)
                 #also reset the learning rate to the default
-                self.doubleSpinBox_learningRate_pop.setValue(Default_dict["doubleSpinBox_learningRate_"+optimizer])
+                self.doubleSpinBox_learningRate.setValue(Default_dict["doubleSpinBox_learningRate_"+optimizer])
 
-    def expert_optimizer_changed_pop(self,value):
-        #set the learning rate to the default for this optimizer
-        optimizer = value
-        value_current = float(self.doubleSpinBox_learningRate_pop.value())
-        value_wanted = Default_dict["doubleSpinBox_learningRate_"+optimizer]
-        text = str(self.textBrowser_FittingInfo_pop.toPlainText())
-        if value_current!=value_wanted and "Epoch" in text:#avoid that the message pops up when window is created
-            self.doubleSpinBox_learningRate_pop.setValue(value_wanted)
-            #Inform user
-            msg = QtWidgets.QMessageBox()
-            msg.setIcon(QtWidgets.QMessageBox.Information)       
-            msg.setWindowTitle("Learning rate to default")
-            msg.setText("Learning rate was set to the default for "+optimizer)
-            msg.setStandardButtons(QtWidgets.QMessageBox.Ok)
-            msg.exec_()
-            return
+#    def expert_optimizer_changed_pop(self,value):
+#        #set the learning rate to the default for this optimizer
+#        optimizer = value
+#        value_current = float(self.doubleSpinBox_learningRate.value())
+#        value_wanted = Default_dict["doubleSpinBox_learningRate_"+optimizer]
+#        text = str(self.textBrowser_FittingInfo.toPlainText())
+#        if value_current!=value_wanted and "Epoch" in text:#avoid that the message pops up when window is created
+#            self.doubleSpinBox_learningRate.setValue(value_wanted)
+#            self.doubleSpinBox_expDecInitLr.setValue(value_wanted)
+#
+#            #Inform user
+#            msg = QtWidgets.QMessageBox()
+#            msg.setIcon(QtWidgets.QMessageBox.Information)       
+#            msg.setWindowTitle("Learning rate to default")
+#            msg.setText("Learning rate was set to the default for "+optimizer)
+#            msg.setStandardButtons(QtWidgets.QMessageBox.Ok)
+#            msg.exec_()
+#            return
 
     def partialtrainability_activated_pop(self,listindex):#same function like partialTrainability but on fitting popup
         print("Not implemented yet")
@@ -5281,13 +5422,13 @@ class popup_trainability(QtWidgets.QWidget):
     def retranslateUi(self, Form):
         _translate = QtCore.QCoreApplication.translate
         Form.setWindowTitle(_translate("Form", "Partial trainability", None))
-        self.tableWidget_pop_pTr_layersTable.setToolTip(_translate("Form", "<html><head/><body><p>The table shows all Dense and Conv2D layers and their trainablilities. To decrease the trainability, use the spinbox and a value between 0 and 1 and hit 'Update'. Then, the layers where you chose decrease the trainabliity are split into a layer that stays trainable and another layer that is set to not-trainable. Next, a Concatenation-layer is inserted, which combines both aforementioned layers again. Of course the weights are copied from the initial model, to the customized model, but you cannot specify, which particular nodes/filters of a layer are trainable or non-trainable. If you set for example a trainabliity of 0.25, the first 75% of the nodes are set to not-trainable and the rest 25% are left trainable.</p></body></html>", None))
+        self.tableWidget_pop_pTr_layersTable.setToolTip(_translate("Form", tooltips["tableWidget_pop_pTr_layersTable"], None))
         #self.pushButton_pop_pTr_reset.setText(_translate("Form", "Reset", None))
         #self.pushButton_pop_pTr_reset.setToolTip(_translate("Form", "<html><head/><body><p>Not implemented yet.</p></body></html>", None))
         self.pushButton_pop_pTr_update.setText(_translate("Form", "Update", None))
-        self.pushButton_pop_pTr_update.setToolTip(_translate("Form", "<html><head/><body><p>Apply the requested changes in trainability.</p></body></html>", None))
+        self.pushButton_pop_pTr_update.setToolTip(_translate("Form", tooltips["pushButton_pop_pTr_update"], None))
         self.pushButton_pop_pTr_ok.setText(_translate("Form", "OK", None))
-        self.pushButton_pop_pTr_ok.setToolTip(_translate("Form", "<html><head/><body><p>Save the customized model to a user-defined location. This model will automaticlly be selected for 'Load and continue' in the 'Define model'-tab. Just determine a 'Model path' before training. Training will then start using your customized model.</p></body></html>", None))
+        self.pushButton_pop_pTr_ok.setToolTip(_translate("Form", tooltips["pushButton_pop_pTr_ok"], None))
         self.groupBox.setTitle(_translate("Form", "Model information", None))
         self.label_pop_pTr_modelPath.setText(_translate("Form", "Model path", None))
 #        self.label_pop_pTr_arch.setText(_translate("Form", "Architecture", None))
@@ -6010,7 +6151,7 @@ class popup_lrfinder(QtWidgets.QWidget):
         self.groupBox_model.setTitle(_translate("Form_LrFinder", "Model", None))
         self.label_colorMode.setText(_translate("Form_LrFinder", "Color Mode"))              
         self.label_inpImgSize.setText(_translate("Form_LrFinder", "Input img. crop", None))
-        self.lineEdit_loadModel.setToolTip(_translate("Form_LrFinder", "Enter path and filename of a history-file (.csv)", None))
+        self.lineEdit_loadModel.setToolTip(_translate("Form_LrFinder", tooltips["lineEdit_LoadModel_3"], None))
         self.comboBox_optimizer.setItemText(0, _translate("Form_LrFinder", "Adam", None))
         self.comboBox_optimizer.setItemText(1, _translate("Form_LrFinder", "SGD", None))
         self.comboBox_optimizer.setItemText(2, _translate("Form_LrFinder", "RMSprop", None))
@@ -6238,16 +6379,346 @@ class Ui_Clr_settings(QtWidgets.QWidget):
 
     def retranslateUi(self, Clr_settings):
         _translate = QtCore.QCoreApplication.translate
-        Clr_settings.setWindowTitle(_translate("Clr_settings", "Form",None))
+        Clr_settings.setWindowTitle(_translate("Clr_settings", "Advanced settings for cyclical learning rates",None))
         self.label_stepSize.setText(_translate("Clr_settings", "step_size",None))
         self.label_gamma.setText(_translate("Clr_settings", "gamma",None))
         self.pushButton_cancel.setText(_translate("Clr_settings", "Close",None))
         self.pushButton_ok.setText(_translate("Clr_settings", "OK",None))
 
+
+
+
+class Ui_Form_expt_optim(QtWidgets.QWidget):
+    def setupUi(self, Form_expt_optim):
+        Form_expt_optim.setObjectName("Form_expt_optim")
+        Form_expt_optim.resize(648, 356)
+        self.gridLayout_2 = QtWidgets.QGridLayout(Form_expt_optim)
+        self.gridLayout_2.setObjectName("gridLayout_2")
+        self.groupBox_expt_optim = QtWidgets.QGroupBox(Form_expt_optim)
+        self.groupBox_expt_optim.setCheckable(False)
+        self.groupBox_expt_optim.setChecked(False)
+        self.groupBox_expt_optim.setObjectName("groupBox_expt_optim")
+        self.gridLayout_47 = QtWidgets.QGridLayout(self.groupBox_expt_optim)
+        self.gridLayout_47.setObjectName("gridLayout_47")
+        self.scrollArea_expt_optim = QtWidgets.QScrollArea(self.groupBox_expt_optim)
+        self.scrollArea_expt_optim.setWidgetResizable(True)
+        self.scrollArea_expt_optim.setObjectName("scrollArea_expt_optim")
+        self.scrollAreaWidgetContents_expt_optim = QtWidgets.QWidget()
+        self.scrollAreaWidgetContents_expt_optim.setGeometry(QtCore.QRect(0, 0, 600, 257))
+        self.scrollAreaWidgetContents_expt_optim.setObjectName("scrollAreaWidgetContents_expt_optim")
+        self.gridLayout = QtWidgets.QGridLayout(self.scrollAreaWidgetContents_expt_optim)
+        self.gridLayout.setObjectName("gridLayout")
+        self.label = QtWidgets.QLabel(self.scrollAreaWidgetContents_expt_optim)
+        self.label.setLayoutDirection(QtCore.Qt.LeftToRight)
+        self.label.setAlignment(QtCore.Qt.AlignCenter)
+        self.label.setObjectName("label")
+        self.gridLayout.addWidget(self.label, 0, 0, 1, 1)
+        self.label_learningRate = QtWidgets.QLabel(self.scrollAreaWidgetContents_expt_optim)
+        self.label_learningRate.setAlignment(QtCore.Qt.AlignCenter)
+        self.label_learningRate.setObjectName("label_learningRate")
+        self.gridLayout.addWidget(self.label_learningRate, 0, 1, 1, 1)
+        self.radioButton_adam = QtWidgets.QRadioButton(self.scrollAreaWidgetContents_expt_optim)
+        self.radioButton_adam.setChecked(False)
+        self.radioButton_adam.setObjectName("radioButton_adam")
+        self.gridLayout.addWidget(self.radioButton_adam, 1, 0, 1, 1)
+        self.doubleSpinBox_lr_adam = QtWidgets.QDoubleSpinBox(self.scrollAreaWidgetContents_expt_optim)
+        self.doubleSpinBox_lr_adam.setDecimals(6)
+        self.doubleSpinBox_lr_adam.setSingleStep(0.0001)
+        #self.doubleSpinBox_lr_adam.setProperty("value", 0.001)
+        self.doubleSpinBox_lr_adam.setEnabled(False)
+        self.doubleSpinBox_lr_adam.setObjectName("doubleSpinBox_lr_adam")
+        self.gridLayout.addWidget(self.doubleSpinBox_lr_adam, 1, 1, 1, 1)
+        self.label_adam_beta1 = QtWidgets.QLabel(self.scrollAreaWidgetContents_expt_optim)
+        self.label_adam_beta1.setAlignment(QtCore.Qt.AlignRight|QtCore.Qt.AlignTrailing|QtCore.Qt.AlignVCenter)
+        self.label_adam_beta1.setObjectName("label_adam_beta1")
+        self.gridLayout.addWidget(self.label_adam_beta1, 1, 2, 1, 1)
+        self.doubleSpinBox_adam_beta1 = QtWidgets.QDoubleSpinBox(self.scrollAreaWidgetContents_expt_optim)
+        self.doubleSpinBox_adam_beta1.setDecimals(3)
+        self.doubleSpinBox_adam_beta1.setSingleStep(0.01)
+        #self.doubleSpinBox_adam_beta1.setProperty("value", 0.9)
+        self.doubleSpinBox_adam_beta1.setEnabled(False)
+        self.doubleSpinBox_adam_beta1.setObjectName("doubleSpinBox_adam_beta1")
+        self.gridLayout.addWidget(self.doubleSpinBox_adam_beta1, 1, 3, 1, 1)
+        self.label_adam_beta2 = QtWidgets.QLabel(self.scrollAreaWidgetContents_expt_optim)
+        self.label_adam_beta2.setAlignment(QtCore.Qt.AlignRight|QtCore.Qt.AlignTrailing|QtCore.Qt.AlignVCenter)
+        self.label_adam_beta2.setObjectName("label_adam_beta2")
+        self.gridLayout.addWidget(self.label_adam_beta2, 1, 4, 1, 1)
+        self.doubleSpinBox_adam_beta2 = QtWidgets.QDoubleSpinBox(self.scrollAreaWidgetContents_expt_optim)
+        self.doubleSpinBox_adam_beta2.setDecimals(3)
+        self.doubleSpinBox_adam_beta2.setSingleStep(0.01)
+        #self.doubleSpinBox_adam_beta2.setProperty("value", 0.999)
+        self.doubleSpinBox_adam_beta2.setEnabled(False)
+        self.doubleSpinBox_adam_beta2.setObjectName("doubleSpinBox_adam_beta2")
+        self.gridLayout.addWidget(self.doubleSpinBox_adam_beta2, 1, 5, 1, 1)
+        self.checkBox_adam_amsgrad = QtWidgets.QCheckBox(self.scrollAreaWidgetContents_expt_optim)
+        self.checkBox_adam_amsgrad.setEnabled(False)
+        self.checkBox_adam_amsgrad.setObjectName("checkBox_adam_amsgrad")
+        self.gridLayout.addWidget(self.checkBox_adam_amsgrad, 1, 6, 1, 1)
+        self.radioButton_sgd = QtWidgets.QRadioButton(self.scrollAreaWidgetContents_expt_optim)
+        self.radioButton_sgd.setObjectName("radioButton_sgd")
+        self.gridLayout.addWidget(self.radioButton_sgd, 2, 0, 1, 1)
+        self.doubleSpinBox_lr_sgd = QtWidgets.QDoubleSpinBox(self.scrollAreaWidgetContents_expt_optim)
+        self.doubleSpinBox_lr_sgd.setEnabled(False)
+        self.doubleSpinBox_lr_sgd.setDecimals(6)
+        self.doubleSpinBox_lr_sgd.setSingleStep(0.0001)
+        #self.doubleSpinBox_lr_sgd.setProperty("value", 0.01)
+        self.doubleSpinBox_lr_sgd.setObjectName("doubleSpinBox_lr_sgd")
+        self.gridLayout.addWidget(self.doubleSpinBox_lr_sgd, 2, 1, 1, 1)
+        self.label_sgd_momentum = QtWidgets.QLabel(self.scrollAreaWidgetContents_expt_optim)
+        self.label_sgd_momentum.setAlignment(QtCore.Qt.AlignRight|QtCore.Qt.AlignTrailing|QtCore.Qt.AlignVCenter)
+        self.label_sgd_momentum.setObjectName("label_sgd_momentum")
+        self.gridLayout.addWidget(self.label_sgd_momentum, 2, 2, 1, 1)
+        self.doubleSpinBox_sgd_momentum = QtWidgets.QDoubleSpinBox(self.scrollAreaWidgetContents_expt_optim)
+        self.doubleSpinBox_sgd_momentum.setEnabled(False)
+        self.doubleSpinBox_sgd_momentum.setDecimals(3)
+        self.doubleSpinBox_sgd_momentum.setSingleStep(0.01)
+        self.doubleSpinBox_sgd_momentum.setObjectName("doubleSpinBox_sgd_momentum")
+        self.gridLayout.addWidget(self.doubleSpinBox_sgd_momentum, 2, 3, 1, 1)
+        self.checkBox_sgd_nesterov = QtWidgets.QCheckBox(self.scrollAreaWidgetContents_expt_optim)
+        self.checkBox_sgd_nesterov.setEnabled(False)
+        self.checkBox_sgd_nesterov.setObjectName("checkBox_sgd_nesterov")
+        self.gridLayout.addWidget(self.checkBox_sgd_nesterov, 2, 4, 1, 2)
+        self.radioButton_rms = QtWidgets.QRadioButton(self.scrollAreaWidgetContents_expt_optim)
+        self.radioButton_rms.setObjectName("radioButton_rms")
+        self.gridLayout.addWidget(self.radioButton_rms, 3, 0, 1, 1)
+        self.doubleSpinBox_lr_rmsprop = QtWidgets.QDoubleSpinBox(self.scrollAreaWidgetContents_expt_optim)
+        self.doubleSpinBox_lr_rmsprop.setEnabled(False)
+        self.doubleSpinBox_lr_rmsprop.setDecimals(6)
+        self.doubleSpinBox_lr_rmsprop.setSingleStep(0.0001)
+        #self.doubleSpinBox_lr_rmsprop.setProperty("value", 0.001)
+        self.doubleSpinBox_lr_rmsprop.setObjectName("doubleSpinBox_lr_rmsprop")
+        self.gridLayout.addWidget(self.doubleSpinBox_lr_rmsprop, 3, 1, 1, 1)
+        self.label_rms_rho = QtWidgets.QLabel(self.scrollAreaWidgetContents_expt_optim)
+        self.label_rms_rho.setAlignment(QtCore.Qt.AlignRight|QtCore.Qt.AlignTrailing|QtCore.Qt.AlignVCenter)
+        self.label_rms_rho.setObjectName("label_rms_rho")
+        self.gridLayout.addWidget(self.label_rms_rho, 3, 2, 1, 1)
+        self.doubleSpinBox_rms_rho = QtWidgets.QDoubleSpinBox(self.scrollAreaWidgetContents_expt_optim)
+        self.doubleSpinBox_rms_rho.setEnabled(False)
+        self.doubleSpinBox_rms_rho.setDecimals(3)
+        self.doubleSpinBox_rms_rho.setSingleStep(0.01)
+        #self.doubleSpinBox_rms_rho.setProperty("value", 0.9)
+        self.doubleSpinBox_rms_rho.setObjectName("doubleSpinBox_rms_rho")
+        self.gridLayout.addWidget(self.doubleSpinBox_rms_rho, 3, 3, 1, 1)
+        self.radioButton_adagrad = QtWidgets.QRadioButton(self.scrollAreaWidgetContents_expt_optim)
+        self.radioButton_adagrad.setObjectName("radioButton_adagrad")
+        self.gridLayout.addWidget(self.radioButton_adagrad, 4, 0, 1, 1)
+        self.doubleSpinBox_lr_adagrad = QtWidgets.QDoubleSpinBox(self.scrollAreaWidgetContents_expt_optim)
+        self.doubleSpinBox_lr_adagrad.setEnabled(False)
+        self.doubleSpinBox_lr_adagrad.setDecimals(6)
+        self.doubleSpinBox_lr_adagrad.setSingleStep(0.0001)
+        #self.doubleSpinBox_lr_adagrad.setProperty("value", 0.01)
+        self.doubleSpinBox_lr_adagrad.setObjectName("doubleSpinBox_lr_adagrad")
+        self.gridLayout.addWidget(self.doubleSpinBox_lr_adagrad, 4, 1, 1, 1)
+        self.radioButton_adadelta = QtWidgets.QRadioButton(self.scrollAreaWidgetContents_expt_optim)
+        self.radioButton_adadelta.setObjectName("radioButton_adadelta")
+        self.gridLayout.addWidget(self.radioButton_adadelta, 5, 0, 1, 1)
+        self.doubleSpinBox_lr_adadelta = QtWidgets.QDoubleSpinBox(self.scrollAreaWidgetContents_expt_optim)
+        self.doubleSpinBox_lr_adadelta.setEnabled(False)
+        self.doubleSpinBox_lr_adadelta.setDecimals(6)
+        self.doubleSpinBox_lr_adadelta.setSingleStep(0.0001)
+        #self.doubleSpinBox_lr_adadelta.setProperty("value", 1.0)
+        self.doubleSpinBox_lr_adadelta.setObjectName("doubleSpinBox_lr_adadelta")
+        self.gridLayout.addWidget(self.doubleSpinBox_lr_adadelta, 5, 1, 1, 1)
+        self.label_adadelta_rho = QtWidgets.QLabel(self.scrollAreaWidgetContents_expt_optim)
+        self.label_adadelta_rho.setAlignment(QtCore.Qt.AlignRight|QtCore.Qt.AlignTrailing|QtCore.Qt.AlignVCenter)
+        self.label_adadelta_rho.setObjectName("label_adadelta_rho")
+        self.gridLayout.addWidget(self.label_adadelta_rho, 5, 2, 1, 1)
+        self.doubleSpinBox_adadelta_rho = QtWidgets.QDoubleSpinBox(self.scrollAreaWidgetContents_expt_optim)
+        self.doubleSpinBox_adadelta_rho.setEnabled(False)
+        self.doubleSpinBox_adadelta_rho.setDecimals(3)
+        self.doubleSpinBox_adadelta_rho.setSingleStep(0.01)
+        #self.doubleSpinBox_adadelta_rho.setProperty("value", 0.95)
+        self.doubleSpinBox_adadelta_rho.setObjectName("doubleSpinBox_adadelta_rho")
+        self.gridLayout.addWidget(self.doubleSpinBox_adadelta_rho, 5, 3, 1, 1)
+        self.radioButton_adamax = QtWidgets.QRadioButton(self.scrollAreaWidgetContents_expt_optim)
+        self.radioButton_adamax.setObjectName("radioButton_adamax")
+        self.gridLayout.addWidget(self.radioButton_adamax, 6, 0, 1, 1)
+        self.doubleSpinBox_lr_adamax = QtWidgets.QDoubleSpinBox(self.scrollAreaWidgetContents_expt_optim)
+        self.doubleSpinBox_lr_adamax.setEnabled(False)
+        self.doubleSpinBox_lr_adamax.setDecimals(6)
+        self.doubleSpinBox_lr_adamax.setSingleStep(0.0001)
+        self.doubleSpinBox_lr_adamax.setProperty("value", 0.002)
+        self.doubleSpinBox_lr_adamax.setObjectName("doubleSpinBox_lr_adamax")
+        self.gridLayout.addWidget(self.doubleSpinBox_lr_adamax, 6, 1, 1, 1)
+        self.label_adamax_beta1 = QtWidgets.QLabel(self.scrollAreaWidgetContents_expt_optim)
+        self.label_adamax_beta1.setAlignment(QtCore.Qt.AlignRight|QtCore.Qt.AlignTrailing|QtCore.Qt.AlignVCenter)
+        self.label_adamax_beta1.setObjectName("label_adamax_beta1")
+        self.gridLayout.addWidget(self.label_adamax_beta1, 6, 2, 1, 1)
+        self.doubleSpinBox_adamax_beta1 = QtWidgets.QDoubleSpinBox(self.scrollAreaWidgetContents_expt_optim)
+        self.doubleSpinBox_adamax_beta1.setEnabled(False)
+        self.doubleSpinBox_adamax_beta1.setDecimals(3)
+        self.doubleSpinBox_adamax_beta1.setSingleStep(0.01)
+        #self.doubleSpinBox_adamax_beta1.setProperty("value", 0.9)
+        self.doubleSpinBox_adamax_beta1.setObjectName("doubleSpinBox_adamax_beta1")
+        self.gridLayout.addWidget(self.doubleSpinBox_adamax_beta1, 6, 3, 1, 1)
+        self.label_adamax_beta2 = QtWidgets.QLabel(self.scrollAreaWidgetContents_expt_optim)
+        self.label_adamax_beta2.setAlignment(QtCore.Qt.AlignRight|QtCore.Qt.AlignTrailing|QtCore.Qt.AlignVCenter)
+        self.label_adamax_beta2.setObjectName("label_adamax_beta2")
+        self.gridLayout.addWidget(self.label_adamax_beta2, 6, 4, 1, 1)
+        self.doubleSpinBox_adamax_beta2 = QtWidgets.QDoubleSpinBox(self.scrollAreaWidgetContents_expt_optim)
+        self.doubleSpinBox_adamax_beta2.setEnabled(False)
+        self.doubleSpinBox_adamax_beta2.setDecimals(3)
+        self.doubleSpinBox_adamax_beta2.setSingleStep(0.01)
+        #self.doubleSpinBox_adamax_beta2.setProperty("value", 0.999)
+        self.doubleSpinBox_adamax_beta2.setObjectName("doubleSpinBox_adamax_beta2")
+        self.gridLayout.addWidget(self.doubleSpinBox_adamax_beta2, 6, 5, 1, 1)
+        self.radioButton_nadam = QtWidgets.QRadioButton(self.scrollAreaWidgetContents_expt_optim)
+        self.radioButton_nadam.setObjectName("radioButton_nadam")
+        self.gridLayout.addWidget(self.radioButton_nadam, 7, 0, 1, 1)
+        self.doubleSpinBox_lr_nadam = QtWidgets.QDoubleSpinBox(self.scrollAreaWidgetContents_expt_optim)
+        self.doubleSpinBox_lr_nadam.setEnabled(False)
+        self.doubleSpinBox_lr_nadam.setDecimals(6)
+        self.doubleSpinBox_lr_nadam.setSingleStep(0.0001)
+        #self.doubleSpinBox_lr_nadam.setProperty("value", 0.002)
+        self.doubleSpinBox_lr_nadam.setObjectName("doubleSpinBox_lr_nadam")
+        self.gridLayout.addWidget(self.doubleSpinBox_lr_nadam, 7, 1, 1, 1)
+        self.label_nadam_beta1 = QtWidgets.QLabel(self.scrollAreaWidgetContents_expt_optim)
+        self.label_nadam_beta1.setAlignment(QtCore.Qt.AlignRight|QtCore.Qt.AlignTrailing|QtCore.Qt.AlignVCenter)
+        self.label_nadam_beta1.setObjectName("label_nadam_beta1")
+        self.gridLayout.addWidget(self.label_nadam_beta1, 7, 2, 1, 1)
+        self.doubleSpinBox_nadam_beta1 = QtWidgets.QDoubleSpinBox(self.scrollAreaWidgetContents_expt_optim)
+        self.doubleSpinBox_nadam_beta1.setEnabled(False)
+        self.doubleSpinBox_nadam_beta1.setDecimals(3)
+        self.doubleSpinBox_nadam_beta1.setSingleStep(0.01)
+        #self.doubleSpinBox_nadam_beta1.setProperty("value", 0.9)
+        self.doubleSpinBox_nadam_beta1.setObjectName("doubleSpinBox_nadam_beta1")
+        self.gridLayout.addWidget(self.doubleSpinBox_nadam_beta1, 7, 3, 1, 1)
+        self.label_nadam_beta2 = QtWidgets.QLabel(self.scrollAreaWidgetContents_expt_optim)
+        self.label_nadam_beta2.setAlignment(QtCore.Qt.AlignRight|QtCore.Qt.AlignTrailing|QtCore.Qt.AlignVCenter)
+        self.label_nadam_beta2.setObjectName("label_nadam_beta2")
+        self.gridLayout.addWidget(self.label_nadam_beta2, 7, 4, 1, 1)
+        self.doubleSpinBox_nadam_beta2 = QtWidgets.QDoubleSpinBox(self.scrollAreaWidgetContents_expt_optim)
+        self.doubleSpinBox_nadam_beta2.setEnabled(False)
+        self.doubleSpinBox_nadam_beta2.setDecimals(3)
+        self.doubleSpinBox_nadam_beta2.setSingleStep(0.01)
+        #self.doubleSpinBox_nadam_beta2.setProperty("value", 0.999)
+        self.doubleSpinBox_nadam_beta2.setObjectName("doubleSpinBox_nadam_beta2")
+        self.gridLayout.addWidget(self.doubleSpinBox_nadam_beta2, 7, 5, 1, 1)
+        self.scrollArea_expt_optim.setWidget(self.scrollAreaWidgetContents_expt_optim)
+        self.gridLayout_47.addWidget(self.scrollArea_expt_optim, 0, 1, 1, 1)
+        self.gridLayout_2.addWidget(self.groupBox_expt_optim, 0, 0, 1, 4)
+        spacerItem = QtWidgets.QSpacerItem(323, 20, QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Minimum)
+        self.gridLayout_2.addItem(spacerItem, 1, 0, 1, 1)
+        self.pushButton_cancel = QtWidgets.QPushButton(Form_expt_optim)
+        self.pushButton_cancel.setObjectName("pushButton_cancel")
+        self.gridLayout_2.addWidget(self.pushButton_cancel, 1, 1, 1, 1)
+        self.pushButton_reset = QtWidgets.QPushButton(Form_expt_optim)
+        self.pushButton_reset.setObjectName("pushButton_reset")
+        self.gridLayout_2.addWidget(self.pushButton_reset, 1, 2, 1, 1)
+        self.pushButton_ok = QtWidgets.QPushButton(Form_expt_optim)
+        self.pushButton_ok.setObjectName("pushButton_ok")
+        self.gridLayout_2.addWidget(self.pushButton_ok, 1, 3, 1, 1)
+
+        
+        self.radioButton_adam.toggled['bool'].connect(self.doubleSpinBox_lr_adam.setEnabled)
+        self.radioButton_adam.toggled['bool'].connect(self.doubleSpinBox_adam_beta1.setEnabled)
+        self.radioButton_adam.toggled['bool'].connect(self.doubleSpinBox_adam_beta2.setEnabled)
+        self.radioButton_adam.toggled['bool'].connect(self.checkBox_adam_amsgrad.setEnabled)
+        self.radioButton_sgd.toggled['bool'].connect(self.doubleSpinBox_lr_sgd.setEnabled)
+        self.radioButton_sgd.toggled['bool'].connect(self.doubleSpinBox_sgd_momentum.setEnabled)
+        self.radioButton_sgd.toggled['bool'].connect(self.checkBox_sgd_nesterov.setEnabled)
+        self.radioButton_rms.toggled['bool'].connect(self.doubleSpinBox_lr_rmsprop.setEnabled)
+        self.radioButton_rms.toggled['bool'].connect(self.doubleSpinBox_rms_rho.setEnabled)
+        self.radioButton_adagrad.toggled['bool'].connect(self.doubleSpinBox_lr_adagrad.setEnabled)
+        self.radioButton_adadelta.toggled['bool'].connect(self.doubleSpinBox_lr_adadelta.setEnabled)
+        self.radioButton_adadelta.toggled['bool'].connect(self.doubleSpinBox_adadelta_rho.setEnabled)
+        self.radioButton_adamax.toggled['bool'].connect(self.doubleSpinBox_lr_adamax.setEnabled)
+        self.radioButton_adamax.toggled['bool'].connect(self.doubleSpinBox_adamax_beta1.setEnabled)
+        self.radioButton_adamax.toggled['bool'].connect(self.doubleSpinBox_adamax_beta2.setEnabled)
+        self.radioButton_nadam.toggled['bool'].connect(self.doubleSpinBox_lr_nadam.setEnabled)
+        self.radioButton_nadam.toggled['bool'].connect(self.doubleSpinBox_nadam_beta1.setEnabled)
+        self.radioButton_nadam.toggled['bool'].connect(self.doubleSpinBox_nadam_beta2.setEnabled)
+
+        self.retranslateUi(Form_expt_optim)    
+        QtCore.QMetaObject.connectSlotsByName(Form_expt_optim)
+
+    def retranslateUi(self, Form_expt_optim):
+        _translate = QtCore.QCoreApplication.translate
+        Form_expt_optim.setWindowTitle(_translate("Form_expt_optim", "Change optimizer settings"))
+        self.groupBox_expt_optim.setTitle(_translate("Form_expt_optim", "Optimizer Settings"))
+        self.label.setText(_translate("Form_expt_optim", "Optimizer"))
+        self.label_learningRate.setText(_translate("Form_expt_optim", "Learning Rate"))
+        self.radioButton_adam.setToolTip(_translate("Form_expt_optim", "Adam optimizer.\n"
+"\n"
+"Default parameters follow those provided in the original paper."))
+        self.radioButton_adam.setText(_translate("Form_expt_optim", "Adam"))
+        self.label_adam_beta1.setText(_translate("Form_expt_optim", "beta_1"))
+        self.label_adam_beta2.setText(_translate("Form_expt_optim", "beta_2"))
+        self.checkBox_adam_amsgrad.setText(_translate("Form_expt_optim", "amsgrad"))
+        self.radioButton_sgd.setToolTip(_translate("Form_expt_optim", "Stochastic gradient descent optimizer.\n"
+"\n"
+"Includes support for momentum, learning rate decay, and Nesterov momentum."))
+        self.radioButton_sgd.setText(_translate("Form_expt_optim", "SGD"))
+        self.label_sgd_momentum.setText(_translate("Form_expt_optim", "Momentum"))
+        self.checkBox_sgd_nesterov.setText(_translate("Form_expt_optim", "Nesterov"))
+        self.radioButton_rms.setToolTip(_translate("Form_expt_optim", "RMSProp optimizer.\n"
+"\n"
+"It is recommended to leave the parameters of this optimizer at their default values (except the learning rate, which can be freely tuned)."))
+        self.radioButton_rms.setText(_translate("Form_expt_optim", "RMSprop"))
+        self.label_rms_rho.setText(_translate("Form_expt_optim", "Rho"))
+        self.radioButton_adagrad.setToolTip(_translate("Form_expt_optim", "Adagrad optimizer.\n"
+"\n"
+"Adagrad is an optimizer with parameter-specific learning rates, which are adapted relative to how frequently a parameter gets updated during training. The more updates a parameter receives, the smaller the learning rate.\n"
+"\n"
+"It is recommended to leave the parameters of this optimizer at their default values."))
+        self.radioButton_adagrad.setText(_translate("Form_expt_optim", "Adagrad"))
+        self.radioButton_adadelta.setToolTip(_translate("Form_expt_optim", "Adadelta optimizer.\n"
+"\n"
+"Adadelta is a more robust extension of Adagrad that adapts learning rates based on a moving window of gradient updates, instead of accumulating all past gradients. This way, Adadelta continues learning even when many updates have been done. Compared to Adagrad, in the original version of Adadelta you don\'t have to set an initial learning rate. In this version, initial learning rate and decay factor can be set, as in most other Keras optimizers.\n"
+"\n"
+"It is recommended to leave the parameters of this optimizer at their default values."))
+        self.radioButton_adadelta.setText(_translate("Form_expt_optim", "Adadelta"))
+        self.label_adadelta_rho.setText(_translate("Form_expt_optim", "Rho"))
+        self.radioButton_adamax.setToolTip(_translate("Form_expt_optim", "Adamax optimizer from Adam paper\'s Section 7.\n"
+"\n"
+"It is a variant of Adam based on the infinity norm. Default parameters follow those provided in the paper."))
+        self.radioButton_adamax.setText(_translate("Form_expt_optim", "Adamax"))
+        self.label_adamax_beta1.setText(_translate("Form_expt_optim", "beta_1"))
+        self.label_adamax_beta2.setText(_translate("Form_expt_optim", "beta_2"))
+        self.radioButton_nadam.setToolTip(_translate("Form_expt_optim", "Nesterov Adam optimizer.\n"
+"\n"
+"Much like Adam is essentially RMSprop with momentum, Nadam is RMSprop with Nesterov momentum.\n"
+"\n"
+"Default parameters follow those provided in the paper. It is recommended to leave the parameters of this optimizer at their default values."))
+        self.radioButton_nadam.setText(_translate("Form_expt_optim", "Nadam"))
+        self.label_nadam_beta1.setText(_translate("Form_expt_optim", "beta_1"))
+        self.label_nadam_beta2.setText(_translate("Form_expt_optim", "beta_2"))
+        self.pushButton_cancel.setText(_translate("Form_expt_optim", "Cancel"))
+        self.pushButton_reset.setText(_translate("Form_expt_optim", "Reset"))
+        self.pushButton_ok.setText(_translate("Form_expt_optim", "OK"))
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 #if __name__ == "__main__":
 #    app = QtWidgets.QApplication(sys.argv)
 #    Form = QtWidgets.QWidget()
-#    ui = Fitting_Ui()
+#    ui = Ui_Form_expt_optim()
 #    ui.setupUi(Form)
 #    Form.show()
 #    sys.exit(app.exec_())
