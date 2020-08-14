@@ -143,27 +143,30 @@ def change_dropout(model_keras,do,model_metrics,out_dim,loss_,optimizer_,learnin
     model_keras.optimizer.set_weights(optimizer_weights)#Set optimizer values
     return 1
 
+
 def model_compile(model_keras,loss_,optimizer_,learning_rate_,model_metrics,out_dim):
-    optimizer_ = optimizer_.lower()
-    if optimizer_=='sgd':
-        optimizer_ = keras.optimizers.SGD(lr=learning_rate_, momentum=0.0, nesterov=False)
-    elif optimizer_=='rmsprop':
-        optimizer_ = keras.optimizers.RMSprop(lr=learning_rate_, rho=0.9)
-    elif optimizer_=='adagrad':
-        optimizer_ = keras.optimizers.Adagrad(lr=learning_rate_)
-    elif optimizer_=='adadelta':
-        optimizer_ = keras.optimizers.Adadelta(lr=learning_rate_, rho=0.95)
-    elif optimizer_=='adam':
-        optimizer_ = keras.optimizers.Adam(lr=learning_rate_, beta_1=0.9, beta_2=0.999, amsgrad=False)
-    elif optimizer_=='adamax':
-        optimizer_ = keras.optimizers.Adamax(lr=learning_rate_, beta_1=0.9, beta_2=0.999)
-    elif optimizer_=='nadam':
-        optimizer_ = keras.optimizers.Nadam(lr=learning_rate_, beta_1=0.9, beta_2=0.999)
+    optimizer_name = optimizer_["comboBox_optimizer"].lower()
+    if optimizer_name=='sgd':
+        optimizer = keras.optimizers.SGD(lr=optimizer_["doubleSpinBox_lr_sgd"], momentum=optimizer_["doubleSpinBox_sgd_momentum"], nesterov=optimizer_["checkBox_sgd_nesterov"])
+    elif optimizer_name=='rmsprop':
+        optimizer = keras.optimizers.RMSprop(lr=optimizer_["doubleSpinBox_lr_rmsprop"], rho=optimizer_["doubleSpinBox_rms_rho"])
+    elif optimizer_name=='adagrad':
+        optimizer = keras.optimizers.Adagrad(lr=optimizer_["doubleSpinBox_lr_adagrad"])
+    elif optimizer_name=='adadelta':
+        optimizer = keras.optimizers.Adadelta(lr=optimizer_["doubleSpinBox_lr_adadelta"], rho=optimizer_["doubleSpinBox_adadelta_rho"])
+    elif optimizer_name=='adam':
+        optimizer = keras.optimizers.Adam(lr=optimizer_["doubleSpinBox_lr_adam"], beta_1=optimizer_["doubleSpinBox_adam_beta1"], beta_2=optimizer_["doubleSpinBox_adam_beta2"], amsgrad=optimizer["checkBox_adam_amsgrad"])
+    elif optimizer_name=='adamax':
+        optimizer = keras.optimizers.Adamax(lr=optimizer_["doubleSpinBox_lr_adamax"], beta_1=optimizer_["doubleSpinBox_adamax_beta1"], beta_2=optimizer_["doubleSpinBox_adamax_beta2"])
+    elif optimizer_name=='nadam':
+        optimizer = keras.optimizers.Nadam(lr=optimizer_["doubleSpinBox_lr_nadam"], beta_1=optimizer_["doubleSpinBox_nadam_beta1"], beta_2=optimizer_["doubleSpinBox_nadam_beta2"])
     else:
         print("Unknown optimizer!")
-    model_keras.compile(loss=loss_,optimizer=optimizer_,
+    model_keras.compile(loss=loss_,optimizer=optimizer,
                         metrics=get_metrics_fresh(model_metrics,out_dim))
     return 1
+
+
 
 def get_dropout(model_keras):
     #Funktion takes a keras model and gives a list of the dropout values.    
@@ -953,6 +956,40 @@ def get_lr_dict(learning_rate_const_on,learning_rate_const,
     lr_dict["cycLrGamma"] = cycLrGamma,
     return lr_dict
 
+def get_optimizer_settings():
+    """
+    Default optimizer settings (taken from https://keras.io/api/optimizers)
+    """
+    d = {}
+    d["comboBox_optimizer"] = "Adam"
+
+    d["doubleSpinBox_lr_sgd"] = 0.01
+    d["doubleSpinBox_sgd_momentum"] = 0.0
+    d["checkBox_sgd_nesterov"] = False
+
+    d["doubleSpinBox_lr_rmsprop"] = 0.001
+    d["doubleSpinBox_rms_rho"] = 0.9
+
+    d["doubleSpinBox_lr_adam"] = 0.001
+    d["doubleSpinBox_adam_beta1"] = 0.9
+    d["doubleSpinBox_adam_beta2"] = 0.999
+    d["checkBox_adam_amsgrad"] = False
+
+    d["doubleSpinBox_lr_nadam"] = 0.002
+    d["doubleSpinBox_nadam_beta1"] = 0.9
+    d["doubleSpinBox_nadam_beta2"] = 0.999
+
+    d["doubleSpinBox_lr_adadelta"] = 1.0
+    d["doubleSpinBox_adadelta_rho"] = 0.95
+
+    d["doubleSpinBox_lr_adagrad"] = 0.01
+
+    d["doubleSpinBox_lr_adamax"] = 0.002
+    d["doubleSpinBox_adamax_beta1"] = 0.9
+    d["doubleSpinBox_adamax_beta2"] = 0.999
+
+    return d
+
 
 def get_lr_callback(learning_rate_const_on,learning_rate_const,
                     learning_rate_cycLR_on,cycLrMin,cycLrMax,
@@ -963,7 +1000,7 @@ def get_lr_callback(learning_rate_const_on,learning_rate_const,
     if learning_rate_const_on==True:
         return None
     elif learning_rate_cycLR_on==True:
-        return cyclicLR(mode=cycLrMethod,base_lr=cycLrMin,max_lr=cycLrMax,step_size=cycLrStepSize)  
+        return cyclicLR(base_lr=cycLrMin,max_lr=cycLrMax,step_size=cycLrStepSize,mode=cycLrMethod,gamma=cycLrGamma)  
     elif learning_rate_expo_on==True:
         return exponentialDecay(initial_lr=expDecInitLr, decay_steps=expDecSteps, decay_rate=expDecRate)  
 
