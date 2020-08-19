@@ -981,7 +981,7 @@ class MainWindow(QtWidgets.QMainWindow):
         #Stop button on the fititng popup
         #Should stop the fitting process and save the metafile
         #1. Change the nr. requested epochs to a smaller number
-        self.fittingpopups_ui[listindex].spinBox_NrEpochs_pop.setValue(epochs-1)
+        self.fittingpopups_ui[listindex].spinBox_NrEpochs.setValue(epochs-1)
         #2. Check the box which will cause that the new parameters are applied at next epoch
         self.fittingpopups_ui[listindex].checkBox_ApplyNextEpoch.setChecked(True)
 
@@ -1231,16 +1231,21 @@ class MainWindow(QtWidgets.QMainWindow):
         item_ui.popup_clrsettings.show()
         
         
-    def popup_lr_plot(self):
-        self.popup_lrplot = MyPopup()
-        self.popup_lrplot_ui = aid_frontend.popup_lrplot()
-        self.popup_lrplot_ui.setupUi(self.popup_lrplot) #open a popup for lr plotting
+    def popup_lr_plot(self,listindex):
+        if listindex==-1:
+            item_ui = self
+        else:
+            item_ui = self.fittingpopups_ui[listindex]
+
+        item_ui.popup_lrplot = MyPopup()
+        item_ui.popup_lrplot_ui = aid_frontend.popup_lrplot()
+        item_ui.popup_lrplot_ui.setupUi(item_ui.popup_lrplot) #open a popup for lr plotting
         
         #compute total number of epochs that will be fitted
-        spinBox_NrEpochs = self.spinBox_NrEpochs.value() #my own loop
-        spinBox_epochs = self.spinBox_epochs.value() #inside model.fit()
+        spinBox_NrEpochs = item_ui.spinBox_NrEpochs.value() #my own loop
+        spinBox_epochs = item_ui.spinBox_epochs.value() #inside model.fit()
         nr_epochs = spinBox_NrEpochs*spinBox_epochs
-        self.popup_lrplot_ui.spinBox_totalEpochs.setValue(nr_epochs)
+        item_ui.popup_lrplot_ui.spinBox_totalEpochs.setValue(nr_epochs)
         
         #Get the number of training examples
         SelectedFiles = self.items_clicked()
@@ -1249,27 +1254,38 @@ class MainWindow(QtWidgets.QMainWindow):
         SelectedFiles_train = np.array(SelectedFiles)[ind]
         SelectedFiles_train = list(SelectedFiles_train)
         nr_events_train_total = np.sum([int(selectedfile["nr_events_epoch"]) for selectedfile in SelectedFiles_train])
-
+        if nr_events_train_total==0 and item_ui.radioButton_LrConst.isChecked()==False:
+            #for Cyclical learning rates and Exponential learning rates, the 
+            #number of training images is needed
+            msg = QtWidgets.QMessageBox()
+            msg.setIcon(QtWidgets.QMessageBox.Information)       
+            msg.setText("There is no training data. Nr. of training images is required for this plot.")
+            msg.setWindowTitle("Nr. of training images = 0")
+            msg.setStandardButtons(QtWidgets.QMessageBox.Ok)
+            msg.exec_()
+            return 
+        
         text_info = ""
-        if self.radioButton_LrConst.isChecked():
+        if item_ui.radioButton_LrConst.isChecked():
             text_info+="Constant learning rate\n"
             epochs_plot = np.array(range(nr_epochs))
             const_lr = float(self.doubleSpinBox_learningRate.value())
             learningrates = np.repeat(const_lr,nr_epochs)
             
-        elif self.radioButton_LrCycl.isChecked():
+        elif item_ui.radioButton_LrCycl.isChecked():
             text_info+="Cyclical learning rates\n"
-            base_lr = float(self.lineEdit_cycLrMin.text())
-            max_lr = float(self.lineEdit_cycLrMax.text())
-            batch_size = int(self.spinBox_batchSize.value())
-            step_size = self.clr_settings["step_size"] #batch updates in a half cycle
+            base_lr = float(item_ui.lineEdit_cycLrMin.text())
+            max_lr = float(item_ui.lineEdit_cycLrMax.text())
+            batch_size = int(item_ui.spinBox_batchSize.value())
+            step_size = item_ui.clr_settings["step_size"] #batch updates in a half cycle
             step_size_ = step_size*int(np.round(nr_events_train_total / batch_size))#number of steps in one epoch
-            mode = str(self.comboBox_cycLrMethod.currentText())
+            mode = str(item_ui.comboBox_cycLrMethod.currentText())
             clr_iterations = nr_epochs*int(np.round(nr_events_train_total / batch_size))#number of cycles
             nr_cycles = (clr_iterations/step_size_)/2.0#number of cycles
-            gamma = self.clr_settings["gamma"] #gamma factor for the exp_range
+            gamma = item_ui.clr_settings["gamma"] #gamma factor for the exp_range
             
             #Generate text to diplay the settings used
+            text_info+="Nr. of training images: "+str(nr_events_train_total)+"\n"
             text_info+="base_lr: "+str(base_lr)+"\n"
             text_info+="max_lr: "+str(max_lr)+"\n"
             text_info+="batch_size: "+str(batch_size)+"\n"
@@ -1291,42 +1307,46 @@ class MainWindow(QtWidgets.QMainWindow):
             epochs_plot = clr_iterations/int(np.round(nr_events_train_total / batch_size))
           
         
-        elif self.radioButton_LrExpo.isChecked():
+        elif item_ui.radioButton_LrExpo.isChecked():
             text_info+="Exponentially decreased learning rates\n"
-            initial_lr = float(self.doubleSpinBox_expDecInitLr.value())
-            decay_steps = int(self.spinBox_expDecSteps.value())
-            decay_rate = float(self.doubleSpinBox_expDecRate.value())
-
+            initial_lr = float(item_ui.doubleSpinBox_expDecInitLr.value())
+            decay_steps = int(item_ui.spinBox_expDecSteps.value())
+            decay_rate = float(item_ui.doubleSpinBox_expDecRate.value())
+            batch_size = int(item_ui.spinBox_batchSize.value())
+            text_info+="Nr. of training images: "+str(nr_events_train_total)+"\n"
             text_info+="initial_lr: "+str(initial_lr)+"\n"
             text_info+="decay_steps: "+str(decay_steps)+"\n"
             text_info+="decay_rate: "+str(decay_rate)+"\n"
         
-            epochs_plot = np.array(range(nr_epochs))
+            #epochs_plot = np.array(range(nr_epochs))
+            epochs_plot = nr_epochs * int(np.round(nr_events_train_total / batch_size))
+            epochs_plot = np.arange(epochs_plot)
             exp_decay = aid_dl.exponentialDecay(initial_lr=initial_lr, decay_steps=decay_steps, decay_rate=decay_rate)
             exp_decay.iterations=epochs_plot#pass the number of clr iterations to the class
             learningrates = exp_decay.exp_decay()
+            epochs_plot = epochs_plot/int(np.round(nr_events_train_total / batch_size))
             #learningrates = aid_dl.exponentialDecay(epochs_plot,initial_lr=initial_lr, decay_steps=decay_steps, decay_rate=decay_rate)
         
         
         def refreshPlot():
             try: # try to empty the plot
-                self.popup_lrplot_ui.lr_plot.removeItem(self.lr_line2)   
+                item_ui.popup_lrplot_ui.lr_plot.removeItem(item_ui.lr_line2)   
             except:
                 pass
             #Get design settings
-            color = self.popup_lrplot_ui.pushButton_color.palette().button().color()
-            width = int(self.popup_lrplot_ui.spinBox_lineWidth.value())
+            color = item_ui.popup_lrplot_ui.pushButton_color.palette().button().color()
+            width = int(item_ui.popup_lrplot_ui.spinBox_lineWidth.value())
             color = list(color.getRgb())
             color = tuple(color)                
             pencolor=pg.mkPen(color, width=width)
             #define curve and add to plot  
-            self.lr_line2 = pg.PlotCurveItem(x=epochs_plot, y=learningrates,pen=pencolor)
-            self.popup_lrplot_ui.lr_plot.addItem(self.lr_line2)            
+            item_ui.lr_line2 = pg.PlotCurveItem(x=epochs_plot, y=learningrates,pen=pencolor)
+            item_ui.popup_lrplot_ui.lr_plot.addItem(item_ui.lr_line2)            
 
         refreshPlot()
-        self.popup_lrplot_ui.pushButton_refreshPlot.clicked.connect(refreshPlot)
-        self.popup_lrplot_ui.textBrowser_lrSettings.setText(text_info)
-        self.popup_lrplot.show()
+        item_ui.popup_lrplot_ui.pushButton_refreshPlot.clicked.connect(refreshPlot)
+        item_ui.popup_lrplot_ui.textBrowser_lrSettings.setText(text_info)
+        item_ui.popup_lrplot.show()
         
         
     def lossWeights_activated(self,on_or_off,listindex):
@@ -1803,21 +1823,32 @@ class MainWindow(QtWidgets.QMainWindow):
         #Collect urls to files that are checked
         SelectedFiles = []
         for rowPosition in range(rowCount):  
+            #get the filename/path
+            rtdc_path = str(self.table_dragdrop.cellWidget(rowPosition, 0).text())
             #get the index (celltype) of it
             index = int(self.table_dragdrop.cellWidget(rowPosition, 1).value())
-            #is it checked for train?
-            cb_t = self.table_dragdrop.item(rowPosition, 2)
             #How many Events contains dataset in total?
             nr_events = int(self.table_dragdrop.item(rowPosition, 5).text())
             #how many cells/epoch during training or validation?
             nr_events_epoch = int(self.table_dragdrop.item(rowPosition, 6).text())            
+            #should the dataset be randomized (shuffled?)            
+            shuffle = bool(self.table_dragdrop.item(rowPosition, 8).checkState())           
+            #should the images be zoomed in/out by a factor?
+            zoom_factor = float(self.table_dragdrop.item(rowPosition, 9).text())            
+            #should xtra_data be used for training?
+            xtra_in = bool(self.table_dragdrop.item(rowPosition, 10).checkState())           
 
+            #is it checked for train?
+            cb_t = self.table_dragdrop.item(rowPosition, 2)
             if cb_t.checkState() == QtCore.Qt.Checked and nr_events_epoch>0: #add to training files if the user wants more than 0 images per epoch
-                SelectedFiles.append({"nr_images":nr_events,"class":index,"TrainOrValid":"Train","nr_events":nr_events,"nr_events_epoch":nr_events_epoch})
-            
+                #SelectedFiles.append({"nr_images":nr_events,"class":index,"TrainOrValid":"Train","nr_events":nr_events,"nr_events_epoch":nr_events_epoch})
+                SelectedFiles.append({"rtdc_path":rtdc_path,"class":index,"TrainOrValid":"Train","nr_events":nr_events,"nr_events_epoch":nr_events_epoch,"shuffle":shuffle,"zoom_factor":zoom_factor,"xtra_in":xtra_in})
+
             cb_v = self.table_dragdrop.item(rowPosition, 3)
             if cb_v.checkState() == QtCore.Qt.Checked and nr_events_epoch>0:
-                SelectedFiles.append({"nr_images":nr_events,"class":index,"TrainOrValid":"Valid","nr_events":nr_events,"nr_events_epoch":nr_events_epoch})
+                #SelectedFiles.append({"nr_images":nr_events,"class":index,"TrainOrValid":"Valid","nr_events":nr_events,"nr_events_epoch":nr_events_epoch})
+                SelectedFiles.append({"rtdc_path":rtdc_path,"class":index,"TrainOrValid":"Valid","nr_events":nr_events,"nr_events_epoch":nr_events_epoch,"shuffle":shuffle,"zoom_factor":zoom_factor,"xtra_in":xtra_in})
+
         return SelectedFiles
 
 
@@ -2245,9 +2276,10 @@ class MainWindow(QtWidgets.QMainWindow):
 
             #zoom image such that longest side is 512
             factor = np.round(float(512.0/np.max(img.shape)),0)
-            #Get the order, specified in Options->Zoom Order
-            zoom_methods = [self.actionOrder0.isChecked(),self.actionOrder1.isChecked(),self.actionOrder2.isChecked(),self.actionOrder3.isChecked(),self.actionOrder4.isChecked(),self.actionOrder5.isChecked()]
-            order = np.where(np.array(zoom_methods)==True)[0]
+            #Get the order, specified in Image processing->Zoom Order
+            order = int(self.comboBox_zoomOrder.currentIndex()) #the combobox-index is already the zoom order
+            #zoom_methods = [self.actionOrder0.isChecked(),self.actionOrder1.isChecked(),self.actionOrder2.isChecked(),self.actionOrder3.isChecked(),self.actionOrder4.isChecked(),self.actionOrder5.isChecked()]
+            #order = np.where(np.array(zoom_methods)==True)[0]
             if channels==1:
                 img_zoom = ndimage.zoom(img, zoom=factor,order=int(order)) #Order 0 means nearest neighbor interplation
             if channels==3:
@@ -2287,9 +2319,9 @@ class MainWindow(QtWidgets.QMainWindow):
                 if self.actionVerbose.isChecked()==True:
                     print("Set resize factor to 1. Before, it was: "+str(factor))     
             #img_crop = zoom(img_crop,factor)
-            #Get the order, specified in Options->Zoom Order
-            zoom_methods = [self.actionOrder0.isChecked(),self.actionOrder1.isChecked(),self.actionOrder2.isChecked(),self.actionOrder3.isChecked(),self.actionOrder4.isChecked(),self.actionOrder5.isChecked()]
-            order = np.where(np.array(zoom_methods)==True)[0]
+            #Get the order, specified in Image processing->Zoom Order
+            #zoom_methods = [self.actionOrder0.isChecked(),self.actionOrder1.isChecked(),self.actionOrder2.isChecked(),self.actionOrder3.isChecked(),self.actionOrder4.isChecked(),self.actionOrder5.isChecked()]
+            order = int(self.comboBox_zoomOrder.currentIndex()) #the combobox-index is already the zoom order
             if channels==1:
                 img_crop = ndimage.zoom(img_crop, zoom=factor,order=int(order))
             if channels==3:
@@ -2452,8 +2484,9 @@ class MainWindow(QtWidgets.QMainWindow):
             #zoom image such that longest side is 64              
             factor = 1#float(64.0/np.max(img.shape))
             #Get the order, specified in Options->Zoom Order
-            zoom_methods = [self.actionOrder0.isChecked(),self.actionOrder1.isChecked(),self.actionOrder2.isChecked(),self.actionOrder3.isChecked(),self.actionOrder4.isChecked(),self.actionOrder5.isChecked()]
-            order = np.where(np.array(zoom_methods)==True)[0]
+            order = int(self.comboBox_zoomOrder.currentIndex()) #the combobox-index is already the zoom order
+            #zoom_methods = [self.actionOrder0.isChecked(),self.actionOrder1.isChecked(),self.actionOrder2.isChecked(),self.actionOrder3.isChecked(),self.actionOrder4.isChecked(),self.actionOrder5.isChecked()]
+            #order = np.where(np.array(zoom_methods)==True)[0]
 
             if channels==1:
                 img_zoom = ndimage.zoom(img, zoom=factor,order=int(order)) #Order 0 means nearest neighbor interplation
@@ -3926,7 +3959,7 @@ class MainWindow(QtWidgets.QMainWindow):
                 text2 = text2+ "'Input image size'  in GUI was changed accordingly\n"
             
             #check that the nr. of classes are equal to the model out put
-            SelectedFiles = self.items_clicked()
+            SelectedFiles = self.items_clicked_no_rtdc_ds()
             indices = [s["class"] for s in SelectedFiles]
             nr_classes = len(set(indices))
             if int(nr_classes)==int(out_dim):
@@ -4581,8 +4614,9 @@ class MainWindow(QtWidgets.QMainWindow):
                 if self.actionDataToRam.isChecked():
                     color_mode = self.get_color_mode()
                     zoom_factors = [selectedfile["zoom_factor"] for selectedfile in SelectedFiles]
-                    zoom_order = [self.actionOrder0.isChecked(),self.actionOrder1.isChecked(),self.actionOrder2.isChecked(),self.actionOrder3.isChecked(),self.actionOrder4.isChecked(),self.actionOrder5.isChecked()]
-                    zoom_order = int(np.where(np.array(zoom_order)==True)[0])
+                    #zoom_order = [self.actionOrder0.isChecked(),self.actionOrder1.isChecked(),self.actionOrder2.isChecked(),self.actionOrder3.isChecked(),self.actionOrder4.isChecked(),self.actionOrder5.isChecked()]
+                    #zoom_order = int(np.where(np.array(zoom_order)==True)[0])
+                    zoom_order = int(self.comboBox_zoomOrder.currentIndex()) #the combobox-index is already the zoom order
                     dic = aid_img.crop_imgs_to_ram(list(SelectedFiles),cropsize2,zoom_factors=zoom_factors,zoom_order=zoom_order,color_mode=color_mode)
                     self.ram = dic 
                     #Finally, activate the 'Fit model' button again
@@ -4776,8 +4810,9 @@ class MainWindow(QtWidgets.QMainWindow):
                 cycLrMin = []
                 cycLrMax = []
             cycLrMethod = str(self.comboBox_cycLrMethod.currentText())
+            #clr_settings = self.fittingpopups_ui[listindex].clr_settings.copy()
             cycLrGamma = self.clr_settings["gamma"]            
-            SelectedFiles = self.items_clicked()#to compute cycLrStepSize, the number of training images is needed
+            SelectedFiles = self.items_clicked_no_rtdc_ds()#to compute cycLrStepSize, the number of training images is needed
             cycLrStepSize = aid_dl.get_cyclStepSize(SelectedFiles,self.clr_settings["step_size"],batchSize_expert)
             #put clr_settings onto fittingpopup,
             self.fittingpopups_ui[listindex].clr_settings = self.clr_settings.copy()#assign a copy. Otherwise values in both dicts are changed when manipulating one dict            
@@ -5004,8 +5039,10 @@ class MainWindow(QtWidgets.QMainWindow):
             nr_events_epoch_train = [selectedfile["nr_events_epoch"] for selectedfile in SelectedFiles_train]
             rtdc_path_train = [selectedfile["rtdc_path"] for selectedfile in SelectedFiles_train]
             zoom_factors_train = [selectedfile["zoom_factor"] for selectedfile in SelectedFiles_train]
-            zoom_order = [self.actionOrder0.isChecked(),self.actionOrder1.isChecked(),self.actionOrder2.isChecked(),self.actionOrder3.isChecked(),self.actionOrder4.isChecked(),self.actionOrder5.isChecked()]
-            zoom_order = int(np.where(np.array(zoom_order)==True)[0])
+            #zoom_order = [self.actionOrder0.isChecked(),self.actionOrder1.isChecked(),self.actionOrder2.isChecked(),self.actionOrder3.isChecked(),self.actionOrder4.isChecked(),self.actionOrder5.isChecked()]
+            #zoom_order = int(np.where(np.array(zoom_order)==True)[0])
+            zoom_order = int(self.comboBox_zoomOrder.currentIndex()) #the combobox-index is already the zoom order
+
             shuffle_train = [selectedfile["shuffle"] for selectedfile in SelectedFiles_train]
             xtra_in = set([selectedfile["xtra_in"] for selectedfile in SelectedFiles_train])   
             if len(xtra_in)>1:# False and True is present. Not supported
@@ -5055,93 +5092,6 @@ class MainWindow(QtWidgets.QMainWindow):
         
             Para_dict = pd.DataFrame()
             def update_para_dict():
-#                norm = str(self.fittingpopups_ui[listindex].comboBox_Normalization_pop.currentText())
-#                nr_epochs = int(self.fittingpopups_ui[listindex].spinBox_NrEpochs_pop.value())
-#                keras_refresh_nr_epochs = int(self.fittingpopups_ui[listindex].spinBox_RefreshAfterEpochs_pop.value())
-#                h_flip = bool(self.fittingpopups_ui[listindex].checkBox_HorizFlip_pop.isChecked())
-#                v_flip = bool(self.fittingpopups_ui[listindex].checkBox_VertFlip_pop.isChecked())
-#                rotation = float(self.fittingpopups_ui[listindex].lineEdit_Rotation_pop.text())
-#         
-#                width_shift = float(self.fittingpopups_ui[listindex].lineEdit_widthShift_pop.text())
-#                height_shift = float(self.fittingpopups_ui[listindex].lineEdit_heightShift_pop.text())
-#                zoom = float(self.fittingpopups_ui[listindex].lineEdit_zoomRange_pop.text())
-#                shear = float(self.fittingpopups_ui[listindex].lineEdit_shearRange_pop.text())
-#                
-#                brightness_refresh_nr_epochs = int(self.fittingpopups_ui[listindex].spinBox_RefreshAfterNrEpochs_pop.value())
-#                brightness_add_lower = float(self.fittingpopups_ui[listindex].spinBox_PlusLower_pop.value())
-#                brightness_add_upper = float(self.fittingpopups_ui[listindex].spinBox_PlusUpper_pop.value())
-#                brightness_mult_lower = float(self.fittingpopups_ui[listindex].doubleSpinBox_MultLower_pop.value())
-#                brightness_mult_upper = float(self.fittingpopups_ui[listindex].doubleSpinBox_MultUpper_pop.value())
-#                gaussnoise_mean = float(self.fittingpopups_ui[listindex].doubleSpinBox_GaussianNoiseMean_pop.value())
-#                gaussnoise_scale = float(self.fittingpopups_ui[listindex].doubleSpinBox_GaussianNoiseScale_pop.value())
-#    
-#                contrast_on = bool(self.fittingpopups_ui[listindex].checkBox_contrast_pop.isChecked())
-#                contrast_lower = float(self.fittingpopups_ui[listindex].doubleSpinBox_contrastLower_pop.value())
-#                contrast_higher = float(self.fittingpopups_ui[listindex].doubleSpinBox_contrastHigher_pop.value())
-#                saturation_on = bool(self.fittingpopups_ui[listindex].checkBox_saturation_pop.isChecked())
-#                saturation_lower = float(self.fittingpopups_ui[listindex].doubleSpinBox_saturationLower_pop.value())
-#                saturation_higher = float(self.fittingpopups_ui[listindex].doubleSpinBox_saturationHigher_pop.value())
-#                hue_on = bool(self.fittingpopups_ui[listindex].checkBox_hue_pop.isChecked())
-#                hue_delta = float(self.fittingpopups_ui[listindex].doubleSpinBox_hueDelta_pop.value())
-#    
-#                avgBlur_on = bool(self.fittingpopups_ui[listindex].checkBox_avgBlur_pop.isChecked())        
-#                avgBlur_min = int(self.fittingpopups_ui[listindex].spinBox_avgBlurMin_pop.value())
-#                avgBlur_max = int(self.fittingpopups_ui[listindex].spinBox_avgBlurMax_pop.value())
-#                gaussBlur_on = bool(self.fittingpopups_ui[listindex].checkBox_gaussBlur_pop.isChecked())        
-#                gaussBlur_min = int(self.fittingpopups_ui[listindex].spinBox_gaussBlurMin_pop.value())
-#                gaussBlur_max = int(self.fittingpopups_ui[listindex].spinBox_gaussBlurMax_pop.value())
-#                motionBlur_on = bool(self.fittingpopups_ui[listindex].checkBox_motionBlur_pop.isChecked())        
-#                motionBlur_kernel = str(self.fittingpopups_ui[listindex].lineEdit_motionBlurKernel_pop.text())
-#                motionBlur_angle = str(self.fittingpopups_ui[listindex].lineEdit_motionBlurAngle_pop.text())
-#                motionBlur_kernel = tuple(ast.literal_eval(motionBlur_kernel)) #translate string in the lineEdits to a tuple
-#                motionBlur_angle = tuple(ast.literal_eval(motionBlur_angle)) #translate string in the lineEdits to a tuple
-#    
-#                expert_mode = bool(self.fittingpopups_ui[listindex].groupBox_expertMode_pop.isChecked())
-#                batchSize_expert = int(self.fittingpopups_ui[listindex].spinBox_batchSize_pop.value())
-#                epochs_expert = int(self.fittingpopups_ui[listindex].spinBox_epochs_pop.value())
-#                
-#                learning_rate_expert_on = bool(self.fittingpopups_ui[listindex].groupBox_learningRate_pop.isChecked())
-#
-#                learning_rate_const_on = bool(self.fittingpopups_ui[listindex].radioButton_LrConst.isChecked())
-#                learning_rate_const = float(self.fittingpopups_ui[listindex].doubleSpinBox_learningRate.value())
-#
-#                learning_rate_cycLR_on = bool(self.fittingpopups_ui[listindex].radioButton_LrCycl.isChecked())
-#                try:
-#                    cycLrMin = float(self.fittingpopups_ui[listindex].lineEdit_cycLrMin.text())
-#                    cycLrMax = float(self.fittingpopups_ui[listindex].lineEdit_cycLrMax.text())
-#                except:
-#                    cycLrMin = []
-#                    cycLrMax = []
-#                cycLrMethod = str(self.fittingpopups_ui[listindex].comboBox_cycLrMethod.currentText())
-#
-#                learning_rate_expo_on = bool(self.fittingpopups_ui[listindex].radioButton_LrExpo.isChecked())
-#                expDecInitLr = float(self.fittingpopups_ui[listindex].doubleSpinBox_expDecInitLr.value())
-#                expDecSteps = int(self.fittingpopups_ui[listindex].spinBox_expDecSteps.value())
-#                expDecRate = float(self.fittingpopups_ui[listindex].doubleSpinBox_expDecRate.value())
-#
-#                loss_expert_on = bool(self.fittingpopups_ui[listindex].checkBox_expt_loss_pop.isChecked())
-#                loss_expert = str(self.fittingpopups_ui[listindex].comboBox_expt_loss_pop.currentText())
-#                optimizer_expert_on = bool(self.fittingpopups_ui[listindex].checkBox_optimizer_pop.isChecked())
-#                optimizer_expert = str(self.fittingpopups_ui[listindex].comboBox_optimizer.currentText())
-#                #optimizer_settings = self.fittingpopups_ui[listindex].optimizer_settings.copy()#make a copy, to make sure that changed in the UI are not used immediately, but only after hitting apply at next epoch
-#                paddingMode = str(self.fittingpopups_ui[listindex].comboBox_paddingMode_pop.currentText())
-#    
-#                train_last_layers = bool(self.fittingpopups_ui[listindex].checkBox_trainLastNOnly_pop.isChecked())             
-#                train_last_layers_n = int(self.fittingpopups_ui[listindex].spinBox_trainLastNOnly_pop.value())              
-#                train_dense_layers = bool(self.fittingpopups_ui[listindex].checkBox_trainDenseOnly_pop.isChecked())             
-#                dropout_expert_on = bool(self.fittingpopups_ui[listindex].checkBox_dropout_pop.isChecked())             
-#                try:
-#                    dropout_expert = str(self.fittingpopups_ui[listindex].lineEdit_dropout_pop.text()) #due to the validator, there are no squ.brackets
-#                    dropout_expert = "["+dropout_expert+"]"
-#                    dropout_expert = ast.literal_eval(dropout_expert)
-#                except:
-#                    dropout_expert = []
-#                #Issue here! This toggles call of lossweights_popup! Can this be prevented?
-#                lossW_expert_on = bool(self.fittingpopups_ui[listindex].checkBox_lossW.isChecked())             
-#                lossW_expert = str(self.fittingpopups_ui[listindex].lineEdit_lossW.text())             
-#                class_weight = self.get_class_weight(self.fittingpopups_ui[listindex].SelectedFiles,lossW_expert)
-                
-                
                 #Document changes in the meta-file
                 Para_dict["AIDeveloper_Version"]=VERSION,
                 Para_dict["model_zoo_version"]=model_zoo_version,
@@ -5160,6 +5110,7 @@ class MainWindow(QtWidgets.QMainWindow):
                 Para_dict["Continued_Fitting_From"]=load_modelname,                        
                 Para_dict["Input image size"]=crop,
                 Para_dict["Color Mode"]=color_mode,
+                Para_dict["Zoom order"]=zoom_order,                
                 Para_dict["Device"]=deviceSelected,
                 Para_dict["gpu_used"]=gpu_used,
                 Para_dict["gpu_memory"]=gpu_memory,
@@ -5214,6 +5165,7 @@ class MainWindow(QtWidgets.QMainWindow):
                 Para_dict["cycLrMin"]=cycLrMin,
                 Para_dict["cycLrMax"]=cycLrMax,
                 Para_dict["cycLrMethod"] = cycLrMethod,
+                Para_dict["clr_settings"] = self.fittingpopups_ui[listindex].clr_settings,
                 
                 Para_dict["learning_rate_expo_on"]=learning_rate_expo_on,
                 Para_dict["expDecInitLr"]=expDecInitLr,
@@ -5285,8 +5237,9 @@ class MainWindow(QtWidgets.QMainWindow):
             nr_events_epoch_valid = [selectedfile["nr_events_epoch"] for selectedfile in SelectedFiles_valid]
             rtdc_path_valid = [selectedfile["rtdc_path"] for selectedfile in SelectedFiles_valid]
             zoom_factors_valid = [selectedfile["zoom_factor"] for selectedfile in SelectedFiles_valid]
-            zoom_order = [self.actionOrder0.isChecked(),self.actionOrder1.isChecked(),self.actionOrder2.isChecked(),self.actionOrder3.isChecked(),self.actionOrder4.isChecked(),self.actionOrder5.isChecked()]
-            zoom_order = int(np.where(np.array(zoom_order)==True)[0])
+            #zoom_order = [self.actionOrder0.isChecked(),self.actionOrder1.isChecked(),self.actionOrder2.isChecked(),self.actionOrder3.isChecked(),self.actionOrder4.isChecked(),self.actionOrder5.isChecked()]
+            #zoom_order = int(np.where(np.array(zoom_order)==True)[0])
+            zoom_order = int(self.comboBox_zoomOrder.currentIndex()) #the combobox-index is already the zoom order
             shuffle_valid = [selectedfile["shuffle"] for selectedfile in SelectedFiles_valid]
             xtra_in = set([selectedfile["xtra_in"] for selectedfile in SelectedFiles_valid])   
             if len(xtra_in)>1:# False and True is present. Not supported
@@ -5320,12 +5273,12 @@ class MainWindow(QtWidgets.QMainWindow):
             if bool(self.actionExport_Original.isChecked())==True:
                 print("Export original images")
                 save_cropped = False
-                aid_bin.write_rtdc(new_modelname.split(".model")[0]+'_Valid_Data.rtdc',rtdc_path_valid,X_valid,Indices,cropped=save_cropped,color_mode=self.get_color_mode())
+                aid_bin.write_rtdc(new_modelname.split(".model")[0]+'_Valid_Data.rtdc',rtdc_path_valid,X_valid,Indices,cropped=save_cropped,color_mode=self.get_color_mode(),xtra_in=xtra_valid)
     
             elif bool(self.actionExport_Cropped.isChecked())==True:
                 print("Export cropped images")
                 save_cropped = True
-                aid_bin.write_rtdc(new_modelname.split(".model")[0]+'_Valid_Data.rtdc',rtdc_path_valid,X_valid,Indices,cropped=save_cropped,color_mode=self.get_color_mode())
+                aid_bin.write_rtdc(new_modelname.split(".model")[0]+'_Valid_Data.rtdc',rtdc_path_valid,X_valid,Indices,cropped=save_cropped,color_mode=self.get_color_mode(),xtra_in=xtra_valid)
     
             elif bool(self.actionExport_Off.isChecked())==True:
                 print("Exporting is turned off")
@@ -5378,7 +5331,7 @@ class MainWindow(QtWidgets.QMainWindow):
             ####################Update the PopupFitting########################
             self.fittingpopups_ui[listindex].lineEdit_modelname_pop.setText(new_modelname) #set the progress bar to zero
             self.fittingpopups_ui[listindex].spinBox_imagecrop_pop.setValue(crop)
-            self.fittingpopups_ui[listindex].spinBox_NrEpochs_pop.setValue(nr_epochs)
+            self.fittingpopups_ui[listindex].spinBox_NrEpochs.setValue(nr_epochs)
             self.fittingpopups_ui[listindex].comboBox_ModelSelection_pop.addItems(self.predefined_models)
             chosen_model = str(self.comboBox_ModelSelection.currentText())
             index = self.fittingpopups_ui[listindex].comboBox_ModelSelection_pop.findText(chosen_model, QtCore.Qt.MatchFixedString)
@@ -5392,6 +5345,8 @@ class MainWindow(QtWidgets.QMainWindow):
             index = self.fittingpopups_ui[listindex].comboBox_paddingMode_pop.findText(paddingMode, QtCore.Qt.MatchFixedString)
             if index >= 0:
                 self.fittingpopups_ui[listindex].comboBox_paddingMode_pop.setCurrentIndex(index)
+            #zoom_order
+            self.fittingpopups_ui[listindex].comboBox_zoomOrder.setCurrentIndex(zoom_order)
             #CPU setting
             self.fittingpopups_ui[listindex].comboBox_cpu_pop.addItem("Default CPU")        
             if gpu_used==False:
@@ -5469,8 +5424,8 @@ class MainWindow(QtWidgets.QMainWindow):
                 self.fittingpopups_ui[listindex].lineEdit_motionBlurAngle_pop.setText(str(motionBlur_angle[0])+","+str(motionBlur_angle[1]))
     
             self.fittingpopups_ui[listindex].groupBox_expertMode_pop.setChecked(expert_mode)
-            self.fittingpopups_ui[listindex].spinBox_batchSize_pop.setValue(batchSize_expert)
-            self.fittingpopups_ui[listindex].spinBox_epochs_pop.setValue(epochs_expert)
+            self.fittingpopups_ui[listindex].spinBox_batchSize.setValue(batchSize_expert)
+            self.fittingpopups_ui[listindex].spinBox_epochs.setValue(epochs_expert)
     
             self.fittingpopups_ui[listindex].groupBox_learningRate_pop.setChecked(learning_rate_expert_on)
             self.fittingpopups_ui[listindex].radioButton_LrConst.setChecked(learning_rate_const_on)
@@ -5691,7 +5646,7 @@ class MainWindow(QtWidgets.QMainWindow):
                                 verbose = 0                            
     
                             if self.fittingpopups_ui[listindex].checkBox_ApplyNextEpoch.isChecked():
-                                nr_epochs = int(self.fittingpopups_ui[listindex].spinBox_NrEpochs_pop.value())
+                                nr_epochs = int(self.fittingpopups_ui[listindex].spinBox_NrEpochs.value())
                                 #Keras stuff
                                 keras_refresh_nr_epochs = int(self.fittingpopups_ui[listindex].spinBox_RefreshAfterEpochs_pop.value())                                
                                 h_flip = bool(self.fittingpopups_ui[listindex].checkBox_HorizFlip_pop.isChecked())
@@ -5736,8 +5691,8 @@ class MainWindow(QtWidgets.QMainWindow):
     
                                 #Expert mode stuff
                                 expert_mode = bool(self.fittingpopups_ui[listindex].groupBox_expertMode_pop.isChecked())
-                                batchSize_expert = int(self.fittingpopups_ui[listindex].spinBox_batchSize_pop.value())
-                                epochs_expert = int(self.fittingpopups_ui[listindex].spinBox_epochs_pop.value())
+                                batchSize_expert = int(self.fittingpopups_ui[listindex].spinBox_batchSize.value())
+                                epochs_expert = int(self.fittingpopups_ui[listindex].spinBox_epochs.value())
                                 
                                 learning_rate_expert_on = bool(self.fittingpopups_ui[listindex].groupBox_learningRate_pop.isChecked())
                                 learning_rate_const_on = bool(self.fittingpopups_ui[listindex].radioButton_LrConst.isChecked())
@@ -5751,7 +5706,10 @@ class MainWindow(QtWidgets.QMainWindow):
                                     cycLrMin = []
                                     cycLrMax = []
                                 cycLrMethod = str(self.fittingpopups_ui[listindex].comboBox_cycLrMethod.currentText())
-                
+                                clr_settings = self.fittingpopups_ui[listindex].clr_settings.copy() #Get a copy of the current optimizer_settings. .copy prevents that changes in the UI have immediate effect
+                                cycLrStepSize = aid_dl.get_cyclStepSize(SelectedFiles,clr_settings["step_size"],batchSize_expert)
+                                cycLrGamma = clr_settings["gamma"]
+
                                 learning_rate_expo_on = bool(self.fittingpopups_ui[listindex].radioButton_LrExpo.isChecked())
                                 expDecInitLr = float(self.fittingpopups_ui[listindex].doubleSpinBox_expDecInitLr.value())
                                 expDecSteps = int(self.fittingpopups_ui[listindex].spinBox_expDecSteps.value())
@@ -6205,7 +6163,7 @@ class MainWindow(QtWidgets.QMainWindow):
                                     Index,Histories,Saved,Stopwatch,LearningRate = [],[],[],[],[]#reset the lists
                                     
                                 #Get a sensible frequency for saving the dataframe (every 20s)
-                                elif t2-t1>20:                                   
+                                elif t2-t1>int(self.fittingpopups_ui[listindex].spinBox_saveMetaEvery.value()):                                   
                                 #elif counter%50==0:  #otherwise save the history to excel after each n epochs
                                     DF1 = [pd.DataFrame(h).iloc[[-1]] for h in Histories] #just in case the nb_epoch in .fit() is >1, only save the last history item, beacuse this would a  model that could be saved 
                                     DF1 = pd.concat(DF1)
@@ -6291,7 +6249,7 @@ class MainWindow(QtWidgets.QMainWindow):
                                     Index = []#reset the Index list
                                     
                                 #Get a sensible frequency for saving the dataframe (every 20s)
-                                elif t2-t1>20:                                    
+                                elif t2-t1>int(self.fittingpopups_ui[listindex].spinBox_saveMetaEvery.value()):                                    
                                     for i in range(len(HISTORIES)):
                                         Histories = HISTORIES[i]
                                         Saved = SAVED[i]
@@ -6502,6 +6460,7 @@ class MainWindow(QtWidgets.QMainWindow):
         #Cyclical learning rate extra settings
         self.fittingpopups_ui[listindex].pushButton_cycLrPopup.clicked.connect(lambda: self.popup_clr_settings(listindex))
         self.fittingpopups_ui[listindex].comboBox_optimizer.currentTextChanged.connect(lambda: self.expert_optimizer_changed(optimizer_text=self.fittingpopups_ui[listindex].comboBox_optimizer.currentText(),listindex=listindex))
+        self.fittingpopups_ui[listindex].pushButton_LR_plot.clicked.connect(lambda: self.popup_lr_plot(listindex))
 
         self.fittingpopups_ui[listindex].doubleSpinBox_learningRate.valueChanged.connect(lambda: self.expert_lr_changed(value=self.fittingpopups_ui[listindex].doubleSpinBox_learningRate.value(),optimizer_text=self.fittingpopups_ui[listindex].comboBox_optimizer.currentText(),listindex=listindex))
         self.fittingpopups_ui[listindex].doubleSpinBox_expDecInitLr.valueChanged.connect(lambda: self.expert_lr_changed(value=self.fittingpopups_ui[listindex].doubleSpinBox_learningRate.value(),optimizer_text=self.fittingpopups_ui[listindex].comboBox_optimizer.currentText(),listindex=listindex))
@@ -6882,7 +6841,7 @@ class MainWindow(QtWidgets.QMainWindow):
             lossW_expert = str(self.lineEdit_lossW.text())
     
             #To get the class weights (loss), the SelectedFiles are required 
-            SelectedFiles = self.items_clicked()
+            SelectedFiles = self.items_clicked_no_rtdc_ds()
             #Check if xtra_data should be used for training
             xtra_in = [s["xtra_in"] for s in SelectedFiles]
             if len(set(xtra_in))==1:
@@ -7023,8 +6982,9 @@ class MainWindow(QtWidgets.QMainWindow):
             nr_events_epoch_train = [selectedfile["nr_events_epoch"] for selectedfile in SelectedFiles_train]
             rtdc_path_train = [selectedfile["rtdc_path"] for selectedfile in SelectedFiles_train]
             zoom_factors_train = [selectedfile["zoom_factor"] for selectedfile in SelectedFiles_train]
-            zoom_order = [self.actionOrder0.isChecked(),self.actionOrder1.isChecked(),self.actionOrder2.isChecked(),self.actionOrder3.isChecked(),self.actionOrder4.isChecked(),self.actionOrder5.isChecked()]
-            zoom_order = int(np.where(np.array(zoom_order)==True)[0])
+            #zoom_order = [self.actionOrder0.isChecked(),self.actionOrder1.isChecked(),self.actionOrder2.isChecked(),self.actionOrder3.isChecked(),self.actionOrder4.isChecked(),self.actionOrder5.isChecked()]
+            #zoom_order = int(np.where(np.array(zoom_order)==True)[0])
+            zoom_order = int(self.comboBox_zoomOrder.currentIndex()) #the combobox-index is already the zoom order
             shuffle_train = [selectedfile["shuffle"] for selectedfile in SelectedFiles_train]
             xtra_in = set([selectedfile["xtra_in"] for selectedfile in SelectedFiles_train])   
             if len(xtra_in)>1:# False and True is present. Not supported
@@ -7077,8 +7037,9 @@ class MainWindow(QtWidgets.QMainWindow):
             nr_events_epoch_valid = [selectedfile["nr_events_epoch"] for selectedfile in SelectedFiles_valid]
             rtdc_path_valid = [selectedfile["rtdc_path"] for selectedfile in SelectedFiles_valid]
             zoom_factors_valid = [selectedfile["zoom_factor"] for selectedfile in SelectedFiles_valid]
-            zoom_order = [self.actionOrder0.isChecked(),self.actionOrder1.isChecked(),self.actionOrder2.isChecked(),self.actionOrder3.isChecked(),self.actionOrder4.isChecked(),self.actionOrder5.isChecked()]
-            zoom_order = int(np.where(np.array(zoom_order)==True)[0])
+            #zoom_order = [self.actionOrder0.isChecked(),self.actionOrder1.isChecked(),self.actionOrder2.isChecked(),self.actionOrder3.isChecked(),self.actionOrder4.isChecked(),self.actionOrder5.isChecked()]
+            #zoom_order = int(np.where(np.array(zoom_order)==True)[0])
+            zoom_order = int(self.comboBox_zoomOrder.currentIndex()) #the combobox-index is already the zoom order            
             shuffle_valid = [selectedfile["shuffle"] for selectedfile in SelectedFiles_valid]
             xtra_in = set([selectedfile["xtra_in"] for selectedfile in SelectedFiles_valid])   
             if len(xtra_in)>1:# False and True is present. Not supported
@@ -7459,7 +7420,7 @@ class MainWindow(QtWidgets.QMainWindow):
 
         #most of it should be similar to action_fit_model_worker
         #Used files go to a separate sheet on the MetaFile.xlsx
-        SelectedFiles = self.items_clicked()
+        SelectedFiles = self.items_clicked_no_rtdc_ds()
         #Collect all information about the fitting routine that was user defined
         crop = int(self.spinBox_imagecrop.value())          
         norm = str(self.comboBox_Normalization.currentText())
@@ -7529,8 +7490,9 @@ class MainWindow(QtWidgets.QMainWindow):
         nr_events_epoch = len(indices)*[10] #[selectedfile["nr_events_epoch"] for selectedfile in SelectedFiles]
         rtdc_path = [selectedfile["rtdc_path"] for selectedfile in SelectedFiles]
         zoom_factors = [selectedfile["zoom_factor"] for selectedfile in SelectedFiles]
-        zoom_order = [self.actionOrder0.isChecked(),self.actionOrder1.isChecked(),self.actionOrder2.isChecked(),self.actionOrder3.isChecked(),self.actionOrder4.isChecked(),self.actionOrder5.isChecked()]
-        zoom_order = int(np.where(np.array(zoom_order)==True)[0])
+        #zoom_order = [self.actionOrder0.isChecked(),self.actionOrder1.isChecked(),self.actionOrder2.isChecked(),self.actionOrder3.isChecked(),self.actionOrder4.isChecked(),self.actionOrder5.isChecked()]
+        #zoom_order = int(np.where(np.array(zoom_order)==True)[0])
+        zoom_order = int(self.comboBox_zoomOrder.currentIndex()) #the combobox-index is already the zoom order
         shuffle = [selectedfile["shuffle"] for selectedfile in SelectedFiles]
         #If the scaling method is "divide by mean and std of the whole training set":
         if norm == "StdScaling using mean and std of all training data":
@@ -7696,8 +7658,10 @@ class MainWindow(QtWidgets.QMainWindow):
             #zoom image such that longest side is 64              
             factor = 1#float(64.0/np.max(img.shape))
             #Get the order, specified in Options->Zoom Order
-            zoom_methods = [self.actionOrder0.isChecked(),self.actionOrder1.isChecked(),self.actionOrder2.isChecked(),self.actionOrder3.isChecked(),self.actionOrder4.isChecked(),self.actionOrder5.isChecked()]
-            order = np.where(np.array(zoom_methods)==True)[0]
+            #zoom_methods = [self.actionOrder0.isChecked(),self.actionOrder1.isChecked(),self.actionOrder2.isChecked(),self.actionOrder3.isChecked(),self.actionOrder4.isChecked(),self.actionOrder5.isChecked()]
+            #order = np.where(np.array(zoom_methods)==True)[0]
+            order = int(self.comboBox_zoomOrder.currentIndex()) #the combobox-index is already the zoom order
+
             if channels==1:
                 img_zoom = ndimage.zoom(img, zoom=factor,order=int(order))
             if channels==3:
@@ -7758,7 +7722,7 @@ class MainWindow(QtWidgets.QMainWindow):
 
         #most of it should be similar to action_fit_model_worker
         #Used files go to a separate sheet on the MetaFile.xlsx
-        SelectedFiles = self.items_clicked()
+        SelectedFiles = self.items_clicked_no_rtdc_ds()
         #Collect all information about the fitting routine that was user defined
         crop = int(self.fittingpopups_ui[listindex].spinBox_imagecrop_pop.value())          
         norm = str(self.fittingpopups_ui[listindex].comboBox_Normalization_pop.currentText())
@@ -7828,8 +7792,10 @@ class MainWindow(QtWidgets.QMainWindow):
         nr_events_epoch = len(indices)*[10] #[selectedfile["nr_events_epoch"] for selectedfile in SelectedFiles]
         rtdc_path = [selectedfile["rtdc_path"] for selectedfile in SelectedFiles]
         zoom_factors = [selectedfile["zoom_factor"] for selectedfile in SelectedFiles]
-        zoom_order = [self.actionOrder0.isChecked(),self.actionOrder1.isChecked(),self.actionOrder2.isChecked(),self.actionOrder3.isChecked(),self.actionOrder4.isChecked(),self.actionOrder5.isChecked()]
-        zoom_order = int(np.where(np.array(zoom_order)==True)[0])
+        #zoom_order = [self.actionOrder0.isChecked(),self.actionOrder1.isChecked(),self.actionOrder2.isChecked(),self.actionOrder3.isChecked(),self.actionOrder4.isChecked(),self.actionOrder5.isChecked()]
+        #zoom_order = int(np.where(np.array(zoom_order)==True)[0])
+        zoom_order = int(self.comboBox_zoomOrder.currentIndex()) #the combobox-index is already the zoom order
+        
         shuffle = [selectedfile["shuffle"] for selectedfile in SelectedFiles]
         xtra_in = set([selectedfile["xtra_in"] for selectedfile in SelectedFiles])   
         if len(xtra_in)>1:# False and True is present. Not supported
@@ -7992,8 +7958,9 @@ class MainWindow(QtWidgets.QMainWindow):
             #zoom image such that longest side is 64              
             factor = 1#float(64.0/np.max(img.shape))
             #Get the order, specified in Options->Zoom Order
-            zoom_methods = [self.actionOrder0.isChecked(),self.actionOrder1.isChecked(),self.actionOrder2.isChecked(),self.actionOrder3.isChecked(),self.actionOrder4.isChecked(),self.actionOrder5.isChecked()]
-            order = np.where(np.array(zoom_methods)==True)[0]
+            #zoom_methods = [self.actionOrder0.isChecked(),self.actionOrder1.isChecked(),self.actionOrder2.isChecked(),self.actionOrder3.isChecked(),self.actionOrder4.isChecked(),self.actionOrder5.isChecked()]
+            #order = np.where(np.array(zoom_methods)==True)[0]
+            zoom_order = int(self.comboBox_zoomOrder.currentIndex()) #the combobox-index is already the zoom order
             if channels==1:
                 img_zoom = ndimage.zoom(img, zoom=factor,order=int(order))
             if channels==3:
@@ -8783,11 +8750,7 @@ class MainWindow(QtWidgets.QMainWindow):
                 
         msg = QtWidgets.QMessageBox()
         msg.setIcon(QtWidgets.QMessageBox.Information)       
-        msg.setText("This function does only refurbish the window 'Drag and \
-                    drop .rtdc files here'. To load the corresponding model \
-                    please use 'Load and continue' in the 'Define Model' -tab. \
-                    Image augmentation parameters have to be adjusted manually.")
-        msg.setWindowTitle("Only Drag and drop table affected!")
+        msg.setText(tooltips["msg_loadSession"])
         msg.setStandardButtons(QtWidgets.QMessageBox.Ok)
         msg.exec_()
 
@@ -9031,9 +8994,10 @@ class MainWindow(QtWidgets.QMainWindow):
             #Collect information for image processing
             cropsize = self.spinBox_imagecrop.value()
             color_mode = str(self.comboBox_loadedRGBorGray.currentText())
-            zoom_methods = [self.actionOrder0.isChecked(),self.actionOrder1.isChecked(),self.actionOrder2.isChecked(),self.actionOrder3.isChecked(),self.actionOrder4.isChecked(),self.actionOrder5.isChecked()]
-            zoom_order = np.where(np.array(zoom_methods)==True)[0]
-            
+            #zoom_methods = [self.actionOrder0.isChecked(),self.actionOrder1.isChecked(),self.actionOrder2.isChecked(),self.actionOrder3.isChecked(),self.actionOrder4.isChecked(),self.actionOrder5.isChecked()]
+            #zoom_order = np.where(np.array(zoom_methods)==True)[0]
+            zoom_order = int(self.comboBox_zoomOrder.currentIndex()) #the combobox-index is already the zoom order
+
             index = 0
             for row in (rows_selected):
                 #get the corresponding rtdc_path
@@ -9098,8 +9062,9 @@ class MainWindow(QtWidgets.QMainWindow):
         SelectedFiles = self.items_clicked()
         color_mode = self.get_color_mode()
         zoom_factors = [selectedfile["zoom_factor"] for selectedfile in SelectedFiles]
-        zoom_order = [self.actionOrder0.isChecked(),self.actionOrder1.isChecked(),self.actionOrder2.isChecked(),self.actionOrder3.isChecked(),self.actionOrder4.isChecked(),self.actionOrder5.isChecked()]
-        zoom_order = int(np.where(np.array(zoom_order)==True)[0])
+        #zoom_order = [self.actionOrder0.isChecked(),self.actionOrder1.isChecked(),self.actionOrder2.isChecked(),self.actionOrder3.isChecked(),self.actionOrder4.isChecked(),self.actionOrder5.isChecked()]
+        #zoom_order = int(np.where(np.array(zoom_order)==True)[0])
+        zoom_order = int(self.comboBox_zoomOrder.currentIndex()) #the combobox-index is already the zoom order
 
         #Get the user-defined cropping size
         crop = int(self.spinBox_imagecrop.value())          
@@ -9398,7 +9363,7 @@ class MainWindow(QtWidgets.QMainWindow):
 
     def get_validation_data_from_clicked(self,get_normalized=True):
         #Check, if files were clicked
-        SelectedFiles = self.items_clicked()
+        SelectedFiles = self.items_clicked_no_rtdc_ds()
         ######################Load the Validation Data################################
         ind = [selectedfile["TrainOrValid"] == "Valid" for selectedfile in SelectedFiles]
         ind = np.where(np.array(ind)==True)[0]
@@ -9418,8 +9383,10 @@ class MainWindow(QtWidgets.QMainWindow):
         nr_events_epoch_valid = [selectedfile["nr_events_epoch"] for selectedfile in SelectedFiles_valid]
         rtdc_path_valid = [selectedfile["rtdc_path"] for selectedfile in SelectedFiles_valid]
         zoom_factors_valid = [selectedfile["zoom_factor"] for selectedfile in SelectedFiles_valid]
-        zoom_order = [self.actionOrder0.isChecked(),self.actionOrder1.isChecked(),self.actionOrder2.isChecked(),self.actionOrder3.isChecked(),self.actionOrder4.isChecked(),self.actionOrder5.isChecked()]
-        zoom_order = int(np.where(np.array(zoom_order)==True)[0])
+        #zoom_order = [self.actionOrder0.isChecked(),self.actionOrder1.isChecked(),self.actionOrder2.isChecked(),self.actionOrder3.isChecked(),self.actionOrder4.isChecked(),self.actionOrder5.isChecked()]
+        #zoom_order = int(np.where(np.array(zoom_order)==True)[0])
+        zoom_order = int(self.comboBox_zoomOrder.currentIndex()) #the combobox-index is already the zoom order
+
         shuffle_valid = [selectedfile["shuffle"] for selectedfile in SelectedFiles_valid]
         xtra_in = set([selectedfile["xtra_in"] for selectedfile in SelectedFiles])   
         if len(xtra_in)>1:# False and True is present. Not supported
@@ -9473,7 +9440,7 @@ class MainWindow(QtWidgets.QMainWindow):
             
         X_valid_orig = [X.astype(np.uint8) for X in X_valid]
         X_valid = np.concatenate(X_valid)
-        
+        Xtra_in = np.concatenate(Xtra_in)
 #        dim = X_valid.shape
 #        if dim[2]!=crop:
 #            remove = int(dim[2]/2.0 - crop/2.0)
@@ -9522,12 +9489,9 @@ class MainWindow(QtWidgets.QMainWindow):
         rtdc_path_valid = self.ValidationSet["rtdc_path_valid"]
         X_valid = []
         X_valid.append(self.ValidationSet["X_valid"][:,:,:,0])
-#        import pickle
-#        with open('X_valid.pickle', 'wb') as handle:
-#            pickle.dump(X_valid, handle, protocol=pickle.HIGHEST_PROTOCOL)            
+
         X_valid_orig = self.ValidationSet["X_valid_orig"]
-#        with open('X_valid_orig.pickle', 'wb') as handle:
-#            pickle.dump(X_valid_orig, handle, protocol=pickle.HIGHEST_PROTOCOL)            
+        Xtra_in = self.ValidationSet["Xtra_in"]
         
         Indices = self.ValidationSet["Indices"]
         y_valid = self.ValidationSet["y_valid"]
@@ -9566,7 +9530,7 @@ class MainWindow(QtWidgets.QMainWindow):
             msg.exec_()
             return
 
-        aid_bin.write_rtdc(filename_X,rtdc_path_valid,X_valid_orig,Indices,cropped=save_cropped,color_mode=self.get_color_mode())
+        aid_bin.write_rtdc(filename_X,rtdc_path_valid,X_valid_orig,Indices,cropped=save_cropped,color_mode=self.get_color_mode(),xtra_in=Xtra_in)
         np.savetxt(filename_y,y_valid.astype(int),fmt='%i')
         
         #If all that run without issue, remember the path for next time
@@ -9723,8 +9687,12 @@ class MainWindow(QtWidgets.QMainWindow):
         Indices = np.array(range(X_valid.shape[0])) #those are just indices to identify single cells in the file ->not cell-type indices!
         SelectedFiles_valid = None #[].append(rtdc_path)#
         nr_events_epoch_valid = None
-        
-        dic = {"SelectedFiles_valid":SelectedFiles_valid,"nr_events_epoch_valid":nr_events_epoch_valid,"rtdc_path_valid":[rtdc_path],"X_valid_orig":[X_valid_orig],"X_valid":X_valid,"y_valid":y_valid,"Indices":[Indices]}
+
+        rtdc_h5 = h5py.File(rtdc_path, 'r')
+        Xtra_in = np.array(rtdc_h5["xtra_in"])
+        rtdc_h5.close() #close the hdf5                
+
+        dic = {"SelectedFiles_valid":SelectedFiles_valid,"nr_events_epoch_valid":nr_events_epoch_valid,"rtdc_path_valid":[rtdc_path],"X_valid_orig":[X_valid_orig],"X_valid":X_valid,"y_valid":y_valid,"Indices":[Indices],"Xtra_in":Xtra_in}
         self.ValidationSet = dic
 
         self.statusbar.showMessage("Validation data loaded to RAM",5000)
@@ -10191,6 +10159,12 @@ class MainWindow(QtWidgets.QMainWindow):
             model_keras = load_model(self.load_model_path,custom_objects=aid_dl.get_custom_metrics())  
             self.model_keras = model_keras #useful to get the list of layers for Grad-CAM; also used to show the summary
             in_dim = model_keras.get_input_shape_at(node_index=0)
+            if type(in_dim)==list:
+                multi_input = True
+                in_dim = in_dim[0]#discard the second (xtra input)
+            else:
+                multi_input = False                
+            
             channels_model = in_dim[-1]
             channels_data = self.ValidationSet["X_valid"].shape[-1]
             
@@ -10231,7 +10205,12 @@ class MainWindow(QtWidgets.QMainWindow):
                 msg.exec_()
                 return
             
-            scores = model_keras.predict(self.ValidationSet["X_valid"])
+            if multi_input == False:                
+                scores = model_keras.predict(self.ValidationSet["X_valid"])
+            if multi_input == True:
+                print("self.ValidationSet[Xtra_in]")
+                print(self.ValidationSet["Xtra_in"])
+                scores = model_keras.predict([self.ValidationSet["X_valid"],self.ValidationSet["Xtra_in"]])
         
         #Get settings from the GUI
         threshold = float(self.doubleSpinBox_sortingThresh.value())#threshold probability obove which a cell is sorted
@@ -10815,7 +10794,8 @@ class MainWindow(QtWidgets.QMainWindow):
             rtdc_path = self.comboBox_selectData.currentText()
             Files.append(rtdc_path)
             #get the index of this file on the table
-            FileIndex = list(np.where(np.array(rtdc_path)==np.array(rtdc_paths))[0])
+            FileIndex = [int(self.comboBox_selectData.currentIndex())]
+            #FileIndex = list(np.where(np.array(rtdc_path)==np.array(rtdc_paths))[0])
         else:
             msg = QtWidgets.QMessageBox()
             msg.setIcon(QtWidgets.QMessageBox.Information)       
@@ -10836,9 +10816,10 @@ class MainWindow(QtWidgets.QMainWindow):
         color_mode = self.get_color_mode()
 
         zoom_factors = [selectedfile["zoom_factor"] for selectedfile in AvailableFiles]
-        zoom_order = [self.actionOrder0.isChecked(),self.actionOrder1.isChecked(),self.actionOrder2.isChecked(),self.actionOrder3.isChecked(),self.actionOrder4.isChecked(),self.actionOrder5.isChecked()]
-        zoom_order = int(np.where(np.array(zoom_order)==True)[0])
-        
+        #zoom_order = [self.actionOrder0.isChecked(),self.actionOrder1.isChecked(),self.actionOrder2.isChecked(),self.actionOrder3.isChecked(),self.actionOrder4.isChecked(),self.actionOrder5.isChecked()]
+        #zoom_order = int(np.where(np.array(zoom_order)==True)[0])
+        zoom_order = int(self.comboBox_zoomOrder.currentIndex()) #the combobox-index is already the zoom order
+
         xtra_in = set([selectedfile["xtra_in"] for selectedfile in AvailableFiles])   
         if len(xtra_in)>1:# False and True is present. Not supported
             print("Xtra data is used only for some files. Xtra data needs to be used either by all or by none!")
@@ -10909,10 +10890,17 @@ class MainWindow(QtWidgets.QMainWindow):
                     return
     
             #Iterate over all Files
-            for i in range(len(Files)):#rtdc_path in Files:
-                f_index = FileIndex[i]
+            for iterable in range(len(Files)):#rtdc_path in Files:
+                print("Files:"+str(Files))
+
+                print("iterable:"+str(iterable))
+                rtdc_path = Files[iterable]
+                print("rtdc_path:"+str(rtdc_path))
+                print("FileIndex:"+str(FileIndex))
+                print("zoom_factors:"+str(zoom_factors))
+
+                f_index = FileIndex[iterable]
                 zoom_factor = zoom_factors[f_index]
-                rtdc_path = Files[f_index]
                 
                 #get all images, cropped correcetly
                 gen_train = aid_img.gen_crop_img(crop,rtdc_path,replace=True,random_images=False,zoom_factor=zoom_factor,zoom_order=zoom_order,color_mode=color_mode,padding_mode=paddingMode,xtra_in=xtra_in)
