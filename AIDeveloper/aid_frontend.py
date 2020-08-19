@@ -364,53 +364,17 @@ def setup_main_ui(self,gpu_nr):
 
 
 
-
     self.groupBox_imgProc = QtWidgets.QGroupBox(self.scrollAreaWidgetContents_3)
     self.groupBox_imgProc.setObjectName("groupBox_imgProc")
     self.gridLayout_49 = QtWidgets.QGridLayout(self.groupBox_imgProc)
     self.gridLayout_49.setObjectName("gridLayout_49")
-    self.gridLayout_cropNormEtc = QtWidgets.QGridLayout()
-    self.gridLayout_cropNormEtc.setObjectName("gridLayout_cropNormEtc")
-    self.horizontalLayout_colorMode = QtWidgets.QHBoxLayout()
-    self.horizontalLayout_colorMode.setObjectName("horizontalLayout_colorMode")
-    self.label_colorModeIcon = QtWidgets.QLabel(self.groupBox_imgProc)
-    self.label_colorModeIcon.setText("")
-    #self.label_colorModeIcon.setPixmap(QtGui.QPixmap("../013_AIDeveloper_0.0.8_dev1/art/Icon theme 1/color_mode.png"))
-    self.label_colorModeIcon.setAlignment(QtCore.Qt.AlignRight|QtCore.Qt.AlignTrailing|QtCore.Qt.AlignVCenter)
-    self.label_colorModeIcon.setObjectName("label_colorModeIcon")
-    self.horizontalLayout_colorMode.addWidget(self.label_colorModeIcon)
-    self.label_colorMode = QtWidgets.QLabel(self.groupBox_imgProc)
-    self.label_colorMode.setAlignment(QtCore.Qt.AlignRight|QtCore.Qt.AlignTrailing|QtCore.Qt.AlignVCenter)
-    self.label_colorMode.setObjectName("label_colorMode")
-    self.horizontalLayout_colorMode.addWidget(self.label_colorMode)
-    self.gridLayout_cropNormEtc.addLayout(self.horizontalLayout_colorMode, 1, 2, 1, 1)
-    self.horizontalLayout_nrEpochs = QtWidgets.QHBoxLayout()
-    self.horizontalLayout_nrEpochs.setObjectName("horizontalLayout_nrEpochs")
-    self.label_padIcon = QtWidgets.QLabel(self.groupBox_imgProc)
-    self.label_padIcon.setText("")
-    #self.label_padIcon.setPixmap(QtGui.QPixmap("../013_AIDeveloper_0.0.8_dev1/art/Icon theme 1/padding.png"))
-    self.label_padIcon.setAlignment(QtCore.Qt.AlignRight|QtCore.Qt.AlignTrailing|QtCore.Qt.AlignVCenter)
-    self.label_padIcon.setObjectName("label_padIcon")
-    self.horizontalLayout_nrEpochs.addWidget(self.label_padIcon)
-    self.label_paddingMode = QtWidgets.QLabel(self.groupBox_imgProc)
-    self.label_paddingMode.setAlignment(QtCore.Qt.AlignRight|QtCore.Qt.AlignTrailing|QtCore.Qt.AlignVCenter)
-    self.label_paddingMode.setObjectName("label_paddingMode")
-    self.horizontalLayout_nrEpochs.addWidget(self.label_paddingMode)
-    self.gridLayout_cropNormEtc.addLayout(self.horizontalLayout_nrEpochs, 1, 0, 1, 1)
-    self.horizontalLayout_normalization = QtWidgets.QHBoxLayout()
-    self.horizontalLayout_normalization.setObjectName("horizontalLayout_normalization")
-    self.label_NormalizationIcon = QtWidgets.QLabel(self.groupBox_imgProc)
-    self.label_NormalizationIcon.setText("")
-    #self.label_NormalizationIcon.setPixmap(QtGui.QPixmap("../013_AIDeveloper_0.0.8_dev1/art/Icon theme 1/normalization.png"))
-    self.label_NormalizationIcon.setAlignment(QtCore.Qt.AlignRight|QtCore.Qt.AlignTrailing|QtCore.Qt.AlignVCenter)
-    self.label_NormalizationIcon.setObjectName("label_NormalizationIcon")
-    self.horizontalLayout_normalization.addWidget(self.label_NormalizationIcon)
-    self.label_Normalization = QtWidgets.QLabel(self.groupBox_imgProc)
-    self.label_Normalization.setLayoutDirection(QtCore.Qt.LeftToRight)
-    self.label_Normalization.setAlignment(QtCore.Qt.AlignRight|QtCore.Qt.AlignTrailing|QtCore.Qt.AlignVCenter)
-    self.label_Normalization.setObjectName("label_Normalization")
-    self.horizontalLayout_normalization.addWidget(self.label_Normalization)
-    self.gridLayout_cropNormEtc.addLayout(self.horizontalLayout_normalization, 0, 2, 1, 1)
+    self.comboBox_Normalization = QtWidgets.QComboBox(self.groupBox_imgProc)
+    self.comboBox_Normalization.setMinimumSize(QtCore.QSize(200, 0))
+    self.comboBox_Normalization.setObjectName("comboBox_Normalization")
+    self.gridLayout_49.addWidget(self.comboBox_Normalization, 0, 4, 1, 1)
+    self.spinBox_imagecrop = QtWidgets.QSpinBox(self.groupBox_imgProc)
+    self.spinBox_imagecrop.setObjectName("spinBox_imagecrop")
+    self.gridLayout_49.addWidget(self.spinBox_imagecrop, 0, 1, 1, 1)
     self.horizontalLayout_crop = QtWidgets.QHBoxLayout()
     self.horizontalLayout_crop.setObjectName("horizontalLayout_crop")
     self.label_CropIcon = QtWidgets.QLabel(self.groupBox_imgProc)
@@ -423,17 +387,7 @@ def setup_main_ui(self,gpu_nr):
     self.label_Crop.setAlignment(QtCore.Qt.AlignRight|QtCore.Qt.AlignTrailing|QtCore.Qt.AlignVCenter)
     self.label_Crop.setObjectName("label_Crop")
     self.horizontalLayout_crop.addWidget(self.label_Crop)
-    self.gridLayout_cropNormEtc.addLayout(self.horizontalLayout_crop, 0, 0, 1, 1)
-    self.comboBox_GrayOrRGB = QtWidgets.QComboBox(self.groupBox_imgProc)
-    self.comboBox_GrayOrRGB.setObjectName("comboBox_GrayOrRGB")
-    self.gridLayout_cropNormEtc.addWidget(self.comboBox_GrayOrRGB, 1, 3, 1, 1)
-    self.comboBox_Normalization = QtWidgets.QComboBox(self.groupBox_imgProc)
-    self.comboBox_Normalization.setMinimumSize(QtCore.QSize(200, 0))
-    self.comboBox_Normalization.setObjectName("comboBox_Normalization")
-    self.gridLayout_cropNormEtc.addWidget(self.comboBox_Normalization, 0, 3, 1, 1)
-    self.spinBox_imagecrop = QtWidgets.QSpinBox(self.groupBox_imgProc)
-    self.spinBox_imagecrop.setObjectName("spinBox_imagecrop")
-    self.gridLayout_cropNormEtc.addWidget(self.spinBox_imagecrop, 0, 1, 1, 1)
+    self.gridLayout_49.addLayout(self.horizontalLayout_crop, 0, 0, 1, 1)
     self.comboBox_paddingMode = QtWidgets.QComboBox(self.groupBox_imgProc)
     self.comboBox_paddingMode.setEnabled(True)
     self.comboBox_paddingMode.setObjectName("comboBox_paddingMode")
@@ -447,14 +401,82 @@ def setup_main_ui(self,gpu_nr):
     self.comboBox_paddingMode.addItem("")
     self.comboBox_paddingMode.addItem("")
     self.comboBox_paddingMode.addItem("")
-    self.gridLayout_cropNormEtc.addWidget(self.comboBox_paddingMode, 1, 1, 1, 1)
-    self.gridLayout_49.addLayout(self.gridLayout_cropNormEtc, 0, 0, 1, 1)
+    self.gridLayout_49.addWidget(self.comboBox_paddingMode, 1, 1, 1, 1)
+    self.horizontalLayout_nrEpochs = QtWidgets.QHBoxLayout()
+    self.horizontalLayout_nrEpochs.setObjectName("horizontalLayout_nrEpochs")
+    self.label_padIcon = QtWidgets.QLabel(self.groupBox_imgProc)
+    self.label_padIcon.setText("")
+    #self.label_padIcon.setPixmap(QtGui.QPixmap("../013_AIDeveloper_0.0.8_dev1/art/Icon theme 1/padding.png"))
+    self.label_padIcon.setAlignment(QtCore.Qt.AlignRight|QtCore.Qt.AlignTrailing|QtCore.Qt.AlignVCenter)
+    self.label_padIcon.setObjectName("label_padIcon")
+    self.horizontalLayout_nrEpochs.addWidget(self.label_padIcon)
+    self.label_paddingMode = QtWidgets.QLabel(self.groupBox_imgProc)
+    self.label_paddingMode.setAlignment(QtCore.Qt.AlignRight|QtCore.Qt.AlignTrailing|QtCore.Qt.AlignVCenter)
+    self.label_paddingMode.setObjectName("label_paddingMode")
+    self.horizontalLayout_nrEpochs.addWidget(self.label_paddingMode)
+    self.gridLayout_49.addLayout(self.horizontalLayout_nrEpochs, 1, 0, 1, 1)
+    self.comboBox_GrayOrRGB = QtWidgets.QComboBox(self.groupBox_imgProc)
+    self.comboBox_GrayOrRGB.setObjectName("comboBox_GrayOrRGB")
+    self.gridLayout_49.addWidget(self.comboBox_GrayOrRGB, 1, 4, 1, 1)
+    self.horizontalLayout_colorMode = QtWidgets.QHBoxLayout()
+    self.horizontalLayout_colorMode.setObjectName("horizontalLayout_colorMode")
+    self.label_colorModeIcon = QtWidgets.QLabel(self.groupBox_imgProc)
+    self.label_colorModeIcon.setText("")
+    #self.label_colorModeIcon.setPixmap(QtGui.QPixmap("../013_AIDeveloper_0.0.8_dev1/art/Icon theme 1/color_mode.png"))
+    self.label_colorModeIcon.setAlignment(QtCore.Qt.AlignRight|QtCore.Qt.AlignTrailing|QtCore.Qt.AlignVCenter)
+    self.label_colorModeIcon.setObjectName("label_colorModeIcon")
+    self.horizontalLayout_colorMode.addWidget(self.label_colorModeIcon)
+    self.label_colorMode = QtWidgets.QLabel(self.groupBox_imgProc)
+    self.label_colorMode.setAlignment(QtCore.Qt.AlignRight|QtCore.Qt.AlignTrailing|QtCore.Qt.AlignVCenter)
+    self.label_colorMode.setObjectName("label_colorMode")
+    self.horizontalLayout_colorMode.addWidget(self.label_colorMode)
+    self.gridLayout_49.addLayout(self.horizontalLayout_colorMode, 1, 3, 1, 1)
+    self.horizontalLayout_normalization = QtWidgets.QHBoxLayout()
+    self.horizontalLayout_normalization.setObjectName("horizontalLayout_normalization")
+    self.label_NormalizationIcon = QtWidgets.QLabel(self.groupBox_imgProc)
+    self.label_NormalizationIcon.setText("")
+    #self.label_NormalizationIcon.setPixmap(QtGui.QPixmap("../013_AIDeveloper_0.0.8_dev1/art/Icon theme 1/normalization.png"))
+    self.label_NormalizationIcon.setAlignment(QtCore.Qt.AlignRight|QtCore.Qt.AlignTrailing|QtCore.Qt.AlignVCenter)
+    self.label_NormalizationIcon.setObjectName("label_NormalizationIcon")
+    self.horizontalLayout_normalization.addWidget(self.label_NormalizationIcon)
+    self.label_Normalization = QtWidgets.QLabel(self.groupBox_imgProc)
+    self.label_Normalization.setLayoutDirection(QtCore.Qt.LeftToRight)
+    self.label_Normalization.setAlignment(QtCore.Qt.AlignRight|QtCore.Qt.AlignTrailing|QtCore.Qt.AlignVCenter)
+    self.label_Normalization.setObjectName("label_Normalization")
+    self.horizontalLayout_normalization.addWidget(self.label_Normalization)
+    self.gridLayout_49.addLayout(self.horizontalLayout_normalization, 0, 3, 1, 1)
+    self.horizontalLayout_2 = QtWidgets.QHBoxLayout()
+    self.horizontalLayout_2.setObjectName("horizontalLayout_2")
+    self.label_zoomIcon = QtWidgets.QLabel(self.groupBox_imgProc)
+    self.label_zoomIcon.setText("")
+    #self.label_zoomIcon.setPixmap(QtGui.QPixmap("../000_Icons/Version_2/zoom_order.png"))
+    self.label_zoomIcon.setAlignment(QtCore.Qt.AlignRight|QtCore.Qt.AlignTrailing|QtCore.Qt.AlignVCenter)
+    self.label_zoomIcon.setObjectName("label_zoomIcon")
+    self.horizontalLayout_2.addWidget(self.label_zoomIcon)
+    self.label_zoomOrder = QtWidgets.QLabel(self.groupBox_imgProc)
+    self.label_zoomOrder.setAlignment(QtCore.Qt.AlignRight|QtCore.Qt.AlignTrailing|QtCore.Qt.AlignVCenter)
+    self.label_zoomOrder.setObjectName("label_zoomOrder")
+    self.horizontalLayout_2.addWidget(self.label_zoomOrder)
+    self.gridLayout_49.addLayout(self.horizontalLayout_2, 2, 0, 1, 1)
+    self.comboBox_zoomOrder = QtWidgets.QComboBox(self.groupBox_imgProc)
+    self.comboBox_zoomOrder.setObjectName("comboBox_zoomOrder")
+    self.comboBox_zoomOrder.addItem("")
+    self.comboBox_zoomOrder.addItem("")
+    self.comboBox_zoomOrder.addItem("")
+    self.comboBox_zoomOrder.addItem("")
+    self.comboBox_zoomOrder.addItem("")
+    self.comboBox_zoomOrder.addItem("")
+    self.comboBox_zoomOrder.setMaximumSize(QtCore.QSize(100, 16777215))
+    
+    self.gridLayout_49.addWidget(self.comboBox_zoomOrder, 2, 1, 1, 1)
     self.gridLayout_44.addWidget(self.groupBox_imgProc, 1, 0, 1, 1)
+
+
+
+
 
     self.horizontalLayout_4 = QtWidgets.QHBoxLayout()
     self.horizontalLayout_4.setObjectName("horizontalLayout_4")
-    
-    
     self.groupBox_system = QtWidgets.QGroupBox(self.scrollAreaWidgetContents_3)
     self.groupBox_system.setObjectName("groupBox_system")
     self.gridLayout_48 = QtWidgets.QGridLayout(self.groupBox_system)
@@ -679,12 +701,18 @@ def setup_main_ui(self,gpu_nr):
     self.gridLayout_15.setObjectName("gridLayout_15")
     self.doubleSpinBox_contrastLower = QtWidgets.QDoubleSpinBox(self.groupBox_colorAugmentation)
     self.doubleSpinBox_contrastLower.setObjectName("doubleSpinBox_contrastLower")
+    self.doubleSpinBox_contrastLower.setMaximumSize(QtCore.QSize(75, 16777215))
+
     self.gridLayout_15.addWidget(self.doubleSpinBox_contrastLower, 0, 1, 1, 1)
     self.doubleSpinBox_saturationHigher = QtWidgets.QDoubleSpinBox(self.groupBox_colorAugmentation)
     self.doubleSpinBox_saturationHigher.setObjectName("doubleSpinBox_saturationHigher")
+    self.doubleSpinBox_saturationHigher.setMaximumSize(QtCore.QSize(75, 16777215))
+
     self.gridLayout_15.addWidget(self.doubleSpinBox_saturationHigher, 1, 2, 1, 1)
     self.doubleSpinBox_contrastHigher = QtWidgets.QDoubleSpinBox(self.groupBox_colorAugmentation)
     self.doubleSpinBox_contrastHigher.setObjectName("doubleSpinBox_contrastHigher")
+    self.doubleSpinBox_contrastHigher.setMaximumSize(QtCore.QSize(75, 16777215))
+
     self.gridLayout_15.addWidget(self.doubleSpinBox_contrastHigher, 0, 2, 1, 1)
     self.checkBox_contrast = QtWidgets.QCheckBox(self.groupBox_colorAugmentation)
     self.checkBox_contrast.setCheckable(True)
@@ -692,9 +720,13 @@ def setup_main_ui(self,gpu_nr):
     self.gridLayout_15.addWidget(self.checkBox_contrast, 0, 0, 1, 1)
     self.doubleSpinBox_saturationLower = QtWidgets.QDoubleSpinBox(self.groupBox_colorAugmentation)
     self.doubleSpinBox_saturationLower.setObjectName("doubleSpinBox_saturationLower")
+    self.doubleSpinBox_saturationLower.setMaximumSize(QtCore.QSize(75, 16777215))
+
     self.gridLayout_15.addWidget(self.doubleSpinBox_saturationLower, 1, 1, 1, 1)
     self.doubleSpinBox_hueDelta = QtWidgets.QDoubleSpinBox(self.groupBox_colorAugmentation)
     self.doubleSpinBox_hueDelta.setObjectName("doubleSpinBox_hueDelta")
+    self.doubleSpinBox_hueDelta.setMaximumSize(QtCore.QSize(75, 16777215))
+    
     self.gridLayout_15.addWidget(self.doubleSpinBox_hueDelta, 2, 1, 1, 1)
     self.checkBox_saturation = QtWidgets.QCheckBox(self.groupBox_colorAugmentation)
     self.checkBox_saturation.setObjectName("checkBox_saturation")
@@ -791,19 +823,25 @@ def setup_main_ui(self,gpu_nr):
     self.label_Plus.setObjectName("label_Plus")
     self.gridLayout_12.addWidget(self.label_Plus, 1, 0, 1, 1)
     self.doubleSpinBox_MultLower = QtWidgets.QDoubleSpinBox(self.groupBox_BrightnessAugmentation)
+    self.doubleSpinBox_MultLower.setMaximumSize(QtCore.QSize(75, 16777215))
     self.doubleSpinBox_MultLower.setObjectName("doubleSpinBox_MultLower")
     self.gridLayout_12.addWidget(self.doubleSpinBox_MultLower, 2, 1, 1, 1)
     self.spinBox_PlusUpper = QtWidgets.QSpinBox(self.groupBox_BrightnessAugmentation)
     self.spinBox_PlusUpper.setObjectName("spinBox_PlusUpper")
+    self.spinBox_PlusUpper.setMaximumSize(QtCore.QSize(75, 16777215))
+
     self.gridLayout_12.addWidget(self.spinBox_PlusUpper, 1, 2, 1, 2)
     self.spinBox_PlusLower = QtWidgets.QSpinBox(self.groupBox_BrightnessAugmentation)
     self.spinBox_PlusLower.setObjectName("spinBox_PlusLower")
+    self.spinBox_PlusLower.setMaximumSize(QtCore.QSize(75, 16777215))
+
     self.gridLayout_12.addWidget(self.spinBox_PlusLower, 1, 1, 1, 1)
     self.label_Mult = QtWidgets.QCheckBox(self.groupBox_BrightnessAugmentation)
     self.label_Mult.setObjectName("label_Mult")
     self.gridLayout_12.addWidget(self.label_Mult, 2, 0, 1, 1)
     self.doubleSpinBox_MultUpper = QtWidgets.QDoubleSpinBox(self.groupBox_BrightnessAugmentation)
     self.doubleSpinBox_MultUpper.setObjectName("doubleSpinBox_MultUpper")
+    self.doubleSpinBox_MultUpper.setMaximumSize(QtCore.QSize(75, 16777215))
     self.gridLayout_12.addWidget(self.doubleSpinBox_MultUpper, 2, 2, 1, 2)
     self.gridLayout_43.addWidget(self.groupBox_BrightnessAugmentation, 2, 0, 1, 1)
     self.spinBox_RefreshAfterNrEpochs = QtWidgets.QSpinBox(self.scrollAreaWidgetContents_2)
@@ -837,6 +875,8 @@ def setup_main_ui(self,gpu_nr):
     self.label_colorModeIcon.setPixmap(QtGui.QPixmap(os.path.join(dir_root,"art",Default_dict["Icon theme"],"color_mode.png")))
     self.label_NormalizationIcon.setPixmap(QtGui.QPixmap(os.path.join(dir_root,"art",Default_dict["Icon theme"],"normalization.png")))
     self.label_padIcon.setPixmap(QtGui.QPixmap(os.path.join(dir_root,"art",Default_dict["Icon theme"],"padding.png")))
+    self.label_zoomIcon.setPixmap(QtGui.QPixmap(os.path.join(dir_root,"art",Default_dict["Icon theme"],"zoom_order.png")))
+    
     self.label_nrEpochsIcon.setPixmap(QtGui.QPixmap(os.path.join(dir_root,"art",Default_dict["Icon theme"],"nr_epochs.png")))
 
     self.checkBox_HorizFlip.setIcon(QtGui.QIcon(os.path.join(dir_root,"art",Default_dict["Icon theme"],"horizontal_flip.png")))
@@ -882,6 +922,8 @@ def setup_main_ui(self,gpu_nr):
     #self.checkBox_motionBlur.stateChanged.connect(self.changed_motionBlur)
 
 
+
+
     #There will be text on the label_colorMode (Color Mode), find out how "long" the text is and 
     #resize the label to that
     width=self.label_colorMode.fontMetrics().boundingRect(max(["Color Mode"], key=len)).width()
@@ -916,14 +958,14 @@ def setup_main_ui(self,gpu_nr):
     self.spinBox_RefreshAfterNrEpochs.setMaximum(999999999)
     self.doubleSpinBox_hueDelta.setMaximum(0.5)
     self.doubleSpinBox_hueDelta.setSingleStep(0.01)
-    self.doubleSpinBox_contrastHigher.setMaximum(100.0)
+    self.doubleSpinBox_contrastHigher.setMaximum(99.9)
     self.doubleSpinBox_contrastHigher.setSingleStep(0.1)
-    self.doubleSpinBox_contrastLower.setMaximum(100.0)
+    self.doubleSpinBox_contrastLower.setMaximum(99.9)
     self.doubleSpinBox_contrastLower.setSingleStep(0.1)
 
-    self.doubleSpinBox_saturationLower.setMaximum(100.0)
+    self.doubleSpinBox_saturationLower.setMaximum(99.9)
     self.doubleSpinBox_saturationLower.setSingleStep(0.1)
-    self.doubleSpinBox_saturationHigher.setMaximum(100.0)
+    self.doubleSpinBox_saturationHigher.setMaximum(99.9)
     self.doubleSpinBox_saturationHigher.setSingleStep(0.1)
     
     self.spinBox_avgBlurMin.setMinimum(0)
@@ -1095,25 +1137,6 @@ def setup_main_ui(self,gpu_nr):
     self.radioButton_LrCycl.setObjectName("radioButton_LrCycl")
     self.gridLayout_50.addWidget(self.radioButton_LrCycl, 1, 0, 1, 1)       
 
-
-
-
-#    self.doubleSpinBox_expDecInitLr = QtWidgets.QDoubleSpinBox(self.groupBox_learningRate)
-#    self.doubleSpinBox_expDecInitLr.setEnabled(False)
-#    self.doubleSpinBox_expDecInitLr.setMaximumSize(QtCore.QSize(63, 16777215))
-#    self.doubleSpinBox_expDecInitLr.setDecimals(6)
-#    self.doubleSpinBox_expDecInitLr.setSingleStep(0.0001)
-#    self.doubleSpinBox_expDecInitLr.setProperty("value", 0.001)
-#    self.doubleSpinBox_expDecInitLr.setObjectName("doubleSpinBox_expDecInitLr")
-#    self.gridLayout_50.addWidget(self.doubleSpinBox_expDecInitLr, 2, 2, 1, 1)
-#    self.spinBox_expDecSteps = QtWidgets.QSpinBox(self.groupBox_learningRate)
-#    self.spinBox_expDecSteps.setEnabled(False)
-#    self.spinBox_expDecSteps.setMaximumSize(QtCore.QSize(63, 16777215))
-#    self.spinBox_expDecSteps.setMaximum(999999999)
-#    self.spinBox_expDecSteps.setProperty("value", 100)
-#    self.spinBox_expDecSteps.setObjectName("spinBox_expDecSteps")
-#    self.gridLayout_50.addWidget(self.spinBox_expDecSteps, 2, 4, 1, 1)
- 
     self.radioButton_LrExpo = QtWidgets.QRadioButton(self.groupBox_learningRate)
     self.radioButton_LrExpo.setObjectName("radioButton_LrExpo")
     self.gridLayout_50.addWidget(self.radioButton_LrExpo, 2, 0, 1, 1)
@@ -1137,8 +1160,10 @@ def setup_main_ui(self,gpu_nr):
     self.spinBox_expDecSteps.setEnabled(False)
     self.spinBox_expDecSteps.setMaximumSize(QtCore.QSize(63, 16777215))
     self.spinBox_expDecSteps.setMaximum(999999999)
+    self.spinBox_expDecSteps.setProperty("value", 100)
     self.spinBox_expDecSteps.setObjectName("spinBox_expDecSteps")
     self.gridLayout_50.addWidget(self.spinBox_expDecSteps, 2, 4, 1, 1)
+    
     self.label_expDecRate = QtWidgets.QLabel(self.groupBox_learningRate)
     self.label_expDecRate.setAlignment(QtCore.Qt.AlignRight|QtCore.Qt.AlignTrailing|QtCore.Qt.AlignVCenter)
     self.label_expDecRate.setObjectName("label_expDecRate")
@@ -1152,20 +1177,6 @@ def setup_main_ui(self,gpu_nr):
     self.doubleSpinBox_expDecRate.setProperty("value", 0.96)
     self.doubleSpinBox_expDecRate.setObjectName("doubleSpinBox_expDecRate")
     self.gridLayout_50.addWidget(self.doubleSpinBox_expDecRate, 2, 7, 1, 1)
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
     
     self.label_cycLrMin = QtWidgets.QLabel(self.groupBox_learningRate)
     self.label_cycLrMin.setAlignment(QtCore.Qt.AlignRight|QtCore.Qt.AlignTrailing|QtCore.Qt.AlignVCenter)
@@ -1197,6 +1208,8 @@ def setup_main_ui(self,gpu_nr):
     self.gridLayout_50.addWidget(self.comboBox_cycLrMethod, 1, 6, 1, 1)
     self.label_cycLrMethod = QtWidgets.QLabel(self.groupBox_learningRate)
     self.label_cycLrMethod.setObjectName("label_cycLrMethod")
+    self.label_cycLrMethod.setAlignment(QtCore.Qt.AlignRight|QtCore.Qt.AlignTrailing|QtCore.Qt.AlignVCenter)
+
     self.gridLayout_50.addWidget(self.label_cycLrMethod, 1, 4, 1, 1)
     self.radioButton_LrConst = QtWidgets.QRadioButton(self.groupBox_learningRate)
     self.radioButton_LrConst.setChecked(True)
@@ -1491,6 +1504,30 @@ def setup_main_ui(self,gpu_nr):
     self.verticalLayout_9.addLayout(self.horizontalLayout_7)
     self.gridLayout_3.addLayout(self.verticalLayout_9, 0, 0, 1, 1)
     self.tabWidget_Modelbuilder.addTab(self.tab_History, _fromUtf8(""))
+
+
+    ############Icons Expert tab########
+    #self.pushButton_LR_finder.setIcon(QtGui.QIcon(os.path.join(dir_root,"art",Default_dict["Icon theme"],"lr_screen.png")))
+    icon = QtGui.QIcon()
+    icon.addPixmap(QtGui.QPixmap(os.path.join(dir_root,"art",Default_dict["Icon theme"],"lr_screen.png")), QtGui.QIcon.Normal, QtGui.QIcon.Off)
+    self.pushButton_LR_finder.setIcon(icon)
+    icon = QtGui.QIcon()
+    icon.addPixmap(QtGui.QPixmap(os.path.join(dir_root,"art",Default_dict["Icon theme"],"lr_plot.png")), QtGui.QIcon.Normal, QtGui.QIcon.Off)
+    self.pushButton_LR_plot.setIcon(icon)
+
+    icon = QtGui.QIcon()
+    icon.addPixmap(QtGui.QPixmap(os.path.join(dir_root,"art",Default_dict["Icon theme"],"lr_const.png")), QtGui.QIcon.Normal, QtGui.QIcon.Off)
+    self.radioButton_LrConst.setIcon(icon)
+    icon = QtGui.QIcon()
+    icon.addPixmap(QtGui.QPixmap(os.path.join(dir_root,"art",Default_dict["Icon theme"],"lr_cycle.png")), QtGui.QIcon.Normal, QtGui.QIcon.Off)
+    self.radioButton_LrCycl.setIcon(icon)
+    icon = QtGui.QIcon()
+    icon.addPixmap(QtGui.QPixmap(os.path.join(dir_root,"art",Default_dict["Icon theme"],"lr_exponential.png")), QtGui.QIcon.Normal, QtGui.QIcon.Off)
+    self.radioButton_LrExpo.setIcon(icon)
+
+
+
+
 
 
 
@@ -2164,6 +2201,13 @@ def setup_main_ui(self,gpu_nr):
 
 
 
+    #####################Icons##################
+    icon = QtGui.QIcon()
+    icon.addPixmap(QtGui.QPixmap(os.path.join(dir_root,"art",Default_dict["Icon theme"],"thumb.png")), QtGui.QIcon.Normal, QtGui.QIcon.Off)
+    self.pushButton_AssessModel.setIcon(icon)
+
+
+
 
 
     ####################Tab Python Editor/Console##########################
@@ -2555,8 +2599,8 @@ def setup_main_ui(self,gpu_nr):
     self.menubar.setObjectName(_fromUtf8("menubar"))
     self.menuFile = QtWidgets.QMenu(self.menubar)
     self.menuFile.setObjectName(_fromUtf8("menuFile"))
-    self.menuEdit = QtWidgets.QMenu(self.menubar)
-    self.menuEdit.setObjectName(_fromUtf8("menuEdit"))
+#    self.menuEdit = QtWidgets.QMenu(self.menubar)
+#    self.menuEdit.setObjectName(_fromUtf8("menuEdit"))
     
     self.menu_Options = QtWidgets.QMenu(self.menubar)
     self.menu_Options.setObjectName("menu_Options")
@@ -2566,8 +2610,6 @@ def setup_main_ui(self,gpu_nr):
     self.menuLayout.setObjectName("menuLayout")
     self.menuExport = QtWidgets.QMenu(self.menu_Options)
     self.menuExport.setObjectName("menuExport")
-    self.menuZoomOrder = QtWidgets.QMenu(self.menu_Options)
-    self.menuZoomOrder.setObjectName("menuZoomOrder")
     self.menuGPU_Options = QtWidgets.QMenu(self.menu_Options)
     self.menuGPU_Options.setObjectName("menuGPU_Options")
     if gpu_nr<2:
@@ -2676,45 +2718,6 @@ def setup_main_ui(self,gpu_nr):
     a = self.actionGroup_Export.addAction(self.actionExport_Cropped)
     self.menuExport.addAction(a)
 
-
-    self.actionGroup_ZoomOrder = QtWidgets.QActionGroup(self,exclusive=True)
-    self.actionOrder0 = QtWidgets.QAction(self)
-    self.actionOrder0.setCheckable(True)
-    self.actionOrder0.setChecked(True)
-    self.actionOrder0.setObjectName("actionOrder0")
-    self.actionOrder1 = QtWidgets.QAction(self)
-    self.actionOrder1.setCheckable(True)
-    self.actionOrder1.setChecked(False)
-    self.actionOrder1.setObjectName("actionOrder1")
-    self.actionOrder2 = QtWidgets.QAction(self)
-    self.actionOrder2.setCheckable(True)
-    self.actionOrder2.setChecked(False)
-    self.actionOrder2.setObjectName("actionOrder2")
-    self.actionOrder3 = QtWidgets.QAction(self)
-    self.actionOrder3.setCheckable(True)
-    self.actionOrder3.setChecked(False)
-    self.actionOrder3.setObjectName("actionOrder3")
-    self.actionOrder4 = QtWidgets.QAction(self)
-    self.actionOrder4.setCheckable(True)
-    self.actionOrder4.setChecked(False)
-    self.actionOrder4.setObjectName("actionOrder4")
-    self.actionOrder5 = QtWidgets.QAction(self)
-    self.actionOrder5.setCheckable(True)
-    self.actionOrder5.setChecked(False)
-    self.actionOrder5.setObjectName("actionOrder5")
-
-    a = self.actionGroup_ZoomOrder.addAction(self.actionOrder0)
-    self.menuZoomOrder.addAction(a)
-    a = self.actionGroup_ZoomOrder.addAction(self.actionOrder1)
-    self.menuZoomOrder.addAction(a)
-    a = self.actionGroup_ZoomOrder.addAction(self.actionOrder2)
-    self.menuZoomOrder.addAction(a)
-    a = self.actionGroup_ZoomOrder.addAction(self.actionOrder3)
-    self.menuZoomOrder.addAction(a)
-    a = self.actionGroup_ZoomOrder.addAction(self.actionOrder4)
-    self.menuZoomOrder.addAction(a)
-    a = self.actionGroup_ZoomOrder.addAction(self.actionOrder5)
-    self.menuZoomOrder.addAction(a)
     
     self.actionGroup_Layout = QtWidgets.QActionGroup(self,exclusive=True)
     self.actionLayout_Normal = QtWidgets.QAction(self)
@@ -2771,36 +2774,32 @@ def setup_main_ui(self,gpu_nr):
     self.menuGPU_Options.addAction(self.actioncpu_weightmerge)
 
     self.menu_Options.addAction(self.menuLayout.menuAction())
+    self.menu_Options.addSeparator()
     self.menu_Options.addAction(self.menuExport.menuAction())
-    self.menu_Options.addAction(self.menuZoomOrder.menuAction())
+    self.menu_Options.addSeparator()
+    self.menu_Options.addAction(self.actionOpenTemp)
+    self.menu_Options.addSeparator()
+    self.menu_Options.addAction(self.actionClearMemory)
     self.menu_Options.addSeparator()
     self.menu_Options.addAction(self.menuGPU_Options.menuAction())
-
+    self.menu_Options.addSeparator()
+    self.menu_Options.addAction(self.actionVerbose)
 
     self.menuFile.addAction(self.actionLoadSession)
-    self.menuFile.addSeparator()
     self.menuFile.addAction(self.actionSaveSession)
     self.menuFile.addSeparator()
+    self.menuFile.addAction(self.actionClearList)
+    self.menuFile.addAction(self.actionRemoveSelected)
+    self.menuFile.addSeparator()
+    self.menuFile.addAction(self.actionDataToRamNow)        
+    self.menuFile.addAction(self.actionDataToRam)
+    self.menuFile.addAction(self.actionSaveToPng)
+    self.menuFile.addSeparator()    
     self.menuFile.addAction(self.actionQuit)
 
-    self.menuEdit.addAction(self.actionDataToRamNow)        
-    self.menuEdit.addAction(self.actionDataToRam)
-    self.menuEdit.addSeparator()
-    self.menuEdit.addAction(self.actionClearList)
-    self.menuEdit.addAction(self.actionRemoveSelected)
-
-    self.menuEdit.addSeparator()
-    self.menuEdit.addAction(self.actionSaveToPng)
-
-    self.menuEdit.addSeparator()
-    self.menuEdit.addAction(self.actionClearMemory)
-    self.menuEdit.addAction(self.actionOpenTemp)
-
-    self.menuEdit.addSeparator()
-    self.menuEdit.addAction(self.actionVerbose)
 
     self.menubar.addAction(self.menuFile.menuAction())
-    self.menubar.addAction(self.menuEdit.menuAction())
+#    self.menubar.addAction(self.menuEdit.menuAction())
     self.menubar.addAction(self.menu_Options.menuAction())
     self.menubar.addAction(self.menu_Help.menuAction())
 
@@ -2974,6 +2973,9 @@ def retranslate_main_ui(self,gpu_nr,VERSION):
     self.label_paddingMode.setText(_translate("MainWindow", "Padding mode", None))
     self.label_paddingMode.setToolTip(_translate("MainWindow", tooltips["label_paddingMode"], None))
     self.comboBox_paddingMode.setToolTip(_translate("MainWindow", tooltips["label_paddingMode"], None))
+    self.label_zoomIcon.setToolTip(_translate("MainWindow", tooltips["label_zoomIcon"], None))
+    self.label_zoomOrder.setText(_translate("MainWindow", "Zoom order", None))
+    self.label_zoomOrder.setToolTip(_translate("MainWindow", tooltips["label_zoomIcon"], None))
 
     self.comboBox_paddingMode.setItemText(0, _translate("MainWindow", "constant", None))
     self.comboBox_paddingMode.setItemText(1, _translate("MainWindow", "edge", None))
@@ -2985,6 +2987,16 @@ def retranslate_main_ui(self,gpu_nr,VERSION):
     self.comboBox_paddingMode.setItemText(7, _translate("MainWindow", "reflect", None))
     self.comboBox_paddingMode.setItemText(8, _translate("MainWindow", "symmetric", None))
     self.comboBox_paddingMode.setItemText(9, _translate("MainWindow", "wrap", None))
+
+    self.comboBox_zoomOrder.setItemText(0, _translate("MainWindow", "0 (nearest neighbor)", None))
+    self.comboBox_zoomOrder.setItemText(1, _translate("MainWindow", "1 (lin. interp.)", None))
+    self.comboBox_zoomOrder.setItemText(2, _translate("MainWindow", "2 (quadr. interp.)", None))
+    self.comboBox_zoomOrder.setItemText(3, _translate("MainWindow", "3 (cubic interp.)", None))
+    self.comboBox_zoomOrder.setItemText(4, _translate("MainWindow", "4", None))
+    self.comboBox_zoomOrder.setItemText(5, _translate("MainWindow", "5", None))
+    width=self.comboBox_zoomOrder.fontMetrics().boundingRect(max(["0 (nearest neighbor)"], key=len)).width()
+    self.comboBox_zoomOrder.view().setFixedWidth(width+10)             
+
 
     self.label_NormalizationIcon.setToolTip(_translate("MainWindow", tooltips["label_Normalization"], None))        
     self.label_Normalization.setToolTip(_translate("MainWindow", tooltips["label_Normalization"], None))
@@ -3151,12 +3163,13 @@ def retranslate_main_ui(self,gpu_nr,VERSION):
 
     self.label_batchSize.setText(_translate("MainWindow", "Batch size", None))
     self.label_epochs.setText(_translate("MainWindow", "Epochs", None))
-    self.pushButton_LR_finder.setText(_translate("MainWindow", "LR Screening", None))
-    self.pushButton_LR_finder.setToolTip(_translate("MainWindow", tooltips["groupBox_LrSettings"], None))    
+    self.pushButton_LR_finder.setText(_translate("MainWindow", "LR Screen", None))
+    self.pushButton_LR_finder.setToolTip(_translate("MainWindow", "Screen learning rates. Function disabled on Fitting screen. Please use main screen.", None))    
     self.pushButton_LR_finder.clicked.connect(self.popup_lr_finder)
+
     self.pushButton_LR_plot.setText(_translate("MainWindow", "Plot", None))
     self.pushButton_LR_plot.setToolTip(_translate("MainWindow", tooltips["pushButton_LR_plot"], None))
-    self.pushButton_LR_plot.clicked.connect(self.popup_lr_plot)
+    self.pushButton_LR_plot.clicked.connect(lambda: self.popup_lr_plot(-1))  
     self.pushButton_cycLrPopup.clicked.connect(lambda: self.popup_clr_settings(-1))
     
     
@@ -3164,7 +3177,7 @@ def retranslate_main_ui(self,gpu_nr,VERSION):
     self.groupBox_lossOptimizer.setToolTip(_translate("MainWindow", tooltips["groupBox_lossOptimizer"], None))
 
     #self.label_others.setText(_translate("MainWindow", "Others", None))
-    self.groupBox_learningRate.setTitle(_translate("MainWindow", "Learning Rate (LR)", None))
+    self.groupBox_learningRate.setTitle(_translate("MainWindow", "Learning rate (LR)", None))
     self.checkBox_trainLastNOnly.setText(_translate("MainWindow", "Train only last N layers", None))
     self.checkBox_trainDenseOnly.setText(_translate("MainWindow", "Train only Dense layers", None))
     self.checkBox_dropout.setText(_translate("MainWindow", "Dropout", None))
@@ -3197,7 +3210,7 @@ def retranslate_main_ui(self,gpu_nr,VERSION):
     self.label_epochs.setToolTip(_translate("MainWindow",tooltips["label_epochs"] , None))
     self.spinBox_epochs.setToolTip(_translate("MainWindow",tooltips["label_epochs"] , None))
 
-    self.groupBox_learningRate.setTitle(_translate("MainWindow", "Learning rate", None))
+    self.groupBox_learningRate.setTitle(_translate("MainWindow", "Learning rate (LR)", None))
     self.radioButton_LrConst.setText(_translate("MainWindow", "Constant", None))
     self.label_LrConst.setText(_translate("MainWindow", "LR", None))
     self.radioButton_LrCycl.setText(_translate("MainWindow", "Cyclical", None))
@@ -3210,10 +3223,9 @@ def retranslate_main_ui(self,gpu_nr,VERSION):
     self.label_cycLrMethod.setToolTip(_translate("MainWindow", tooltips["comboBox_cycLrMethod"], None))
     
     self.pushButton_cycLrPopup.setText(_translate("MainWindow", "...", None))
-    self.radioButton_LrExpo.setText(_translate("MainWindow", "Exponential", None))
+    self.radioButton_LrExpo.setText(_translate("MainWindow", "Expo.", None))
     
-    self.groupBox_learningRate.setToolTip(_translate("MainWindow", tooltips["groupBox_learningRate"],None))
-    self.radioButton_LrConst.setToolTip(_translate("MainWindow", tooltips["radioButton_LrConst"],None))
+    self.radioButton_LrConst.setToolTip(_translate("MainWindow", tooltips["doubleSpinBox_learningRate"],None))
     self.doubleSpinBox_learningRate.setToolTip(_translate("MainWindow", tooltips["doubleSpinBox_learningRate"],None))
     self.radioButton_LrCycl.setToolTip(_translate("MainWindow", tooltips["radioButton_LrCycl"],None))
     self.label_cycLrMin.setToolTip(_translate("MainWindow", tooltips["label_cycLrMin"],None))
@@ -3231,7 +3243,7 @@ def retranslate_main_ui(self,gpu_nr,VERSION):
     self.doubleSpinBox_expDecRate.setToolTip(_translate("MainWindow", tooltips["label_expDecRate"],None))
     
     
-    self.label_expDecInitLr.setText(_translate("MainWindow", "Initial lr",None))
+    self.label_expDecInitLr.setText(_translate("MainWindow", "Initial LR",None))
     self.label_expDecSteps.setText(_translate("MainWindow", "Decay steps",None))
     self.label_expDecRate.setText(_translate("MainWindow", "Decay rate",None))
 
@@ -3466,11 +3478,10 @@ def retranslate_main_ui(self,gpu_nr,VERSION):
 
 
     self.menuFile.setTitle(_translate("MainWindow", "File", None))
-    self.menuEdit.setTitle(_translate("MainWindow", "Edit", None))
+#    self.menuEdit.setTitle(_translate("MainWindow", "Edit", None))
     self.menu_Options.setTitle(_translate("MainWindow", "Options",None))
     self.menuLayout.setTitle(_translate("MainWindow", "Layout",None))
     self.menuExport.setTitle(_translate("MainWindow", "Export",None))
-    self.menuZoomOrder.setTitle(_translate("MainWindow", "Zoom Order",None))
     self.menuGPU_Options.setTitle(_translate("MainWindow", "Multi-GPU",None))
 
     self.menu_Options.setToolTip(_translate("MainWindow", "<html><head/><body><p>menu_Options tooltip</p></body></html>", None))
@@ -3503,12 +3514,6 @@ def retranslate_main_ui(self,gpu_nr,VERSION):
     self.actionLayout_DarkOrange.setText(_translate("MainWindow", "DarkOrange layout",None))
     self.actionIconTheme_1.setText(_translate("MainWindow", "Icon theme 1",None))
     self.actionIconTheme_2.setText(_translate("MainWindow", "Icon theme 2",None))
-    self.actionOrder0.setText(_translate("MainWindow", "0 (nearest neighbor)",None))
-    self.actionOrder1.setText(_translate("MainWindow", "1 (linear interp.)",None))
-    self.actionOrder2.setText(_translate("MainWindow", "2 (quadratic interp.)",None))
-    self.actionOrder3.setText(_translate("MainWindow", "3 (cubic interp.)",None))
-    self.actionOrder4.setText(_translate("MainWindow", "4",None))
-    self.actionOrder5.setText(_translate("MainWindow", "5",None))
 
     self.actioncpu_merge.setText(_translate("MainWindow", "cpu_merge",None))
     self.actioncpu_merge.setToolTip(_translate("MainWindow", tooltips["actioncpu_merge"],None))
@@ -3722,6 +3727,38 @@ class Fitting_Ui(QtWidgets.QWidget):
         self.comboBox_Normalization_pop.setObjectName("comboBox_Normalization_pop")
         self.horizontalLayout_5_pop.addWidget(self.comboBox_Normalization_pop)
         self.gridLayout_10.addLayout(self.horizontalLayout_5_pop, 0, 1, 1, 1)
+
+        self.gridLayout_10.addLayout(self.horizontalLayout_5_pop, 0, 1, 1, 1)
+        self.horizontalLayout_6 = QtWidgets.QHBoxLayout()
+        self.horizontalLayout_6.setObjectName("horizontalLayout_6")
+        self.label_zoomIcon = QtWidgets.QLabel(self.groupBox_expt_imgProc_pop)
+        self.label_zoomIcon.setText("")
+        #self.label_zoomIcon.setPixmap(QtGui.QPixmap("../000_Icons/Version_2/zoom_order.png"))
+        self.label_zoomIcon.setAlignment(QtCore.Qt.AlignRight|QtCore.Qt.AlignTrailing|QtCore.Qt.AlignVCenter)
+        self.label_zoomIcon.setObjectName("label_zoomIcon")
+        self.horizontalLayout_6.addWidget(self.label_zoomIcon)
+        self.label_zoomOrder = QtWidgets.QLabel(self.groupBox_expt_imgProc_pop)
+        self.label_zoomOrder.setAlignment(QtCore.Qt.AlignRight|QtCore.Qt.AlignTrailing|QtCore.Qt.AlignVCenter)
+        self.label_zoomOrder.setObjectName("label_zoomOrder")
+        self.horizontalLayout_6.addWidget(self.label_zoomOrder)
+        self.comboBox_zoomOrder = QtWidgets.QComboBox(self.groupBox_expt_imgProc_pop)
+        self.comboBox_zoomOrder.setEnabled(False)
+        self.comboBox_zoomOrder.setMaximumSize(QtCore.QSize(100, 16777215))
+        self.comboBox_zoomOrder.setObjectName("comboBox_zoomOrder")
+        self.comboBox_zoomOrder.addItem("")
+        self.comboBox_zoomOrder.addItem("")
+        self.comboBox_zoomOrder.addItem("")
+        self.comboBox_zoomOrder.addItem("")
+        self.comboBox_zoomOrder.addItem("")
+        self.comboBox_zoomOrder.addItem("")
+        self.comboBox_zoomOrder.setMaximumSize(QtCore.QSize(100, 16777215))
+
+        self.horizontalLayout_6.addWidget(self.comboBox_zoomOrder)
+        self.gridLayout_10.addLayout(self.horizontalLayout_6, 2, 0, 1, 1)
+
+
+
+        
         self.horizontalLayout_2 = QtWidgets.QHBoxLayout()
         self.horizontalLayout_2.setObjectName("horizontalLayout_2")
         self.label_padIcon_pop = QtWidgets.QLabel(self.groupBox_expt_imgProc_pop)
@@ -3816,13 +3853,26 @@ class Fitting_Ui(QtWidgets.QWidget):
         self.label_Crop_NrEpochs_pop.setAlignment(QtCore.Qt.AlignRight|QtCore.Qt.AlignTrailing|QtCore.Qt.AlignVCenter)
         self.label_Crop_NrEpochs_pop.setObjectName("label_Crop_NrEpochs_pop")
         self.horizontalLayout_4_pop.addWidget(self.label_Crop_NrEpochs_pop)
-        self.spinBox_NrEpochs_pop = QtWidgets.QSpinBox(self.groupBox_system_pop)
-        self.spinBox_NrEpochs_pop.setMaximum(999999999)
-        self.spinBox_NrEpochs_pop.setObjectName("spinBox_NrEpochs_pop")
-        self.horizontalLayout_4_pop.addWidget(self.spinBox_NrEpochs_pop)
+        self.spinBox_NrEpochs = QtWidgets.QSpinBox(self.groupBox_system_pop)
+        self.spinBox_NrEpochs.setMaximum(999999999)
+        self.spinBox_NrEpochs.setObjectName("spinBox_NrEpochs")
+        self.horizontalLayout_4_pop.addWidget(self.spinBox_NrEpochs)
         self.gridLayout_48.addLayout(self.horizontalLayout_4_pop, 0, 1, 1, 1)
-        spacerItem1 = QtWidgets.QSpacerItem(211, 20, QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Minimum)
-        self.gridLayout_48.addItem(spacerItem1, 1, 1, 1, 1)
+        
+        self.horizontalLayout_4 = QtWidgets.QHBoxLayout()
+        self.horizontalLayout_4.setObjectName("horizontalLayout_4")
+        self.label_saveMetaEvery = QtWidgets.QLabel(self.groupBox_system_pop)
+        self.label_saveMetaEvery.setAlignment(QtCore.Qt.AlignRight|QtCore.Qt.AlignTrailing|QtCore.Qt.AlignVCenter)
+        self.label_saveMetaEvery.setObjectName("label_saveMetaEvery")
+        self.horizontalLayout_4.addWidget(self.label_saveMetaEvery)
+        self.spinBox_saveMetaEvery = QtWidgets.QSpinBox(self.groupBox_system_pop)
+        self.spinBox_saveMetaEvery.setMinimum(1)
+        self.spinBox_saveMetaEvery.setMaximum(999999)
+        self.spinBox_saveMetaEvery.setProperty("value", 30)
+        self.spinBox_saveMetaEvery.setObjectName("spinBox_saveMetaEvery")
+        self.horizontalLayout_4.addWidget(self.spinBox_saveMetaEvery)
+        self.gridLayout_48.addLayout(self.horizontalLayout_4, 1, 1, 1, 1)
+
         self.verticalLayout_defineModel_pop.addWidget(self.groupBox_system_pop)
         self.horizontalLayout_modelname_2_pop = QtWidgets.QHBoxLayout()
         self.horizontalLayout_modelname_2_pop.setObjectName("horizontalLayout_modelname_2_pop")
@@ -3879,11 +3929,6 @@ class Fitting_Ui(QtWidgets.QWidget):
         self.horizontalLayout_3.addWidget(self.pushButton_Stop_pop)
         self.gridLayout.addLayout(self.horizontalLayout_3, 1, 0, 1, 1)
 
-
-
-
-        
-        
         self.tabWidget_DefineModel_pop.addTab(self.tab_DefineModel_pop, "")
         self.tab_KerasImgAug_pop = QtWidgets.QWidget()
         self.tab_KerasImgAug_pop.setObjectName("tab_KerasImgAug_pop")
@@ -4037,19 +4082,19 @@ class Fitting_Ui(QtWidgets.QWidget):
         self.gridLayout_15 = QtWidgets.QGridLayout(self.groupBox_colorAugmentation_pop)
         self.gridLayout_15.setObjectName("gridLayout_15")
         self.doubleSpinBox_contrastLower_pop = QtWidgets.QDoubleSpinBox(self.groupBox_colorAugmentation_pop)
-        self.doubleSpinBox_contrastLower_pop.setMaximum(100.0)
+        self.doubleSpinBox_contrastLower_pop.setMaximum(99.9)
         self.doubleSpinBox_contrastLower_pop.setSingleStep(0.1)
         #self.doubleSpinBox_contrastLower_pop.setProperty("value", 0.7)
         self.doubleSpinBox_contrastLower_pop.setObjectName("doubleSpinBox_contrastLower_pop")
         self.gridLayout_15.addWidget(self.doubleSpinBox_contrastLower_pop, 0, 1, 1, 1)
         self.doubleSpinBox_saturationHigher_pop = QtWidgets.QDoubleSpinBox(self.groupBox_colorAugmentation_pop)
-        self.doubleSpinBox_saturationHigher_pop.setMaximum(100.0)
+        self.doubleSpinBox_saturationHigher_pop.setMaximum(99.9)
         self.doubleSpinBox_saturationHigher_pop.setSingleStep(0.1)
         #self.doubleSpinBox_saturationHigher_pop.setProperty("value", 1.3)
         self.doubleSpinBox_saturationHigher_pop.setObjectName("doubleSpinBox_saturationHigher_pop")
         self.gridLayout_15.addWidget(self.doubleSpinBox_saturationHigher_pop, 1, 2, 1, 1)
         self.doubleSpinBox_contrastHigher_pop = QtWidgets.QDoubleSpinBox(self.groupBox_colorAugmentation_pop)
-        self.doubleSpinBox_contrastHigher_pop.setMaximum(100.0)
+        self.doubleSpinBox_contrastHigher_pop.setMaximum(99.9)
         self.doubleSpinBox_contrastHigher_pop.setSingleStep(0.1)
         #self.doubleSpinBox_contrastHigher_pop.setProperty("value", 1.3)
         self.doubleSpinBox_contrastHigher_pop.setObjectName("doubleSpinBox_contrastHigher_pop")
@@ -4060,7 +4105,7 @@ class Fitting_Ui(QtWidgets.QWidget):
         self.checkBox_contrast_pop.setObjectName("checkBox_contrast_pop")
         self.gridLayout_15.addWidget(self.checkBox_contrast_pop, 0, 0, 1, 1)
         self.doubleSpinBox_saturationLower_pop = QtWidgets.QDoubleSpinBox(self.groupBox_colorAugmentation_pop)
-        self.doubleSpinBox_saturationLower_pop.setMaximum(100.0)
+        self.doubleSpinBox_saturationLower_pop.setMaximum(99.9)
         self.doubleSpinBox_saturationLower_pop.setSingleStep(0.1)
         #self.doubleSpinBox_saturationLower_pop.setProperty("value", 0.7)
         self.doubleSpinBox_saturationLower_pop.setObjectName("doubleSpinBox_saturationLower_pop")
@@ -4153,7 +4198,6 @@ class Fitting_Ui(QtWidgets.QWidget):
         self.gridLayout_45.addLayout(self.gridLayout_blur_pop, 0, 0, 1, 1)
         self.gridLayout_9.addWidget(self.groupBox_blurringAug_pop, 2, 1, 1, 1)
         
-        
         self.scrollArea_BrightnessAug_pop.setWidget(self.scrollAreaWidgetContents_pop_2)
         self.gridLayout_7.addWidget(self.scrollArea_BrightnessAug_pop, 0, 0, 1, 1)
         self.tabWidget_DefineModel_pop.addTab(self.tab_BrightnessAug_pop, "")
@@ -4221,21 +4265,21 @@ class Fitting_Ui(QtWidgets.QWidget):
         self.label_batchSize_pop.setAlignment(QtCore.Qt.AlignRight|QtCore.Qt.AlignTrailing|QtCore.Qt.AlignVCenter)
         self.label_batchSize_pop.setObjectName("label_batchSize_pop")
         self.gridLayout_11.addWidget(self.label_batchSize_pop, 0, 0, 1, 1)
-        self.spinBox_batchSize_pop = QtWidgets.QSpinBox(self.groupBox_modelKerasFit_pop)
-        self.spinBox_batchSize_pop.setMinimum(1)
-        self.spinBox_batchSize_pop.setMaximum(999999999)
-        self.spinBox_batchSize_pop.setProperty("value", 32)
-        self.spinBox_batchSize_pop.setObjectName("spinBox_batchSize_pop")
-        self.gridLayout_11.addWidget(self.spinBox_batchSize_pop, 0, 1, 1, 1)
+        self.spinBox_batchSize = QtWidgets.QSpinBox(self.groupBox_modelKerasFit_pop)
+        self.spinBox_batchSize.setMinimum(1)
+        self.spinBox_batchSize.setMaximum(999999999)
+        self.spinBox_batchSize.setProperty("value", 32)
+        self.spinBox_batchSize.setObjectName("spinBox_batchSize")
+        self.gridLayout_11.addWidget(self.spinBox_batchSize, 0, 1, 1, 1)
         self.label_epochs_pop = QtWidgets.QLabel(self.groupBox_modelKerasFit_pop)
         self.label_epochs_pop.setAlignment(QtCore.Qt.AlignRight|QtCore.Qt.AlignTrailing|QtCore.Qt.AlignVCenter)
         self.label_epochs_pop.setObjectName("label_epochs_pop")
         self.gridLayout_11.addWidget(self.label_epochs_pop, 0, 2, 1, 1)
-        self.spinBox_epochs_pop = QtWidgets.QSpinBox(self.groupBox_modelKerasFit_pop)
-        self.spinBox_epochs_pop.setMinimum(1)
-        self.spinBox_epochs_pop.setMaximum(999999999)
-        self.spinBox_epochs_pop.setObjectName("spinBox_epochs_pop")
-        self.gridLayout_11.addWidget(self.spinBox_epochs_pop, 0, 3, 1, 1)
+        self.spinBox_epochs = QtWidgets.QSpinBox(self.groupBox_modelKerasFit_pop)
+        self.spinBox_epochs.setMinimum(1)
+        self.spinBox_epochs.setMaximum(999999999)
+        self.spinBox_epochs.setObjectName("spinBox_epochs")
+        self.gridLayout_11.addWidget(self.spinBox_epochs, 0, 3, 1, 1)
         self.gridLayout_4.addWidget(self.groupBox_modelKerasFit_pop, 0, 0, 1, 1)
         self.groupBox_regularization_pop = QtWidgets.QGroupBox(self.scrollAreaWidgetContents_pop)
         self.groupBox_regularization_pop.setObjectName("groupBox_regularization_pop")
@@ -4282,71 +4326,7 @@ class Fitting_Ui(QtWidgets.QWidget):
 #        self.pushButton_pTr_pop.setObjectName("pushButton_pTr_pop")
 #        self.horizontalLayout_pTr_pop.addWidget(self.pushButton_pTr_pop)
         self.gridLayout_12.addLayout(self.horizontalLayout_pTr_pop, 2, 0, 1, 1)
-        self.gridLayout_4.addWidget(self.groupBox_regularization_pop, 3, 0, 1, 1)
-        
-        
-        
-        
-        
-#        self.groupBox_lossOptimizer = QtWidgets.QGroupBox(self.scrollAreaWidgetContents_pop)
-#        self.groupBox_lossOptimizer.setObjectName("groupBox_lossOptimizer")
-#        self.gridLayout_14 = QtWidgets.QGridLayout(self.groupBox_lossOptimizer)
-#        self.gridLayout_14.setObjectName("gridLayout_14")
-#        self.checkBox_expt_loss_pop = QtWidgets.QCheckBox(self.groupBox_lossOptimizer)
-#        self.checkBox_expt_loss_pop.setLayoutDirection(QtCore.Qt.RightToLeft)
-#        self.checkBox_expt_loss_pop.setObjectName("checkBox_expt_loss_pop")
-#        self.gridLayout_14.addWidget(self.checkBox_expt_loss_pop, 0, 0, 1, 1)
-#        self.comboBox_expt_loss_pop = QtWidgets.QComboBox(self.groupBox_lossOptimizer)
-#        self.comboBox_expt_loss_pop.setEnabled(False)
-#        self.comboBox_expt_loss_pop.setObjectName("comboBox_expt_loss_pop")
-#        self.comboBox_expt_loss_pop.addItem("")
-#        self.comboBox_expt_loss_pop.addItem("")
-#        self.comboBox_expt_loss_pop.addItem("")
-#        self.comboBox_expt_loss_pop.addItem("")
-#        self.comboBox_expt_loss_pop.addItem("")
-#        self.comboBox_expt_loss_pop.addItem("")
-#        self.comboBox_expt_loss_pop.addItem("")
-#        self.comboBox_expt_loss_pop.addItem("")
-#        self.comboBox_expt_loss_pop.addItem("")
-#        self.comboBox_expt_loss_pop.addItem("")
-#        self.comboBox_expt_loss_pop.addItem("")
-#        self.comboBox_expt_loss_pop.addItem("")
-#        self.comboBox_expt_loss_pop.addItem("")
-#        self.comboBox_expt_loss_pop.addItem("")
-#        self.comboBox_expt_loss_pop.addItem("")
-#        self.comboBox_expt_loss_pop.addItem("")
-#        self.gridLayout_14.addWidget(self.comboBox_expt_loss_pop, 0, 1, 1, 1)
-#        self.checkBox_optimizer_pop = QtWidgets.QCheckBox(self.groupBox_lossOptimizer)
-#        self.checkBox_optimizer_pop.setLayoutDirection(QtCore.Qt.RightToLeft)
-#        self.checkBox_optimizer_pop.setObjectName("checkBox_optimizer_pop")
-#        self.gridLayout_14.addWidget(self.checkBox_optimizer_pop, 0, 2, 1, 1)
-#        self.comboBox_optimizer = QtWidgets.QComboBox(self.groupBox_lossOptimizer)
-#        self.comboBox_optimizer.setEnabled(False)
-#        self.comboBox_optimizer.setObjectName("comboBox_optimizer")
-#        self.comboBox_optimizer.addItem("")
-#        self.comboBox_optimizer.addItem("")
-#        self.comboBox_optimizer.addItem("")
-#        self.comboBox_optimizer.addItem("")
-#        self.comboBox_optimizer.addItem("")
-#        self.comboBox_optimizer.addItem("")
-#        self.comboBox_optimizer.addItem("")
-#        self.gridLayout_14.addWidget(self.comboBox_optimizer, 0, 3, 1, 2)
-#        self.checkBox_lossW = QtWidgets.QCheckBox(self.groupBox_lossOptimizer)
-#        self.checkBox_lossW.setLayoutDirection(QtCore.Qt.RightToLeft)
-#        self.checkBox_lossW.setObjectName("checkBox_lossW")
-#        self.gridLayout_14.addWidget(self.checkBox_lossW, 1, 0, 1, 1)
-#        self.lineEdit_lossW = QtWidgets.QLineEdit(self.groupBox_lossOptimizer)
-#        self.lineEdit_lossW.setEnabled(False)
-#        self.lineEdit_lossW.setObjectName("lineEdit_lossW")
-#        self.gridLayout_14.addWidget(self.lineEdit_lossW, 1, 1, 1, 3)
-#        self.pushButton_lossW = QtWidgets.QPushButton(self.groupBox_lossOptimizer)
-#        self.pushButton_lossW.setEnabled(False)
-#        self.pushButton_lossW.setMaximumSize(QtCore.QSize(40, 16777215))
-#        self.pushButton_lossW.setObjectName("pushButton_lossW")
-#        self.gridLayout_14.addWidget(self.pushButton_lossW, 1, 4, 1, 1)
-#        self.gridLayout_4.addWidget(self.groupBox_lossOptimizer, 1, 0, 1, 1)
-        
-        
+        self.gridLayout_4.addWidget(self.groupBox_regularization_pop, 3, 0, 1, 1)       
         
         self.groupBox_lossOptimizer = QtWidgets.QGroupBox(self.scrollAreaWidgetContents_pop)
         self.groupBox_lossOptimizer.setObjectName("groupBox_lossOptimizer")
@@ -4411,21 +4391,6 @@ class Fitting_Ui(QtWidgets.QWidget):
         self.gridLayout_14.addWidget(self.pushButton_lossW, 1, 4, 1, 1)
         self.gridLayout_4.addWidget(self.groupBox_lossOptimizer, 1, 0, 1, 1)
         
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
         self.groupBox_learningRate_pop = QtWidgets.QGroupBox(self.scrollAreaWidgetContents_pop)
         self.groupBox_learningRate_pop.setEnabled(True)
         self.groupBox_learningRate_pop.setCheckable(True)
@@ -4471,6 +4436,7 @@ class Fitting_Ui(QtWidgets.QWidget):
         self.gridLayout_16.addWidget(self.lineEdit_cycLrMax, 1, 3, 1, 1)
         self.label_cycLrMethod = QtWidgets.QLabel(self.groupBox_learningRate_pop)
         self.label_cycLrMethod.setObjectName("label_cycLrMethod")
+        self.label_cycLrMethod.setAlignment(QtCore.Qt.AlignRight|QtCore.Qt.AlignTrailing|QtCore.Qt.AlignVCenter)
         self.gridLayout_16.addWidget(self.label_cycLrMethod, 1, 4, 1, 1)
         self.comboBox_cycLrMethod = QtWidgets.QComboBox(self.groupBox_learningRate_pop)
         self.comboBox_cycLrMethod.setEnabled(False)
@@ -4566,6 +4532,8 @@ class Fitting_Ui(QtWidgets.QWidget):
         self.label_colorModeIcon_pop.setPixmap(QtGui.QPixmap(os.path.join(dir_root,"art",Default_dict["Icon theme"],"color_mode.png")))
         self.label_NormalizationIcon_pop.setPixmap(QtGui.QPixmap(os.path.join(dir_root,"art",Default_dict["Icon theme"],"normalization.png")))
         self.label_Crop_NrEpochsIcon_pop.setPixmap(QtGui.QPixmap(os.path.join(dir_root,"art",Default_dict["Icon theme"],"nr_epochs.png")))
+        self.label_zoomIcon.setPixmap(QtGui.QPixmap(os.path.join(dir_root,"art",Default_dict["Icon theme"],"zoom_order.png")))
+
         self.label_ModelGeomIcon_pop.setPixmap(QtGui.QPixmap(os.path.join(dir_root,"art",Default_dict["Icon theme"],"model_architecture.png")))
         self.label_padIcon_pop.setPixmap(QtGui.QPixmap(os.path.join(dir_root,"art",Default_dict["Icon theme"],"padding.png")))
         
@@ -4637,7 +4605,24 @@ class Fitting_Ui(QtWidgets.QWidget):
         #aternatively, I could use "^[0-9 . , \[ \] ]+$" - this would also allow the user to put the brackets. But why? I just do it in the program
         self.lineEdit_dropout_pop.setValidator(validator)        
 
+        ############Icons Expert tab########
+        #self.pushButton_LR_finder.setIcon(QtGui.QIcon(os.path.join(dir_root,"art",Default_dict["Icon theme"],"lr_screen.png")))
+        icon = QtGui.QIcon()
+        icon.addPixmap(QtGui.QPixmap(os.path.join(dir_root,"art",Default_dict["Icon theme"],"lr_screen.png")), QtGui.QIcon.Normal, QtGui.QIcon.Off)
+        self.pushButton_LR_finder.setIcon(icon)
+        icon = QtGui.QIcon()
+        icon.addPixmap(QtGui.QPixmap(os.path.join(dir_root,"art",Default_dict["Icon theme"],"lr_plot.png")), QtGui.QIcon.Normal, QtGui.QIcon.Off)
+        self.pushButton_LR_plot.setIcon(icon)
 
+        icon = QtGui.QIcon()
+        icon.addPixmap(QtGui.QPixmap(os.path.join(dir_root,"art",Default_dict["Icon theme"],"lr_const.png")), QtGui.QIcon.Normal, QtGui.QIcon.Off)
+        self.radioButton_LrConst.setIcon(icon)
+        icon = QtGui.QIcon()
+        icon.addPixmap(QtGui.QPixmap(os.path.join(dir_root,"art",Default_dict["Icon theme"],"lr_cycle.png")), QtGui.QIcon.Normal, QtGui.QIcon.Off)
+        self.radioButton_LrCycl.setIcon(icon)
+        icon = QtGui.QIcon()
+        icon.addPixmap(QtGui.QPixmap(os.path.join(dir_root,"art",Default_dict["Icon theme"],"lr_exponential.png")), QtGui.QIcon.Normal, QtGui.QIcon.Off)
+        self.radioButton_LrExpo.setIcon(icon)
 
 
 
@@ -4686,7 +4671,7 @@ class Fitting_Ui(QtWidgets.QWidget):
         self.doubleSpinBox_GaussianNoiseMean_pop.setMaximum(255) 
         self.doubleSpinBox_GaussianNoiseMean_pop.setSingleStep(0.1)
         self.doubleSpinBox_GaussianNoiseScale_pop.setMinimum(0)
-        self.doubleSpinBox_GaussianNoiseScale_pop.setMaximum(100)
+        self.doubleSpinBox_GaussianNoiseScale_pop.setMaximum(99.9)
         self.doubleSpinBox_GaussianNoiseScale_pop.setSingleStep(0.1)
 
         self.spinBox_avgBlurMin_pop.setMinimum(0)
@@ -4709,12 +4694,12 @@ class Fitting_Ui(QtWidgets.QWidget):
 #        self.scrollArea_expertMode_pop.setWidgetResizable(True)
   
         #Adjust some QObjects manually
-        self.spinBox_batchSize_pop.setMinimum(1)       
-        self.spinBox_batchSize_pop.setMaximum(1E6)       
-        self.spinBox_batchSize_pop.setValue(32)       
-        self.spinBox_epochs_pop.setMinimum(1)       
-        self.spinBox_epochs_pop.setMaximum(1E6)       
-        self.spinBox_epochs_pop.setValue(1)       
+        self.spinBox_batchSize.setMinimum(1)       
+        self.spinBox_batchSize.setMaximum(1E6)       
+        self.spinBox_batchSize.setValue(32)       
+        self.spinBox_epochs.setMinimum(1)       
+        self.spinBox_epochs.setMaximum(1E6)       
+        self.spinBox_epochs.setValue(1)       
         self.doubleSpinBox_learningRate.setDecimals(9)
         self.doubleSpinBox_learningRate.setMinimum(0.0)       
         self.doubleSpinBox_learningRate.setMaximum(1E6)       
@@ -4725,14 +4710,13 @@ class Fitting_Ui(QtWidgets.QWidget):
         self.spinBox_trainLastNOnly_pop.setValue(0)    
         self.checkBox_trainDenseOnly_pop.setChecked(False)
 
+        self.spinBox_NrEpochs.setMinimum(1)
+        self.spinBox_NrEpochs.setMaximum(9E8)
+
         self.spinBox_realTimeEpochs.setSingleStep(1)
         self.spinBox_realTimeEpochs.setMinimum(1)
-        
-        self.spinBox_NrEpochs_pop.setMinimum(1)
-        self.spinBox_NrEpochs_pop.setMaximum(9E8)
-
-        self.spinBox_realTimeEpochs.setValue(250)        
         self.spinBox_realTimeEpochs.setMaximum(9999999)
+        self.spinBox_realTimeEpochs.setValue(250)        
         self.pushButton_Pause_pop.setMinimumSize(QtCore.QSize(60, 30))
         self.pushButton_Pause_pop.setMaximumSize(QtCore.QSize(60, 30))
         self.pushButton_Stop_pop.setMinimumSize(QtCore.QSize(60, 30))
@@ -4744,7 +4728,7 @@ class Fitting_Ui(QtWidgets.QWidget):
         self.spinBox_trainLastNOnly_pop.setEnabled(False)
         self.lineEdit_dropout_pop.setEnabled(False)
         self.pushButton_LR_finder.setEnabled(False)
-        self.pushButton_LR_plot.setEnabled(False)
+        #self.pushButton_LR_plot.setEnabled(False)
 
 
         self.radioButton_LrConst.toggled['bool'].connect(self.doubleSpinBox_learningRate.setEnabled)
@@ -4757,6 +4741,7 @@ class Fitting_Ui(QtWidgets.QWidget):
         self.radioButton_LrExpo.toggled['bool'].connect(self.doubleSpinBox_expDecRate.setEnabled)
         
         self.groupBox_learningRate_pop.toggled['bool'].connect(self.doubleSpinBox_learningRate.setEnabled) 
+
         self.checkBox_expt_loss_pop.toggled['bool'].connect(self.comboBox_expt_loss_pop.setEnabled)
         self.checkBox_optimizer_pop.toggled['bool'].connect(self.comboBox_optimizer.setEnabled)
         self.checkBox_optimizer_pop.toggled['bool'].connect(self.pushButton_optimizer_pop.setEnabled)
@@ -4823,6 +4808,9 @@ class Fitting_Ui(QtWidgets.QWidget):
         self.label_Normalization_pop.setText(_translate("Form", "Normalization", None))
         self.label_NormalizationIcon_pop.setToolTip(_translate("Form", tooltips["label_Normalization"], None))
         self.comboBox_Normalization_pop.setToolTip(_translate("Form", tooltips["label_Normalization"], None))
+        
+        self.label_zoomOrder.setText(_translate("Form", "Zoom order", None))
+        
         self.label_Crop_pop.setToolTip(_translate("Form", tooltips["label_Crop"], None))
         self.label_Crop_pop.setText(_translate("Form", "Input image size", None))
         self.label_CropIcon_pop.setToolTip(_translate("Form", tooltips["label_Crop"], None))
@@ -4834,8 +4822,11 @@ class Fitting_Ui(QtWidgets.QWidget):
         self.spinBox_imagecrop_pop.setToolTip(_translate("Form", tooltips["label_Crop"], None))
         self.label_Crop_NrEpochs_pop.setToolTip(_translate("Form", "Total number of training iterations", None))
         self.label_Crop_NrEpochs_pop.setText(_translate("Form", "Nr. epochs", None))
-        self.spinBox_NrEpochs_pop.setToolTip(_translate("Form", "Total number of training iterations", None))
+        self.spinBox_NrEpochs.setToolTip(_translate("Form", "Total number of training iterations", None))
         self.label_Crop_NrEpochsIcon_pop.setToolTip(_translate("Form", "Total number of training iterations", None))
+        self.label_saveMetaEvery.setText(_translate("Form", "Save meta every (sec)", None))
+        self.label_saveMetaEvery.setToolTip(_translate("Form", tooltips["label_saveMetaEvery"], None))
+        self.spinBox_saveMetaEvery.setToolTip(_translate("Form", tooltips["label_saveMetaEvery"], None))
 
         self.radioButton_cpu_pop.setToolTip(_translate("MainWindow",tooltips["radioButton_cpu"] , None))
         self.comboBox_cpu_pop.setToolTip(_translate("MainWindow",tooltips["radioButton_cpu"] , None))
@@ -4970,9 +4961,59 @@ class Fitting_Ui(QtWidgets.QWidget):
         self.groupBox_expertMode_pop.setToolTip(_translate("Form", tooltips["groupBox_expertMode"], None))
         self.groupBox_expertMode_pop.setTitle(_translate("Form", "Expert mode", None))
         self.groupBox_modelKerasFit_pop.setTitle(_translate("Form", "In model_keras.fit()", None))       
-        self.groupBox_learningRate_pop.setToolTip(_translate("Form", tooltips["checkBox_learningRate"], None))
+
+
+
+
+        self.groupBox_lossOptimizer.setToolTip(_translate("MainWindow", tooltips["groupBox_lossOptimizer"], None))
+        self.checkBox_optimizer_pop.setToolTip(_translate("MainWindow", tooltips["label_optimizer"] , None))
+        self.comboBox_optimizer.setToolTip(_translate("MainWindow", tooltips["label_optimizer"] , None))    
+        self.pushButton_optimizer_pop.setToolTip(_translate("MainWindow", "Show advanced options for optimizer", None))
+        self.checkBox_expt_loss_pop.setToolTip(_translate("MainWindow", tooltips["label_expt_loss"], None))
+        self.comboBox_expt_loss_pop.setToolTip(_translate("MainWindow", tooltips["label_expt_loss"], None))
+        self.checkBox_lossW.setToolTip(_translate("MainWindow",tooltips["checkBox_lossW"] , None))
+        self.lineEdit_lossW.setToolTip(_translate("MainWindow", tooltips["checkBox_lossW"], None))
+
+        self.groupBox_learningRate_pop.setToolTip(_translate("Form", tooltips["groupBox_learningRate"], None))
         self.groupBox_learningRate_pop.setTitle(_translate("Form", "Learning Rate", None))
-        self.doubleSpinBox_learningRate.setToolTip(_translate("Form", tooltips["checkBox_learningRate"], None))
+        self.doubleSpinBox_learningRate.setToolTip(_translate("Form", tooltips["doubleSpinBox_learningRate"], None))
+
+        self.radioButton_LrConst.setToolTip(_translate("MainWindow", tooltips["doubleSpinBox_learningRate"],None))
+        self.radioButton_LrCycl.setToolTip(_translate("MainWindow", tooltips["radioButton_LrCycl"],None))
+        self.label_cycLrMethod.setToolTip(_translate("MainWindow", tooltips["comboBox_cycLrMethod"], None))    
+        self.label_cycLrMin.setToolTip(_translate("MainWindow", tooltips["label_cycLrMin"],None))
+        self.lineEdit_cycLrMin.setToolTip(_translate("MainWindow", tooltips["label_cycLrMin"],None))
+        self.lineEdit_cycLrMax.setToolTip(_translate("MainWindow", tooltips["label_cycLrMax"],None))
+        self.comboBox_cycLrMethod.setToolTip(_translate("MainWindow", tooltips["comboBox_cycLrMethod"],None))
+        self.pushButton_cycLrPopup.setToolTip(_translate("MainWindow", tooltips["pushButton_cycLrPopup"],None))
+        self.radioButton_LrExpo.setToolTip(_translate("MainWindow", tooltips["radioButton_LrExpo"],None))
+        self.label_expDecInitLr.setToolTip(_translate("MainWindow", tooltips["label_expDecInitLr"],None))
+        self.doubleSpinBox_expDecInitLr.setToolTip(_translate("MainWindow", tooltips["radioButton_LrExpo"],None))
+        self.label_expDecSteps.setToolTip(_translate("MainWindow", tooltips["label_expDecSteps"],None))
+        self.spinBox_expDecSteps.setToolTip(_translate("MainWindow", tooltips["label_expDecSteps"],None))
+        self.label_expDecRate.setToolTip(_translate("MainWindow", tooltips["label_expDecRate"],None))
+        self.doubleSpinBox_expDecRate.setToolTip(_translate("MainWindow", tooltips["label_expDecRate"],None))
+
+        self.pushButton_LR_finder.setToolTip(_translate("MainWindow", tooltips["groupBox_LrSettings"], None))    
+        self.pushButton_LR_plot.setToolTip(_translate("MainWindow", tooltips["pushButton_LR_plot"], None))
+
+
+
+    
+
+
+
+
+
+
+
+
+
+
+
+
+
+
         self.checkBox_trainLastNOnly_pop.setToolTip(_translate("Form", tooltips["checkBox_trainLastNOnly"], None))
         self.checkBox_trainLastNOnly_pop.setText(_translate("Form", "Train only last N layers", None))
         self.spinBox_trainLastNOnly_pop.setToolTip(_translate("Form", tooltips["spinBox_trainLastNOnly"], None))
@@ -4981,10 +5022,10 @@ class Fitting_Ui(QtWidgets.QWidget):
 
         self.label_batchSize_pop.setToolTip(_translate("Form", tooltips["label_batchSize"], None))
         self.label_batchSize_pop.setText(_translate("Form", "Batch size", None))
-        self.spinBox_batchSize_pop.setToolTip(_translate("Form", tooltips["label_batchSize"], None))
+        self.spinBox_batchSize.setToolTip(_translate("Form", tooltips["label_batchSize"], None))
         self.label_epochs_pop.setToolTip(_translate("Form", tooltips["label_epochs"], None))
         self.label_epochs_pop.setText(_translate("Form", "Epochs", None))
-        self.spinBox_epochs_pop.setToolTip(_translate("Form", tooltips["label_epochs"], None))
+        self.spinBox_epochs.setToolTip(_translate("Form", tooltips["label_epochs"], None))
 
 
 
@@ -4993,7 +5034,6 @@ class Fitting_Ui(QtWidgets.QWidget):
 
         self.radioButton_LrConst.setText(_translate("Form", "Constant", None))
         self.label_LrConst_pop.setText(_translate("Form", "LR", None))
-        self.doubleSpinBox_learningRate.setToolTip(_translate("Form", "<html><head/><body><p>Change the learning rate. Optimizer is always \'adam\' and default value is 0.001</p></body></html>", None))
         self.radioButton_LrCycl.setText(_translate("Form", "Cyclical", None))
         self.label_cycLrMin.setText(_translate("Form", "Range", None))
         self.label_cycLrMethod.setText(_translate("Form", "Method", None))
@@ -5001,11 +5041,11 @@ class Fitting_Ui(QtWidgets.QWidget):
         self.comboBox_cycLrMethod.setItemText(1, _translate("Form", "triangular2", None))
         self.comboBox_cycLrMethod.setItemText(2, _translate("Form", "exp_range", None))
         self.pushButton_cycLrPopup.setText(_translate("Form", "...", None))
-        self.radioButton_LrExpo.setText(_translate("Form", "Expontl.", None))
+        self.radioButton_LrExpo.setText(_translate("Form", "Expo.", None))
         self.label_expDecInitLr.setText(_translate("Form", "Initial LR", None))
-        self.label_expDecSteps.setText(_translate("Form", "Steps", None))
+        self.label_expDecSteps.setText(_translate("Form", "Decay steps", None))
         self.label_expDecRate.setText(_translate("Form", "Decay rate", None))
-        self.pushButton_LR_finder.setText(_translate("Form", "LR Finder", None))
+        self.pushButton_LR_finder.setText(_translate("Form", "LR Screen", None))
         self.pushButton_LR_plot.setText(_translate("Form", "Plot", None))
 
         self.groupBox_expt_imgProc_pop.setTitle(_translate("Form", "Image processing", None))
@@ -5022,6 +5062,14 @@ class Fitting_Ui(QtWidgets.QWidget):
         self.comboBox_paddingMode_pop.setItemText(8, _translate("Form", "symmetric", None))
         self.comboBox_paddingMode_pop.setItemText(9, _translate("Form", "wrap", None))
 
+        self.comboBox_zoomOrder.setItemText(0, _translate("MainWindow", "0 (nearest neighbor)", None))
+        self.comboBox_zoomOrder.setItemText(1, _translate("MainWindow", "1 (lin. interp.)", None))
+        self.comboBox_zoomOrder.setItemText(2, _translate("MainWindow", "2 (quadr. interp.)", None))
+        self.comboBox_zoomOrder.setItemText(3, _translate("MainWindow", "3 (cubic interp.)", None))
+        self.comboBox_zoomOrder.setItemText(4, _translate("MainWindow", "4", None))
+        self.comboBox_zoomOrder.setItemText(5, _translate("MainWindow", "5", None))
+        width=self.comboBox_zoomOrder.fontMetrics().boundingRect(max(["0 (nearest neighbor)"], key=len)).width()
+        self.comboBox_zoomOrder.view().setFixedWidth(width+10)             
 
         self.groupBox_regularization_pop.setTitle(_translate("Form", "Regularization", None))
         self.checkBox_expt_loss_pop.setText(_translate("Form", "Loss", None))
@@ -5197,8 +5245,8 @@ class Fitting_Ui(QtWidgets.QWidget):
         metrics are defined only once when starting fitting and should not be changed
         """
         if on_or_off==0: #switch off
-            self.spinBox_batchSize_pop.setValue(Default_dict["spinBox_batchSize"])
-            self.spinBox_epochs_pop.setValue(1)
+            self.spinBox_batchSize.setValue(Default_dict["spinBox_batchSize"])
+            self.spinBox_epochs.setValue(1)
             self.checkBox_expt_loss_pop.setChecked(False)
             self.expert_loss_off_pop(0)
             self.groupBox_learningRate_pop.setChecked(False)        
@@ -6147,7 +6195,7 @@ class popup_lrfinder(QtWidgets.QWidget):
 
     def retranslateUi(self, Form_LrFinder):
         _translate = QtCore.QCoreApplication.translate
-        Form_LrFinder.setWindowTitle(_translate("Form_LrFinder", "LR screening", None))
+        Form_LrFinder.setWindowTitle(_translate("Form_LrFinder", "LR Screening", None))
         self.groupBox_model.setTitle(_translate("Form_LrFinder", "Model", None))
         self.label_colorMode.setText(_translate("Form_LrFinder", "Color Mode"))              
         self.label_inpImgSize.setText(_translate("Form_LrFinder", "Input img. crop", None))
@@ -6233,8 +6281,8 @@ class popup_lrfinder(QtWidgets.QWidget):
         self.label_lineWidth.setToolTip(_translate("MainWindow", tooltips["label_lineWidth"],None))
         self.spinBox_lineWidth.setToolTip(_translate("MainWindow", tooltips["label_lineWidth"],None))
 
-        self.label_epochs.setToolTip(_translate("MainWindow", tooltips["label_epochs"],None))
-        self.spinBox_epochs.setToolTip(_translate("MainWindow", tooltips["label_epochs"],None))
+        self.label_epochs.setToolTip(_translate("MainWindow", tooltips["label_epochs_lrfind"],None))
+        self.spinBox_epochs.setToolTip(_translate("MainWindow", tooltips["label_epochs_lrfind"],None))
         self.pushButton_LrFindRun.setToolTip(_translate("MainWindow", tooltips["pushButton_LrFindRun"],None))
         self.groupBox_LrSettings.setToolTip(_translate("MainWindow", tooltips["groupBox_LrSettings"],None))
         self.widget_LrPlotting.setToolTip(_translate("MainWindow", tooltips["groupBox_LrSettings"],None))
@@ -6718,7 +6766,7 @@ class Ui_Form_expt_optim(QtWidgets.QWidget):
 #if __name__ == "__main__":
 #    app = QtWidgets.QApplication(sys.argv)
 #    Form = QtWidgets.QWidget()
-#    ui = Ui_Form_expt_optim()
+#    ui = Fitting_Ui()
 #    ui.setupUi(Form)
 #    Form.show()
 #    sys.exit(app.exec_())
