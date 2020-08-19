@@ -874,7 +874,7 @@ class cyclicLR(keras.callbacks.Callback):
 class exponentialDecay(keras.callbacks.Callback):
     """    
     Decrease learning rate using exponential decay
-    lr = initial_lr * decay_rate ** (epoch / decay_steps)    
+    lr = initial_lr * decay_rate ** (batch_iteration / decay_steps)    
     """
     def __init__(self, initial_lr=0.01, decay_steps=100, decay_rate=0.95):
         super(exponentialDecay, self).__init__()
