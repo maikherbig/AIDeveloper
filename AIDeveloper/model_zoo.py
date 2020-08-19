@@ -14,21 +14,23 @@ import keras
 import numpy as np
 
 
-version = "0.1.0_Original" #1.) Use any string you like to specify/define your version of the model_zoo
+version = "0.1.1_Original" #1.) Use any string you like to specify/define your version of the model_zoo
 def __version__():
     #print(version)
     return version
 
 #2.) Insert the name of your model in this list. All those names here, will appear later in the GUI
-predefined_1 = ["MLP_4_4_4", "MLP_8_8_8", "MLP_16_8_16", "MLP_24_16_24", "MLP_64_32_16", "MLP_24_16_24_skipcon","MLP_256_128_64_do"]
+predefined_1 = ["MLP_4_4_4", "MLP_8_8_8", "MLP_16_8_16", "MLP_24_16_24", 
+                "MLP_64_32_16", "MLP_72_80_32","MLP_64_80_32","MLP_72_64_48_48",
+                "MLP_72_48_24_32","MLP_24_16_24_skipcon","MLP_256_128_64_do"]
 predefined_2 = ["LeNet5","LeNet5_do","LeNet5_bn_do","LeNet5_bn_do_skipcon","TinyResNet","TinyCNN"]
 predefined_3 = ["VGG_small_1", "VGG_small_2","VGG_small_3","VGG_small_4"]
-predefined_4 = ["Nitta_et_al_6layer","Nitta_et_al_8layer","Nitta_et_al_6layer_linact"]
+predefined_4 = ["Nitta_et_al_6layer","Nitta_et_al_8layer","Nitta_et_al_6layer_linact","Nitta_et_al_6layer_reluact"]
 predefined_5 = ["MhNet1_bn_do_skipcon","MhNet2_bn_do_skipcon","CNN_4Conv2Dense_Optim"]
 predefined_6_1 = ["pretrained_squeezenet","pretrained_mobilenet_v2","pretrained_nasnetmobile","pretrained_nasnetlarge","pretrained_densenet","pretrained_mobilenet","pretrained_inception_v3","pretrained_vgg19","pretrained_vgg16","pretrained_xception"]
 predefined_6_2 = ["pretrained_resnet50","pretrained_resnet101","pretrained_resnet152","pretrained_resnet50_v2","pretrained_resnet101_v2","pretrained_resnet152_v2"]
 predefined_7 = ["Collection_1","Collection_2","Collection_3","Collection_4","Collection_5","Collection_6"]
-multiInputModels = ["MLP_MultiIn_3Lay_64"]
+multiInputModels = ["MLP_MultiIn_3Lay_24","MLP_MultiIn_3Lay_64","MLP_MultiIn_4Lay_72"]
 predefined_coll_test = ["Collection_test"]
 
 predefined_models = predefined_1+predefined_2+predefined_3+predefined_4+\
@@ -50,8 +52,12 @@ def get_model(modelname,in_dim,channels,out_dim):
     elif modelname=="MLP_72_64_48_48_do":
         model = MLP_72_64_48_48_do(in_dim,channels,out_dim)
 
+    elif modelname=="MLP_MultiIn_3Lay_24":
+        model = MLP_MultiIn_3Lay_24(in_dim,channels,out_dim)
     elif modelname=="MLP_MultiIn_3Lay_64":
         model = MLP_MultiIn_3Lay_64(in_dim,channels,out_dim)
+    elif modelname=="MLP_MultiIn_4Lay_72":
+        model = MLP_MultiIn_4Lay_72(in_dim,channels,out_dim)
 
     elif modelname=="LeNet5":
         model = LeNet5(in_dim,channels,out_dim)
@@ -82,7 +88,10 @@ def get_model(modelname,in_dim,channels,out_dim):
         model = nitta_et_al_8layer(in_dim,in_dim,channels,out_dim)
     elif modelname=="Nitta_et_al_6layer_linact":
         model = Nitta_et_al_6layer_linact(in_dim,in_dim,channels,out_dim)
-        
+    elif modelname=="Nitta_et_al_6layer_reluact":
+        model = Nitta_et_al_6layer_reluact(in_dim,in_dim,channels,out_dim)
+  
+      
     elif modelname=="MhNet1_bn_do_skipcon":
         model = MhNet1_bn_do_skipcon(in_dim,channels,out_dim)
     elif modelname=="MhNet2_bn_do_skipcon":
@@ -1003,6 +1012,34 @@ def Nitta_et_al_6layer_linact(in_dim1,in_dim2,channels,out_dim):
     model.add(Activation('linear',name="outputTensor"))
     return model
 
+def Nitta_et_al_6layer_reluact(in_dim1,in_dim2,channels,out_dim):
+    """
+    same as Nitta_et_al_6layer_linact, but with relu activation at the end
+    """
+    model = Sequential()
+    
+    model.add(Conv2D(32,3,3,input_shape=(in_dim1, in_dim2,channels),name="inputTensor")) #TensorFlow    
+    model.add(Activation('relu'))
+    model.add(Conv2D(32, 3,3))
+    model.add(Activation('relu'))
+    model.add(MaxPooling2D(pool_size=(2, 2)))
+    model.add(Dropout(0.25))
+
+    model.add(Conv2D(64, 3,3))
+    model.add(Activation('relu'))
+    model.add(Conv2D(64, 3,3))
+    model.add(Activation('relu'))
+    model.add(MaxPooling2D(pool_size=(2, 2)))
+    model.add(Dropout(0.25))
+
+    model.add(Flatten())  # this converts our 3D feature maps to 1D feature vectors
+    
+    model.add(Dense(256))
+    model.add(Activation('relu'))
+    model.add(Dropout(0.5))
+    model.add(Dense(out_dim))
+    model.add(Activation('relu',name="outputTensor"))
+    return model
 
 
 
@@ -1759,7 +1796,28 @@ def collection_test(in_dim1, in_dim2, channels, out_dim):
 
 
 #########################Multi-Input models#######################
+def MLP_MultiIn_3Lay_24(in_dim,channels,out_dim):
+    inputA = Input(shape=(in_dim, in_dim,channels),name="inputTensorA") #TensorFlow format (height,width,channels)
+    inputB = Input(shape=(1,),name="inputTensorB") 
+    
+    flattenA = Flatten()(inputA)
+    x = Concatenate(axis=1)([flattenA, inputB])
+    
+    x = Dense(24)(x)
+    x = Dense(16)(x)
+    x = Dense(24)(x)
 
+    x = Activation('relu')(x)
+
+    x = Dense(out_dim)(x)
+    predictions = Activation('softmax',name="outputTensor")(x)
+    
+    model = Model(inputs=[inputA, inputB], outputs=predictions)
+
+    return model
+    
+    
+    
 def MLP_MultiIn_3Lay_64(in_dim,channels,out_dim):
     inputA = Input(shape=(in_dim, in_dim,channels),name="inputTensorA") #TensorFlow format (height,width,channels)
     inputB = Input(shape=(1,),name="inputTensorB") 
@@ -1782,3 +1840,41 @@ def MLP_MultiIn_3Lay_64(in_dim,channels,out_dim):
     model = Model(inputs=[inputA, inputB], outputs=predictions)
 
     return model
+
+def MLP_MultiIn_4Lay_72(in_dim,channels,out_dim):
+    inputA = Input(shape=(in_dim, in_dim,channels),name="inputTensorA") #TensorFlow format (height,width,channels)
+    inputB = Input(shape=(1,),name="inputTensorB") 
+    
+    flattenA = Flatten()(inputA)
+    #flattenB = Flatten()(inputB)
+    x = Concatenate(axis=1)([flattenA, inputB])
+    
+    #x = Flatten()(x)
+
+    x = Dense(72)(x)
+    x = Dense(48)(x)
+    x = Dense(24)(x)
+    x = Dense(32)(x)
+
+    x = Activation('relu')(x)
+
+    x = Dense(out_dim)(x)
+    predictions = Activation('softmax',name="outputTensor")(x)
+    
+    model = Model(inputs=[inputA, inputB], outputs=predictions)
+
+    return model
+
+
+
+
+
+
+
+
+
+
+
+
+
+
