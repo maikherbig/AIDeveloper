@@ -163,7 +163,7 @@ def find_files(user_selected_path,paths,hashes):
             Info.append("Found the required file multiple times! Choose one!")
     return(Paths_new,Info)
 
-def write_rtdc(fname,rtdc_datasets,X_valid,Indices,cropped=True,color_mode='Grayscale'):
+def write_rtdc(fname,rtdc_datasets,X_valid,Indices,cropped=True,color_mode='Grayscale',xtra_in=[]):
     """
     fname - path+filename of file to be created
     rtdc_datasets - list paths to rtdc data-data-sets
@@ -235,9 +235,12 @@ def write_rtdc(fname,rtdc_datasets,X_valid,Indices,cropped=True,color_mode='Gray
         #Create rtdc_dataset
         hdf = h5py.File(fname,'a')
         hdf.create_dataset("events/image", data=images, dtype=np.uint8,maxshape=maxshape,fletcher32=True,chunks=True)
-        hdf.create_dataset("events/pos_x", data=pos_x, dtype='uint8')
-        hdf.create_dataset("events/pos_y", data=pos_y, dtype='uint8')
-        hdf.create_dataset("events/index", data=index_new, dtype='uint8')
+        hdf.create_dataset("events/pos_x", data=pos_x, dtype=np.int32)
+        hdf.create_dataset("events/pos_y", data=pos_y, dtype=np.int32)
+        hdf.create_dataset("events/index", data=index_new, dtype=np.int32)
+        if len((np.array(xtra_in)).ravel())>0: #
+            #hdf.create_dataset("xtra_in", data=xtra_in, dtype=np.float32)
+            hdf.create_dataset('xtra_in', data=np.concatenate(xtra_in), compression="gzip", chunks=True, maxshape=(None,))
         
         #Adjust metadata:
         #"experiment:event count" = Nr. of images
@@ -430,6 +433,18 @@ def write_rtdc(fname,rtdc_datasets,X_valid,Indices,cropped=True,color_mode='Gray
                                       data={feat: np.array(data)},mode="append")
                         
                     h5obj.close()
+                    
+    #Append xtra_in data to the rtdc file
+    if len((np.array(xtra_in)).ravel())>0: #in case there is some xtra_in data
+        with h5py.File(fname, 'a') as rtdc_h5:
+            try:
+                rtdc_h5.create_dataset('xtra_in', data=np.concatenate(xtra_in), compression="gzip", chunks=True, maxshape=(None,))
+                rtdc_h5.close()
+            except:
+                pass
+
+
+
 
 def check_update(this_version):
     """
