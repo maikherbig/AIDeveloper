@@ -1183,6 +1183,10 @@ class MainWindow(QtWidgets.QMainWindow):
         self.popup_lrfinder_ui.pushButton_LrReset.clicked.connect(self.reset_lr_settings)
         self.popup_lrfinder_ui.pushButton_singleReset.clicked.connect(self.reset_lr_value)
         self.popup_lrfinder_ui.pushButton_rangeReset.clicked.connect(self.reset_lr_range)
+        #LR single value when groupbox is toggled
+        self.popup_lrfinder_ui.groupBox_singleLr.toggled.connect(self.get_lr_single)
+        #LR range when groupbox is toggled
+        self.popup_lrfinder_ui.groupBox_LrRange.toggled.connect(self.get_lr_range)
 
         #compute the number of steps/epoch
         ind = [selectedfile["TrainOrValid"] == "Train" for selectedfile in SelectedFiles]
@@ -7306,23 +7310,17 @@ class MainWindow(QtWidgets.QMainWindow):
             self.popup_lrfinder_ui.groupBox_LrRange.setEnabled(True)
             
             try:# try to empty the plot
-                self.popup_lrfinder_ui.lr_plot.removeItem(self.lr_single)   
-                self.popup_lrfinder_ui.lr_plot.removeItem(self.lr_region)
-                self.popup_lrfinder_ui.lr_plot.removeItem(self.lr_line)
+                self.popup_lrfinder_ui.lr_plot.clear()
             except:
                 pass
             
             self.lr_line = pg.PlotCurveItem(x=np.log10(learning_rates), y=losses,pen=pencolor)
             self.popup_lrfinder_ui.lr_plot.addItem(self.lr_line)            
 
-            #LR single value when groupbox is toggled
-            self.popup_lrfinder_ui.groupBox_singleLr.toggled.connect(self.get_lr_single)
             #In case the groupBox_singleLr is already checked, carry out the function:
             if self.popup_lrfinder_ui.groupBox_singleLr.isChecked():
                 self.get_lr_single(on_or_off=True)
 
-            #LR range when groupbox is toggled
-            self.popup_lrfinder_ui.groupBox_LrRange.toggled.connect(self.get_lr_range)
             #In case the groupBox_LrRange is already checked, carry out the function:
             if self.popup_lrfinder_ui.groupBox_LrRange.isChecked():
                 self.get_lr_range(on_or_off=True)
