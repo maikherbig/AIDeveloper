@@ -1092,13 +1092,20 @@ class MainWindow(QtWidgets.QMainWindow):
     def accept_lr_range(self):
         lr_start = str(self.popup_lrfinder_ui.lineEdit_LrMin.text())
         lr_stop = str(self.popup_lrfinder_ui.lineEdit_LrMax.text())
-        self.lineEdit_cycLrMin.setText(lr_start)
-        self.lineEdit_cycLrMax.setText(lr_stop)
+        if len(lr_start)>0 and len(lr_stop)>0:
+            self.lineEdit_cycLrMin.setText(lr_start)
+            self.lineEdit_cycLrMax.setText(lr_stop)
+        else:
+            print("Found no values for LR range")
         
     def accept_lr_value(self):
-        lr_value = float(self.popup_lrfinder_ui.lineEdit_singleLr.text())
-        self.doubleSpinBox_learningRate.setValue(lr_value)
-        self.doubleSpinBox_expDecInitLr.setValue(lr_value)
+        single_lr = self.popup_lrfinder_ui.lineEdit_singleLr.text()
+        if len(single_lr)>0:
+            lr_value = float(single_lr)
+            self.doubleSpinBox_learningRate.setValue(lr_value)
+            self.doubleSpinBox_expDecInitLr.setValue(lr_value)
+        else:
+            print("Found no value for single LR!")
     
     def reset_lr_settings(self):
         self.popup_lrfinder_ui.lineEdit_startLr.setText(_translate("Form_LrFinder", "1e-10", None))
@@ -1109,19 +1116,18 @@ class MainWindow(QtWidgets.QMainWindow):
         self.popup_lrfinder_ui.spinBox_epochs.setProperty("value", 5)
         
     def reset_lr_value(self):
-        self.popup_lrfinder_ui.lineEdit_singleLr.setText()
-        try:# try to empty the plot
-            self.popup_lrfinder_ui.lr_plot.removeItem(self.lr_line)   
-        except:
-            pass
+        self.popup_lrfinder_ui.lineEdit_singleLr.setText("")
+        #Uncheck and Check the groupbox to refresh the line
+        self.popup_lrfinder_ui.groupBox_singleLr.setChecked(False)
+        self.popup_lrfinder_ui.groupBox_singleLr.setChecked(True)
 
     def reset_lr_range(self):
-        self.popup_lrfinder_ui.lineEdit_LrMin.setText()
-        self.popup_lrfinder_ui.lineEdit_LrMax.setText()
-        try:# try to empty the plot
-            self.popup_lrfinder_ui.lr_plot.removeItem(self.lr_region)
-        except:
-            pass
+        self.popup_lrfinder_ui.lineEdit_LrMin.setText("")
+        self.popup_lrfinder_ui.lineEdit_LrMax.setText("")
+        #Uncheck and Check the groupbox to refresh the range
+        self.popup_lrfinder_ui.groupBox_LrRange.setChecked(False)
+        self.popup_lrfinder_ui.groupBox_LrRange.setChecked(True)
+
           
     def popup_lr_finder(self):
         SelectedFiles = self.items_clicked()
@@ -1176,6 +1182,7 @@ class MainWindow(QtWidgets.QMainWindow):
         self.popup_lrfinder_ui.pushButton_singleAccept.clicked.connect(self.accept_lr_value)
         self.popup_lrfinder_ui.pushButton_LrReset.clicked.connect(self.reset_lr_settings)
         self.popup_lrfinder_ui.pushButton_singleReset.clicked.connect(self.reset_lr_value)
+        self.popup_lrfinder_ui.pushButton_rangeReset.clicked.connect(self.reset_lr_range)
 
         #compute the number of steps/epoch
         ind = [selectedfile["TrainOrValid"] == "Train" for selectedfile in SelectedFiles]
@@ -7299,8 +7306,9 @@ class MainWindow(QtWidgets.QMainWindow):
             self.popup_lrfinder_ui.groupBox_LrRange.setEnabled(True)
             
             try:# try to empty the plot
-                self.popup_lrfinder_ui.lr_plot.removeItem(self.lr_line)   
+                self.popup_lrfinder_ui.lr_plot.removeItem(self.lr_single)   
                 self.popup_lrfinder_ui.lr_plot.removeItem(self.lr_region)
+                self.popup_lrfinder_ui.lr_plot.removeItem(self.lr_line)
             except:
                 pass
             
