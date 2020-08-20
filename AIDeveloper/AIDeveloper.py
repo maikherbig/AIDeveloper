@@ -7960,7 +7960,7 @@ class MainWindow(QtWidgets.QMainWindow):
             #Get the order, specified in Options->Zoom Order
             #zoom_methods = [self.actionOrder0.isChecked(),self.actionOrder1.isChecked(),self.actionOrder2.isChecked(),self.actionOrder3.isChecked(),self.actionOrder4.isChecked(),self.actionOrder5.isChecked()]
             #order = np.where(np.array(zoom_methods)==True)[0]
-            zoom_order = int(self.comboBox_zoomOrder.currentIndex()) #the combobox-index is already the zoom order
+            order = int(self.comboBox_zoomOrder.currentIndex()) #the combobox-index is already the zoom order
             if channels==1:
                 img_zoom = ndimage.zoom(img, zoom=factor,order=int(order))
             if channels==3:
@@ -9689,8 +9689,12 @@ class MainWindow(QtWidgets.QMainWindow):
         nr_events_epoch_valid = None
 
         rtdc_h5 = h5py.File(rtdc_path, 'r')
-        Xtra_in = np.array(rtdc_h5["xtra_in"])
-        rtdc_h5.close() #close the hdf5                
+        try:
+            Xtra_in = np.array(rtdc_h5["xtra_in"])
+        except:
+            Xtra_in = []
+        rtdc_h5.close() #close the hdf5 
+                       
 
         dic = {"SelectedFiles_valid":SelectedFiles_valid,"nr_events_epoch_valid":nr_events_epoch_valid,"rtdc_path_valid":[rtdc_path],"X_valid_orig":[X_valid_orig],"X_valid":X_valid,"y_valid":y_valid,"Indices":[Indices],"Xtra_in":Xtra_in}
         self.ValidationSet = dic
