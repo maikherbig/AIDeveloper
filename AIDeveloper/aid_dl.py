@@ -155,7 +155,7 @@ def model_compile(model_keras,loss_,optimizer_,learning_rate_,model_metrics,out_
     elif optimizer_name=='adadelta':
         optimizer = keras.optimizers.Adadelta(lr=optimizer_["doubleSpinBox_lr_adadelta"], rho=optimizer_["doubleSpinBox_adadelta_rho"])
     elif optimizer_name=='adam':
-        optimizer = keras.optimizers.Adam(lr=optimizer_["doubleSpinBox_lr_adam"], beta_1=optimizer_["doubleSpinBox_adam_beta1"], beta_2=optimizer_["doubleSpinBox_adam_beta2"], amsgrad=optimizer["checkBox_adam_amsgrad"])
+        optimizer = keras.optimizers.Adam(lr=optimizer_["doubleSpinBox_lr_adam"], beta_1=optimizer_["doubleSpinBox_adam_beta1"], beta_2=optimizer_["doubleSpinBox_adam_beta2"], amsgrad=optimizer_["checkBox_adam_amsgrad"])
     elif optimizer_name=='adamax':
         optimizer = keras.optimizers.Adamax(lr=optimizer_["doubleSpinBox_lr_adamax"], beta_1=optimizer_["doubleSpinBox_adamax_beta1"], beta_2=optimizer_["doubleSpinBox_adamax_beta2"])
     elif optimizer_name=='nadam':
@@ -1004,16 +1004,3 @@ def get_lr_callback(learning_rate_const_on,learning_rate_const,
     elif learning_rate_expo_on==True:
         return exponentialDecay(initial_lr=expDecInitLr, decay_steps=expDecSteps, decay_rate=expDecRate)  
 
-       
-
-        
-        
-        
-        
-        
-        
-        
-
-        
-
-    
