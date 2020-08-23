@@ -25,10 +25,16 @@ In this video only the very basic functionality of AID is presented. Furthermore
 [![Alternate Text](/art/Youtube_Link_Tutorial1_v04.png)](https://youtu.be/dvFiSRnwoto "AIDeveloper Tutorial 1")
   
   
-## Transfer learning    
+## Transfer learning  
 In a second tutorial (28min), the 'Expert' options of AID are exploited to perform transfer learning.  
 First, an existing CNN is loaded into AID. This CNN was trained previously on CIFAR-10 (grayscale) until a validation accuracy of 83%. Next, the Fashion-MNIST dataset is loaded into AID and training of the model is continued on this dataset. At the beginning, only the last layer of the CNN is trained, but later more and more layers are included into training. Also the dropout rates are optimized during the training process until a possibly record breaking testing accuracy of above 92% is reached.  
 [![Alternate Text](art/Youtube_Link_Tutorial2_v04.png)](https://youtu.be/NWhv4PF0C4g "AIDeveloper Tutorial 2")
+  
+  
+## Learning rate screening and learning rate schedules  
+The learning rate (LR) is an important parameter when it comes to training neural networks. AID features a LR screening method which was originally suggested in
+[this paper](https://arxiv.org/abs/1506.01186). That method allows you to find a LR that is suited well for your setting. Furthermore, this tutorial introduces LR schedules, which allow you to automatically adjust the learning rate during the training process. Besides exponentially decreasing learning rates, AID also features cyclical learning rates, which were also introduced in the [paper mentioned earlier](https://arxiv.org/abs/1506.01186).     
+[![Alternate Text](art/Youtube_Link_Tutorial_LR_schedules.png)](https://youtu.be/cQSFFURAtPc "AIDeveloper Learning rate schedules and learning rate screening")  
   
   
 ## Detecting COVID-19 using chest X-ray images  
