@@ -5,7 +5,7 @@ AIDeveloper is a software tool that allows you to train, evaluate and apply deep
 for image classification within a graphical user-interface (GUI).  
 
 # Overview  
-![Alt Text](art/Intro_v06.gif)
+![Alt Text](art/Intro-v07.gif)
 # Installation  
 There is a tutorial video (ca. 1min. short) on YouTube.  
 In this video, I show you how to get AIDeveloper running on your PC.  
