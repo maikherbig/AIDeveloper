@@ -1,9 +1,11 @@
 
-![alt text](https://github.com/maikherbig/AIDeveloper/blob/master/art/main_icon_simple_04_text2.png "AIDeveloper Logo with Text")  
+![alt text](art/main_icon_simple_04_text2.png "AIDeveloper Logo with Text")  
 
 AIDeveloper is a software tool that allows you to train, evaluate and apply deep neural nets 
 for image classification within a graphical user-interface (GUI).  
 
+# Overview  
+![Alt Text](art/Intro_v06.gif)
 # Installation  
 There is a tutorial video (ca. 1min. short) on YouTube.  
 In this video, I show you how to get AIDeveloper running on your PC.  
@@ -22,7 +24,7 @@ Go through the following 5 steps and you are good to go:
 ## Basic usage  
 There is a tutorial video (ca. 13min. short) on YouTube.  
 In this video only the very basic functionality of AID is presented. Furthermore, AIDeveloper contains many tooltips, which should help you to proceed further.  
-[![Alternate Text](/art/Youtube_Link_Tutorial1_v04.png)](https://youtu.be/dvFiSRnwoto "AIDeveloper Tutorial 1")
+[![Alternate Text](art/Youtube_Link_Tutorial1_v04.png)](https://youtu.be/dvFiSRnwoto "AIDeveloper Tutorial 1")
   
   
 ## Transfer learning  
