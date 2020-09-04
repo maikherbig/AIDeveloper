@@ -1526,7 +1526,6 @@ def pretrained_resnet152(in_dim1,in_dim2,channels,out_dim):
     """
     try:
         pretrained_model  = keras_applications.resnet.ResNet152(weights='imagenet',input_shape=(in_dim1,in_dim2,channels),include_top=False,backend = keras.backend, layers = keras.layers, models = keras.models, utils = keras.utils)
-    
     except:
         pretrained_model  = keras.applications.resnet.ResNet152(weights='imagenet',input_shape=(in_dim1,in_dim2,channels),include_top=False)
     
@@ -1556,7 +1555,7 @@ def pretrained_resnet50_v2(in_dim1,in_dim2,channels,out_dim):
     try:
         pretrained_model  = keras_applications.resnet.ResNet50V2(weights='imagenet',input_shape=(in_dim1,in_dim2,channels),include_top=False,backend = keras.backend, layers = keras.layers, models = keras.models, utils = keras.utils)
     except:
-        pretrained_model  = keras.applications.resnet.ResNet50V2(weights='imagenet',input_shape=(in_dim1,in_dim2,channels),include_top=False)
+        pretrained_model  = keras_applications.resnet_v2.ResNet50V2(weights='imagenet',input_shape=(in_dim1,in_dim2,channels),include_top=False,backend = keras.backend, layers = keras.layers, models = keras.models, utils = keras.utils)
 
     layers = pretrained_model.layers
     layers[0].name = "inputTensor"
@@ -1584,7 +1583,7 @@ def pretrained_resnet101_v2(in_dim1,in_dim2,channels,out_dim):
     try:
         pretrained_model  = keras_applications.resnet.ResNet101V2(weights='imagenet',input_shape=(in_dim1,in_dim2,channels),include_top=False,backend = keras.backend, layers = keras.layers, models = keras.models, utils = keras.utils)
     except:
-        pretrained_model  = keras.applications.resnet.ResNet101V2(weights='imagenet',input_shape=(in_dim1,in_dim2,channels),include_top=False)
+        pretrained_model  = keras_applications.resnet_v2.ResNet101V2(weights='imagenet',input_shape=(in_dim1,in_dim2,channels),include_top=False,backend = keras.backend, layers = keras.layers, models = keras.models, utils = keras.utils)
         
     layers = pretrained_model.layers
     layers[0].name = "inputTensor"
@@ -1612,7 +1611,7 @@ def pretrained_resnet152_v2(in_dim1,in_dim2,channels,out_dim):
     try:
         pretrained_model  = keras_applications.resnet.ResNet152V2(weights='imagenet',input_shape=(in_dim1,in_dim2,channels),include_top=False,backend = keras.backend, layers = keras.layers, models = keras.models, utils = keras.utils)
     except:
-        pretrained_model  = keras.applications.resnet.ResNet152V2(weights='imagenet',input_shape=(in_dim1,in_dim2,channels),include_top=False)
+        pretrained_model  = keras_applications.resnet_v2.ResNet152V2(weights='imagenet',input_shape=(in_dim1,in_dim2,channels),include_top=False,backend = keras.backend, layers = keras.layers, models = keras.models, utils = keras.utils)
         
     layers = pretrained_model.layers
     layers[0].name = "inputTensor"
