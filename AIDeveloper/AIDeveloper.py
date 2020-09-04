@@ -119,7 +119,7 @@ import aid_img, aid_dl, aid_bin
 import aid_frontend
 from partial_trainability import partial_trainability
 
-VERSION = "0.1.1" #Python 3.5.6 Version
+VERSION = "0.1.1_dev1" #Python 3.5.6 Version
 model_zoo_version = model_zoo.__version__()
 print("AIDeveloper Version: "+VERSION)
 print("model_zoo.py Version: "+model_zoo.__version__())
@@ -942,11 +942,13 @@ class MainWindow(QtWidgets.QMainWindow):
                     Colors.append(cb.background())
         self.Colors = Colors
         Histories = self.fittingpopups_ui[listindex].Histories
-        DF1 = [pd.DataFrame(h).iloc[[-1]] for h in Histories] #just in case the nb_epoch in .fit() is >1, only save the last history item, beacuse this would a  model that could be saved 
-        if len(DF1)>0:
-            DF1 = pd.concat(DF1)
-        else:
-            return
+        DF1 = [[ h[h_i][-1] for h_i in h] for h in Histories] #if nb_epoch in .fit() is >1, only save the last history item, beacuse this would a model that could be saved
+        DF1 = np.r_[DF1]
+        DF1 = pd.DataFrame( DF1,columns=Histories[0].keys() )
+#        if len(DF1)>0:
+#            DF1 = pd.concat(DF1)
+#        else:
+#            return
         self.fittingpopups_ui[listindex].widget_pop.clear()
         
         #Create fresh plot
@@ -6156,9 +6158,11 @@ class MainWindow(QtWidgets.QMainWindow):
                             
                             if collection==False:
                                 if counter==0:
-                                    #If this runs the first time, create the file with header
-                                    DF1 = [pd.DataFrame(h).iloc[[-1]] for h in Histories] #just in case the nb_epoch in .fit() is >1, only save the last history item, beacuse this would a  model that could be saved 
-                                    DF1 = pd.concat(DF1)
+                                    #If this runs the first time, create the file with header                                    
+                                    DF1 = [[ h[h_i][-1] for h_i in h] for h in Histories] #if nb_epoch in .fit() is >1, only save the last history item, beacuse this would a model that could be saved
+                                    DF1 = np.r_[DF1]
+                                    DF1 = pd.DataFrame( DF1,columns=Histories[0].keys() )
+                                    
                                     DF1["Saved"] = Saved
                                     DF1["Time"] = Stopwatch
                                     DF1["LearningRate"] = LearningRate
@@ -6176,8 +6180,9 @@ class MainWindow(QtWidgets.QMainWindow):
                                 #Get a sensible frequency for saving the dataframe (every 20s)
                                 elif t2-t1>int(self.fittingpopups_ui[listindex].spinBox_saveMetaEvery.value()):                                   
                                 #elif counter%50==0:  #otherwise save the history to excel after each n epochs
-                                    DF1 = [pd.DataFrame(h).iloc[[-1]] for h in Histories] #just in case the nb_epoch in .fit() is >1, only save the last history item, beacuse this would a  model that could be saved 
-                                    DF1 = pd.concat(DF1)
+                                    DF1 = [[ h[h_i][-1] for h_i in h] for h in Histories] #if nb_epoch in .fit() is >1, only save the last history item, beacuse this would a model that could be saved
+                                    DF1 = np.r_[DF1]
+                                    DF1 = pd.DataFrame( DF1,columns=Histories[0].keys() )
                                     DF1["Saved"] = Saved
                                     DF1["Time"] = Stopwatch
                                     DF1["LearningRate"] = LearningRate
@@ -6244,8 +6249,9 @@ class MainWindow(QtWidgets.QMainWindow):
                                         Histories = HISTORIES[i]
                                         Saved = SAVED[i]
                                         #If this runs the first time, create the file with header
-                                        DF1 = [pd.DataFrame(h).iloc[[-1]] for h in Histories] #just in case the nb_epoch in .fit() is >1, only save the last history item, beacuse this would a  model that could be saved 
-                                        DF1 = pd.concat(DF1)
+                                        DF1 = [[ h[h_i][-1] for h_i in h] for h in Histories] #if nb_epoch in .fit() is >1, only save the last history item, beacuse this would a model that could be saved
+                                        DF1 = np.r_[DF1]
+                                        DF1 = pd.DataFrame( DF1,columns=Histories[0].keys() )
                                         DF1["Saved"] = Saved
                                         DF1.index = Index
                                         HISTORIES[i] = []#reset the Histories list
@@ -6264,8 +6270,9 @@ class MainWindow(QtWidgets.QMainWindow):
                                     for i in range(len(HISTORIES)):
                                         Histories = HISTORIES[i]
                                         Saved = SAVED[i]
-                                        DF1 = [pd.DataFrame(h).iloc[[-1]] for h in Histories] #just in case the nb_epoch in .fit() is >1, only save the last history item, beacuse this would a  model that could be saved 
-                                        DF1 = pd.concat(DF1)
+                                        DF1 = [[ h[h_i][-1] for h_i in h] for h in Histories] #if nb_epoch in .fit() is >1, only save the last history item, beacuse this would a model that could be saved
+                                        DF1 = np.r_[DF1]
+                                        DF1 = pd.DataFrame( DF1,columns=Histories[0].keys() )
                                         DF1["Saved"] = Saved
                                         DF1.index = Index
                                         HISTORIES[i] = []#reset the Histories list
@@ -6287,8 +6294,9 @@ class MainWindow(QtWidgets.QMainWindow):
     
             if collection==False:
                 if len(Histories)>0: #if the list for History files is not empty, process it!
-                    DF1 = [pd.DataFrame(h).iloc[[-1]] for h in Histories] #just in case the nb_epoch in .fit() is >1, only save the last history item, beacuse this would a  model that could be saved 
-                    DF1 = pd.concat(DF1)
+                    DF1 = [[ h[h_i][-1] for h_i in h] for h in Histories] #if nb_epoch in .fit() is >1, only save the last history item, beacuse this would a model that could be saved
+                    DF1 = np.r_[DF1]
+                    DF1 = pd.DataFrame( DF1,columns=Histories[0].keys() )
                     DF1["Saved"] = Saved
                     DF1["Time"] = Stopwatch
                     DF1["LearningRate"] = LearningRate
@@ -6311,8 +6319,9 @@ class MainWindow(QtWidgets.QMainWindow):
                     Histories = HISTORIES[i]
                     Saved = SAVED[i]
                     if len(Histories)>0: #if the list for History files is not empty, process it!
-                        DF1 = [pd.DataFrame(h).iloc[[-1]] for h in Histories] #just in case the nb_epoch in .fit() is >1, only save the last history item, beacuse this would a  model that could be saved 
-                        DF1 = pd.concat(DF1)
+                        DF1 = [[ h[h_i][-1] for h_i in h] for h in Histories] #if nb_epoch in .fit() is >1, only save the last history item, beacuse this would a model that could be saved
+                        DF1 = np.r_[DF1]
+                        DF1 = pd.DataFrame( DF1,columns=Histories[0].keys() )
                         DF1["Saved"] = Saved
                         DF1.index = Index
                         HISTORIES[i] = []#reset the Histories list
@@ -8757,6 +8766,7 @@ class MainWindow(QtWidgets.QMainWindow):
         msg = QtWidgets.QMessageBox()
         msg.setIcon(QtWidgets.QMessageBox.Information)       
         msg.setText(tooltips["msg_loadSession"])
+        msg.setWindowTitle("Session loaded")
         msg.setStandardButtons(QtWidgets.QMessageBox.Ok)
         msg.exec_()
 
