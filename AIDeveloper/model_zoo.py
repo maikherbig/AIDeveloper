@@ -29,12 +29,13 @@ predefined_4 = ["Nitta_et_al_6layer","Nitta_et_al_8layer","Nitta_et_al_6layer_li
 predefined_5 = ["MhNet1_bn_do_skipcon","MhNet2_bn_do_skipcon","CNN_4Conv2Dense_Optim"]
 predefined_6_1 = ["pretrained_squeezenet","pretrained_mobilenet_v2","pretrained_nasnetmobile","pretrained_nasnetlarge","pretrained_densenet","pretrained_mobilenet","pretrained_inception_v3","pretrained_vgg19","pretrained_vgg16","pretrained_xception"]
 predefined_6_2 = ["pretrained_resnet50","pretrained_resnet101","pretrained_resnet152","pretrained_resnet50_v2","pretrained_resnet101_v2","pretrained_resnet152_v2"]
+predefined_6_3 = ["pretrained_resnext50","pretrained_resnext101"]
 predefined_7 = ["Collection_1","Collection_2","Collection_3","Collection_4","Collection_5","Collection_6"]
 multiInputModels = ["MLP_MultiIn_3Lay_24","MLP_MultiIn_3Lay_64","MLP_MultiIn_4Lay_72"]
 predefined_coll_test = ["Collection_test"]
 
 predefined_models = predefined_1+predefined_2+predefined_3+predefined_4+\
-predefined_5+predefined_6_1+predefined_6_2+predefined_7+predefined_coll_test+multiInputModels
+predefined_5+predefined_6_1+predefined_6_2+predefined_6_3+predefined_7+predefined_coll_test+multiInputModels
 def get_predefined_models(): #this function is used inside AIDeveloper.py
     return predefined_models
 
@@ -133,6 +134,10 @@ def get_model(modelname,in_dim,channels,out_dim):
         model = pretrained_resnet101_v2(in_dim,in_dim,channels,out_dim)
     elif modelname=="pretrained_resnet152_v2":
         model = pretrained_resnet152_v2(in_dim,in_dim,channels,out_dim)
+    elif modelname=="pretrained_resnext50":
+        model = pretrained_resnext50(in_dim,in_dim,channels,out_dim)
+    elif modelname=="pretrained_resnext101":
+        model = pretrained_resnext101(in_dim,in_dim,channels,out_dim)
 
     elif modelname=="Collection_1":
         model = collection_1(in_dim,in_dim,channels,out_dim)
@@ -1612,6 +1617,61 @@ def pretrained_resnet152_v2(in_dim1,in_dim2,channels,out_dim):
         pretrained_model  = keras_applications.resnet.ResNet152V2(weights='imagenet',input_shape=(in_dim1,in_dim2,channels),include_top=False,backend = keras.backend, layers = keras.layers, models = keras.models, utils = keras.utils)
     except:
         pretrained_model  = keras_applications.resnet_v2.ResNet152V2(weights='imagenet',input_shape=(in_dim1,in_dim2,channels),include_top=False,backend = keras.backend, layers = keras.layers, models = keras.models, utils = keras.utils)
+        
+    layers = pretrained_model.layers
+    layers[0].name = "inputTensor"
+    #The output of the pretrained network are the inputs to our Dense layers
+    x = Flatten()(pretrained_model.output)
+    x = Dense(2048, activation='relu')(x)
+    x = Dropout(0.3)(x)
+    x = BatchNormalization()(x)
+    x = Dense(1024, activation='relu')(x)
+    x = Dropout(0.3)(x)
+    x = Dense(out_dim)(x)
+    predictions = Activation('softmax',name="outputTensor")(x)
+    #combine pretrained models and our dense layers
+    model = Model(input = pretrained_model.input, output = predictions) 
+    return model
+
+
+def pretrained_resnext50(in_dim1,in_dim2,channels,out_dim):
+    """
+    Loads a pretrained model from Keras (internet required).
+    Minimum input dimension: (32,32,3)
+    --Only three channels allowed!--
+    It is recommended to use the expert model in AIDeveloper to only train the dense layers
+    """
+    try:
+        pretrained_model  = keras_applications.resnext.ResNeXt50(weights='imagenet',input_shape=(in_dim1,in_dim2,channels),include_top=False,backend = keras.backend, layers = keras.layers, models = keras.models, utils = keras.utils)
+    except:
+        pretrained_model  = keras.applications.keras_applications.resnext.ResNeXt50(weights='imagenet',input_shape=(in_dim1,in_dim2,channels),include_top=False,backend = keras.backend, layers = keras.layers, models = keras.models, utils = keras.utils)
+        
+    layers = pretrained_model.layers
+    layers[0].name = "inputTensor"
+    #The output of the pretrained network are the inputs to our Dense layers
+    x = Flatten()(pretrained_model.output)
+    x = Dense(2048, activation='relu')(x)
+    x = Dropout(0.3)(x)
+    x = BatchNormalization()(x)
+    x = Dense(1024, activation='relu')(x)
+    x = Dropout(0.3)(x)
+    x = Dense(out_dim)(x)
+    predictions = Activation('softmax',name="outputTensor")(x)
+    #combine pretrained models and our dense layers
+    model = Model(input = pretrained_model.input, output = predictions) 
+    return model
+
+def pretrained_resnext101(in_dim1,in_dim2,channels,out_dim):
+    """
+    Loads a pretrained model from Keras (internet required).
+    Minimum input dimension: (32,32,3)
+    --Only three channels allowed!--
+    It is recommended to use the expert model in AIDeveloper to only train the dense layers
+    """
+    try:
+        pretrained_model  = keras_applications.resnext.ResNeXt101(weights='imagenet',input_shape=(in_dim1,in_dim2,channels),include_top=False,backend = keras.backend, layers = keras.layers, models = keras.models, utils = keras.utils)
+    except:
+        pretrained_model  = keras.applications.keras_applications.resnext.ResNeXt50(weights='imagenet',input_shape=(in_dim1,in_dim2,channels),include_top=False,backend = keras.backend, layers = keras.layers, models = keras.models, utils = keras.utils)
         
     layers = pretrained_model.layers
     layers[0].name = "inputTensor"
