@@ -14,7 +14,7 @@ import keras
 import numpy as np
 
 
-version = "0.1.1_Original" #1.) Use any string you like to specify/define your version of the model_zoo
+version = "0.1.2_Original" #1.) Use any string you like to specify/define your version of the model_zoo
 def __version__():
     #print(version)
     return version
