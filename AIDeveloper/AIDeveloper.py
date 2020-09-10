@@ -119,7 +119,7 @@ import aid_img, aid_dl, aid_bin
 import aid_frontend
 from partial_trainability import partial_trainability
 
-VERSION = "0.1.1_dev1" #Python 3.5.6 Version
+VERSION = "0.1.1_dev2" #Python 3.5.6 Version
 model_zoo_version = model_zoo.__version__()
 print("AIDeveloper Version: "+VERSION)
 print("model_zoo.py Version: "+model_zoo.__version__())
@@ -1547,9 +1547,6 @@ class MainWindow(QtWidgets.QMainWindow):
         item_ui.popup_optim_ui.radioButton_adadelta.toggled.connect(lambda: change_optimizer("Adadelta"))
         item_ui.popup_optim_ui.radioButton_adamax.toggled.connect(lambda: change_optimizer("Adamax"))
         item_ui.popup_optim_ui.radioButton_nadam.toggled.connect(lambda: change_optimizer("Nadam"))
-
-            
-
 
         def ok():
             doubleSpinBox_lr_sgd = float(item_ui.popup_optim_ui.doubleSpinBox_lr_sgd.value())
@@ -4898,7 +4895,7 @@ class MainWindow(QtWidgets.QMainWindow):
             if collection==False:    
                 #Create an excel file
                 writer = pd.ExcelWriter(new_modelname.split(".model")[0]+'_meta.xlsx', engine='openpyxl')
-                self.writer = writer
+                self.fittingpopups_ui[listindex].writer = writer
                 #Used files go to a separate sheet on the MetaFile.xlsx
                 SelectedFiles_df = pd.DataFrame(SelectedFiles)
                 pd.DataFrame().to_excel(writer,sheet_name='UsedData') #initialize empty Sheet
@@ -5211,14 +5208,14 @@ class MainWindow(QtWidgets.QMainWindow):
     
                 if collection==False:
                     if counter == 0:
-                        Para_dict.to_excel(self.writer,sheet_name='Parameters')
+                        Para_dict.to_excel(self.fittingpopups_ui[listindex].writer,sheet_name='Parameters')
                     else:
-                        Para_dict.to_excel(self.writer,sheet_name='Parameters',startrow=self.writer.sheets['Parameters'].max_row,header= False)
+                        Para_dict.to_excel(self.fittingpopups_ui[listindex].writer,sheet_name='Parameters',startrow=self.fittingpopups_ui[listindex].writer.sheets['Parameters'].max_row,header= False)
 
                     if os.path.isfile(new_modelname.split(".model")[0]+'_meta.xlsx'):
                         os.chmod(new_modelname.split(".model")[0]+'_meta.xlsx', S_IREAD|S_IRGRP|S_IROTH|S_IWRITE|S_IWGRP|S_IWOTH)#change to read/write
                     try:
-                        self.writer.save()
+                        self.fittingpopups_ui[listindex].writer.save()
                     except:
                         pass
                     os.chmod(new_modelname.split(".model")[0]+'_meta.xlsx', S_IREAD|S_IRGRP|S_IROTH)#change to only readable
@@ -5501,6 +5498,7 @@ class MainWindow(QtWidgets.QMainWindow):
                SAVED = [ [] for model in model_keras]
     
             counter = 0
+            saving_failed = False #when saving fails, this becomes true and the user will be informed at the end of training
 
             #Save the initial values (Epoch 1)
             update_para_dict()
@@ -6062,6 +6060,7 @@ class MainWindow(QtWidgets.QMainWindow):
                                     else:#in case the folder does not exist (anymore), create a folder in temp
                                         #what is the foldername of the model?
                                         print("Saving failed. Create folder in temp")
+                                        saving_failed = True
                                         temp_path = aid_bin.create_temp_folder()#create a temp folder if it does not already exist
                                         print("Your temp folder is here: "+str(temp_path))
                                         parentfolder = aid_bin.splitall(new_modelname)[-2]
@@ -6086,6 +6085,7 @@ class MainWindow(QtWidgets.QMainWindow):
                                         model_keras.save(new_modelname.split(".model")[0]+"_"+str(counter)+".model")
                                         #Also update the excel writer!
                                         writer = pd.ExcelWriter(new_modelname.split(".model")[0]+'_meta.xlsx', engine='openpyxl')
+                                        self.fittingpopups_ui[listindex].writer = writer
                                         pd.DataFrame().to_excel(writer,sheet_name='UsedData') #initialize empty Sheet
                                         SelectedFiles_df.to_excel(writer,sheet_name='UsedData')
                                         DataOverview_df.to_excel(writer,sheet_name='DataOverview') #write data overview to separate sheet            
@@ -6175,6 +6175,7 @@ class MainWindow(QtWidgets.QMainWindow):
                                     writer.save()
                                     os.chmod(new_modelname.split(".model")[0]+'_meta.xlsx', S_IREAD|S_IRGRP|S_IROTH)
                                     print("meta.xlsx was saved")
+                                    self.fittingpopups_ui[listindex].backup.append({"DF1":DF1})
                                     Index,Histories,Saved,Stopwatch,LearningRate = [],[],[],[],[]#reset the lists
                                     
                                 #Get a sensible frequency for saving the dataframe (every 20s)
@@ -6196,19 +6197,18 @@ class MainWindow(QtWidgets.QMainWindow):
                                         writer.save()
                                         os.chmod(new_modelname.split(".model")[0]+'_meta.xlsx', S_IREAD|S_IRGRP|S_IROTH)  #make read only
                                         print("meta.xlsx was saved")
+                                        self.fittingpopups_ui[listindex].backup.append({"DF1":DF1})
                                         Index,Histories,Saved,Stopwatch,LearningRate = [],[],[],[],[]#reset the lists
                                         t1 = time.time()
                                         print("Saved to: "+new_modelname)
                                     else:#If folder not available, create a folder in temp
                                         print("Saving failed. Create folder in temp")
+                                        saving_failed = True
                                         temp_path = aid_bin.create_temp_folder()#create a temp folder if it does not already exist
                                         print("Your temp folder is here: "+str(temp_path))
                                         folder = os.path.split(new_modelname)[-2]
                                         folder = os.path.split(folder)[-1]
-                                        print("folder: "+folder)
                                         fname = os.path.split(new_modelname)[-1]
-                                        print("fname: "+fname)
-
                                         #create that folder in temp if it does'nt exist already
                                         if not os.path.exists(os.path.join(temp_path,folder)):
                                             print("create "+os.path.join(temp_path,folder))
@@ -6219,14 +6219,15 @@ class MainWindow(QtWidgets.QMainWindow):
 
                                         #inform user!
                                         text = "Could not find original folder. Files are now saved to "+new_modelname
-                                        text = "<span style=\' color: red;\'>" +text+"</span>"
+                                        text = "<span style=\' color: red;\'>" +text+"</span>"#put red text to the infobox
                                         self.fittingpopups_ui[listindex].textBrowser_FittingInfo.append(text)
-                                        text = "<span style=\' color: black;\'>" +""+"</span>"
+                                        text = "<span style=\' color: black;\'>" +""+"</span>"#reset textcolor to black
                                         self.fittingpopups_ui[listindex].textBrowser_FittingInfo.append(text)
 
 
                                         #update the excel writer
                                         writer = pd.ExcelWriter(new_modelname.split(".model")[0]+'_meta.xlsx', engine='openpyxl')
+                                        self.fittingpopups_ui[listindex].writer = writer
                                         pd.DataFrame().to_excel(writer,sheet_name='UsedData') #initialize empty Sheet
                                         SelectedFiles_df.to_excel(writer,sheet_name='UsedData')
                                         DataOverview_df.to_excel(writer,sheet_name='DataOverview') #write data overview to separate sheet            
@@ -6291,7 +6292,24 @@ class MainWindow(QtWidgets.QMainWindow):
                             counter+=1
                         
             progress_callback.emit(100.0)
-    
+            
+            #If the original storing locating became inaccessible (folder name changed, HD unplugged...)
+            #the models and meta are saved to temp folder. Inform the user!!!
+            if saving_failed==True:
+                path_orig = str(self.fittingpopups_ui[listindex].lineEdit_modelname_pop.text())
+                text = "<html><head/><body><p>Original path:<br>"+path_orig+\
+                "<br>became inaccessible during training! Files were then saved to:<br>"+\
+                new_modelname.split(".model")[0]+"<br>To bring both parts back together\
+                , you have manually open the meta files (excel) and copy;paste each sheet. \
+                Sorry for the inconvenience.<br>If that happens often, you may contact \
+                the main developer and ask him to improve that.</p></body></html>"
+                
+                text = "<span style=\' font-weight:600; color: red;\'>" +text+"</span>"#put red text to the infobox
+                self.fittingpopups_ui[listindex].textBrowser_FittingInfo.append(text)
+                print('\a')#make a noise
+                self.fittingpopups_ui[listindex].textBrowser_FittingInfo.setStyleSheet("background-color: yellow;")
+                self.fittingpopups_ui[listindex].textBrowser_FittingInfo.moveCursor(QtGui.QTextCursor.End)
+                
             if collection==False:
                 if len(Histories)>0: #if the list for History files is not empty, process it!
                     DF1 = [[ h[h_i][-1] for h_i in h] for h in Histories] #if nb_epoch in .fit() is >1, only save the last history item, beacuse this would a model that could be saved
@@ -6337,7 +6355,9 @@ class MainWindow(QtWidgets.QMainWindow):
                     Writers[i].close()
                     
                 Index = []#reset the Index list
-    
+                
+                
+                
             sess.close()
     #        try:
     #            aid_dl.reset_keras(model_keras)
@@ -6453,7 +6473,6 @@ class MainWindow(QtWidgets.QMainWindow):
         ###################Popup Window####################################
         self.fittingpopups.append(MyPopup())
         ui = aid_frontend.Fitting_Ui()
-
         ui.setupUi(self.fittingpopups[-1]) #append the ui to the last element on the list
         self.fittingpopups_ui.append(ui)
         # Increase the popupcounter by one; this will help to coordinate the data flow between main ui and popup
@@ -6594,6 +6613,7 @@ class MainWindow(QtWidgets.QMainWindow):
                         pg.QtGui.QApplication.processEvents()
 
         self.fittingpopups_ui[listindex].epoch_counter = 0
+        self.fittingpopups_ui[listindex].backup = [] #backup of the meta information -> in case the original folder is not accessible anymore
         worker.signals.history.connect(real_time_info)
         
         #Finally start the worker!
@@ -7385,35 +7405,6 @@ class MainWindow(QtWidgets.QMainWindow):
                 self.popup_lrfinder_ui.lr_plot.removeItem(self.lr_region)
             except:
                 pass
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 
