@@ -614,22 +614,28 @@ class LearningRateFinder:
         self.beta = beta
         # initialize our list of learning rates and losses,
         # respectively
-        self.lrs = []
-        self.losses = []
+        self.lrs = [] #list for learning rates
+        self.losses_sm,self.losses_or,self.val_losses_sm,self.val_losses_or = [],[],[],[]#list for losses and val.losses
+        self.accs_sm,self.accs_or, self.val_accs_or,self.val_accs_sm = [],[],[],[]#list for accuracies
         # initialize our learning rate multiplier, average loss, best
         # loss found thus far, current batch number, and weights file
         self.lrMult = 1
         self.avgLoss = 0
+        self.avgLossV = 0
+        self.avgAcc = 0
+        self.avgAccV = 0
         self.bestLoss = 1e9
         self.batchNum = 0
         self.weightsFile = None
 
     def reset(self):
         # re-initialize all variables from our constructor
-        self.lrs = []
-        self.losses = []
+        self.lrs = [] #list for learning rates
+        self.losses_sm,self.losses_or,self.val_losses_sm,self.val_losses_or = [],[],[],[]#list for losses and val.losses
+        self.accs_sm,self.accs_or, self.val_accs_or,self.val_accs_sm = [],[],[],[]#list for accuracies
         self.lrMult = 1
         self.avgLoss = 0
+        self.avgAcc = 0
         self.bestLoss = 1e9
         self.batchNum = 0
         self.weightsFile = None
@@ -650,11 +656,39 @@ class LearningRateFinder:
         # number of batches processed, compute the average average
         # loss, smooth it, and update the losses list with the
         # smoothed value
-        l = logs["loss"]
+
+#        print("logs")
+#        print(logs)
         self.batchNum += 1
-        self.avgLoss = (self.beta * self.avgLoss) + ((1 - self.beta) * l)
+        
+        self.avgLoss = (self.beta * self.avgLoss) + ((1 - self.beta) * logs["loss"])
         smooth = self.avgLoss / (1 - (self.beta ** self.batchNum))
-        self.losses.append(smooth)
+        self.losses_sm.append(smooth)
+        self.losses_or.append(logs["loss"])
+
+        self.avgAcc = (self.beta * self.avgAcc) + ((1 - self.beta) * logs["acc"])
+        smooth = self.avgAcc / (1 - (self.beta ** self.batchNum))
+        self.accs_sm.append(smooth)
+        self.accs_or.append(logs["acc"])
+
+        #print(logs["acc"],smooth,self.beta,self.batchNum)
+
+
+        #Get validation accuracy
+        if self.valData!=None:
+            val_loss, val_acc = self.model.evaluate(self.valData[0], self.valData[1], verbose=0)
+            
+            self.avgLossV = (self.beta * self.avgLossV) + ((1 - self.beta) * val_loss)
+            smooth = self.avgLossV / (1 - (self.beta ** self.batchNum))
+            self.val_losses_sm.append(smooth)
+            self.val_losses_or.append(val_loss)
+
+            self.avgAccV = (self.beta * self.avgAccV) + ((1 - self.beta) * val_acc)
+            smooth = self.avgAccV / (1 - (self.beta ** self.batchNum))
+            self.val_accs_sm.append(smooth)
+            self.val_accs_or.append(val_acc)
+
+
         # compute the maximum loss stopping factor value
         stopLoss = self.stopFactor * self.bestLoss
         # check to see whether the loss has grown too large
@@ -668,12 +702,14 @@ class LearningRateFinder:
         # increase the learning rate
         lr *= self.lrMult
         K.set_value(self.model.optimizer.lr, lr)
+
+
+    def find(self, trainData,valData, startLR, endLR, epochs=None,
+        stepsPerEpoch=None, batchSize=32, sampleSize=2048,verbose=1):
         
-    def find(self, trainData, startLR, endLR, epochs=None,
-        stepsPerEpoch=None, batchSize=32, sampleSize=2048,
-        verbose=1):
-        # reset our class-specific variables
-        self.reset()
+        self.valData = valData #put validation data on self to allow on_batch_end to compute val_acc
+        
+        self.reset()# reset our class-specific variables
         # determine if we are using a data generator or not
         useGen = self.is_data_iter(trainData)
         # if we're using a generator and the steps per epoch is not
@@ -1004,3 +1040,16 @@ def get_lr_callback(learning_rate_const_on,learning_rate_const,
     elif learning_rate_expo_on==True:
         return exponentialDecay(initial_lr=expDecInitLr, decay_steps=expDecSteps, decay_rate=expDecRate)  
 
+       
+
+        
+        
+        
+        
+        
+        
+        
+
+        
+
+    
