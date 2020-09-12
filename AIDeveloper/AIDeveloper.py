@@ -119,7 +119,7 @@ import aid_img, aid_dl, aid_bin
 import aid_frontend
 from partial_trainability import partial_trainability
 
-VERSION = "0.1.1_dev2" #Python 3.5.6 Version
+VERSION = "0.1.1_dev3" #Python 3.5.6 Version
 model_zoo_version = model_zoo.__version__()
 print("AIDeveloper Version: "+VERSION)
 print("model_zoo.py Version: "+model_zoo.__version__())
@@ -1112,7 +1112,8 @@ class MainWindow(QtWidgets.QMainWindow):
     def reset_lr_settings(self):
         self.popup_lrfinder_ui.lineEdit_startLr.setText(_translate("Form_LrFinder", "1e-10", None))
         self.popup_lrfinder_ui.lineEdit_stopLr.setText(_translate("Form_LrFinder", "0.1", None))
-        self.popup_lrfinder_ui.doubleSpinBox_percData.setProperty("value", 100.0)
+        self.popup_lrfinder_ui.doubleSpinBox_percDataT.setProperty("value", 100.0)
+        self.popup_lrfinder_ui.doubleSpinBox_percDataV.setProperty("value", 100.0)
         self.popup_lrfinder_ui.spinBox_batchSize.setValue(Default_dict["spinBox_batchSize"])       
         self.popup_lrfinder_ui.spinBox_lineWidth.setProperty("value", 6)
         self.popup_lrfinder_ui.spinBox_epochs.setProperty("value", 5)
@@ -1185,6 +1186,11 @@ class MainWindow(QtWidgets.QMainWindow):
         self.popup_lrfinder_ui.pushButton_LrReset.clicked.connect(self.reset_lr_settings)
         self.popup_lrfinder_ui.pushButton_singleReset.clicked.connect(self.reset_lr_value)
         self.popup_lrfinder_ui.pushButton_rangeReset.clicked.connect(self.reset_lr_range)
+        #Update the plot when any plotting option is changed
+        self.popup_lrfinder_ui.comboBox_metric.currentIndexChanged.connect(self.update_lrfind_plot)
+        self.popup_lrfinder_ui.spinBox_lineWidth.valueChanged.connect(self.update_lrfind_plot)
+        self.popup_lrfinder_ui.checkBox_smooth.toggled.connect(self.update_lrfind_plot)
+        
         #LR single value when groupbox is toggled
         self.popup_lrfinder_ui.groupBox_singleLr.toggled.connect(self.get_lr_single)
         #LR range when groupbox is toggled
@@ -1199,14 +1205,14 @@ class MainWindow(QtWidgets.QMainWindow):
 
         def update_stepsPerEpoch():
             batch_size = self.popup_lrfinder_ui.spinBox_batchSize.value()
-            perc_data = self.popup_lrfinder_ui.doubleSpinBox_percData.value()
+            perc_data = self.popup_lrfinder_ui.doubleSpinBox_percDataT.value()
             nr_events = (perc_data/100)*nr_events_train_total
             stepsPerEpoch = np.ceil(nr_events / float(batch_size))
             self.popup_lrfinder_ui.spinBox_stepsPerEpoch.setValue(stepsPerEpoch)
 
         update_stepsPerEpoch()
         self.popup_lrfinder_ui.spinBox_batchSize.valueChanged.connect(update_stepsPerEpoch)
-        self.popup_lrfinder_ui.doubleSpinBox_percData.valueChanged.connect(update_stepsPerEpoch)
+        self.popup_lrfinder_ui.doubleSpinBox_percDataT.valueChanged.connect(update_stepsPerEpoch)
 
         self.popup_lrfinder.show()
 
@@ -7308,55 +7314,128 @@ class MainWindow(QtWidgets.QMainWindow):
             epochs = int(self.popup_lrfinder_ui.spinBox_epochs.value())
             start_lr = float(self.popup_lrfinder_ui.lineEdit_startLr.text())
             stop_lr = float(self.popup_lrfinder_ui.lineEdit_stopLr.text())
-            
-            #color = self.popup_lrfinder_ui.pushButton_color.background()
-            color = self.popup_lrfinder_ui.pushButton_color.palette().button().color()
-            width = int(self.popup_lrfinder_ui.spinBox_lineWidth.value())
-            color = list(color.getRgb())
-            #color[-1] = int(0.6*color[-1])
-            color = tuple(color)                
-            #pencolor = pg.mkColor(color)
-            pencolor=pg.mkPen(color, width=width)
-            
-            
+            percDataT = float(self.popup_lrfinder_ui.doubleSpinBox_percDataT.value())
+            percDataV = float(self.popup_lrfinder_ui.doubleSpinBox_percDataV.value())
+            valMetrics = bool(self.popup_lrfinder_ui.checkBox_valMetrics.isChecked())
+
             ####################lr_find algorithm####################
             if model_keras_p == None:
                 #history = model_keras.fit(X_batch, Y_batch, batch_size=32, epochs=1,verbose=verbose, validation_data=(X_valid, Y_valid),class_weight=None)
                 lrf = aid_dl.LearningRateFinder(model_keras)
             elif model_keras_p != None:
                 lrf = aid_dl.LearningRateFinder(model_keras_p)
+            if valMetrics==True:
+                lrf.find([X_batch,Y_batch],[X_valid,Y_valid],start_lr,stop_lr,stepsPerEpoch=stepsPerEpoch,batchSize=batch_size,epochs=epochs)
+            else:
+                lrf.find([X_batch,Y_batch],None,start_lr,stop_lr,stepsPerEpoch=stepsPerEpoch,batchSize=batch_size,epochs=epochs)
+            
+            skipBegin,skipEnd = 10,1
+            self.learning_rates = lrf.lrs[skipBegin:-skipEnd]
+            self.losses_or = lrf.losses_or[skipBegin:-skipEnd]
+            self.losses_sm = lrf.losses_sm[skipBegin:-skipEnd]
+            self.accs_or = lrf.accs_or[skipBegin:-skipEnd]
+            self.accs_sm = lrf.accs_sm[skipBegin:-skipEnd]
+            
+            self.val_losses_sm = lrf.val_losses_sm[skipBegin:-skipEnd]
+            self.val_losses_or = lrf.val_losses_or[skipBegin:-skipEnd]
+            self.val_accs_sm = lrf.val_accs_sm[skipBegin:-skipEnd]
+            self.val_accs_or = lrf.val_accs_or[skipBegin:-skipEnd]
 
-            lrf.find([X_batch,Y_batch],start_lr,stop_lr,stepsPerEpoch=stepsPerEpoch,batchSize=batch_size,epochs=epochs)
-            
-            skipBegin,skipEnd=10,1
-            learning_rates = lrf.lrs[skipBegin:-skipEnd]
-            losses = lrf.losses[skipBegin:-skipEnd]
-            self.learning_rates = learning_rates
-            self.losses = losses
-            
             # Enable the groupboxes
             self.popup_lrfinder_ui.groupBox_singleLr.setEnabled(True)
             self.popup_lrfinder_ui.groupBox_LrRange.setEnabled(True)
             
-            try:# try to empty the plot
-                self.popup_lrfinder_ui.lr_plot.clear()
-            except:
-                pass
+            self.update_lrfind_plot()
             
-            self.lr_line = pg.PlotCurveItem(x=np.log10(learning_rates), y=losses,pen=pencolor)
-            self.popup_lrfinder_ui.lr_plot.addItem(self.lr_line)            
+    def update_lrfind_plot(self):
+        if not hasattr(self, 'learning_rates'):
+            return
 
-            #In case the groupBox_singleLr is already checked, carry out the function:
-            if self.popup_lrfinder_ui.groupBox_singleLr.isChecked():
-                self.get_lr_single(on_or_off=True)
+        metric = str(self.popup_lrfinder_ui.comboBox_metric.currentText())
+        color = self.popup_lrfinder_ui.pushButton_color.palette().button().color()
+        width = int(self.popup_lrfinder_ui.spinBox_lineWidth.value())
+        color = list(color.getRgb())
+        color = tuple(color)                
+        pencolor = pg.mkPen(color, width=width)
+        smooth = bool(self.popup_lrfinder_ui.checkBox_smooth.isChecked())
 
-            #In case the groupBox_LrRange is already checked, carry out the function:
-            if self.popup_lrfinder_ui.groupBox_LrRange.isChecked():
-                self.get_lr_range(on_or_off=True)
+#        DF = pd.DataFrame()
+#        DF["losses_or"] = self.losses_or
+#        DF["losses_sm"] = self.losses_sm
+#        DF["accs_or"] = self.accs_or
+#        DF["accs_sm"] = self.accs_sm
+#        DF["val_losses_or"] = self.val_losses_or
+#        DF["val_losses_sm"] = self.val_losses_sm
+#        DF["val_accs_or"] = self.val_accs_or
+#        DF["val_accs_sm"] = self.val_accs_or
+#        DF.to_csv("LRscreening.csv")
+
+        try:# try to empty the plot
+            self.popup_lrfinder_ui.lr_plot.clear()
+            #self.popup_lrfinder_ui.lr_plot.removeItem(self.lr_line)
+        except:
+            pass
+
+        if metric=="Loss" and smooth==True:
+            self.y_values = self.losses_sm
+        elif metric=="Loss" and smooth==False:
+            self.y_values = self.losses_or            
+        elif metric=="Loss 1st derivative" and smooth==True:
+            self.y_values = np.diff(self.losses_sm,n=1)
+        elif metric=="Loss 1st derivative" and smooth==False:
+            self.y_values = np.diff(self.losses_or,n=1)
+        elif metric=="Accuracy" and smooth==True:
+            self.y_values = self.accs_sm
+        elif metric=="Accuracy" and smooth==False:
+            self.y_values = self.accs_or
+        elif metric=="Accuracy 1st derivative" and smooth==True:
+            self.y_values = np.diff(self.accs_sm,n=1)
+        elif metric=="Accuracy 1st derivative" and smooth==False:
+            self.y_values = np.diff(self.accs_or,n=1)
+
+        elif metric=="Val. loss" and smooth==True:
+            self.y_values = self.val_losses_sm
+        elif metric=="Val. loss" and smooth==False:
+            self.y_values = self.val_losses_or
+        elif metric=="Val. loss 1st derivative" and smooth==True:
+            self.y_values = np.diff(self.val_losses_sm,n=1)
+        elif metric=="Val. loss 1st derivative" and smooth==False:
+            self.y_values = np.diff(self.val_losses_or,n=1)
+        elif metric=="Val. accuracy" and smooth==True:
+            self.y_values = self.val_accs_sm
+        elif metric=="Val. accuracy" and smooth==False:
+            self.y_values = self.val_accs_or
+        elif metric=="Val. accuracy 1st derivative" and smooth==True:
+            self.y_values = np.diff(self.val_accs_sm,n=1)
+        elif metric=="Val. accuracy 1st derivative" and smooth==False:
+            self.y_values = np.diff(self.val_accs_or,n=1)
+        else:
+            print("The combination of "+str(metric)+" and smooth="+str(smooth)+" is not supported!")
+        
+        
+        if len(self.learning_rates)==len(self.y_values):
+            self.lr_line = pg.PlotCurveItem(x=np.log10(self.learning_rates), y=self.y_values,pen=pencolor,name=metric)
+        elif len(self.learning_rates)-1==len(self.y_values):
+            self.lr_line = pg.PlotCurveItem(x=np.log10(self.learning_rates)[1:], y=self.y_values,pen=pencolor,name=metric)
+        else:
+            print("No data available. Probably, validation metrics were not computed. Please click Run again.")
+            return
+        self.popup_lrfinder_ui.lr_plot.addItem(self.lr_line)            
+
+        #In case the groupBox_singleLr is already checked, carry out the function:
+        if self.popup_lrfinder_ui.groupBox_singleLr.isChecked():
+            self.get_lr_single(on_or_off=True)
+
+        #In case the groupBox_LrRange is already checked, carry out the function:
+        if self.popup_lrfinder_ui.groupBox_LrRange.isChecked():
+            self.get_lr_range(on_or_off=True)
+
+
+
 
     def get_lr_single(self,on_or_off):
         if on_or_off==True: #bool(self.popup_lrfinder_ui.groupBox_LrRange.isChecked()):
-            ind = np.argmin(self.losses)#find location of loss-minimum
+            ind = np.argmin(self.y_values)#find location of loss-minimum
             mini_x = self.learning_rates[ind]
             mini_x = np.log10(mini_x)
             pen = pg.mkPen(color="w")
@@ -7384,7 +7463,7 @@ class MainWindow(QtWidgets.QMainWindow):
         if on_or_off==True: #bool(self.popup_lrfinder_ui.groupBox_LrRange.isChecked()):
             start_x = 0.00001
             start_x = np.log10(start_x)
-            ind = np.argmin(self.losses)#find location of loss-minimum
+            ind = np.argmin(self.y_values)#find location of loss-minimum
             end_x = self.learning_rates[ind]
             end_x = np.log10(end_x)
             self.lr_region = pg.LinearRegionItem([start_x, end_x], movable=True)
