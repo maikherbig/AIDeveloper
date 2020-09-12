@@ -393,6 +393,11 @@ def get_tooltips():
     tooltips["pushButton_LrReset"] = "<html><head/><body><p>Reset the LR screening settings to initial values.</p></body></html>"
     tooltips["pushButton_color"] = "<html><head/><body><p>Click to open a menu to choose a color for the LR screening plot.</p></body></html>"
     tooltips["label_lineWidth"] = "<html><head/><body><p>Define the width of the line in the LR screening plot.</p></body></html>"
+
+    tooltips["checkBox_smooth"] = "<html><head/><body><p>Smooth values using an exponentially weighed running average.</p></body></html>"
+    tooltips["checkBox_valMetrics"] = "<html><head/><body><p>Compute validation metrics after each batch update. This can be computationally VERY expensive, but allows you to plot the validation loss and validation accuracy. Only when checked, the above dropdown menu will show these options.</p></body></html>"
+
+
     tooltips["label_epochs_lrfind"] = "<html><head/><body><p>Number of epochs to train. Higher will give more precise result. Typically, 3-5 epochs are sufficient.</p></body></html>"
     tooltips["pushButton_LrFindRun"] = "<html><head/><body><p>Run a LR screening. This might take some minutes since data has to be loaded and a model is actually trained for some epochs. Note that all parameters (image augmentation etc) are used as indicated in the corresponding menus. Hence, make sure to first set these values as it affects training.</p></body></html>"
     tooltips["groupBox_LrSettings"] = "<html><head/><body><p>Carry out a screening of different learning rates as introduced in https://arxiv.org/abs/1506.01186.<br>Very low learning rates will not allow the model to learn anything and the resulting loss stays constant. Too high learning rates will cause large updates of model weights which prevents finding a minumum. You may consult this page to learn more how to choose good learning rates and how it is implemented:<br>https://www.pyimagesearch.com/2019/08/05/keras-learning-rate-finder </p></body></html>"    
