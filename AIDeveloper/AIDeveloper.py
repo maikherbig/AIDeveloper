@@ -6213,7 +6213,7 @@ class MainWindow(QtWidgets.QMainWindow):
                                     writer.save()
                                     os.chmod(new_modelname.split(".model")[0]+'_meta.xlsx', S_IREAD|S_IRGRP|S_IROTH)
                                     print("meta.xlsx was saved")
-                                    self.fittingpopups_ui[listindex].backup.append({"DF1":DF1})
+                                    #self.fittingpopups_ui[listindex].backup.append({"DF1":DF1})
                                     Index,Histories,Saved,Stopwatch,LearningRate = [],[],[],[],[]#reset the lists
                                     
                                 #Get a sensible frequency for saving the dataframe (every 20s)
@@ -6235,7 +6235,7 @@ class MainWindow(QtWidgets.QMainWindow):
                                         writer.save()
                                         os.chmod(new_modelname.split(".model")[0]+'_meta.xlsx', S_IREAD|S_IRGRP|S_IROTH)  #make read only
                                         print("meta.xlsx was saved")
-                                        self.fittingpopups_ui[listindex].backup.append({"DF1":DF1})
+                                        #self.fittingpopups_ui[listindex].backup.append({"DF1":DF1})
                                         Index,Histories,Saved,Stopwatch,LearningRate = [],[],[],[],[]#reset the lists
                                         t1 = time.time()
                                         print("Saved to: "+new_modelname)
@@ -6651,7 +6651,7 @@ class MainWindow(QtWidgets.QMainWindow):
                         pg.QtGui.QApplication.processEvents()
 
         self.fittingpopups_ui[listindex].epoch_counter = 0
-        self.fittingpopups_ui[listindex].backup = [] #backup of the meta information -> in case the original folder is not accessible anymore
+        #self.fittingpopups_ui[listindex].backup = [] #backup of the meta information -> in case the original folder is not accessible anymore
         worker.signals.history.connect(real_time_info)
         
         #Finally start the worker!
@@ -11212,7 +11212,10 @@ class MainWindow(QtWidgets.QMainWindow):
     def cpu_ram_worker(self,progress_callback,history_callback):
         while True:
             cpu,ram = psutil.cpu_percent(),psutil.virtual_memory().percent
-            self.statusbar_cpuRam.setText("CPU: "+str(cpu)+"%  RAM: "+str(ram)+"%")
+            #Count the number of visible fittingpopups
+            Nr_fittings = [a.isVisible() for a in self.fittingpopups]
+            Nr_fittings = int(np.sum(Nr_fittings))
+            self.statusbar_cpuRam.setText("CPU: "+str(cpu)+"%  RAM: "+str(ram)+"% Jobs: "+str(Nr_fittings))            
             time.sleep(2)
 
     def delete_ram(self):
