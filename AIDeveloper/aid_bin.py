@@ -553,20 +553,11 @@ def open_temp():
     os.startfile(temp_path)
 
 
-def ram_compare_data(ram_dic,new_dic):
-#    print("ram_dic")
-#    print(ram_dic)
-#    print("new_dic")
-#    print(new_dic)
-    
+def ram_compare_data(ram_dic,new_dic):    
     #compare the rtdc filenames:
     new_rtdc_paths = [a["rtdc_path"] for a in new_dic["SelectedFiles"]]
     ram_rtdc_paths = list(ram_dic["rtdc_path"])
     test_rtdc_paths = set(ram_rtdc_paths)==set(new_rtdc_paths)
-    print("new_rtdc_paths")
-    print(new_rtdc_paths)
-    print("ram_rtdc_paths")
-    print(ram_rtdc_paths)
 
     #Compare the image shape (size)
     ram_imgshape = ram_dic["Cropped_Images"][0].shape
@@ -588,14 +579,8 @@ def ram_compare_data(ram_dic,new_dic):
     ram_nr_images = [a.shape[0] for a in ram_dic["Cropped_Images"]]
     new_nr_images = [a["nr_images"] for a in new_dic["SelectedFiles"]]
     test_nr_images = set(ram_nr_images)==set(new_nr_images)
-    print("ram_nr_images")
-    print(ram_nr_images)
-    print("new_nr_images")
-    print(new_nr_images)
-
-    
+ 
     dic = {"test_rtdc_paths":test_rtdc_paths,"test_imgcrop":test_imgcrop,"test_colormode":test_colormode,"test_nr_images":test_nr_images}
-    print(dic)
     #Are all tests poisitve (True)?
     alltrue = all(dic.values())
     return alltrue
