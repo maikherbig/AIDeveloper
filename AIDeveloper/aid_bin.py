@@ -456,13 +456,14 @@ def check_update(this_version):
         content = urllib.request.urlopen(url_releases).read().decode('UTF-8')
         tags = content.split("/maikherbig/AIDeveloper/releases/tag/")[1:]
         tags = [t.split('">AIDeveloper')[0] for t in tags]
-        tags_values =  [list(map(int, re.findall(r'\d+', t))) for t in tags]
-        highest_major = np.max([t[0] for t in tags_values])
-        highest_minor = np.max([t[1] for t in tags_values])
-        highest_revis = np.max([t[2] for t in tags_values])
-        tags_values = np.array(tags_values)
-        #are there dev versions of the most recent version?
-        latest_release = ".".join([str(highest_major),str(highest_minor),str(highest_revis)])
+#        tags_values =  [list(map(int, re.findall(r'\d+', t))) for t in tags]
+#        highest_major = np.max([t[0] for t in tags_values])
+#        highest_minor = np.max([t[1] for t in tags_values])
+#        highest_revis = np.max([t[2] for t in tags_values])
+#        tags_values = np.array(tags_values)
+#        #are there dev versions of the most recent version?
+#        latest_release = ".".join([str(highest_major),str(highest_minor),str(highest_revis)])
+        latest_release = tags[0]
         highest_dev = [latest_release+"_dev" in tag for tag in tags]
         ind = np.where(np.array(highest_dev)==True)[0]
         if len(ind)>0:
