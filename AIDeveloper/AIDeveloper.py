@@ -119,7 +119,7 @@ import aid_img, aid_dl, aid_bin
 import aid_frontend
 from partial_trainability import partial_trainability
 
-VERSION = "0.1.1_dev5" #Python 3.5.6 Version
+VERSION = "0.1.1_dev6" #Python 3.5.6 Version
 model_zoo_version = model_zoo.__version__()
 print("AIDeveloper Version: "+VERSION)
 print("model_zoo.py Version: "+model_zoo.__version__())
@@ -8832,22 +8832,7 @@ class MainWindow(QtWidgets.QMainWindow):
             zoom_factor = str(np.array(UsedData_true["zoom_factor"])[i])  
             self.table_dragdrop.item(rowPosition+i, 9).setText(zoom_factor)
 
-
-#            item = QtWidgets.QTableWidgetItem()
-#            item.setData(QtCore.Qt.EditRole,zoom_factor)
-#            self.table_dragdrop.setItem(rowPosition+i, 9, item)
-#
-#            #self.table_dragdrop.cellWidget(rowPosition+i, 9).setValue(zoom_factor)
-
-                
-        msg = QtWidgets.QMessageBox()
-        msg.setIcon(QtWidgets.QMessageBox.Information)       
-        msg.setText(tooltips["msg_loadSession"])
-        msg.setWindowTitle("Session loaded")
-        msg.setStandardButtons(QtWidgets.QMessageBox.Ok)
-        msg.exec_()
-
-
+      
         #Now take care of missing data
         #Take care of missing files (they might have been moved to a different location)
         ind_false = np.where(np.array(file_exists)==False)[0]  
@@ -8948,17 +8933,31 @@ class MainWindow(QtWidgets.QMainWindow):
             self.pushButton_Search_pop2.setText("Define folder to search files")
             self.w_pop2.show()
 
-#        #update the Define Model tab
-#        Parameters = pd.read_excel(filename,sheet_name="Parameters")
-#        chosen_model = str(Parameters["Chosen Model"])
-#        index = self.comboBox_ModelSelection.findText(chosen_model, QtCore.Qt.MatchFixedString)
-#        if index >= 0:
-#            self.comboBox_ModelSelection.setCurrentIndex(index)
-#        #update the Normalization method
-#        norm = str(Parameters["Normalization"])
-#        index = self.comboBox_Normalization.findText(norm, QtCore.Qt.MatchFixedString)
-#        if index >= 0:
-#            self.comboBox_Normalization.setCurrentIndex(index)
+        
+        #Ask user if only data, or the full set of parameters should be loaded
+        msg = QtWidgets.QMessageBox()
+        msg.setIcon(QtWidgets.QMessageBox.Question)
+        msg.setText(tooltips["msg_loadSession"])
+        msg.setWindowTitle("Load only data table all parameters?")
+        msg.setStandardButtons(QtGui.QMessageBox.Yes | QtGui.QMessageBox.Save)# | QtGui.QMessageBox.Cancel)
+        dataonly = msg.button(QtGui.QMessageBox.Yes)
+        dataonly.setText('Data table only')
+        allparams = msg.button(QtGui.QMessageBox.Save)
+        allparams.setText('Data and all parameters')
+#        cancel = msg.button(QtGui.QMessageBox.Cancel)
+#        cancel.setText('Cancel')
+        msg.exec_()        
+ 
+        #Only update the data table.
+        if msg.clickedButton()==dataonly: #show image and heatmap overlay
+            pass
+        #Load the parameters
+        elif msg.clickedButton()==allparams: #show image and heatmap overlay
+            para = pd.read_excel(filename,sheet_name="Parameters")
+            aid_frontend.load_hyper_params(self,para)
+#        if msg.clickedButton()==cancel: #show image and heatmap overlay
+#            return
+
 
         #If all this run without error, save the path.
         Default_dict["Path of last model"] = os.path.split(filename)[0]
