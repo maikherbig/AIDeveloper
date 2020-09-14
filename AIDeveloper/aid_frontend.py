@@ -5908,14 +5908,14 @@ class popup_cm_modelsummary(QtWidgets.QWidget):
 class popup_lrfinder(QtWidgets.QWidget):
     def setupUi(self, Form_LrFinder):
         Form_LrFinder.setObjectName("Form_LrFinder")
-        Form_LrFinder.resize(693, 740)
+        Form_LrFinder.resize(740, 740)
         self.gridLayout_3 = QtWidgets.QGridLayout(Form_LrFinder)
         self.gridLayout_3.setObjectName("gridLayout_3")
         self.scrollArea_LrFinder = QtWidgets.QScrollArea(Form_LrFinder)
         self.scrollArea_LrFinder.setWidgetResizable(True)
         self.scrollArea_LrFinder.setObjectName("scrollArea_LrFinder")
         self.scrollAreaWidgetContents = QtWidgets.QWidget()
-        self.scrollAreaWidgetContents.setGeometry(QtCore.QRect(0, 0, 693, 690))
+        self.scrollAreaWidgetContents.setGeometry(QtCore.QRect(0, 0, 740, 740))
         self.scrollAreaWidgetContents.setObjectName("scrollAreaWidgetContents")
         self.gridLayout_9 = QtWidgets.QGridLayout(self.scrollAreaWidgetContents)
         self.gridLayout_9.setObjectName("gridLayout_9")
