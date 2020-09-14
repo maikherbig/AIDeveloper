@@ -119,7 +119,7 @@ import aid_img, aid_dl, aid_bin
 import aid_frontend
 from partial_trainability import partial_trainability
 
-VERSION = "0.1.1_dev4" #Python 3.5.6 Version
+VERSION = "0.1.1_dev5" #Python 3.5.6 Version
 model_zoo_version = model_zoo.__version__()
 print("AIDeveloper Version: "+VERSION)
 print("model_zoo.py Version: "+model_zoo.__version__())
@@ -7126,19 +7126,18 @@ class MainWindow(QtWidgets.QMainWindow):
             xtra_in = list(xtra_in)[0]#this is either True or False
 
             ############Cropping#####################
+            percDataV = float(self.popup_lrfinder_ui.doubleSpinBox_percDataV.value())
+            percDataV = percDataV/100.0
+            
             X_valid,y_valid,Indices,xtra_valid = [],[],[],[]
             for i in range(len(SelectedFiles_valid)):
-                if not self.actionDataToRam.isChecked():
-                    #Replace=true means individual cells could occur several times
-                    gen_valid = aid_img.gen_crop_img(crop,rtdc_path_valid[i],nr_events_epoch_valid[i],random_images=shuffle_valid[i],replace=True,zoom_factor=zoom_factors_valid[i],zoom_order=zoom_order,color_mode=self.get_color_mode(),padding_mode=paddingMode,xtra_in=xtra_in)
-                else: #get a similar generator, using the ram-data
-                    if len(DATA)==0:
-                        #Replace=true means individual cells could occur several times
-                        gen_valid = aid_img.gen_crop_img(crop,rtdc_path_valid[i],nr_events_epoch_valid[i],random_images=shuffle_valid[i],replace=True,zoom_factor=zoom_factors_valid[i],zoom_order=zoom_order,color_mode=self.get_color_mode(),padding_mode=paddingMode,xtra_in=xtra_in)
-                    else:
-                        gen_valid = aid_img.gen_crop_img_ram(DATA,rtdc_path_valid[i],nr_events_epoch_valid[i],random_images=shuffle_valid[i],replace=True,xtra_in=xtra_in) #Replace true means that individual cells could occur several times
-                        if self.actionVerbose.isChecked():
-                            print("Loaded data from RAM")
+                if len(DATA)==0:#if there is no data available on ram
+                    #replace=true means individual cells could occur several times
+                    gen_valid = aid_img.gen_crop_img(crop,rtdc_path_valid[i],int(np.rint(percDataV*nr_events_epoch_valid[i])),random_images=shuffle_valid[i],replace=True,zoom_factor=zoom_factors_valid[i],zoom_order=zoom_order,color_mode=self.get_color_mode(),padding_mode=paddingMode,xtra_in=xtra_in)
+                else:#get a similar generator, using the ram-data
+                    gen_valid = aid_img.gen_crop_img_ram(DATA,rtdc_path_valid[i],int(np.rint(percDataV*nr_events_epoch_valid[i])),random_images=shuffle_valid[i],replace=True,xtra_in=xtra_in) #Replace true means that individual cells could occur several times
+                    if self.actionVerbose.isChecked():
+                        print("Loaded data from RAM")
                 generator_cropped_out = next(gen_valid)
                 X_valid.append(generator_cropped_out[0])
                 #y_valid.append(np.repeat(indices_valid[i],nr_events_epoch_valid[i]))
@@ -7162,8 +7161,6 @@ class MainWindow(QtWidgets.QMainWindow):
                 #Add the "channels" dimension
                 X_valid = np.expand_dims(X_valid,3)
     
-            #get it to theano image format (channels first)
-            #X_valid = X_valid.swapaxes(-1,-2).swapaxes(-2,-3)
             if norm == "StdScaling using mean and std of all training data":
                 X_valid = aid_img.norm_imgs(X_valid,norm,mean_trainingdata,std_trainingdata)
             else:
@@ -7184,33 +7181,27 @@ class MainWindow(QtWidgets.QMainWindow):
     
     
     
-            ###############Continue with training data:augmentation############
+            ###################Load training data####################
+            #####################and perform#########################
+            ##################Image augmentation#####################
+
             #Rotating could create edge effects. Avoid this by making crop a bit larger for now
             #Worst case would be a 45degree rotation:
             cropsize2 = np.sqrt(crop**2+crop**2)
             cropsize2 = np.ceil(cropsize2 / 2.) * 2 #round to the next even number
 
-            model_metrics_names = []
-            for met in model_metrics:
-                if type(met)==str:
-                    model_metrics_names.append(met) 
-                else:
-                    metname = met.name
-                    metlabel = met.label
-                    if metlabel>0:
-                        metname = metname+"_"+str(metlabel)
-                    model_metrics_names.append(metname) 
+            #Should only a certain percentage of the numbers given in the table be sampled? 
+            percDataT = float(self.popup_lrfinder_ui.doubleSpinBox_percDataT.value())
+            percDataT = percDataT/100.0
 
-            ############Keras image augmentation#####################
-            #Start the first iteration:                
             X_train,y_train,xtra_train = [],[],[]
             t3 = time.time()
             for i in range(len(SelectedFiles_train)):
                 if len(DATA)==0:
                     #Replace true means that individual cells could occur several times
-                    gen_train = aid_img.gen_crop_img(cropsize2,rtdc_path_train[i],nr_events_epoch_train[i],random_images=shuffle_train[i],replace=True,zoom_factor=zoom_factors_train[i],zoom_order=zoom_order,color_mode=self.get_color_mode(),padding_mode=paddingMode,xtra_in=xtra_in) 
+                    gen_train = aid_img.gen_crop_img(cropsize2,rtdc_path_train[i],int(np.rint(percDataT*nr_events_epoch_train[i])),random_images=shuffle_train[i],replace=True,zoom_factor=zoom_factors_train[i],zoom_order=zoom_order,color_mode=self.get_color_mode(),padding_mode=paddingMode,xtra_in=xtra_in) 
                 else:
-                    gen_train = aid_img.gen_crop_img_ram(DATA,rtdc_path_train[i],nr_events_epoch_train[i],random_images=shuffle_train[i],replace=True,xtra_in=xtra_in) #Replace true means that individual cells could occur several times
+                    gen_train = aid_img.gen_crop_img_ram(DATA,rtdc_path_train[i],int(np.rint(percDataT*nr_events_epoch_train[i])),random_images=shuffle_train[i],replace=True,xtra_in=xtra_in) #Replace true means that individual cells could occur several times
                     if self.actionVerbose.isChecked():
                         print("Loaded data from RAM")
                 data_ = next(gen_train)
@@ -7244,23 +7235,23 @@ class MainWindow(QtWidgets.QMainWindow):
             t3 = time.time()
             
             #Affine augmentation
-            X_batch = aid_img.affine_augm(X_train,v_flip,h_flip,rotation,width_shift,height_shift,zoom,shear) #Affine image augmentation
-            y_batch = np.copy(y_train)
+            X_train = aid_img.affine_augm(X_train,v_flip,h_flip,rotation,width_shift,height_shift,zoom,shear) #Affine image augmentation
+            y_train = np.copy(y_train)
    
-            Y_batch = np_utils.to_categorical(y_batch, nr_classes)# * 2 - 1
+            Y_train = np_utils.to_categorical(y_train, nr_classes)# * 2 - 1
             t4 = time.time()
             if verbose == 1:
                 print("Time to perform affine augmentation ="+str(t4-t3))
                     
             t3 = time.time()            
             #Now do the final cropping to the actual size that was set by user
-            dim = X_batch.shape
+            dim = X_train.shape
             if dim[2]!=crop:
                 remove = int(dim[2]/2.0 - crop/2.0)
-                X_batch = X_batch[:,remove:remove+crop,remove:remove+crop,:] #crop to crop x crop pixels #TensorFlow
+                X_train = X_train[:,remove:remove+crop,remove:remove+crop,:] #crop to crop x crop pixels #TensorFlow
             t4 = time.time()
 
-            X_batch_orig = np.copy(X_batch) #save into new array and do some iterations with varying noise/brightness
+            #X_train = np.copy(X_train) #save into new array and do some iterations with varying noise/brightness
             #reuse this X_batch_orig a few times since this augmentation was costly
 
             if self.actionVerbose.isChecked()==True:
@@ -7269,23 +7260,23 @@ class MainWindow(QtWidgets.QMainWindow):
                 verbose = 0                            
                                                             
             #In each iteration, start with non-augmented data
-            X_batch = np.copy(X_batch_orig)#copy from X_batch_orig, X_batch will be altered without altering X_batch_orig            
-            X_batch = X_batch.astype(np.uint8)                            
+            #X_batch = np.copy(X_batch_orig)#copy from X_batch_orig, X_batch will be altered without altering X_batch_orig            
+            #X_train = X_train.astype(np.uint8)                            
             
             ##########Contrast/Saturation/Hue augmentation#########
             #is there any of contrast/saturation/hue augmentation to do?
-            X_batch = X_batch.astype(np.uint8)
+            X_train = X_train.astype(np.uint8)
 
             if contrast_on:
                 t_con_aug_1 = time.time()
-                X_batch = aid_img.contrast_augm_cv2(X_batch,contrast_lower,contrast_higher) #this function is almost 15 times faster than random_contrast from tf!
+                X_train = aid_img.contrast_augm_cv2(X_train,contrast_lower,contrast_higher) #this function is almost 15 times faster than random_contrast from tf!
                 t_con_aug_2 = time.time()
                 if verbose == 1:
                     print("Time to augment contrast="+str(t_con_aug_2-t_con_aug_1))
 
             if saturation_on or hue_on:
                 t_sat_aug_1 = time.time()
-                X_batch = aid_img.satur_hue_augm_cv2(X_batch.astype(np.uint8),saturation_on,saturation_lower,saturation_higher,hue_on,hue_delta) #Gray and RGB; both values >0!
+                X_train = aid_img.satur_hue_augm_cv2(X_train.astype(np.uint8),saturation_on,saturation_lower,saturation_higher,hue_on,hue_delta) #Gray and RGB; both values >0!
                 t_sat_aug_2 = time.time()
                 if verbose == 1:
                     print("Time to augment saturation/hue="+str(t_sat_aug_2-t_sat_aug_1))
@@ -7294,48 +7285,48 @@ class MainWindow(QtWidgets.QMainWindow):
             #is there any of blurring to do?
             if avgBlur_on:
                 t_avgBlur_1 = time.time()
-                X_batch = aid_img.avg_blur_cv2(X_batch,avgBlur_min,avgBlur_max)
+                X_train = aid_img.avg_blur_cv2(X_train,avgBlur_min,avgBlur_max)
                 t_avgBlur_2 = time.time()
                 if verbose == 1:
                     print("Time to perform average blurring="+str(t_avgBlur_2-t_avgBlur_1))
 
             if gaussBlur_on:
                 t_gaussBlur_1 = time.time()
-                X_batch = aid_img.gauss_blur_cv(X_batch,gaussBlur_min,gaussBlur_max)
+                X_train = aid_img.gauss_blur_cv(X_train,gaussBlur_min,gaussBlur_max)
                 t_gaussBlur_2 = time.time()
                 if verbose == 1:
                     print("Time to perform gaussian blurring="+str(t_gaussBlur_2-t_gaussBlur_1))
 
             if motionBlur_on:
                 t_motionBlur_1 = time.time()
-                X_batch = aid_img.motion_blur_cv(X_batch,motionBlur_kernel,motionBlur_angle)
+                X_train = aid_img.motion_blur_cv(X_train,motionBlur_kernel,motionBlur_angle)
                 t_motionBlur_2 = time.time()
                 if verbose == 1:
                     print("Time to perform motion blurring="+str(t_motionBlur_2-t_motionBlur_1))
 
             ##########Brightness noise#########
             t3 = time.time()
-            X_batch = aid_img.brightn_noise_augm_cv2(X_batch,brightness_add_lower,brightness_add_upper,brightness_mult_lower,brightness_mult_upper,gaussnoise_mean,gaussnoise_scale)
+            X_train = aid_img.brightn_noise_augm_cv2(X_train,brightness_add_lower,brightness_add_upper,brightness_mult_lower,brightness_mult_upper,gaussnoise_mean,gaussnoise_scale)
             t4 = time.time()
             if verbose == 1:
                 print("Time to augment brightness="+str(t4-t3))
 
             t3 = time.time()
             if norm == "StdScaling using mean and std of all training data":
-                X_batch = aid_img.norm_imgs(X_batch,norm,mean_trainingdata,std_trainingdata)
+                X_train = aid_img.norm_imgs(X_train,norm,mean_trainingdata,std_trainingdata)
             else:
-                X_batch = aid_img.norm_imgs(X_batch,norm)
+                X_train = aid_img.norm_imgs(X_train,norm)
             t4 = time.time()
             if verbose == 1:
                 print("Time to apply normalization="+str(t4-t3))
             
             if verbose == 1: 
-                print("X_batch.shape")
-                print(X_batch.shape)
+                print("X_train.shape")
+                print(X_train.shape)
 
             if xtra_in==True:
-                print("Add Xtra Data to X_batch")
-                X_batch = [X_batch,xtra_train]
+                print("Add Xtra Data to X_train")
+                X_train = [X_train,xtra_train]
 
             ###################################################
             ###############Actual fitting######################
@@ -7346,8 +7337,6 @@ class MainWindow(QtWidgets.QMainWindow):
             epochs = int(self.popup_lrfinder_ui.spinBox_epochs.value())
             start_lr = float(self.popup_lrfinder_ui.lineEdit_startLr.text())
             stop_lr = float(self.popup_lrfinder_ui.lineEdit_stopLr.text())
-            percDataT = float(self.popup_lrfinder_ui.doubleSpinBox_percDataT.value())
-            percDataV = float(self.popup_lrfinder_ui.doubleSpinBox_percDataV.value())
             valMetrics = bool(self.popup_lrfinder_ui.checkBox_valMetrics.isChecked())
 
             ####################lr_find algorithm####################
@@ -7357,9 +7346,9 @@ class MainWindow(QtWidgets.QMainWindow):
             elif model_keras_p != None:
                 lrf = aid_dl.LearningRateFinder(model_keras_p)
             if valMetrics==True:
-                lrf.find([X_batch,Y_batch],[X_valid,Y_valid],start_lr,stop_lr,stepsPerEpoch=stepsPerEpoch,batchSize=batch_size,epochs=epochs)
+                lrf.find([X_train,Y_train],[X_valid,Y_valid],start_lr,stop_lr,stepsPerEpoch=stepsPerEpoch,batchSize=batch_size,epochs=epochs)
             else:
-                lrf.find([X_batch,Y_batch],None,start_lr,stop_lr,stepsPerEpoch=stepsPerEpoch,batchSize=batch_size,epochs=epochs)
+                lrf.find([X_train,Y_train],None,start_lr,stop_lr,stepsPerEpoch=stepsPerEpoch,batchSize=batch_size,epochs=epochs)
             
             skipBegin,skipEnd = 10,1
             self.learning_rates = lrf.lrs[skipBegin:-skipEnd]
