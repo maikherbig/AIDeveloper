@@ -119,7 +119,7 @@ import aid_img, aid_dl, aid_bin
 import aid_frontend
 from partial_trainability import partial_trainability
 
-VERSION = "0.1.1_dev3" #Python 3.5.6 Version
+VERSION = "0.1.1_dev4" #Python 3.5.6 Version
 model_zoo_version = model_zoo.__version__()
 print("AIDeveloper Version: "+VERSION)
 print("model_zoo.py Version: "+model_zoo.__version__())
@@ -4633,11 +4633,43 @@ class MainWindow(QtWidgets.QMainWindow):
                     #zoom_order = [self.actionOrder0.isChecked(),self.actionOrder1.isChecked(),self.actionOrder2.isChecked(),self.actionOrder3.isChecked(),self.actionOrder4.isChecked(),self.actionOrder5.isChecked()]
                     #zoom_order = int(np.where(np.array(zoom_order)==True)[0])
                     zoom_order = int(self.comboBox_zoomOrder.currentIndex()) #the combobox-index is already the zoom order
-                    dic = aid_img.crop_imgs_to_ram(list(SelectedFiles),cropsize2,zoom_factors=zoom_factors,zoom_order=zoom_order,color_mode=color_mode)
-                    self.ram = dic 
-                    #Finally, activate the 'Fit model' button again
-                    #self.pushButton_FitModel.setEnabled(True)
+                    
+                    #Check if there is data already available in RAM
+                    if len(self.ram)==0:#if there is already data stored on ram
+                        print("No data on RAM. I have to load")
+                        dic = aid_img.crop_imgs_to_ram(list(SelectedFiles),cropsize2,zoom_factors=zoom_factors,zoom_order=zoom_order,color_mode=color_mode)
+                        self.ram = dic 
+
+                    else: 
+                        print("There is already some data on RAM")
+                        new_fileinfo = {"SelectedFiles":list(SelectedFiles),"cropsize2":cropsize2,"zoom_factors":zoom_factors,"zoom_order":zoom_order,"color_mode":color_mode}
+                        identical = aid_bin.ram_compare_data(self.ram,new_fileinfo)
+                        if not identical:
+                            #Load the data
+                            dic = aid_img.crop_imgs_to_ram(list(SelectedFiles),cropsize2,zoom_factors=zoom_factors,zoom_order=zoom_order,color_mode=color_mode)
+                            self.ram = dic 
+                        if identical:
+                            msg = QtWidgets.QMessageBox()
+                            msg.setIcon(QtWidgets.QMessageBox.Question)
+                            text = "Data was loaded before! Should same data be reused? If not, click 'Reload data', e.g. if you altered the Data-table."
+                            text = "<html><head/><body><p>"+text+"</p></body></html>"
+                            msg.setText(text)
+                            msg.setWindowTitle("Found data on RAM")
+                            msg.addButton(QtGui.QPushButton('Reuse data'), QtGui.QMessageBox.YesRole)
+                            msg.addButton(QtGui.QPushButton('Reload data'), QtGui.QMessageBox.NoRole)
+                            retval = msg.exec_()
                 
+                            if retval==0: 
+                                print("Re-use data")
+                                #Re-use same data
+                            elif retval==1:
+                                print("Re-load data")
+                                dic = aid_img.crop_imgs_to_ram(list(SelectedFiles),cropsize2,zoom_factors=zoom_factors,zoom_order=zoom_order,color_mode=color_mode)
+                                self.ram = dic 
+
+                #Finally, activate the 'Fit model' button again
+                #self.pushButton_FitModel.setEnabled(True)
+
                 if duties=="initialize_train":
                     self.action_fit_model()
                 if duties=="initialize_lrfind":
@@ -7043,7 +7075,7 @@ class MainWindow(QtWidgets.QMainWindow):
             if verbose==1:
                 print("Length of DATA (in RAM) = "+str(len(DATA)))
             #clear the ram again 
-            self.ram = dict()
+            #self.ram = dict() #dont clear the RAM! 
             #If the scaling method is "divide by mean and std of the whole training set":
             if norm == "StdScaling using mean and std of all training data":
                 mean_trainingdata,std_trainingdata = [],[]
@@ -7359,17 +7391,6 @@ class MainWindow(QtWidgets.QMainWindow):
         pencolor = pg.mkPen(color, width=width)
         smooth = bool(self.popup_lrfinder_ui.checkBox_smooth.isChecked())
 
-#        DF = pd.DataFrame()
-#        DF["losses_or"] = self.losses_or
-#        DF["losses_sm"] = self.losses_sm
-#        DF["accs_or"] = self.accs_or
-#        DF["accs_sm"] = self.accs_sm
-#        DF["val_losses_or"] = self.val_losses_or
-#        DF["val_losses_sm"] = self.val_losses_sm
-#        DF["val_accs_or"] = self.val_accs_or
-#        DF["val_accs_sm"] = self.val_accs_or
-#        DF.to_csv("LRscreening.csv")
-
         try:# try to empty the plot
             self.popup_lrfinder_ui.lr_plot.clear()
             #self.popup_lrfinder_ui.lr_plot.removeItem(self.lr_line)
@@ -7412,7 +7433,6 @@ class MainWindow(QtWidgets.QMainWindow):
         else:
             print("The combination of "+str(metric)+" and smooth="+str(smooth)+" is not supported!")
         
-        
         if len(self.learning_rates)==len(self.y_values):
             self.lr_line = pg.PlotCurveItem(x=np.log10(self.learning_rates), y=self.y_values,pen=pencolor,name=metric)
         elif len(self.learning_rates)-1==len(self.y_values):
@@ -7429,8 +7449,6 @@ class MainWindow(QtWidgets.QMainWindow):
         #In case the groupBox_LrRange is already checked, carry out the function:
         if self.popup_lrfinder_ui.groupBox_LrRange.isChecked():
             self.get_lr_range(on_or_off=True)
-
-
 
 
     def get_lr_single(self,on_or_off):
