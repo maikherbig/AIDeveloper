@@ -2680,6 +2680,11 @@ def setup_main_ui(self,gpu_nr):
     self.actionDataToRam = QtWidgets.QAction(self,checkable=True)
     self.actionDataToRam.setChecked(True)
     self.actionDataToRam.setObjectName(_fromUtf8("actionDataToRam"))
+
+    self.actionKeep_Data_in_RAM = QtWidgets.QAction(self,checkable=True)
+    self.actionKeep_Data_in_RAM.setChecked(False)
+    self.actionKeep_Data_in_RAM.setObjectName(_fromUtf8("actionKeep_Data_in_RAM"))
+    
     self.actionVerbose = QtWidgets.QAction(self,checkable=True)
     self.actionVerbose.setObjectName(_fromUtf8("actionVerbose"))
     self.actionClearList = QtWidgets.QAction(self)
@@ -2746,7 +2751,7 @@ def setup_main_ui(self,gpu_nr):
     self.menuLayout.addSeparator()
     self.actionTooltipOnOff = QtWidgets.QAction(self,checkable=True)
     self.actionTooltipOnOff.setChecked(True)
-    self.actionTooltipOnOff.setObjectName(_fromUtf8("actionDataToRam"))
+    self.actionTooltipOnOff.setObjectName(_fromUtf8("actionTooltipOnOff"))
     self.menuLayout.addAction(self.actionTooltipOnOff)        
 
     self.menuLayout.addSeparator()
@@ -2793,6 +2798,8 @@ def setup_main_ui(self,gpu_nr):
     self.menuFile.addSeparator()
     self.menuFile.addAction(self.actionDataToRamNow)        
     self.menuFile.addAction(self.actionDataToRam)
+    self.menuFile.addAction(self.actionKeep_Data_in_RAM)
+
     self.menuFile.addAction(self.actionSaveToPng)
     self.menuFile.addSeparator()    
     self.menuFile.addAction(self.actionQuit)
@@ -3497,6 +3504,7 @@ def retranslate_main_ui(self,gpu_nr,VERSION):
     self.actionSaveSession.setText(_translate("MainWindow", "Save Session", None))
     self.actionQuit.setText(_translate("MainWindow", "Quit", None))
     self.actionDataToRam.setText(_translate("MainWindow", "Data to RAM upon Initialization of Model", None))
+    self.actionKeep_Data_in_RAM.setText(_translate("MainWindow", "Keep Data in RAM for multiple training sessions", None))
     self.actionVerbose.setText(_translate("MainWindow", "Verbose", None))
 #        self.actionShowDataOverview.setText(_translate("MainWindow", "Show Data Overview", None))
     self.actionClearList.setText(_translate("MainWindow", "Clear List", None))
