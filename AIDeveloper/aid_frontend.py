@@ -1503,6 +1503,9 @@ def setup_main_ui(self,gpu_nr):
     self.tabWidget_Modelbuilder.addTab(self.tab_History, _fromUtf8(""))
 
 
+    ############Icon####################
+    self.pushButton_FitModel.setIcon(QtGui.QIcon(os.path.join(dir_root,"art",Default_dict["Icon theme"],"continue.png")))
+
     ############Icons Expert tab########
     #self.pushButton_LR_finder.setIcon(QtGui.QIcon(os.path.join(dir_root,"art",Default_dict["Icon theme"],"lr_screen.png")))
     icon = QtGui.QIcon()
