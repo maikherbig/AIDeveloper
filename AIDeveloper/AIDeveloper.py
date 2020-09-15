@@ -119,7 +119,7 @@ import aid_img, aid_dl, aid_bin
 import aid_frontend
 from partial_trainability import partial_trainability
 
-VERSION = "0.1.1_dev6" #Python 3.5.6 Version
+VERSION = "0.1.1_dev7" #Python 3.5.6 Version
 model_zoo_version = model_zoo.__version__()
 print("AIDeveloper Version: "+VERSION)
 print("model_zoo.py Version: "+model_zoo.__version__())
@@ -438,7 +438,7 @@ class MainWindow(QtWidgets.QMainWindow):
                             url_converted.append(fname)
                         except Exception as e:
                             msg = QtWidgets.QMessageBox()
-                            msg.setIcon(QtWidgets.QMessageBox.Information)
+                            msg.setIcon(QtWidgets.QMessageBox.Critical)
                             msg.setText(str(e))
                             msg.setWindowTitle("Error")
                             retval = msg.exec_()
@@ -8401,7 +8401,7 @@ class MainWindow(QtWidgets.QMainWindow):
 
         except Exception as e:
             msg = QtWidgets.QMessageBox()
-            msg.setIcon(QtWidgets.QMessageBox.Information)       
+            msg.setIcon(QtWidgets.QMessageBox.Critical)       
             msg.setText(str(e))
             msg.setWindowTitle("Error")
             msg.setStandardButtons(QtWidgets.QMessageBox.Ok)
@@ -8413,7 +8413,7 @@ class MainWindow(QtWidgets.QMainWindow):
             keys = list(dic.keys())
         except Exception as e:
             msg = QtWidgets.QMessageBox()
-            msg.setIcon(QtWidgets.QMessageBox.Information)       
+            msg.setIcon(QtWidgets.QMessageBox.Critical)       
             msg.setText(str(e))
             msg.setWindowTitle("Error")
             msg.setStandardButtons(QtWidgets.QMessageBox.Ok)
@@ -9006,6 +9006,19 @@ class MainWindow(QtWidgets.QMainWindow):
         DataOverview_df = self.get_dataOverview()
         DataOverview_df.to_excel(writer,sheet_name='DataOverview') #write data overview to separate sheet            
 
+        #Get all hyper parameters
+        Para_dict = pd.DataFrame()
+        Para_dict["AIDeveloper_Version"]=VERSION,
+        Para_dict["model_zoo_version"]=model_zoo_version,
+        try:
+            Para_dict["OS"]=platform.platform(),
+            Para_dict["CPU"]=platform.processor(),
+        except:
+            Para_dict["OS"]="Unknown",
+            Para_dict["CPU"]="Unknown",
+        Para_dict = aid_frontend.get_hyper_params(Para_dict,self)
+        Para_dict.to_excel(writer,sheet_name='Parameters')
+        
         writer.save()
         writer.close()
 
@@ -10349,7 +10362,7 @@ class MainWindow(QtWidgets.QMainWindow):
         except Exception as e:
             #There was an error!
             msg = QtWidgets.QMessageBox()
-            msg.setIcon(QtWidgets.QMessageBox.Information)       
+            msg.setIcon(QtWidgets.QMessageBox.Critical)       
             msg.setText(str(e))
             msg.setWindowTitle("Error")
             msg.setStandardButtons(QtWidgets.QMessageBox.Ok)
@@ -10484,7 +10497,7 @@ class MainWindow(QtWidgets.QMainWindow):
         except Exception as e:
             #There is an issue loading the files!
             msg = QtWidgets.QMessageBox()
-            msg.setIcon(QtWidgets.QMessageBox.Information)       
+            msg.setIcon(QtWidgets.QMessageBox.Warning)       
             msg.setText(str(e))
             msg.setWindowTitle("Error")
             msg.setStandardButtons(QtWidgets.QMessageBox.Ok)
@@ -10601,7 +10614,7 @@ class MainWindow(QtWidgets.QMainWindow):
         except Exception as e:
             #There is an issue loading the files!
             msg = QtWidgets.QMessageBox()
-            msg.setIcon(QtWidgets.QMessageBox.Information)       
+            msg.setIcon(QtWidgets.QMessageBox.Critical)       
             msg.setText(str(e))
             msg.setWindowTitle("Error")
             msg.setStandardButtons(QtWidgets.QMessageBox.Ok)
