@@ -119,7 +119,7 @@ import aid_img, aid_dl, aid_bin
 import aid_frontend
 from partial_trainability import partial_trainability
 
-VERSION = "0.1.1_dev7" #Python 3.5.6 Version
+VERSION = "0.1.1_dev8" #Python 3.5.6 Version
 model_zoo_version = model_zoo.__version__()
 print("AIDeveloper Version: "+VERSION)
 print("model_zoo.py Version: "+model_zoo.__version__())
@@ -5102,8 +5102,10 @@ class MainWindow(QtWidgets.QMainWindow):
             DATA = self.ram
             if verbose==1:
                 print("Length of DATA (in RAM) = "+str(len(DATA)))
-            #clear the ram again 
-            self.ram = dict()
+            #clear the ram again if desired
+            if not self.actionKeep_Data_in_RAM.isChecked():
+                self.ram = dict()
+                print("Removed data from self.ram. For further training sessions, data has to be reloaded.")
             #If the scaling method is "divide by mean and std of the whole training set":
             if norm == "StdScaling using mean and std of all training data":
                 mean_trainingdata,std_trainingdata = [],[]
