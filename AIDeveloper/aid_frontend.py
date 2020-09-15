@@ -6832,184 +6832,223 @@ def load_hyper_params(ui_item,para):
     index = ui_item.comboBox_GrayOrRGB.findText(prop, QtCore.Qt.MatchFixedString)
     if index >= 0:
         ui_item.comboBox_GrayOrRGB.setCurrentIndex(index)
-    prop = int(para["Zoom order"].iloc[-1])
-    ui_item.comboBox_zoomOrder.setCurrentIndex(prop)
-    prop = str(para["Normalization"].iloc[-1])
-    index = ui_item.comboBox_Normalization.findText(prop, QtCore.Qt.MatchFixedString)
-    if index >= 0:
-        ui_item.comboBox_Normalization.setCurrentIndex(index)
-    prop = int(para["Nr. epochs"].iloc[-1])
-    ui_item.spinBox_NrEpochs.setValue(prop)
-    prop = int(para["Keras refresh after nr. epochs"].iloc[-1])
-    ui_item.spinBox_RefreshAfterEpochs.setValue(prop)
-    prop = bool(para["Horz. flip"].iloc[-1])
-    ui_item.checkBox_HorizFlip.setChecked(prop)
-    prop = bool(para["Vert. flip"].iloc[-1])
-    ui_item.checkBox_HorizFlip.setChecked(prop)
-    prop = str(para["rotation"].iloc[-1])
-    ui_item.lineEdit_Rotation.setText(prop)
-    prop = str(para["width_shift"].iloc[-1])
-    ui_item.lineEdit_widthShift.setText(prop)
-    prop = str(para["height_shift"].iloc[-1])
-    ui_item.lineEdit_heightShift.setText(prop)
-    prop = str(para["zoom"].iloc[-1])
-    ui_item.lineEdit_zoomRange.setText(prop)
-    prop = str(para["shear"].iloc[-1])
-    ui_item.lineEdit_shearRange.setText(prop)
-    prop = int(para["Keras refresh after nr. epochs"].iloc[-1])
-    ui_item.spinBox_RefreshAfterNrEpochs.setValue(prop)
-    prop = int(para["Brightness add. lower"].iloc[-1])
-    ui_item.spinBox_PlusLower.setValue(prop)
-    prop = int(para["Brightness add. upper"].iloc[-1])
-    ui_item.spinBox_PlusUpper.setValue(prop)
-    prop = float(para["Brightness mult. lower"].iloc[-1])
-    ui_item.doubleSpinBox_MultLower.setValue(prop)
-    prop = float(para["Brightness mult. upper"].iloc[-1])
-    ui_item.doubleSpinBox_MultUpper.setValue(prop)
-    prop = float(para["Gaussnoise Mean"].iloc[-1])
-    ui_item.doubleSpinBox_GaussianNoiseMean.setValue(prop)
-    prop = float(para["Gaussnoise Scale"].iloc[-1])
-    ui_item.doubleSpinBox_GaussianNoiseScale.setValue(prop)
-    prop = bool(para["Contrast on"].iloc[-1])
-    ui_item.checkBox_contrast.setChecked(prop)
-    prop = float(para["Contrast Lower"].iloc[-1])
-    ui_item.doubleSpinBox_contrastLower.setValue(prop)
-    prop = float(para["Contrast Higher"].iloc[-1])
-    ui_item.doubleSpinBox_contrastHigher.setValue(prop)
-    prop = bool(para["Saturation on"].iloc[-1])
-    ui_item.checkBox_saturation.setChecked(prop)
-    prop = float(para["Saturation Lower"].iloc[-1])
-    ui_item.doubleSpinBox_saturationLower.setValue(prop)
-    prop = float(para["Saturation Higher"].iloc[-1])
-    ui_item.doubleSpinBox_saturationHigher.setValue(prop)
-    prop = bool(para["Hue on"].iloc[-1])
-    ui_item.checkBox_hue.setChecked(prop)
-    prop = float(para["Hue delta"].iloc[-1])
-    ui_item.doubleSpinBox_hueDelta.setValue(prop)
-    prop = bool(para["Average blur on"].iloc[-1])
-    ui_item.checkBox_avgBlur.setChecked(prop)
-    prop = int(para["Average blur Lower"].iloc[-1])
-    ui_item.spinBox_avgBlurMin.setValue(prop)
-    prop = int(para["Average blur Higher"].iloc[-1])
-    ui_item.spinBox_avgBlurMax.setValue(prop)
-    prop = bool(para["Gauss blur on"].iloc[-1])
-    ui_item.checkBox_gaussBlur.setChecked(prop)
-    prop = int(para["Gauss blur Lower"].iloc[-1])
-    ui_item.spinBox_gaussBlurMin.setValue(prop)
-    prop = int(para["Gauss blur Higher"].iloc[-1])
-    ui_item.spinBox_gaussBlurMax.setValue(prop)
-    prop = bool(para["Motion blur on"].iloc[-1])
-    ui_item.checkBox_motionBlur.setChecked(prop)
-    prop = str(para["Motion blur Kernel"].iloc[-1])
-    ui_item.lineEdit_motionBlurKernel.setText(prop)
-    prop = str(para["Motion blur Angle"].iloc[-1])
-    ui_item.lineEdit_motionBlurAngle.setText(prop)
-    prop = bool(para["expert_mode"].iloc[-1])
-    ui_item.groupBox_expertMode.setChecked(prop)
-
-    prop = str(para["optimizer_settings"].iloc[-1])
-    prop = eval(prop)
-    ui_item.optimizer_settings["doubleSpinBox_lr_sgd"] = prop["doubleSpinBox_lr_sgd"]
-    ui_item.optimizer_settings["doubleSpinBox_sgd_momentum"] = prop["doubleSpinBox_sgd_momentum"]
-    ui_item.optimizer_settings["checkBox_sgd_nesterov"] = prop["checkBox_sgd_nesterov"]
-
-    ui_item.optimizer_settings["doubleSpinBox_lr_rmsprop"] = prop["doubleSpinBox_lr_rmsprop"]
-    ui_item.optimizer_settings["doubleSpinBox_rms_rho"] = prop["doubleSpinBox_rms_rho"]
-
-    ui_item.optimizer_settings["doubleSpinBox_lr_adam"] = prop["doubleSpinBox_lr_adam"]
-    ui_item.optimizer_settings["doubleSpinBox_adam_beta1"] = prop["doubleSpinBox_adam_beta1"]
-    ui_item.optimizer_settings["doubleSpinBox_adam_beta2"] = prop["doubleSpinBox_adam_beta2"]
-    ui_item.optimizer_settings["checkBox_adam_amsgrad"] = prop["checkBox_adam_amsgrad"]
-
-    ui_item.optimizer_settings["doubleSpinBox_lr_adadelta"] = prop["doubleSpinBox_lr_adadelta"]
-    ui_item.optimizer_settings["doubleSpinBox_adadelta_rho"] = prop["doubleSpinBox_adadelta_rho"]
-
-    ui_item.optimizer_settings["doubleSpinBox_lr_nadam"] = prop["doubleSpinBox_lr_nadam"]
-    ui_item.optimizer_settings["doubleSpinBox_nadam_beta1"] = prop["doubleSpinBox_nadam_beta1"]
-    ui_item.optimizer_settings["doubleSpinBox_nadam_beta2"] = prop["doubleSpinBox_nadam_beta2"]
-
-    ui_item.optimizer_settings["doubleSpinBox_lr_adagrad"] = prop["doubleSpinBox_lr_adagrad"]
-
-    ui_item.optimizer_settings["doubleSpinBox_lr_adamax"] = prop["doubleSpinBox_lr_adamax"]
-    ui_item.optimizer_settings["doubleSpinBox_adamax_beta1"] = prop["doubleSpinBox_adamax_beta1"]
-    ui_item.optimizer_settings["doubleSpinBox_adamax_beta2"] = prop["doubleSpinBox_adamax_beta2"]
-
-    prop = bool(para["optimizer_expert_on"].iloc[-1])
-    ui_item.checkBox_optimizer.setChecked(prop)
-    prop = str(para["optimizer_expert"].iloc[-1])
-    index = ui_item.comboBox_optimizer.findText(prop, QtCore.Qt.MatchFixedString)
-    if index >= 0:
-        ui_item.comboBox_optimizer.setCurrentIndex(index)
-
-    prop = int(para["batchSize_expert"].iloc[-1])
-    ui_item.spinBox_batchSize.setValue(prop)
-    prop = int(para["epochs_expert"].iloc[-1])
-    ui_item.spinBox_epochs.setValue(prop)
-    prop = bool(para["learning_rate_expert_on"].iloc[-1])
-    ui_item.groupBox_learningRate.setChecked(prop)
-    prop = bool(para["learning_rate_const_on"].iloc[-1])
-    ui_item.radioButton_LrConst.setChecked(prop)
-    prop = float(para["learning_rate_const"].iloc[-1])
-    ui_item.doubleSpinBox_learningRate.setValue(prop)
-    prop = bool(para["learning_rate_cycLR_on"].iloc[-1])
-    ui_item.radioButton_LrCycl.setChecked(prop)
-    prop = str(para["cycLrMin"].iloc[-1])
-    ui_item.lineEdit_cycLrMin.setText(prop)
-    prop = str(para["cycLrMax"].iloc[-1])
-    ui_item.lineEdit_cycLrMax.setText(prop)
-    prop = str(para["cycLrMethod"].iloc[-1])
-    index = ui_item.comboBox_cycLrMethod.findText(prop, QtCore.Qt.MatchFixedString)
-    if index >= 0:
-        ui_item.comboBox_cycLrMethod.setCurrentIndex(index)
-    prop = str(para["clr_settings"].iloc[-1])
-    prop = eval(prop)
-    ui_item.clr_settings["step_size"] = prop["step_size"]
-    ui_item.clr_settings["gamma"] = prop["gamma"]
-    prop = bool(para["learning_rate_expo_on"].iloc[-1])
-    ui_item.radioButton_LrExpo.setChecked(prop)
-    prop = float(para["expDecInitLr"].iloc[-1])
-    ui_item.doubleSpinBox_expDecInitLr.setValue(prop)
-    prop = int(para["expDecSteps"].iloc[-1])
-    ui_item.spinBox_expDecSteps.setValue(prop)
-    prop = float(para["expDecRate"].iloc[-1])
-    ui_item.doubleSpinBox_expDecRate.setValue(prop)
-    prop = bool(para["loss_expert_on"].iloc[-1])
-    ui_item.checkBox_expt_loss.setChecked(prop)
-    prop = str(para["loss_expert"].iloc[-1])
-    index = ui_item.comboBox_expt_loss.findText(prop, QtCore.Qt.MatchFixedString)
-    if index >= 0:
-        ui_item.comboBox_expt_loss.setCurrentIndex(index)
+    try:
+        prop = int(para["Zoom order"].iloc[-1])
+        ui_item.comboBox_zoomOrder.setCurrentIndex(prop)
+    except: pass
+    try:
+        prop = str(para["Normalization"].iloc[-1])
+        index = ui_item.comboBox_Normalization.findText(prop, QtCore.Qt.MatchFixedString)
+        if index >= 0:
+            ui_item.comboBox_Normalization.setCurrentIndex(index)
+    except: pass
+    try:
+        prop = int(para["Nr. epochs"].iloc[-1])
+        ui_item.spinBox_NrEpochs.setValue(prop)
+    except: pass
+    try:
+        prop = int(para["Keras refresh after nr. epochs"].iloc[-1])
+        ui_item.spinBox_RefreshAfterEpochs.setValue(prop)
+        prop = bool(para["Horz. flip"].iloc[-1])
+        ui_item.checkBox_HorizFlip.setChecked(prop)
+        prop = bool(para["Vert. flip"].iloc[-1])
+        ui_item.checkBox_HorizFlip.setChecked(prop)
+        prop = str(para["rotation"].iloc[-1])
+        ui_item.lineEdit_Rotation.setText(prop)
+        prop = str(para["width_shift"].iloc[-1])
+        ui_item.lineEdit_widthShift.setText(prop)
+        prop = str(para["height_shift"].iloc[-1])
+        ui_item.lineEdit_heightShift.setText(prop)
+        prop = str(para["zoom"].iloc[-1])
+        ui_item.lineEdit_zoomRange.setText(prop)
+        prop = str(para["shear"].iloc[-1])
+        ui_item.lineEdit_shearRange.setText(prop)
+    except: pass
+    try:    
+        prop = int(para["Keras refresh after nr. epochs"].iloc[-1])
+        ui_item.spinBox_RefreshAfterNrEpochs.setValue(prop)
+        prop = int(para["Brightness add. lower"].iloc[-1])
+        ui_item.spinBox_PlusLower.setValue(prop)
+        prop = int(para["Brightness add. upper"].iloc[-1])
+        ui_item.spinBox_PlusUpper.setValue(prop)
+        prop = float(para["Brightness mult. lower"].iloc[-1])
+        ui_item.doubleSpinBox_MultLower.setValue(prop)
+        prop = float(para["Brightness mult. upper"].iloc[-1])
+        ui_item.doubleSpinBox_MultUpper.setValue(prop)
+        prop = float(para["Gaussnoise Mean"].iloc[-1])
+        ui_item.doubleSpinBox_GaussianNoiseMean.setValue(prop)
+        prop = float(para["Gaussnoise Scale"].iloc[-1])
+        ui_item.doubleSpinBox_GaussianNoiseScale.setValue(prop)
+    except: pass
+    try:
+        prop = bool(para["Contrast on"].iloc[-1])
+        ui_item.checkBox_contrast.setChecked(prop)
+        prop = float(para["Contrast Lower"].iloc[-1])
+        ui_item.doubleSpinBox_contrastLower.setValue(prop)
+        prop = float(para["Contrast Higher"].iloc[-1])
+        ui_item.doubleSpinBox_contrastHigher.setValue(prop)
+        prop = bool(para["Saturation on"].iloc[-1])
+        ui_item.checkBox_saturation.setChecked(prop)
+        prop = float(para["Saturation Lower"].iloc[-1])
+        ui_item.doubleSpinBox_saturationLower.setValue(prop)
+        prop = float(para["Saturation Higher"].iloc[-1])
+        ui_item.doubleSpinBox_saturationHigher.setValue(prop)
+        prop = bool(para["Hue on"].iloc[-1])
+        ui_item.checkBox_hue.setChecked(prop)
+        prop = float(para["Hue delta"].iloc[-1])
+        ui_item.doubleSpinBox_hueDelta.setValue(prop)
+    except: pass
+    try:
+        prop = bool(para["Average blur on"].iloc[-1])
+        ui_item.checkBox_avgBlur.setChecked(prop)
+        prop = int(para["Average blur Lower"].iloc[-1])
+        ui_item.spinBox_avgBlurMin.setValue(prop)
+        prop = int(para["Average blur Higher"].iloc[-1])
+        ui_item.spinBox_avgBlurMax.setValue(prop)
+        prop = bool(para["Gauss blur on"].iloc[-1])
+        ui_item.checkBox_gaussBlur.setChecked(prop)
+        prop = int(para["Gauss blur Lower"].iloc[-1])
+        ui_item.spinBox_gaussBlurMin.setValue(prop)
+        prop = int(para["Gauss blur Higher"].iloc[-1])
+        ui_item.spinBox_gaussBlurMax.setValue(prop)
+        prop = bool(para["Motion blur on"].iloc[-1])
+        ui_item.checkBox_motionBlur.setChecked(prop)
+        prop = str(para["Motion blur Kernel"].iloc[-1])
+        ui_item.lineEdit_motionBlurKernel.setText(prop)
+        prop = str(para["Motion blur Angle"].iloc[-1])
+        ui_item.lineEdit_motionBlurAngle.setText(prop)
+    except: pass
+    try:
+        prop = bool(para["expert_mode"].iloc[-1])
+        ui_item.groupBox_expertMode.setChecked(prop)
+    except: pass
+    try:
+        prop = str(para["optimizer_settings"].iloc[-1])
+        prop = eval(prop)
+        ui_item.optimizer_settings["doubleSpinBox_lr_sgd"] = prop["doubleSpinBox_lr_sgd"]
+        ui_item.optimizer_settings["doubleSpinBox_sgd_momentum"] = prop["doubleSpinBox_sgd_momentum"]
+        ui_item.optimizer_settings["checkBox_sgd_nesterov"] = prop["checkBox_sgd_nesterov"]
     
-    prop = str(para["paddingMode"].iloc[-1])
-    index = ui_item.comboBox_paddingMode.findText(prop, QtCore.Qt.MatchFixedString)
-    if index >= 0:
-        ui_item.comboBox_paddingMode.setCurrentIndex(index)
+        ui_item.optimizer_settings["doubleSpinBox_lr_rmsprop"] = prop["doubleSpinBox_lr_rmsprop"]
+        ui_item.optimizer_settings["doubleSpinBox_rms_rho"] = prop["doubleSpinBox_rms_rho"]
+    
+        ui_item.optimizer_settings["doubleSpinBox_lr_adam"] = prop["doubleSpinBox_lr_adam"]
+        ui_item.optimizer_settings["doubleSpinBox_adam_beta1"] = prop["doubleSpinBox_adam_beta1"]
+        ui_item.optimizer_settings["doubleSpinBox_adam_beta2"] = prop["doubleSpinBox_adam_beta2"]
+        ui_item.optimizer_settings["checkBox_adam_amsgrad"] = prop["checkBox_adam_amsgrad"]
+    
+        ui_item.optimizer_settings["doubleSpinBox_lr_adadelta"] = prop["doubleSpinBox_lr_adadelta"]
+        ui_item.optimizer_settings["doubleSpinBox_adadelta_rho"] = prop["doubleSpinBox_adadelta_rho"]
+    
+        ui_item.optimizer_settings["doubleSpinBox_lr_nadam"] = prop["doubleSpinBox_lr_nadam"]
+        ui_item.optimizer_settings["doubleSpinBox_nadam_beta1"] = prop["doubleSpinBox_nadam_beta1"]
+        ui_item.optimizer_settings["doubleSpinBox_nadam_beta2"] = prop["doubleSpinBox_nadam_beta2"]
+    
+        ui_item.optimizer_settings["doubleSpinBox_lr_adagrad"] = prop["doubleSpinBox_lr_adagrad"]
+    
+        ui_item.optimizer_settings["doubleSpinBox_lr_adamax"] = prop["doubleSpinBox_lr_adamax"]
+        ui_item.optimizer_settings["doubleSpinBox_adamax_beta1"] = prop["doubleSpinBox_adamax_beta1"]
+        ui_item.optimizer_settings["doubleSpinBox_adamax_beta2"] = prop["doubleSpinBox_adamax_beta2"]
+    except: pass
+    try:
+        prop = bool(para["optimizer_expert_on"].iloc[-1])
+        ui_item.checkBox_optimizer.setChecked(prop)
+        prop = str(para["optimizer_expert"].iloc[-1])
+        index = ui_item.comboBox_optimizer.findText(prop, QtCore.Qt.MatchFixedString)
+        if index >= 0:
+            ui_item.comboBox_optimizer.setCurrentIndex(index)
+    except: pass
 
-    prop = bool(para["train_last_layers"].iloc[-1])
-    ui_item.checkBox_trainLastNOnly.setChecked(prop)
-    prop = int(para["train_last_layers_n"].iloc[-1])
-    ui_item.spinBox_trainLastNOnly.setValue(prop)
-    prop = bool(para["train_dense_layers"].iloc[-1])
-    ui_item.checkBox_trainDenseOnly.setChecked(prop)
-    prop = bool(para["dropout_expert_on"].iloc[-1])
-    ui_item.checkBox_dropout.setChecked(prop)
-    prop = str(para["dropout_expert"].iloc[-1])
-    if prop!="()":
-        ui_item.lineEdit_dropout.setText(prop[1:-1])
-    prop = bool(para["lossW_expert_on"].iloc[-1])
-    ui_item.checkBox_lossW.setChecked(prop)
-    prop = str(para["lossW_expert"].iloc[-1])
-    if prop!="nan":
-        ui_item.lineEdit_lossW.setText(prop)
-    prop = str(para["metrics"].iloc[-1])
-    if "accuracy" in prop.lower():
-        ui_item.checkBox_expertAccuracy.setChecked(True)
-    if "f1" in prop.lower():
-        ui_item.checkBox_expertF1.setChecked(True)
-    if "precision" in prop.lower():
-        ui_item.checkBox_expertPrecision.setChecked(True)
-    if "recall" in prop.lower():
-        ui_item.checkBox_expertRecall.setChecked(True)
+    try:
+        prop = int(para["batchSize_expert"].iloc[-1])
+        ui_item.spinBox_batchSize.setValue(prop)
+        prop = int(para["epochs_expert"].iloc[-1])
+        ui_item.spinBox_epochs.setValue(prop)
+    except: pass
+    try:
+        prop = bool(para["learning_rate_expert_on"].iloc[-1])
+        ui_item.groupBox_learningRate.setChecked(prop)
+    except: pass
+    try:
+        prop = bool(para["learning_rate_const_on"].iloc[-1])
+        ui_item.radioButton_LrConst.setChecked(prop)
+        prop = float(para["learning_rate_const"].iloc[-1])
+        ui_item.doubleSpinBox_learningRate.setValue(prop)
+    except: pass
+    try:
+        prop = bool(para["learning_rate_cycLR_on"].iloc[-1])
+        ui_item.radioButton_LrCycl.setChecked(prop)
+        prop = str(para["cycLrMin"].iloc[-1])
+        ui_item.lineEdit_cycLrMin.setText(prop)
+        prop = str(para["cycLrMax"].iloc[-1])
+        ui_item.lineEdit_cycLrMax.setText(prop)
+        prop = str(para["cycLrMethod"].iloc[-1])
+        index = ui_item.comboBox_cycLrMethod.findText(prop, QtCore.Qt.MatchFixedString)
+        if index >= 0:
+            ui_item.comboBox_cycLrMethod.setCurrentIndex(index)
+        prop = str(para["clr_settings"].iloc[-1])
+        prop = eval(prop)
+        ui_item.clr_settings["step_size"] = prop["step_size"]
+        ui_item.clr_settings["gamma"] = prop["gamma"]
+    except: pass
+    try:
+        prop = bool(para["learning_rate_expo_on"].iloc[-1])
+        ui_item.radioButton_LrExpo.setChecked(prop)
+        prop = float(para["expDecInitLr"].iloc[-1])
+        ui_item.doubleSpinBox_expDecInitLr.setValue(prop)
+        prop = int(para["expDecSteps"].iloc[-1])
+        ui_item.spinBox_expDecSteps.setValue(prop)
+        prop = float(para["expDecRate"].iloc[-1])
+        ui_item.doubleSpinBox_expDecRate.setValue(prop)
+    except: pass
+    try:
+        prop = bool(para["loss_expert_on"].iloc[-1])
+        ui_item.checkBox_expt_loss.setChecked(prop)
+        prop = str(para["loss_expert"].iloc[-1])
+        index = ui_item.comboBox_expt_loss.findText(prop, QtCore.Qt.MatchFixedString)
+        if index >= 0:
+            ui_item.comboBox_expt_loss.setCurrentIndex(index)
+    except: pass
+    try:
+        prop = str(para["paddingMode"].iloc[-1])
+        index = ui_item.comboBox_paddingMode.findText(prop, QtCore.Qt.MatchFixedString)
+        if index >= 0:
+            ui_item.comboBox_paddingMode.setCurrentIndex(index)
+    except: pass
+    try:
+        prop = bool(para["train_last_layers"].iloc[-1])
+        ui_item.checkBox_trainLastNOnly.setChecked(prop)
+        prop = int(para["train_last_layers_n"].iloc[-1])
+        ui_item.spinBox_trainLastNOnly.setValue(prop)
+        prop = bool(para["train_dense_layers"].iloc[-1])
+        ui_item.checkBox_trainDenseOnly.setChecked(prop)
+    except: pass
+    try:
+        prop = bool(para["dropout_expert_on"].iloc[-1])
+        ui_item.checkBox_dropout.setChecked(prop)
+        prop = str(para["dropout_expert"].iloc[-1])
+        if prop!="()":
+            ui_item.lineEdit_dropout.setText(prop[1:-1])
+    except: pass
+    try:
+        prop = bool(para["lossW_expert_on"].iloc[-1])
+        ui_item.checkBox_lossW.setChecked(prop)
+        prop = str(para["lossW_expert"].iloc[-1])
+        if prop!="nan":
+            ui_item.lineEdit_lossW.setText(prop)
+    except: pass
+    try:
+        prop = str(para["metrics"].iloc[-1])
+        if "accuracy" in prop.lower():
+            ui_item.checkBox_expertAccuracy.setChecked(True)
+        if "f1" in prop.lower():
+            ui_item.checkBox_expertF1.setChecked(True)
+        if "precision" in prop.lower():
+            ui_item.checkBox_expertPrecision.setChecked(True)
+        if "recall" in prop.lower():
+            ui_item.checkBox_expertRecall.setChecked(True)
+    except:
+        pass
 
 
 
