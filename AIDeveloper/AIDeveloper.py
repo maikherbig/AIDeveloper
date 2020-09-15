@@ -8778,7 +8778,8 @@ class MainWindow(QtWidgets.QMainWindow):
         filename = filename[0]
         if len(filename)==0:
             return
-        UsedData = pd.read_excel(filename,sheet_name="UsedData")
+        xlsx = pd.ExcelFile(filename)
+        UsedData = pd.read_excel(xlsx,sheet_name="UsedData")
         Files = list(UsedData["rtdc_path"])
 
         file_exists = [os.path.exists(url) for url in Files]
@@ -8953,8 +8954,8 @@ class MainWindow(QtWidgets.QMainWindow):
             pass
         #Load the parameters
         elif msg.clickedButton()==allparams: #show image and heatmap overlay
-            para = pd.read_excel(filename,sheet_name="Parameters")
-            aid_frontend.load_hyper_params(self,para)
+            Parameters = pd.read_excel(xlsx,sheet_name="Parameters")
+            aid_frontend.load_hyper_params(self,Parameters)
 #        if msg.clickedButton()==cancel: #show image and heatmap overlay
 #            return
 
