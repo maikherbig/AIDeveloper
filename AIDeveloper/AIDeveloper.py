@@ -119,7 +119,7 @@ import aid_img, aid_dl, aid_bin
 import aid_frontend
 from partial_trainability import partial_trainability
 
-VERSION = "0.1.1_dev8" #Python 3.5.6 Version
+VERSION = "0.1.1_dev9" #Python 3.5.6 Version
 model_zoo_version = model_zoo.__version__()
 print("AIDeveloper Version: "+VERSION)
 print("model_zoo.py Version: "+model_zoo.__version__())
@@ -7072,21 +7072,18 @@ class MainWindow(QtWidgets.QMainWindow):
                 return
             xtra_in = list(xtra_in)[0]#this is either True or False
             
-            #read self.ram to new variable ; next clear ram. This is required for multitasking (training multiple models with maybe different data)
-            DATA = self.ram
             if verbose==1:
-                print("Length of DATA (in RAM) = "+str(len(DATA)))
-            #clear the ram again 
-            #self.ram = dict() #dont clear the RAM! 
+                print("Length of DATA (in RAM) = "+str(len(self.ram)))
+
             #If the scaling method is "divide by mean and std of the whole training set":
             if norm == "StdScaling using mean and std of all training data":
                 mean_trainingdata,std_trainingdata = [],[]
                 for i in range(len(SelectedFiles_train)):
-                    if len(DATA)==0: #Here, the entire training set needs to be used! Not only random images!
+                    if len(self.ram)==0: #Here, the entire training set needs to be used! Not only random images!
                         #Replace=true: means individual cells could occur several times
                         gen_train = aid_img.gen_crop_img(crop,rtdc_path_train[i],random_images=False,zoom_factor=zoom_factors_train[i],zoom_order=zoom_order,color_mode=self.get_color_mode(),padding_mode=paddingMode) 
                     else:
-                        gen_train = aid_img.gen_crop_img_ram(DATA,rtdc_path_train[i],random_images=False) #Replace true means that individual cells could occur several times
+                        gen_train = aid_img.gen_crop_img_ram(self.ram,rtdc_path_train[i],random_images=False) #Replace true means that individual cells could occur several times
                         if self.actionVerbose.isChecked():
                             print("Loaded data from RAM")
                         
@@ -7133,11 +7130,11 @@ class MainWindow(QtWidgets.QMainWindow):
             
             X_valid,y_valid,Indices,xtra_valid = [],[],[],[]
             for i in range(len(SelectedFiles_valid)):
-                if len(DATA)==0:#if there is no data available on ram
+                if len(self.ram)==0:#if there is no data available on ram
                     #replace=true means individual cells could occur several times
                     gen_valid = aid_img.gen_crop_img(crop,rtdc_path_valid[i],int(np.rint(percDataV*nr_events_epoch_valid[i])),random_images=shuffle_valid[i],replace=True,zoom_factor=zoom_factors_valid[i],zoom_order=zoom_order,color_mode=self.get_color_mode(),padding_mode=paddingMode,xtra_in=xtra_in)
                 else:#get a similar generator, using the ram-data
-                    gen_valid = aid_img.gen_crop_img_ram(DATA,rtdc_path_valid[i],int(np.rint(percDataV*nr_events_epoch_valid[i])),random_images=shuffle_valid[i],replace=True,xtra_in=xtra_in) #Replace true means that individual cells could occur several times
+                    gen_valid = aid_img.gen_crop_img_ram(self.ram,rtdc_path_valid[i],int(np.rint(percDataV*nr_events_epoch_valid[i])),random_images=shuffle_valid[i],replace=True,xtra_in=xtra_in) #Replace true means that individual cells could occur several times
                     if self.actionVerbose.isChecked():
                         print("Loaded data from RAM")
                 generator_cropped_out = next(gen_valid)
@@ -7199,11 +7196,11 @@ class MainWindow(QtWidgets.QMainWindow):
             X_train,y_train,xtra_train = [],[],[]
             t3 = time.time()
             for i in range(len(SelectedFiles_train)):
-                if len(DATA)==0:
+                if len(self.ram)==0:
                     #Replace true means that individual cells could occur several times
                     gen_train = aid_img.gen_crop_img(cropsize2,rtdc_path_train[i],int(np.rint(percDataT*nr_events_epoch_train[i])),random_images=shuffle_train[i],replace=True,zoom_factor=zoom_factors_train[i],zoom_order=zoom_order,color_mode=self.get_color_mode(),padding_mode=paddingMode,xtra_in=xtra_in) 
                 else:
-                    gen_train = aid_img.gen_crop_img_ram(DATA,rtdc_path_train[i],int(np.rint(percDataT*nr_events_epoch_train[i])),random_images=shuffle_train[i],replace=True,xtra_in=xtra_in) #Replace true means that individual cells could occur several times
+                    gen_train = aid_img.gen_crop_img_ram(self.ram,rtdc_path_train[i],int(np.rint(percDataT*nr_events_epoch_train[i])),random_images=shuffle_train[i],replace=True,xtra_in=xtra_in) #Replace true means that individual cells could occur several times
                     if self.actionVerbose.isChecked():
                         print("Loaded data from RAM")
                 data_ = next(gen_train)
