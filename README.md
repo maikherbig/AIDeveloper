@@ -7,9 +7,9 @@ for image classification within a graphical user-interface (GUI).
 # Overview  
 ![Alt Text](art/Intro-v07.gif)
 # Installation  
-There is a tutorial video (ca. 1min. short) on YouTube.  
+There is a tutorial video (44 seconds short) on YouTube.  
 In this video, I show you how to get AIDeveloper running on your PC.  
-[![Alternate Text](/art/Youtube_Link_Tutorial0_v01.png)](https://youtu.be/uqygHsVlCCM "AIDeveloper Tutorial 0")  
+[![Alternate Text](/art/Youtube_Link_Tutorial0_v01.png)](https://youtu.be/s5Kby9UuzL4 "AIDeveloper Tutorial 0")  
 
   
 **_If you dont want to watch the video:_**   
