@@ -119,7 +119,7 @@ import aid_img, aid_dl, aid_bin
 import aid_frontend
 from partial_trainability import partial_trainability
 
-VERSION = "0.1.2_dev1" #Python 3.5.6 Version
+VERSION = "0.1.2_dev2" #Python 3.5.6 Version
 model_zoo_version = model_zoo.__version__()
 print("AIDeveloper Version: "+VERSION)
 print("model_zoo.py Version: "+model_zoo.__version__())
@@ -11174,8 +11174,13 @@ class MainWindow(QtWidgets.QMainWindow):
 
     #####################Python Editor/Console#################################
     def pythonInRun(self):
+        self.threadpool_single_queue += 1
+        if self.threadpool_single_queue == 1:
+            worker = Worker(self.pythonInRun_Worker)                          
+            self.threadpool.start(worker)
+
+    def pythonInRun_Worker(self,progress_callback,history_callback):
         code = self.plainTextEdit_pythonIn.toPlainText()
-        
         codeOut = io.StringIO()
         out,error = "",""
         # capture output
@@ -11197,6 +11202,8 @@ class MainWindow(QtWidgets.QMainWindow):
         if len(error)>0:
             self.textBrowser_pythonOut.append(text_error)
 
+        self.threadpool_single_queue = 0 #reset thread counter
+        
     def pythonInClear(self):
         self.plainTextEdit_pythonIn.clear()
         self.lineEdit_pythonCurrentFile.clear()
