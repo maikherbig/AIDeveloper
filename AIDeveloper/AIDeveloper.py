@@ -119,7 +119,7 @@ import aid_img, aid_dl, aid_bin
 import aid_frontend
 from partial_trainability import partial_trainability
 
-VERSION = "0.1.1_dev9" #Python 3.5.6 Version
+VERSION = "0.1.2_dev1" #Python 3.5.6 Version
 model_zoo_version = model_zoo.__version__()
 print("AIDeveloper Version: "+VERSION)
 print("model_zoo.py Version: "+model_zoo.__version__())
@@ -3798,7 +3798,7 @@ class MainWindow(QtWidgets.QMainWindow):
             self.pushButton_w.clicked.connect(self.get_norm_from_modelparafile)
             self.w.show()
 
-    def action_preview_model(self,enabled):
+    def action_preview_model(self,enabled):#function runs when radioButton_LoadRestartModel or radioButton_LoadContinueModel was clicked
         if enabled: 
             #if the "Load and restart" radiobutton was clicked:
             if self.radioButton_LoadRestartModel.isChecked():
@@ -3977,13 +3977,20 @@ class MainWindow(QtWidgets.QMainWindow):
             #check that the nr. of classes are equal to the model out put
             SelectedFiles = self.items_clicked_no_rtdc_ds()
             indices = [s["class"] for s in SelectedFiles]
-            nr_classes = len(set(indices))
+            
+            nr_classes = np.max(indices)+1
+
             if int(nr_classes)==int(out_dim):
                 text3 = "Output: "+str(out_dim)+" classes\n"
-            else:
-                text3 = "Model Output: The architecture you chose has "+(str(out_dim))+\
+            elif int(nr_classes)>int(out_dim):#Dataset has more classes than the model provides!
+                text3 = "Loaded model has only "+(str(out_dim))+\
                 " output nodes (classes) but your selected data has "+str(nr_classes)+\
-                " classes. The model could theoretically have more outputs nodes than you have indices but the other way around is not defined\n"                
+                " classes. Therefore, the model will be adjusted before fitting, by customizing the final Dense layer.\n"                
+                #aid_dl.model_add_classes(model_keras,nr_classes)#this function changes model_keras inplace
+            elif int(nr_classes)<int(out_dim):#Dataset has less classes than the model provides!
+                text3 = "Model output: The architecture you chose has "+(str(out_dim))+\
+                " output nodes (classes) and your selected data has only "+str(nr_classes)+\
+                " classes. This is fine. The model will essentially have some excess classes that are not used.\n"                
 
             text = text1+text2+text3
             self.textBrowser_Info.setText(text)
@@ -4163,18 +4170,24 @@ class MainWindow(QtWidgets.QMainWindow):
                 #check that the nr. of classes are equal to the model out put
                 SelectedFiles = self.items_clicked()
                 indices = [s["class"] for s in SelectedFiles]
-                nr_classes = len(set(indices))
+                nr_classes = np.max(indices)+1
+                    
                 if int(nr_classes)==int(out_dim):
                     text3 = "Output: "+str(out_dim)+" classes\n"
-                else:
-                    text3 = "Model Output: The architecture you chose has "+(str(out_dim))+\
+                elif int(nr_classes)>int(out_dim):#Dataset has more classes than the model provides!
+                    text3 = "Loaded model has only "+(str(out_dim))+\
                     " output nodes (classes) but your selected data has "+str(nr_classes)+\
-                    " classes. The model could theoretically have more outputs nodes than you have indices but the other way around is not defined\n"                
+                    " classes. Therefore, the model will be adjusted before fitting, by customizing the final Dense layer.\n"                
+                    aid_dl.model_add_classes(model_keras,nr_classes)#this function changes model_keras inplace
+                elif int(nr_classes)<int(out_dim):#Dataset has less classes than the model provides!
+                    text3 = "Model output: The architecture you chose has "+(str(out_dim))+\
+                    " output nodes (classes) and your selected data has only "+str(nr_classes)+\
+                    " classes. This is fine. The model will essentially have some excess classes that are not used.\n"                
     
             ###############Load and continue training the model####################
             elif self.radioButton_LoadContinueModel.isChecked():
                 load_modelname = str(self.lineEdit_LoadModelPath.text())
-                text0 = "Loaded model: "+load_modelname
+                text0 = "Loaded model: "+load_modelname+"\n"
 
                 #User can only choose a .model (FULL model with trained weights) , but for display only load the architecture
                 if load_modelname.endswith(".model"):              
@@ -4186,7 +4199,7 @@ class MainWindow(QtWidgets.QMainWindow):
                         model_keras = load_model(load_modelname,custom_objects=aid_dl.get_custom_metrics())
                     #model_config = model_keras.config() #Load the model config (this is the architecture)
                     #load_modelname = load_modelname.split(".model")[0]
-                    text1 = "Architecture: loaded from .model\nWeights: pretrained weights loaded'\n"
+                    text1 = "Architecture: loaded from .model\nWeights: pretrained weights were loaded\n"
                 else:
                     msg = QtWidgets.QMessageBox()
                     msg.setIcon(QtWidgets.QMessageBox.Information)       
@@ -4246,13 +4259,19 @@ class MainWindow(QtWidgets.QMainWindow):
                 #check that the nr. of classes are equal to the model out put
                 SelectedFiles = self.items_clicked()
                 indices = [s["class"] for s in SelectedFiles]
-                nr_classes = len(set(indices))
+                nr_classes = np.max(indices)+1
+
                 if int(nr_classes)==int(out_dim):
                     text3 = "Output: "+str(out_dim)+" classes\n"
-                else:
-                    text3 = "Model Output: The architecture you chose has "+(str(out_dim))+\
+                elif int(nr_classes)>int(out_dim):#Dataset has more classes than the model provides!
+                    text3 = "Loaded model has only "+(str(out_dim))+\
                     " output nodes (classes) but your selected data has "+str(nr_classes)+\
-                    " classes. The model could theoretically have more outputs nodes than you have indices but the other way around is not defined\n"                
+                    " classes. Therefore, the model will be adjusted before fitting, by customizing the final Dense layer.\n"                
+                    aid_dl.model_add_classes(model_keras,nr_classes)#this function changes model_keras inplace
+                elif int(nr_classes)<int(out_dim):#Dataset has less classes than the model provides!
+                    text3 = "Model output: The architecture you chose has "+(str(out_dim))+\
+                    " output nodes (classes) and your selected data has only "+str(nr_classes)+\
+                    " classes. This is fine. The model will essentially have some excess classes that are not used.\n"                
     
             ###########################New model###################################
             elif self.radioButton_NewModel.isChecked():
@@ -4290,11 +4309,7 @@ class MainWindow(QtWidgets.QMainWindow):
                     msg.exec_()
                     return  
                 
-                if 0 in indices:
-                    #out_dim = len(set(indices))
-                    out_dim = np.max(indices)+1
-                else:
-                    out_dim = np.max(indices)           
+                out_dim = np.max(indices)+1
                 nr_classes = out_dim
                 
                 if chosen_model=="None":
@@ -4331,11 +4346,16 @@ class MainWindow(QtWidgets.QMainWindow):
     
                 if int(nr_classes)==int(out_dim):
                     text3 = "Output: "+str(out_dim)+" classes\n"
-                else:
-                    text3 = "Model Output: The architecture you chose has "+(str(out_dim))+\
+                elif int(nr_classes)>int(out_dim):#Dataset has more classes than the model provides!
+                    text3 = "Loaded model has only "+(str(out_dim))+\
                     " output nodes (classes) but your selected data has "+str(nr_classes)+\
-                    " classes. The model could theoretically have more outputs nodes than you have indices but the other way around is not defined\n"                
-            
+                    " classes. Therefore, the model will be adjusted before fitting, by customizing the final Dense layer.\n"                
+                    aid_dl.model_add_classes(model_keras,nr_classes)#this function changes model_keras inplace
+                elif int(nr_classes)<int(out_dim):#Dataset has less classes than the model provides!
+                    text3 = "Model output: The architecture you chose has "+(str(out_dim))+\
+                    " output nodes (classes) and your selected data has only "+str(nr_classes)+\
+                    " classes. This is fine. The model will essentially have some excess classes that are not used.\n"                
+
             else:
                 #No radio-button was chosen
                 msg = QtWidgets.QMessageBox()
