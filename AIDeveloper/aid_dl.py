@@ -14,7 +14,8 @@ rand_state = np.random.RandomState(117) #to get the same random number on diff. 
 import tensorflow as tf
 from tensorflow.python.tools import optimize_for_inference_lib
 import keras
-from keras.models import load_model
+from keras.models import load_model,Model
+from keras.layers import Dense,Activation
 from keras import backend as K
 
 import keras_metrics #side package for precision, recall etc during training
@@ -144,6 +145,43 @@ def change_dropout(model_keras,do,model_metrics,out_dim,loss_,optimizer_,learnin
     model_keras.optimizer.set_weights(optimizer_weights)#Set optimizer values
     return 1
 
+def model_add_classes(model_keras,nr_classes):
+    #Sequential or Functional API?
+    model_config = model_keras.get_config()
+    if "sequential" not in model_config["name"]:
+        print("Loaded model is defined using functional API of Keras")
+        model_api = "functional"
+    if "sequential" in model_config["name"]:
+        print("Loaded model is defined using the sequential API of Keras")
+        model_api = "sequential"
+    
+    #get list of layer types
+    layer_types_list = [l.__class__.__name__ for l in model_keras.layers]
+    #get the index of the last dense layer
+    ind = [name=="Dense" for name in layer_types_list]#where are dense layers
+    ind = np.where(np.array(ind)==True)[0][-1]#index of the last dense layer
+    last_dense_name = model_keras.layers[ind].name #name of that last dense layer
+    ind = ind-1 #go even one more layer back, because we need its output
+    
+    #For functional API:
+    if model_api=="functional":
+        #overwrite model_keras with a new, (shortened) model
+        model_keras = Model(model_keras.get_input_at(0),model_keras.layers[ind].output)
+        #Add a new final dense layer
+        x = Dense(nr_classes,name=last_dense_name)(model_keras.layers[-1].output)
+        x = Activation('softmax',name="outputTensor")(x)
+        model_keras = Model(inputs=model_keras.get_input_at(0), outputs=x)
+    #For sequential API:
+    elif model_api=="sequential":
+        model_keras.pop()#remove final activation layer
+        model_keras.pop()#remove last dense layer
+        model_keras.add(Dense(nr_classes,name=last_dense_name))
+        model_keras.add(Activation('softmax',name="outputTensor"))
+    
+    #Compile to reset the optimizer weights
+    model_keras.compile(optimizer='adam', loss='categorical_crossentropy')
+
+    
 
 def model_compile(model_keras,loss_,optimizer_,learning_rate_,model_metrics,out_dim):
     optimizer_name = optimizer_["comboBox_optimizer"].lower()
