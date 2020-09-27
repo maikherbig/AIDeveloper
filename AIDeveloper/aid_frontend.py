@@ -6851,10 +6851,13 @@ def load_hyper_params(ui_item,para):
         prop = 32
         print("Cound not find parameter for 'Input image size' in the meta file")
     ui_item.spinBox_imagecrop.setValue(prop)
-    prop = para["Color Mode"].iloc[-1]
-    index = ui_item.comboBox_GrayOrRGB.findText(prop, QtCore.Qt.MatchFixedString)
-    if index >= 0:
-        ui_item.comboBox_GrayOrRGB.setCurrentIndex(index)
+    try:
+        prop = para["Color Mode"].iloc[-1]
+        index = ui_item.comboBox_GrayOrRGB.findText(prop, QtCore.Qt.MatchFixedString)
+        if index >= 0:
+            ui_item.comboBox_GrayOrRGB.setCurrentIndex(index)
+    except Exception as e:
+        errormessage(e)
     try:
         prop = int(para["Zoom order"].iloc[-1])
         ui_item.comboBox_zoomOrder.setCurrentIndex(prop)
