@@ -6835,7 +6835,7 @@ def load_hyper_params(ui_item,para):
         index = ui_item.comboBox_ModelSelection.findText(prop, QtCore.Qt.MatchFixedString)
         if index >= 0:
             ui_item.comboBox_ModelSelection.setCurrentIndex(index)
-    elif para["radioButton_LoadRestartModel"].iloc[-1]==True:
+    elif para["loadrestart_model"].iloc[-1]==True:
         ui_item.radioButton_NewModel.setChecked(True)
         prop = str(para["Continued_Fitting_From"])
         ui_item.lineEdit_LoadModelPath.setText(prop)
