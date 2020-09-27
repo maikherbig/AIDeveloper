@@ -6843,7 +6843,13 @@ def load_hyper_params(ui_item,para):
         ui_item.radioButton_LoadContinueModel.setChecked(True)
         prop = str(para["Continued_Fitting_From"].iloc[-1])
         ui_item.lineEdit_LoadModelPath.setText(prop)
-    prop = para["Input image size"].iloc[-1]
+    if "Input image size" in para.keys():
+        prop = para["Input image size"].iloc[-1]
+    elif "Input image crop" in para.keys():
+        prop = para["Input image crop"].iloc[-1]
+    else:
+        prop = 32
+        print("Cound not find parameter for 'Input image size' in the meta file")
     ui_item.spinBox_imagecrop.setValue(prop)
     prop = para["Color Mode"].iloc[-1]
     index = ui_item.comboBox_GrayOrRGB.findText(prop, QtCore.Qt.MatchFixedString)
