@@ -119,7 +119,7 @@ import aid_img, aid_dl, aid_bin
 import aid_frontend
 from partial_trainability import partial_trainability
 
-VERSION = "0.1.2_dev2" #Python 3.5.6 Version
+VERSION = "0.1.2_dev4" #Python 3.5.6 Version
 model_zoo_version = model_zoo.__version__()
 print("AIDeveloper Version: "+VERSION)
 print("model_zoo.py Version: "+model_zoo.__version__())
@@ -4007,18 +4007,15 @@ class MainWindow(QtWidgets.QMainWindow):
         Metrics =  []
         f1 = bool(self.checkBox_expertF1.isChecked())
         if f1==True:
-            for class_ in range(nr_classes):
-                Metrics.append(keras_metrics.categorical_f1_score(label=class_))
+            Metrics.append("f1_score")
         precision = bool(self.checkBox_expertPrecision.isChecked())
         if precision==True:
-            for class_ in range(nr_classes):
-                Metrics.append(keras_metrics.categorical_precision(label=class_))
+            Metrics.append("precision")
         recall = bool(self.checkBox_expertRecall.isChecked())
         if recall==True:
-            for class_ in range(nr_classes):
-                Metrics.append(keras_metrics.categorical_recall(label=class_))
-        
+            Metrics.append("recall")
         metrics =  ['accuracy'] + Metrics
+        metrics = aid_dl.get_metrics_tensors(metrics,nr_classes)
         return metrics
 
     def action_set_modelpath_and_name(self):
@@ -4140,9 +4137,9 @@ class MainWindow(QtWidgets.QMainWindow):
                 channels = in_dim[-1] #TensorFlow: channels in last dimension
     
                 #Compile model (consider user-specific metrics)
-                metrics = self.get_metrics(out_dim)            
-                model_keras.compile(loss='categorical_crossentropy',optimizer='adam',metrics=metrics)#dont specify loss and optimizer yet...expert stuff will follow and model will be recompiled
-    
+                model_metrics = self.get_metrics(out_dim)    
+                model_keras.compile(loss='categorical_crossentropy',optimizer='adam',metrics=model_metrics)#dont specify loss and optimizer yet...expert stuff will follow and model will be recompiled
+
                 if channels==1:
                     channel_text = "1 channel (Grayscale)"
                     if self.get_color_mode()!="Grayscale":
@@ -4366,13 +4363,7 @@ class MainWindow(QtWidgets.QMainWindow):
                 msg.exec_()
                 return
     
-            model_metrics = self.get_metrics(out_dim)
-            if "collection" in chosen_model.lower():
-                for m in model_keras[1]: #in a collection, model_keras[0] are the names of the models and model_keras[1] is a list of all models
-                    m.compile(loss='categorical_crossentropy',optimizer='adam',metrics=self.get_metrics(nr_classes))#dont specify loss and optimizer yet...expert stuff will follow and model will be recompiled
-            if not "collection" in chosen_model.lower():
-                model_keras.compile(loss='categorical_crossentropy',optimizer='adam',metrics=model_metrics)#dont specify loss and optimizer yet...expert stuff will follow and model will be recompiled
-    
+
             #If expert mode is on, apply the requested options
             #This affects learning rate, trainability of layers and dropout rate
             expert_mode = bool(self.groupBox_expertMode.isChecked())
@@ -4388,7 +4379,16 @@ class MainWindow(QtWidgets.QMainWindow):
             optimizer_expert = str(self.comboBox_optimizer.currentText()).lower()
             optimizer_settings = self.optimizer_settings.copy() #get the current optimizer settings
             paddingMode = str(self.comboBox_paddingMode.currentText()).lower()
-    
+
+            model_metrics = self.get_metrics(nr_classes)    
+            if "collection" in chosen_model.lower():
+                for m in model_keras[1]: #in a collection, model_keras[0] are the names of the models and model_keras[1] is a list of all models
+                    aid_dl.model_compile(m,loss_expert,optimizer_settings,learning_rate_const,self.get_metrics(nr_classes),nr_classes)
+
+            if not "collection" in chosen_model.lower():
+                aid_dl.model_compile(model_keras,loss_expert,optimizer_settings,learning_rate_const,model_metrics,nr_classes)
+                
+
             try:
                 dropout_expert = str(self.lineEdit_dropout.text()) #due to the validator, there are no squ.brackets
                 dropout_expert = "["+dropout_expert+"]"
@@ -5061,13 +5061,17 @@ class MainWindow(QtWidgets.QMainWindow):
                     for m in model_keras:
                         K.set_value(m.optimizer.lr, learning_rate_const)
                 text_updates +=  "Changed the learning rate to "+ str(learning_rate_const)+"\n"
-            recompile = False
+            
+            #Check if model has to be compiled again
+            recompile = False #by default, dont recompile (happens for "Load and continue" training a model)
+            if new_model==True:
+                recompile = True
+            
             #Compare current optimizer and the optimizer on expert tab:
             if collection==False:
                 optimizer_current = aid_dl.get_optimizer_name(model_keras).lower()#get the current optimizer of the model
             if collection==True:
                 optimizer_current = aid_dl.get_optimizer_name(model_keras[0]).lower()#get the current optimizer of the model
-    
             if optimizer_current!=optimizer_expert.lower():#if the current model has a different optimizer
                 recompile = True
                 text_updates+="Changed the optimizer to "+optimizer_expert+"\n"
@@ -5081,7 +5085,6 @@ class MainWindow(QtWidgets.QMainWindow):
                 if model_keras[0].loss!=loss_expert:
                     recompile = True
                     text_updates+="Changed the loss function to "+loss_expert+"\n"
-    
     
             if recompile==True:
                 print("Recompiling...")
@@ -5387,9 +5390,9 @@ class MainWindow(QtWidgets.QMainWindow):
             #Validation data can be cropped to final size already since no augmentation
             #will happen on this data set
             dim_val = X_valid.shape
-            print("Current dim. of validation set (pixels x pixels)="+str(dim_val[2]))
+            print("Current dim. of validation set (pixels x pixels) = "+str(dim_val[2]))
             if dim_val[2]!=crop:
-                print("Change dim. (pixels x pixels) of validation set to ="+str(crop))
+                print("Change dim. (pixels x pixels) of validation set to = "+str(crop))
                 remove = int(dim_val[2]/2.0 - crop/2.0)
                 X_valid = X_valid[:,remove:remove+crop,remove:remove+crop,:] #crop to crop x crop pixels #TensorFlow
             
@@ -5702,15 +5705,15 @@ class MainWindow(QtWidgets.QMainWindow):
                                                                         
                         #Another while loop if the user wants to reuse the keras-augmented data
                         #several times and only apply brightness augmentation:
-                        brightnesss_iter_counter = 0
-                        while brightnesss_iter_counter < brightness_refresh_nr_epochs and counter < nr_epochs:
+                        brightness_iter_counter = 0
+                        while brightness_iter_counter < brightness_refresh_nr_epochs and counter < nr_epochs:
                             #In each iteration, start with non-augmented data
                             X_batch = np.copy(X_batch_orig)#copy from X_batch_orig, X_batch will be altered without altering X_batch_orig            
                             X_batch = X_batch.astype(np.uint8)                            
                             
                             #########X_batch = X_batch.astype(float)########## No float yet :) !!!
                             
-                            brightnesss_iter_counter += 1
+                            brightness_iter_counter += 1
                             if self.actionVerbose.isChecked()==True:
                                 verbose = 1
                             else:
@@ -6576,8 +6579,6 @@ class MainWindow(QtWidgets.QMainWindow):
         #And furthermore provide option to do real-time plotting
         def real_time_info(dic):
             self.fittingpopups_ui[listindex].Histories.append(dic) #append to a list. Will be used for plotting in the "Update plot" function
-#            print("dic")
-#            print(dic) 
             OtherMetrics_keys = self.fittingpopups_ui[listindex].RealTime_OtherMetrics.keys()
             #Append to lists for real-time plotting
             self.fittingpopups_ui[listindex].RealTime_Acc.append(dic["acc"][0])
@@ -7188,9 +7189,9 @@ class MainWindow(QtWidgets.QMainWindow):
             #Validation data can be cropped to final size already since no augmentation
             #will happen on this data set
             dim_val = X_valid.shape
-            print("Current dim. of validation set (pixels x pixels)="+str(dim_val[2]))
+            print("Current dim. of validation set (pixels x pixels) = "+str(dim_val[2]))
             if dim_val[2]!=crop:
-                print("Change dim. (pixels x pixels) of validation set to ="+str(crop))
+                print("Change dim. (pixels x pixels) of validation set to = "+str(crop))
                 remove = int(dim_val[2]/2.0 - crop/2.0)
                 X_valid = X_valid[:,remove:remove+crop,remove:remove+crop,:] #crop to crop x crop pixels #TensorFlow
             
@@ -7360,7 +7361,6 @@ class MainWindow(QtWidgets.QMainWindow):
 
             ####################lr_find algorithm####################
             if model_keras_p == None:
-                #history = model_keras.fit(X_batch, Y_batch, batch_size=32, epochs=1,verbose=verbose, validation_data=(X_valid, Y_valid),class_weight=None)
                 lrf = aid_dl.LearningRateFinder(model_keras)
             elif model_keras_p != None:
                 lrf = aid_dl.LearningRateFinder(model_keras_p)
