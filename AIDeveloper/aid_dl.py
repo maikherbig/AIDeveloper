@@ -40,7 +40,7 @@ def get_custom_metrics():
     return custom_metrics
 
 
-def get_metrics_fresh(metrics,nr_classes):
+def get_metrics_tensors(metrics,nr_classes):
     """
     Function takes a list of metrics and creates fresh tensors accordingly.
     This is necessary, after re-compiling the model because the placeholder has
@@ -60,10 +60,8 @@ def get_metrics_fresh(metrics,nr_classes):
     if recall==True:
         for class_ in range(nr_classes):
             Metrics.append(keras_metrics.categorical_recall(label=class_))
-    
     metrics =  ['accuracy'] + Metrics
     return metrics
-
 
 def model_change_trainability(model_keras,trainable_new,model_metrics,out_dim,loss_,optimizer_,learning_rate_):    
     #Function takes a keras model and list of trainable states.
@@ -202,9 +200,30 @@ def model_compile(model_keras,loss_,optimizer_,learning_rate_,model_metrics,out_
     else:
         print("Unknown optimizer!")
     model_keras.compile(loss=loss_,optimizer=optimizer,
-                        metrics=get_metrics_fresh(model_metrics,out_dim))
+                        metrics=get_metrics_tensors(model_metrics,out_dim))
     return 1
 
+def model_compile_deprecated(model_keras,loss_,optimizer_,learning_rate_,model_metrics,out_dim):
+    optimizer_ = optimizer_.lower()
+    if optimizer_=='sgd':
+        optimizer_ = keras.optimizers.SGD(lr=learning_rate_, momentum=0.0, nesterov=False)
+    elif optimizer_=='rmsprop':
+        optimizer_ = keras.optimizers.RMSprop(lr=learning_rate_, rho=0.9)
+    elif optimizer_=='adagrad':
+        optimizer_ = keras.optimizers.Adagrad(lr=learning_rate_)
+    elif optimizer_=='adadelta':
+        optimizer_ = keras.optimizers.Adadelta(lr=learning_rate_, rho=0.95)
+    elif optimizer_=='adam':
+        optimizer_ = keras.optimizers.Adam(lr=learning_rate_, beta_1=0.9, beta_2=0.999, amsgrad=False)
+    elif optimizer_=='adamax':
+        optimizer_ = keras.optimizers.Adamax(lr=learning_rate_, beta_1=0.9, beta_2=0.999)
+    elif optimizer_=='nadam':
+        optimizer_ = keras.optimizers.Nadam(lr=learning_rate_, beta_1=0.9, beta_2=0.999)
+    else:
+        print("Unknown optimizer!")
+    model_keras.compile(loss=loss_,optimizer=optimizer_,
+                        metrics=get_metrics_tensors(model_metrics,out_dim))
+    return 1
 
 
 def get_dropout(model_keras):
