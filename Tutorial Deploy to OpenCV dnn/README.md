@@ -34,6 +34,14 @@ predictions = aid_cv2_dnn.forward_images_cv2(model_pb,img_processing_settings,
                                              images,pos_x,pos_y,pix)
 ```
 
+The following paragraphs will cover:
+- how images are preprocessed,
+- how images are forwarded through a neural net
+- how the smiley dataset was generated
+- how the smiley classification model was trained
+- how the model was exported
+- tests for the image preprocessing functions of aid_cv2_dnn
+  
 # aid_cv2_dnn  
 Functions, required for preprocessing the .rtdc images and forwarding them
 through a neural net are included in that script.
