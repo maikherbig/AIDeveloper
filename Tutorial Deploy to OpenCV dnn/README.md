@@ -1,5 +1,5 @@
 
-![alt text](Logo_AID_2_OpenCV.png "AID to OpenCV Logo")  
+![alt text](https://github.com/maikherbig/AIDeveloper/blob/master/art/Logo_AID_2_OpenCV.png "AID to OpenCV Logo")  
 
 Along with this tutorial, all required materials/scripts will be provided to export models from AID and run them using OpenCV's dnn module. Since the OpenCV also offers the same API in C++, loading models and forwarding images would work equivalently.  
 This tutorial is structured in a top-down fashion, meaning that you see first how a model is loaded and images are forwarded. The underlying code is explained afterwards. Only at the end, there are some tests and benchmarks.
