@@ -14,7 +14,7 @@ import keras
 import numpy as np
 
 
-version = "0.1.2_Original" #1.) Use any string you like to specify/define your version of the model_zoo
+version = "0.1.2_dev1" #1.) Use any string you like to specify/define your version of the model_zoo
 def __version__():
     #print(version)
     return version
@@ -31,7 +31,7 @@ predefined_6_1 = ["pretrained_squeezenet","pretrained_mobilenet_v2","pretrained_
 predefined_6_2 = ["pretrained_resnet50","pretrained_resnet101","pretrained_resnet152","pretrained_resnet50_v2","pretrained_resnet101_v2","pretrained_resnet152_v2"]
 predefined_6_3 = ["pretrained_resnext50","pretrained_resnext101"]
 predefined_7 = ["Collection_1","Collection_2","Collection_3","Collection_4","Collection_5","Collection_6"]
-multiInputModels = ["MLP_MultiIn_3Lay_24","MLP_MultiIn_3Lay_64","MLP_MultiIn_4Lay_72"]
+multiInputModels = ["MLP_MultiIn_3Lay_24","MLP_MultiIn_3Lay_64","MLP_MultiIn_4Lay_72","Nitta6l_MultiIn"]
 predefined_coll_test = ["Collection_test"]
 
 predefined_models = predefined_1+predefined_2+predefined_3+predefined_4+\
@@ -59,7 +59,9 @@ def get_model(modelname,in_dim,channels,out_dim):
         model = MLP_MultiIn_3Lay_64(in_dim,channels,out_dim)
     elif modelname=="MLP_MultiIn_4Lay_72":
         model = MLP_MultiIn_4Lay_72(in_dim,channels,out_dim)
-
+    elif modelname=="Nitta6l_MultiIn":
+        model = Nitta6l_MultiIn(in_dim,channels,out_dim)
+    
     elif modelname=="LeNet5":
         model = LeNet5(in_dim,channels,out_dim)
     elif modelname=="LeNet5_do":
@@ -1928,6 +1930,75 @@ def MLP_MultiIn_4Lay_72(in_dim,channels,out_dim):
 
 
 
+
+
+
+
+
+
+
+
+def nitta_et_al_6layer(in_dim1,in_dim2,channels,out_dim):
+    """
+    The settins of this model are shown in the paper
+    "Intelligent Image-Activated Cell Sorting" on Figure 5A
+    """
+    model = Sequential()
+    
+    model.add(Conv2D(32,3,3,input_shape=(in_dim1, in_dim2,channels),name="inputTensor")) #TensorFlow    
+    model.add(Activation('relu'))
+    model.add(Conv2D(32, 3,3))
+    model.add(Activation('relu'))
+    model.add(MaxPooling2D(pool_size=(2, 2)))
+    model.add(Dropout(0.25))
+
+    model.add(Conv2D(64, 3,3))
+    model.add(Activation('relu'))
+    model.add(Conv2D(64, 3,3))
+    model.add(Activation('relu'))
+    model.add(MaxPooling2D(pool_size=(2, 2)))
+    model.add(Dropout(0.25))
+
+    model.add(Flatten())  # this converts our 3D feature maps to 1D feature vectors
+    
+    model.add(Dense(256))
+    model.add(Activation('relu'))
+    model.add(Dropout(0.5))
+    model.add(Dense(out_dim))
+    model.add(Activation('softmax',name="outputTensor"))
+    return model
+
+
+def Nitta6l_MultiIn(in_dim,channels,out_dim):
+    inputA = Input(shape=(in_dim, in_dim,channels),name="inputTensorA") #TensorFlow format (height,width,channels)
+    inputB = Input(shape=(1,),name="inputTensorB") 
+    
+    x = Conv2D(32,kernel_size=3,strides=1,padding='valid')(inputA)
+    x = Activation('relu')(x)
+    x = Conv2D(32,kernel_size=3,strides=1,padding='valid')(x)
+    x = Activation('relu')(x)
+    x = MaxPooling2D(pool_size=(2, 2))(x)
+    x = Dropout(0.25)(x)
+
+    x = Conv2D(64,kernel_size=3,strides=1,padding='valid')(x)
+    x = Activation('relu')(x)
+    x = Conv2D(64,kernel_size=3,strides=1,padding='valid')(x)
+    x = Activation('relu')(x)
+    x = MaxPooling2D(pool_size=(2, 2))(x)
+    x = Dropout(0.25)(x)
+
+    x = Flatten()(x)  #this converts the 3D feature maps to 1D feature vectors
+    x = Concatenate(axis=1)([x, inputB])
+
+    x = Dense(256)(x)
+    x = Activation('relu')(x)
+    x = Dropout(0.5)(x)
+    x = Dense(out_dim)(x)
+    
+    predictions = Activation('softmax',name="outputTensor")(x)
+    
+    model = Model(inputs=[inputA, inputB], outputs=predictions)
+    return model
 
 
 
