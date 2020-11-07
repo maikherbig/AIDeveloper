@@ -5,7 +5,7 @@ Along with this tutorial, all required materials/scripts will be provided to exp
 This tutorial is structured in a top-down fashion, meaning you see first how a model is loaded and images are forwarded. The underlying code is explained afterwards. Only at the end, there are some tests and benchmarks.
 
 # Run a model in OpenCV's dnn module   
-```
+```Python
 import aid_cv2_dnn
 import dclab,cv2
 import numpy as np
@@ -43,8 +43,26 @@ The following paragraphs will cover:
 - tests for the image preprocessing functions of aid_cv2_dnn
   
 # aid_cv2_dnn  
-Functions, required for preprocessing the .rtdc images and forwarding them
-through a neural net are included in that script.
+This script contains all functions, required for preprocessing the .rtdc images 
+and forwarding them through a neural net. For illustration, lets use the images
+loaded above, which are are smileys, located at arbitrary positions on a noisy background:  
+![alt text](https://github.com/maikherbig/AIDeveloper/blob/master/art/Smiley_Blink_Examples_Gray.png "Smiley blink example images")  
+
+It depends on the model, how image preprocessing has to be done. During training,
+AIDevloper saved these informations in a meta file. Lets load the image processing settings:
+
+
+The shown images are RGB images (colorized). Both, RGB and grayscale images are
+supported by the functions provided in aid_cv2_dnn. Given that a model was trained
+using grayscale images, you can co
+
+
+
+As in rtdc experiments, the position of the smiley in the image is known (pos_x, pos_y).
+This allows to crop the image to the desired
+
+Required image preprocessing steps are:
+- adjusting the number of channels
 
 
 
