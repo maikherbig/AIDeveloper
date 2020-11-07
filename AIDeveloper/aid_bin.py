@@ -247,7 +247,6 @@ def write_rtdc(fname,rtdc_datasets,X_valid,Indices,cropped=True,color_mode='Gray
         hdf.attrs["experiment:event count"]=images.shape[0]
         hdf.attrs["experiment:sample"]=fname
         hdf.attrs["imaging:pixel size"]=1.00
-        hdf.attrs["experiment:event count"]=images.shape[0]
         hdf.close()
         return
 
@@ -586,8 +585,6 @@ def ram_compare_data(ram_dic,new_dic):
     alltrue = all(dic.values())
     return alltrue
     
-
-
 
 
 
