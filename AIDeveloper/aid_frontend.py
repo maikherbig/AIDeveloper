@@ -7108,6 +7108,8 @@ def get_hyper_params(Para_dict,ui_item):
         load_modelname = str(ui_item.lineEdit_LoadModelPath.text())
     elif ui_item.radioButton_NewModel.isChecked():
         load_modelname = "" #No model is loaded
+    else:
+        load_modelname = ""
     Para_dict["Continued_Fitting_From"]=load_modelname,                        
     Para_dict["Input image size"]=int(ui_item.spinBox_imagecrop.value()) ,
     Para_dict["Color Mode"]=str(ui_item.comboBox_GrayOrRGB.currentText()),
