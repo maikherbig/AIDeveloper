@@ -119,7 +119,7 @@ import aid_img, aid_dl, aid_bin
 import aid_frontend
 from partial_trainability import partial_trainability
 
-VERSION = "0.1.2_dev4" #Python 3.5.6 Version
+VERSION = "0.1.2_dev5" #Python 3.5.6 Version
 model_zoo_version = model_zoo.__version__()
 print("AIDeveloper Version: "+VERSION)
 print("model_zoo.py Version: "+model_zoo.__version__())
@@ -1827,7 +1827,7 @@ class MainWindow(QtWidgets.QMainWindow):
             zoom_factor = float(self.table_dragdrop.item(rowPosition, 9).text())            
             #should xtra_data be used for training?
             xtra_in = bool(self.table_dragdrop.item(rowPosition, 10).checkState())           
-            
+
             SelectedFiles.append({"rtdc_path":rtdc_path,"class":index,"TrainOrValid":"NotSpecified","nr_events":nr_events,"nr_events_epoch":nr_events_epoch,"shuffle":shuffle,"zoom_factor":zoom_factor,"xtra_in":xtra_in})
             
         return SelectedFiles
@@ -4060,7 +4060,7 @@ class MainWindow(QtWidgets.QMainWindow):
         """
         duties: which tasks should be performed: "initialize", "initialize_train", "initialize_lrfind"
         """
-        print("duties: "+str(duties))
+        #print("duties: "+str(duties))
         
         #Create config (define which device to use)
         if self.radioButton_cpu.isChecked():
@@ -4486,21 +4486,17 @@ class MainWindow(QtWidgets.QMainWindow):
                     else:
                         text_do = "Dropout rate(s) in model was/were not changed"
                     print(text_do)
-    
-                    
+      
             text_updates = ""
-    
-            #Compare current lr and the lr on expert tab:
+            #Learning Rate: Compare current lr and the lr on expert tab:
             if collection == False:
                 lr_current = K.eval(model_keras.optimizer.lr)
             else:
                 lr_current = K.eval(model_keras[1][0].optimizer.lr)
-            print("Current learning rate: "+str(lr_current))
             lr_diff = learning_rate_const-lr_current
-            print("Current learning rate: "+str(lr_current))
-            if  abs(lr_diff) > 1e-6:
+            if  abs(lr_diff) > 1e-6: #If there is a difference, change lr accordingly
                 K.set_value(model_keras.optimizer.lr, learning_rate_const)
-                text_updates +=  "Changed the learning rate to: "+ str(learning_rate_const)+"\n"
+            text_updates += "Learning rate: "+str(lr_current)+"\n"
     
             recompile = False
             #Compare current optimizer and the optimizer on expert tab:
@@ -4511,17 +4507,16 @@ class MainWindow(QtWidgets.QMainWindow):
     
             if optimizer_current!=optimizer_expert.lower():#if the current model has a different optimizer
                 recompile = True
-                text_updates+="Changed the optimizer to: "+optimizer_expert+"\n"
-            #Compare current loss function and the loss-function on expert tab:
-    
+            text_updates+="Optimizer: "+optimizer_expert+"\n"
+            
+            #Loss function: Compare current loss function and the loss-function on expert tab:
             if collection==False:
                 if model_keras.loss!=loss_expert:
                     recompile = True
-                    text_updates+="Changed the loss function to: "+loss_expert+"\n"
             if collection==True:
                 if model_keras[1][0].loss!=loss_expert:
                     recompile = True
-                    text_updates+="Changed the loss function to: "+loss_expert+"\n"
+            text_updates += "Loss function: "+loss_expert+"\n"
     
             if recompile==True:
                 if collection==False:
@@ -4600,7 +4595,7 @@ class MainWindow(QtWidgets.QMainWindow):
                         json_file.write(model_json)
     
                 summary = "\n".join(summary)
-                text = text_new_modelname+text0+text1+text2+text3+text4+text5+summary
+                text = text_new_modelname+text0+text1+text2+text3+text4+text_updates+text5+summary
                 self.textBrowser_Info.setText(text)
     
             #Save the model to a variable on self
@@ -4880,7 +4875,7 @@ class MainWindow(QtWidgets.QMainWindow):
             cycLrMethod = str(self.comboBox_cycLrMethod.currentText())
             #clr_settings = self.fittingpopups_ui[listindex].clr_settings.copy()
             cycLrGamma = self.clr_settings["gamma"]            
-            SelectedFiles = self.items_clicked_no_rtdc_ds()#to compute cycLrStepSize, the number of training images is needed
+            SelectedFiles = self.items_clicked()#to compute cycLrStepSize, the number of training images is needed
             cycLrStepSize = aid_dl.get_cyclStepSize(SelectedFiles,self.clr_settings["step_size"],batchSize_expert)
             #put clr_settings onto fittingpopup,
             self.fittingpopups_ui[listindex].clr_settings = self.clr_settings.copy()#assign a copy. Otherwise values in both dicts are changed when manipulating one dict            
@@ -6090,9 +6085,9 @@ class MainWindow(QtWidgets.QMainWindow):
                                 Stopwatch.append(time.time()-time_start)
                                 learningrate = K.get_value(history.model.optimizer.lr)
                                 LearningRate.append(learningrate)
+
                                 #Check if any metric broke a record
                                 record_broken = False #initially, assume there is no new record
-                                
                                 for key in history.history.keys():
                                     value = history.history[key][-1]
                                     record = model_metrics_records[key]
@@ -6101,37 +6096,51 @@ class MainWindow(QtWidgets.QMainWindow):
                                         if value>record:
                                             model_metrics_records[key] = value
                                             record_broken = True
-                                            print(key+" broke record -> Model is saved")
+                                            print(key+" broke record -> Model will be saved" )
     
-                                            #one could 'break' here, but I want to update all records
                                     elif 'val_loss' in key:
                                         #This metric should go down (towards 0)
                                         if value<record:
                                             model_metrics_records[key] = value
                                             record_broken = True
-                                            print(key+" broke record -> Model is saved")
+                                            print(key+" broke record -> Model will be saved")
+                                                #self.fittingpopups_ui[listindex].textBrowser_FittingInfo.append(text)
     
-                                if record_broken:
+                                if record_broken:#if any record was broken...
                                     if deviceSelected=="Multi-GPU":#in case of Multi-GPU...
                                         #In case of multi-GPU, first copy the weights of the parallel model to the normal model
                                         model_keras.set_weights(model_keras_p.layers[-2].get_weights())
                                     #Save the model
-                                    print("Save model to following directory:")
-                                    print(os.path.dirname(new_modelname))
+                                    text = "Save model to following directory: \n"+os.path.dirname(new_modelname)
+                                    print(text)
+
                                     if os.path.exists(os.path.dirname(new_modelname)):
                                         model_keras.save(new_modelname.split(".model")[0]+"_"+str(counter)+".model")
+                                        text = "Record was broken -> saved model"
+                                        print(text)
+                                        self.fittingpopups_ui[listindex].textBrowser_FittingInfo.append(text)
+
                                     else:#in case the folder does not exist (anymore), create a folder in temp
                                         #what is the foldername of the model?
-                                        print("Saving failed. Create folder in temp")
+                                        text = "Saving failed. Create folder in temp"
+                                        print(text)
+                                        self.fittingpopups_ui[listindex].textBrowser_FittingInfo.append(text)
+
                                         saving_failed = True
                                         temp_path = aid_bin.create_temp_folder()#create a temp folder if it does not already exist
-                                        print("Your temp folder is here: "+str(temp_path))
+
+                                        text = "Your temp. folder is here: "+str(temp_path)
+                                        print(text)
+                                        self.fittingpopups_ui[listindex].textBrowser_FittingInfo.append(text)
+
                                         parentfolder = aid_bin.splitall(new_modelname)[-2]
                                         fname = os.path.split(new_modelname)[-1]
 
                                         #create that folder in temp if it not exists already
                                         if not os.path.exists(os.path.join(temp_path,parentfolder)):
-                                            print("create "+os.path.join(temp_path,parentfolder))
+                                            text = "Create folder in temp:\n"+os.path.join(temp_path,parentfolder)
+                                            print(text)
+                                            self.fittingpopups_ui[listindex].textBrowser_FittingInfo.append(text)
                                             os.mkdir(os.path.join(temp_path,parentfolder))
 
                                         #change the new_modelname to a path in temp
@@ -6146,6 +6155,10 @@ class MainWindow(QtWidgets.QMainWindow):
 
                                         #Save the  model
                                         model_keras.save(new_modelname.split(".model")[0]+"_"+str(counter)+".model")
+                                        text = "Model saved successfully to temp"
+                                        print(text)
+                                        self.fittingpopups_ui[listindex].textBrowser_FittingInfo.append(text)
+
                                         #Also update the excel writer!
                                         writer = pd.ExcelWriter(new_modelname.split(".model")[0]+'_meta.xlsx', engine='openpyxl')
                                         self.fittingpopups_ui[listindex].writer = writer
@@ -6188,14 +6201,19 @@ class MainWindow(QtWidgets.QMainWindow):
                                             if value>record:
                                                 model_metrics_records[key] = value
                                                 record_broken = True
-                                                print(key+" broke record -> Model is saved")
+                                                text = key+" broke record -> Model will be saved"
+                                                print(text)
+                                                self.fittingpopups_ui[listindex].textBrowser_FittingInfo.append(text)
+
                                                 #one could 'break' here, but I want to update all records
                                         elif 'val_loss' in key:
                                             #This metric should go down (towards 0)
                                             if value<record:
                                                 model_metrics_records[key] = value
                                                 record_broken = True
-                                                print(key+" broke record -> Model is saved")
+                                                text = key+" broke record -> Model will be saved"
+                                                print(text)
+                                                self.fittingpopups_ui[listindex].textBrowser_FittingInfo.append(text)
                                     
                                     #For collections of models:
                                     if record_broken:
@@ -6237,7 +6255,12 @@ class MainWindow(QtWidgets.QMainWindow):
                                     DF1.to_excel(writer,sheet_name='History')
                                     writer.save()
                                     os.chmod(new_modelname.split(".model")[0]+'_meta.xlsx', S_IREAD|S_IRGRP|S_IROTH)
-                                    print("meta.xlsx was saved")
+                                    
+                                    meta_saving_t = int(self.fittingpopups_ui[listindex].spinBox_saveMetaEvery.value())
+                                    text = "meta.xlsx was saved (automatic saving every "+str(meta_saving_t)+"s)"
+                                    print(text)
+                                    self.fittingpopups_ui[listindex].textBrowser_FittingInfo.append(text)
+
                                     #self.fittingpopups_ui[listindex].backup.append({"DF1":DF1})
                                     Index,Histories,Saved,Stopwatch,LearningRate = [],[],[],[],[]#reset the lists
                                     
@@ -6259,24 +6282,28 @@ class MainWindow(QtWidgets.QMainWindow):
                                         DF1.to_excel(writer,sheet_name='History', startrow=writer.sheets['History'].max_row,header= False)
                                         writer.save()
                                         os.chmod(new_modelname.split(".model")[0]+'_meta.xlsx', S_IREAD|S_IRGRP|S_IROTH)  #make read only
-                                        print("meta.xlsx was saved")
-                                        #self.fittingpopups_ui[listindex].backup.append({"DF1":DF1})
+                                        
+                                        meta_saving_t = int(self.fittingpopups_ui[listindex].spinBox_saveMetaEvery.value())
+                                        text = "meta.xlsx was saved (automatic saving every "+str(meta_saving_t)+"s to directory:\n)"+new_modelname
+                                        print(text)
+                                        self.fittingpopups_ui[listindex].textBrowser_FittingInfo.append(text)
+                                        
                                         Index,Histories,Saved,Stopwatch,LearningRate = [],[],[],[],[]#reset the lists
                                         t1 = time.time()
-                                        print("Saved to: "+new_modelname)
                                     else:#If folder not available, create a folder in temp
-                                        print("Saving failed. Create folder in temp")
+                                        text = "Failed to save meta.xlsx. -> Create folder in temp\n"
                                         saving_failed = True
                                         temp_path = aid_bin.create_temp_folder()#create a temp folder if it does not already exist
-                                        print("Your temp folder is here: "+str(temp_path))
+                                        text += "Your temp folder is here: "+str(temp_path)+"\n"
                                         folder = os.path.split(new_modelname)[-2]
                                         folder = os.path.split(folder)[-1]
                                         fname = os.path.split(new_modelname)[-1]
                                         #create that folder in temp if it does'nt exist already
                                         if not os.path.exists(os.path.join(temp_path,folder)):
-                                            print("create "+os.path.join(temp_path,folder))
                                             os.mkdir(os.path.join(temp_path,folder))
-                                        
+                                            text +="Created directory in temp:\n"+os.path.join(temp_path,folder)
+
+                                        print(text)
                                         #change the new_modelname to a path in temp
                                         new_modelname = os.path.join(temp_path,folder,fname)
 
