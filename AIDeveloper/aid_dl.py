@@ -102,7 +102,6 @@ def model_get_trainable_list(model_keras):
 def get_optimizer_name(model_keras):
     optimizer = str(model_keras.optimizer)
     optimizer = optimizer.split("<keras.optimizers.")[1].split(" object at")[0]
-    print(optimizer)
     if optimizer in ['SGD','RMSprop','Adagrad',"Adamax",'Adadelta','Adam','Nadam']:
         return optimizer
     else:
