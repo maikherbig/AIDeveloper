@@ -42,18 +42,11 @@ predictions = aid_cv2_dnn.forward_images_cv2(model_pb,img_processing_settings,
 ```
 
 # Step by step instruction
-
 The following paragraphs show how to deploy a model, step by step:
 - [Export a model](#export-a-model) 
 - [Pre-process images](#pre-process-images)
 - [Forward images through neural net](#forward-images-through-neural-net)
-    
-Finally, test functions and details about a test-dataset are provided:
-- Test image preprocessing function
-- Test model inference function
-- Generation of the smiley dataset
-- Training the smiley classification model
-
+  
 ## Export a model 
 1. Start AIDeveloper and go to the "History"-Tab.
 2. Click the button 'Load model' on the lower left and choose a model that was trained earlier. 
@@ -70,9 +63,8 @@ You can load those settings using:
 ```Python
 img_processing_settings = aid_cv2_dnn.load_model_meta(meta_path)
 ```
-
 For image pre-processing, a dedicated function **aid_cv2_dnn.image_preprocessing**
-is provided, which carries out the followig methods:  
+is provided, which carries out the followig methods:
 
 - **image_adjust_channels**: adjust the number of channels of the images. Models in AIDeveloper can be trained using
 grayscale or RGB images and the resulting model then expects images with either 1, or 3 channels.
@@ -104,6 +96,11 @@ predictions = aid_cv2_dnn.forward_images_cv2(model_pb,img_processing_settings,
 ```
 
 # Tests and benchmarks
+Following test functions and details of the test-dataset are provided:
+- Test image preprocessing function
+- Test model inference function
+- Generation of the smiley dataset
+- Training the smiley classification model
 
 For illustration, lets use the images which show smileys at arbitrary positions on a noisy background:  
 ![alt text](https://github.com/maikherbig/AIDeveloper/blob/master/art/Smiley_Blink_Examples_Gray.png "Smiley blink example images")  
