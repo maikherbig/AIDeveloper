@@ -43,11 +43,11 @@ predictions = aid_cv2_dnn.forward_images_cv2(model_pb,img_processing_settings,
 
 # Step by step instruction
 The following paragraphs show how to deploy a model, step by step:
-- [Export a model](#export-a-model) 
+- [Export a model in AIDeveloper](#export-a-model-in-AIDeveloper) 
 - [Pre-process images](#pre-process-images)
 - [Forward images through neural net](#forward-images-through-neural-net)
   
-## Export a model 
+## Export a model in AIDeveloper
 1. Start AIDeveloper and go to the "History"-Tab.
 2. Click the button 'Load model' on the lower left and choose a model that was trained earlier. 
 3. Use the dropdown menu on the lower right and choose 'Optimized TensorFlow .pb'. 
@@ -87,7 +87,7 @@ pixels are padded accordingly.
 - **image_normalization**: This function carries out a normalization of the pixel
 values.
 
-Tests for that function are provedided [below](#test-image-preprocessing-(image_preprocessing)). 
+Tests for that function are provedided [below](#test-image-preprocessing-(test_image_preprocessing)). 
 
 ## Forward images through neural net
 To load an exported model, use:
