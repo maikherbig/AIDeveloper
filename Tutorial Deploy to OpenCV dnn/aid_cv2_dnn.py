@@ -3,9 +3,11 @@ import pandas as pd
 import cv2
 from scipy import ndimage
 
-#this script contains all functions from AIDeveloper, that are required
-#to preprocess images before forwarding through a neural net and
-#functions to actually forward images through a NN and get predictions
+#Run inference (using OpenCV's dnn module) on images using your model trained 
+#in AIDeveloper.
+#Script contains functions 
+#- to pre-preprocess images accoring to the models input criteria
+#- forward images through a model and get output (predictions)
 
 def image_adjust_channels(images,target_channels=1):
     """
