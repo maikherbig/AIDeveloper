@@ -87,7 +87,7 @@ pixels are padded accordingly.
 - **image_normalization**: This function carries out a normalization of the pixel
 values.
 
-Tests for that function are provedided [below](#test-image-preprocessing-(test_image_preprocessing)). 
+Tests for that function are provedided [below](#test-image-preprocessing-(test-image-preprocessing)). 
 
 ## Forward images through neural net
 To load an exported model, use:
@@ -104,8 +104,8 @@ Tests for that function are provedided [below](#test-model-inference-(forward_im
 
 # Tests and benchmarks
 Following paragraphs cover test functions and details of the test-dataset: 
-- [Test image preprocessing (image_preprocessing)](#test-image-preprocessing-(image_preprocessing))
-- [Test model inference (forward_images_cv2)](#test-model-inference-(forward_images_cv2))
+- [Test image preprocessing (image_preprocessing)](#test-image-preprocessing-(test-image-preprocessing))
+- [Test model inference (forward_images_cv2)](#test-model-inference-(forward-images-cv2))
 - [Generation of the smiley dataset](#generation-of-the-smiley-dataset)
 - Training the smiley classification model
 
