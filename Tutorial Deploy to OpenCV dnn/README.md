@@ -87,7 +87,7 @@ pixels are padded accordingly.
 - **image_normalization**: This function carries out a normalization of the pixel
 values.
 
-Tests for that function are provedided [below](#test-image-preprocessing-test_image_preprocessing)). 
+Tests for that function are provedided [below](#test-image-preprocessing-test_image_preprocessing). 
 
 ## Forward images through neural net
 To load an exported model, use:
@@ -103,10 +103,10 @@ predictions = aid_cv2_dnn.forward_images_cv2(model_pb,img_processing_settings,
 Tests for that function are provided [below](#test-model-inference-forward_images_cv2)). 
 
 # Tests and benchmarks
-Following paragraphs cover test functions which are contained in [aid_cv2_dnn_tests.py](https://github.com/maikherbig/AIDeveloper/blob/master/Tutorial%20Deploy%20to%20OpenCV%20dnn/aid_cv2_dnn_tests.py)
+Following paragraphs cover test functions which are contained in [aid_cv2_dnn_tests.py](https://github.com/maikherbig/AIDeveloper/blob/master/Tutorial%20Deploy%20to%20OpenCV%20dnn/aid_cv2_dnn_tests.py).  
 Furthermore, details of the test-dataset are provided in [aid_cv2_dnn_tests.py](https://github.com/maikherbig/AIDeveloper/blob/master/Tutorial%20Deploy%20to%20OpenCV%20dnn/aid_cv2_dnn_tests.py).
-- [Test image preprocessing (image_preprocessing)](#test-image-preprocessing-test_image_preprocessing))
-- [Test model inference (forward_images_cv2)](#test-model-inference-forward_images_cv2))
+- [Test image preprocessing (image_preprocessing)](#test-image-preprocessing-test_image_preprocessing)
+- [Test model inference (forward_images_cv2)](#test-model-inference-forward_images_cv2)
 - [Generation of the smiley dataset](#generation-of-the-smiley-dataset)
 - Training the smiley classification model
 
