@@ -87,7 +87,7 @@ pixels are padded accordingly.
 - **image_normalization**: This function carries out a normalization of the pixel
 values.
 
-Tests for that function are provedided [below](#test-image-preprocessing-(test-image-preprocessing)). 
+Tests for that function are provedided [below](#test-image-preprocessing-test_image_preprocessing)). 
 
 ## Forward images through neural net
 To load an exported model, use:
