@@ -64,7 +64,7 @@ You can load those settings using:
 img_processing_settings = aid_cv2_dnn.load_model_meta(meta_path)
 ```
 For image pre-processing, a dedicated function **aid_cv2_dnn.image_preprocessing**
-is provided, which carries out the followig methods:
+carries out the followig methods:
 
 - **image_adjust_channels**: adjust the number of channels of the images. Models in AIDeveloper can be trained using
 grayscale or RGB images and the resulting model then expects images with either 1, or 3 channels.
@@ -87,22 +87,49 @@ pixels are padded accordingly.
 - **image_normalization**: This function carries out a normalization of the pixel
 values.
 
+Tests for that function are provedided [below](#test-image-preprocessing-(image_preprocessing)). 
+
 ## Forward images through neural net
-The script [aid_cv2_dnn.py](https://github.com/maikherbig/AIDeveloper/blob/master/Tutorial%20Deploy%20to%20OpenCV%20dnn/aid_cv2_dnn.py) 
-contains all functions, required to run inference on images of an .rtdc file:  
+To load an exported model, use:
+```Python
+model_pb = cv2.dnn.readNet(model_pb_path)
+```
+That model, along with the image pre-processing settings can now be used to 
+forward images of an rtdc file:
 ```Python
 predictions = aid_cv2_dnn.forward_images_cv2(model_pb,img_processing_settings,
                                              images,pos_x,pos_y,pix)
 ```
+Tests for that function are provedided [below](#test-model-inference-(forward_images_cv2)). 
 
 # Tests and benchmarks
-Following test functions and details of the test-dataset are provided:
-- Test image preprocessing function
-- Test model inference function
-- Generation of the smiley dataset
+Following paragraphs cover test functions and details of the test-dataset: 
+- [Test image preprocessing (image_preprocessing)](#test-image-preprocessing-(image_preprocessing))
+- [Test model inference (forward_images_cv2)](#test-model-inference-(forward_images_cv2))
+- [Generation of the smiley dataset](#generation-of-the-smiley-dataset)
 - Training the smiley classification model
 
-For illustration, lets use the images which show smileys at arbitrary positions on a noisy background:  
+## Test image preprocessing (test_image_preprocessing)
+For illustration, a smiley is placed on aribtrary positions on a noisy background.
+The successful test returns images of the desired size showing the sunglasses smiley in the center:  
+![alt text](https://github.com/maikherbig/AIDeveloper/blob/master/art/Test_ImagePreProcessing.png "Image Preprocessing Test")  
+
+
+## Test model inference (forward_images_cv2)
+
+
+## Generation of the smiley dataset
+Smileys of size 32x32 pixels showing 'blink', 'happy', or 'sunglasses' were placed at arbitrary positions on a noisy background:  
 ![alt text](https://github.com/maikherbig/AIDeveloper/blob/master/art/Smiley_Blink_Examples_Gray.png "Smiley blink example images")  
 
 
+
+
+
+
+
+## Benchmarks
+### Padding
+AIDeveloper v<=0.1.2 uses np.pad, but OpenCV offers a similar implementation which 
+should be preferred as it would also be available in C++. 
+**aid_cv2_dnn_tests.pad_functions_compare** compares both functions and 
