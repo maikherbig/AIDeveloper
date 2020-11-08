@@ -100,12 +100,12 @@ forward images of an rtdc file:
 predictions = aid_cv2_dnn.forward_images_cv2(model_pb,img_processing_settings,
                                              images,pos_x,pos_y,pix)
 ```
-Tests for that function are provedided [below](#test-model-inference-(forward_images_cv2)). 
+Tests for that function are provedided [below](#test-model-inference-forward_images_cv2)). 
 
 # Tests and benchmarks
 Following paragraphs cover test functions and details of the test-dataset: 
-- [Test image preprocessing (image_preprocessing)](#test-image-preprocessing-(test-image-preprocessing))
-- [Test model inference (forward_images_cv2)](#test-model-inference-(forward-images-cv2))
+- [Test image preprocessing (image_preprocessing)](#test-image-preprocessing-test_image_preprocessing))
+- [Test model inference (forward_images_cv2)](#test-model-inference-forward_images_cv2))
 - [Generation of the smiley dataset](#generation-of-the-smiley-dataset)
 - Training the smiley classification model
 
