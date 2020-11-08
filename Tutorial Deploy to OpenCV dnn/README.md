@@ -45,10 +45,10 @@ Finally, test functions and details about a test-dataset are provided:
 - Training the smiley classification model
 
 # Export a model 
-- 1. Start AIDeveloper and go to the "History"-Tab.
-- 2. Click the button 'Load model' on the lower left and choose a model that was trained earlier. 
-- 3. Use the dropdown menu on the lower right and choose 'Optimized TensorFlow .pb'. 
-- 4. Click the button 'Convert' on the lower right to run the conversion. After that you will find the correspoding model file in the same directory as the original model.
+1. Start AIDeveloper and go to the "History"-Tab.
+2. Click the button 'Load model' on the lower left and choose a model that was trained earlier. 
+3. Use the dropdown menu on the lower right and choose 'Optimized TensorFlow .pb'. 
+4. Click the button 'Convert' on the lower right to run the conversion. After that you will find the correspoding model file in the same directory as the original model.  
 ![alt text](https://github.com/maikherbig/AIDeveloper/blob/master/art/Export_Model_Combined_v01.png "Export Model")  
   
 # Pre-process images 
