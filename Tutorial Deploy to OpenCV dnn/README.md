@@ -1,10 +1,17 @@
 
 ![alt text](https://github.com/maikherbig/AIDeveloper/blob/master/art/Logo_AID_2_OpenCV.png "AID to OpenCV Logo")  
 
-Along with this tutorial, all required materials/scripts will be provided to export models from AID and run them using OpenCV's dnn module. Since the OpenCV also offers the same API in C++, loading models and forwarding images would work equivalently.  
-This tutorial is structured in a top-down fashion, meaning you see first how a model is loaded and images are forwarded. The underlying code is explained afterwards. Only at the end, there are some tests and benchmarks.
+Along with this tutorial, all required materials/scripts will be provided to 
+export models from AID and run them using OpenCV's dnn module. Since the OpenCV 
+also offers the same API in C++, loading models and forwarding images would work equivalently.  
 
-# Run a model in OpenCV's dnn module   
+[First, an example](#example) is provided which shows how to load an .rtdc file, load a frozen model,
+perform image pre-processing and finally forward images throught the model.  
+[Next, a step by step instruction](#step-by-step-instruction) is provided with more explanation of the underlying code.  
+[Finally, tests and benchmarks](#tests-and-benchmarks) are provided. 
+
+# Example
+
 ```Python
 import aid_cv2_dnn
 import dclab,cv2
@@ -33,6 +40,9 @@ pos_x, pos_y = rtdc_ds["pos_x"][:], rtdc_ds["pos_y"][:]
 predictions = aid_cv2_dnn.forward_images_cv2(model_pb,img_processing_settings,
                                              images,pos_x,pos_y,pix)
 ```
+
+# Step by step instruction
+
 The following paragraphs show how to deploy a model, step by step:
 - [Export a model](#export-a-model) 
 - [Pre-process images](#pre-process-images)
@@ -44,14 +54,14 @@ Finally, test functions and details about a test-dataset are provided:
 - Generation of the smiley dataset
 - Training the smiley classification model
 
-# Export a model 
+## Export a model 
 1. Start AIDeveloper and go to the "History"-Tab.
 2. Click the button 'Load model' on the lower left and choose a model that was trained earlier. 
 3. Use the dropdown menu on the lower right and choose 'Optimized TensorFlow .pb'. 
 4. Click the button 'Convert' on the lower right to run the conversion. After that you will find the correspoding model file in the same directory as the original model.  
 ![alt text](https://github.com/maikherbig/AIDeveloper/blob/master/art/Export_Model_Combined_v01.png "Export Model")  
   
-# Pre-process images 
+## Pre-process images 
 The script [aid_cv2_dnn.py](https://github.com/maikherbig/AIDeveloper/blob/master/Tutorial%20Deploy%20to%20OpenCV%20dnn/aid_cv2_dnn.py) 
 contains all functions, required for preprocessing images of an .rtdc file. 
 It depends on the model, how image preprocessing is done and AIDeveloper saves these
@@ -70,7 +80,7 @@ If a grayscale image is provided, but the model expects 3 channels, the single c
 copied three times. If an RGB image is provided but the model was trained using grayscale
 images, the [luminosity method](https://en.wikipedia.org/wiki/Grayscale#Colorimetric_(perceptual_luminance-preserving)_conversion_to_grayscale)
 is used to convert the RGB image into grayscale.  
-- **image_zooming**: If images are captured using a magnification that is different from
+- **image_zooming**: if images are captured using a magnification that is different from
 the magnification that was used during capturing the training set, zooming allows to correct.
 For example, lets say a model was trained using data that was captured using a 40x magnification.
 If your imaging system offers just a 20x objective, the difference in magnification could 
@@ -79,13 +89,13 @@ in images of unique phenotype. Especially  differences in numerical aperture (NA
 differnt look of images and as a result the model will fail to predict correctly.
 - **image_crop_pad_cv2**: crop images to particular size. In RT-DC, the location of 
 objects is known and given by pos_x and pos_y. Images are cropped such that the
-object is in the middle. If an object is too far at the border such that the 
-desired image size cannot be obtained without going beyond the order of the image,
+object is in the middle. If an object is too close to the border such that the 
+desired image size cannot be obtained without going beyond the border of the image,
 pixels are padded accordingly.
 - **image_normalization**: This function carries out a normalization of the pixel
 values.
 
-# Forward images through neural net
+## Forward images through neural net
 The script [aid_cv2_dnn.py](https://github.com/maikherbig/AIDeveloper/blob/master/Tutorial%20Deploy%20to%20OpenCV%20dnn/aid_cv2_dnn.py) 
 contains all functions, required to run inference on images of an .rtdc file:  
 ```Python
@@ -93,12 +103,9 @@ predictions = aid_cv2_dnn.forward_images_cv2(model_pb,img_processing_settings,
                                              images,pos_x,pos_y,pix)
 ```
 
+# Tests and benchmarks
 
 For illustration, lets use the images which show smileys at arbitrary positions on a noisy background:  
 ![alt text](https://github.com/maikherbig/AIDeveloper/blob/master/art/Smiley_Blink_Examples_Gray.png "Smiley blink example images")  
-
-
-
-
 
 
