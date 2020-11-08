@@ -1,14 +1,11 @@
-import os,time
 import numpy as np
-import matplotlib.pyplot as plt
 import pandas as pd
-import  dclab
 import cv2
 from scipy import ndimage
-from keras.models import load_model
 
 #this script contains all functions from AIDeveloper, that are required
-#to preprocess images before forwarding through a neural net
+#to preprocess images before forwarding through a neural net and
+#functions to actually forward images through a NN and get predictions
 
 def image_adjust_channels(images,target_channels=1):
     """
@@ -73,12 +70,14 @@ def image_crop_pad_np(images,pos_x,pos_y,final_h,final_w,padding_mode='constant'
     images: list of images of arbitrary shape
     (nr.images,height,width,channels) 
         can be a single image or multiple images
+    pos_x: float or ndarray of length N
+        The x coordinate(s) of the centroid of the event(s) [um]
+    pos_y: float or ndarray of length N
+        The y coordinate(s) of the centroid of the event(s) [um]
     final_h: int
         target image height [pixels]
-        
     final_w: int
         target image width [pixels]
-        
     padding_mode: str
         Perform the following padding operation if the cell is too far at the 
         border of the image such that the  desired image size cannot be 
@@ -104,7 +103,7 @@ def image_crop_pad_np(images,pos_x,pos_y,final_h,final_w,padding_mode='constant'
     Returns
     ----------
     images: list of images. Each image is a numpy array of shape 
-    (final_h,final_w,channels) 
+        (final_h,final_w,channels) 
     """
     print("Deprecated: Please use 'image_crop_pad_cv' instead, which uses OpenCV instead of numpy.")
     
@@ -151,7 +150,7 @@ def image_crop_pad_np(images,pos_x,pos_y,final_h,final_w,padding_mode='constant'
             
     return images
 
-def image_crop_pad_cv2(images,pos_x_pix,pos_y_pix,final_h,final_w,padding_mode="cv2.BORDER_CONSTANT"):
+def image_crop_pad_cv2(images,pos_x,pos_y,pix,final_h,final_w,padding_mode="cv2.BORDER_CONSTANT"):
     """
     Function takes a list images (list of numpy arrays) an resizes them to 
     equal size by center cropping and/or padding.
@@ -161,10 +160,10 @@ def image_crop_pad_cv2(images,pos_x_pix,pos_y_pix,final_h,final_w,padding_mode="
     images: list of images of arbitrary shape
     (nr.images,height,width,channels) 
         can be a single image or multiple images
-    pos_x_pix: float or ndarray of length N
-        The x coordinate(s) of the centroid of the event(s) [pixels]
-    pos_y_pix: float or ndarray of length N
-        The y coordinate(s) of the centroid of the event(s) [pixels]
+    pos_x: float or ndarray of length N
+        The x coordinate(s) of the centroid of the event(s) [um]
+    pos_y: float or ndarray of length N
+        The y coordinate(s) of the centroid of the event(s) [um]
         
     final_h: int
         target image height [pixels]
@@ -174,7 +173,7 @@ def image_crop_pad_cv2(images,pos_x_pix,pos_y_pix,final_h,final_w,padding_mode="
         
     padding_mode: str; OpenCV BorderType
         Perform the following padding operation if the cell is too far at the 
-        border of the image such that the  desired image size cannot be 
+        border such that the  desired image size cannot be 
         obtained without going beyond the order of the image:
         
         - "Delete": Return empty array (all zero) if the cell is too far at border (delete image)
@@ -195,12 +194,15 @@ def image_crop_pad_cv2(images,pos_x_pix,pos_y_pix,final_h,final_w,padding_mode="
     (final_h,final_w,channels) 
 
     """
+    #Convert position of cell from "um" to "pixel index"
+    pos_x,pos_y = pos_x/pix,pos_y/pix  
+
     for i in range(len(images)):
         image = images[i]
     
         #Compute the edge-coordinates that define the cropped image
-        y1 = np.around(pos_y_pix[i]-final_h/2.0)              
-        x1 = np.around(pos_x_pix[i]-final_w/2.0) 
+        y1 = np.around(pos_y[i]-final_h/2.0)              
+        x1 = np.around(pos_x[i]-final_w/2.0) 
         y2 = y1+final_h               
         x2 = x1+final_w
 
@@ -243,7 +245,9 @@ def image_zooming(images,zoom_factor,zoom_interpol_method):
     """
     Function takes a list of images (list of numpy arrays) an resizes them to 
     an equal size by scaling (interpolation).
-    
+
+    Parameters
+    ----------
     images: list of images of arbitrary shape
     zoom_factor: float
         Factor by which the size of the images should be zoomed
@@ -253,17 +257,50 @@ def image_zooming(images,zoom_factor,zoom_interpol_method):
         -"cv2.INTER_AREA" – resampling using pixel area relation. It may be a preferred method for image decimation, as it gives moire’-free results. But when the image is zoomed, it is similar to the INTER_NEAREST method.
         -"cv2.INTER_CUBIC" - a bicubic interpolation over 4x4 pixel neighborhood
         -"cv2.INTER_LANCZOS4" - a Lanczos interpolation over 8x8 pixel neighborhood
+    Returns
+    ----------
+    list of images of arbitrary shape
     """
 
-    final_h = int(np.around(zoom_factor*images[0].shape[1]))
-    final_w = int(np.around(zoom_factor*images[0].shape[2]))
+    #final_h = int(np.around(zoom_factor*images[0].shape[1]))
+    #final_w = int(np.around(zoom_factor*images[0].shape[2]))
 
     for i in range(len(images)):
         #the order (width,height) in cv2.resize is not an error. OpenCV wants this order...
-        images[i] = cv2.resize(images[i], dsize=(final_w,final_h), interpolation=eval(zoom_interpol_method))
+        #images[i] = cv2.resize(images[i], dsize=(final_w,final_h), interpolation=eval(zoom_interpol_method))
+        images[i] = cv2.resize(images[i], dsize=None,fx=zoom_factor, fy=zoom_factor, interpolation=eval(zoom_interpol_method))
+
     return images
 
 def image_normalization(images,normalization_method,mean_trainingdata=None,std_trainingdata=None):
+    """
+    Perform a normalization of the pixel values.
+
+    Parameters
+    ----------
+    images: ndarray
+    normalization_method: str
+        Factor by which the size of the images should be zoomed
+    normalization_method: str; available are: (text copied from original docs: 
+        https://docs.opencv.org/2.4/modules/imgproc/doc/geometric_transformations.html#resize)
+        -"None" – No normalization is applied.
+        -"Div. by 255" – Each input image is divided by 255 (useful since pixel 
+        values go from 0 to 255, so the result will be in range 0-1)
+        -"StdScaling using mean and std of each image individually" – The mean 
+        and standard deviation of each input image itself is used to scale it 
+        by first subtracting the mean and then dividing by the standard deviation
+        -"StdScaling using mean and std of all training data" - During model 
+        training, the mean and std of the entire training set was determined. 
+        This mean and standard deviation is used to normalize images by first 
+        subtracting the mean and then dividing by the standard deviation    
+    mean_trainingdata: float; the mean pixel value obtained from the training dataset
+    std_trainingdata: float; the std of the pixel values obtained from the training dataset
+
+    Returns
+    ----------
+    ndarray of images
+  
+    """
     if normalization_method == "StdScaling using mean and std of all training data":
         #make sure pandas series is converted to numpy array
         if type(mean_trainingdata)==pd.core.series.Series:
@@ -372,15 +409,14 @@ def image_preprocessing(images,pos_x,pos_y,pix=0.34,target_imsize=32,
         training dataset. These fixed values are used to scale images during 
         training by first subtracting the mean and then dividing by the 
         standard deviation.
+    mean_trainingdata: float; the mean pixel value obtained from the training dataset
+    std_trainingdata: float; the std of the pixel values obtained from the training dataset
     """
 
     #Adjust number of channels
     images = image_adjust_channels(images,target_channels)
     #Convert image array to list 
     images = list(images)
-
-    #Convert position of cell from "um" to "pixel index"
-    pos_x,pos_y = pos_x/pix,pos_y/pix  
 
     #Apply zooming operation if required
     if zoom_factor!=1:
@@ -389,7 +425,7 @@ def image_preprocessing(images,pos_x,pos_y,pix=0.34,target_imsize=32,
         pos_x,pos_y = zoom_factor*pos_x,zoom_factor*pos_y
 
     #Cropping and padding operation to obtain images of desired size
-    images = image_crop_pad_cv2(images=images,pos_x_pix=pos_x,pos_y_pix=pos_y,final_h=target_imsize,final_w=target_imsize,padding_mode=padding_mode)
+    images = image_crop_pad_cv2(images=images,pos_x=pos_x,pos_y=pos_y,pix=pix,final_h=target_imsize,final_w=target_imsize,padding_mode=padding_mode)
 
     #Convert to unit8 arrays
     images = np.array((images), dtype="uint8")
@@ -490,7 +526,35 @@ def load_model_meta(meta_path):
 
 
 def forward_images_cv2(model_pb,img_processing_settings,images,pos_x,pos_y,pix):
-    
+    """
+    Run inference on images using a tensorflow model
+
+    Parameters
+    ----------    
+    model_pb: cv2.dnn_Net object; a frozen model graph that was loaded using cv2.dnn.readNet
+    img_processing_settings: pd.DataFrame; a DataFrame generated using load_model_meta()
+    images: numpy array of shape (nr.images,height,width) for grayscale images, or 
+        of shape (nr.images,height,width,channels) for RGB images
+    pos_x: float or ndarray of length N
+        The x coordinate(s) of the centroid of the event(s) [um]
+    pos_y: float or ndarray of length N
+        The y coordinate(s) of the centroid of the event(s) [um]
+    pix: float
+        Resolution [µm/pix]
+
+    Returns
+    ----------    
+    pd.DataFrame ; A DataFrame with the following keys:
+        target_imsize: input image size required by the neural net
+        target_channels: number of image channels required by the neural net
+        normalization_method: the method to normalize the pixel-values of the images
+        mean_trainingdata: the mean pixel value obtained from the training dataset
+        std_trainingdata: the std of the pixel values obtained from the training dataset
+        zoom_factor: factor by which the size of the images should be zoomed
+        zoom_interpol_method: OpenCV interpolation flag
+        padding_mode: OpenCV borderType flag
+    """
+
     target_imsize = int(img_processing_settings["target_imsize"].values[0])
     target_channels = int(img_processing_settings["target_channels"].values[0])
     zoom_factor = float(img_processing_settings["zoom_factor"].values[0])
