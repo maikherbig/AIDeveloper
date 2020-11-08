@@ -35,37 +35,34 @@ predictions = aid_cv2_dnn.forward_images_cv2(model_pb,img_processing_settings,
 ```
 The following paragraphs show how to deploy a model, step by step:
 - [Export a model](#export-a-model) 
-- Preprocess images
-- Forward images through a neural net
-  
-Finally, there are some more details and tests:
-- Tests for the image preprocessing functions of aid_cv2_dnn
+- [Pre-process images](#pre-process-images)
+- [Forward images through neural net](#forward-images-through-neural-net)
+    
+Finally, test functions and details about a test-dataset are provided:
+- Test image preprocessing function
+- Test model inference function
 - Generation of the smiley dataset
 - Training the smiley classification model
 
 # Export a model 
-
+- 1. Start AIDeveloper and go to the "History"-Tab.
+- 2. Click the button 'Load model' on the lower left and choose a model that was trained earlier. 
+- 3. Use the dropdown menu on the lower right and choose 'Optimized TensorFlow .pb'. 
+- 4. Click the button 'Convert' on the lower right to run the conversion. After that you will find the correspoding model file in the same directory as the original model.
+![alt text](https://github.com/maikherbig/AIDeveloper/blob/master/art/Export_Model_Combined_v01.png "Export Model")  
   
-# Preprocess images 
+# Pre-process images 
 The script [aid_cv2_dnn.py](https://github.com/maikherbig/AIDeveloper/blob/master/Tutorial%20Deploy%20to%20OpenCV%20dnn/aid_cv2_dnn.py) 
-contains all functions, required for preprocessing the .rtdc images 
-and forwarding them through a neural net. For illustration, lets use the images
-loaded above, which are are smileys, located at arbitrary positions on a noisy background:  
-![alt text](https://github.com/maikherbig/AIDeveloper/blob/master/art/Smiley_Blink_Examples_Gray.png "Smiley blink example images")  
-
+contains all functions, required for preprocessing images of an .rtdc file. 
 It depends on the model, how image preprocessing is done and AIDeveloper saves these
-settings in a so called meta file during training.  
+settings during training in a so called meta file.  
 You can load those settings using:
 ```Python
 img_processing_settings = aid_cv2_dnn.load_model_meta(meta_path)
 ```
-In the code block at the top of this page, predictions are obtained by calling
-```Python
-predictions = aid_cv2_dnn.forward_images_cv2(model_pb,img_processing_settings,
-                                             images,pos_x,pos_y,pix)
-```
-Within **aid_cv2_dnn.forward_images_cv2**, image preprocessing is performed
-by an dedicated function: **aid_cv2_dnn.image_preprocessing**, which carries out the following methods:   
+
+For image pre-processing, a dedicated function **aid_cv2_dnn.image_preprocessing**
+is provided, which carries out the followig methods:  
 
 - **image_adjust_channels**: adjust the number of channels of the images. Models in AIDeveloper can be trained using
 grayscale or RGB images and the resulting model then expects images with either 1, or 3 channels.
@@ -88,9 +85,17 @@ pixels are padded accordingly.
 - **image_normalization**: This function carries out a normalization of the pixel
 values.
 
+# Forward images through neural net
+The script [aid_cv2_dnn.py](https://github.com/maikherbig/AIDeveloper/blob/master/Tutorial%20Deploy%20to%20OpenCV%20dnn/aid_cv2_dnn.py) 
+contains all functions, required to run inference on images of an .rtdc file:  
+```Python
+predictions = aid_cv2_dnn.forward_images_cv2(model_pb,img_processing_settings,
+                                             images,pos_x,pos_y,pix)
+```
 
 
-
+For illustration, lets use the images which show smileys at arbitrary positions on a noisy background:  
+![alt text](https://github.com/maikherbig/AIDeveloper/blob/master/art/Smiley_Blink_Examples_Gray.png "Smiley blink example images")  
 
 
 
