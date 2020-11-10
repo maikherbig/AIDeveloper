@@ -796,6 +796,14 @@ def VGG_small_1(in_dim,channels,out_dim):
 
 
 def VGG_small_2(in_dim,channels,out_dim):
+    """
+    This model is similar to VGG_small_1, but introduces one Skip-connection:
+    at the end of the model, the (batch-normalized) input information is added 
+    to the processed input. This adding operation only works when initial
+    input to the model had particular dimension:
+    Model only works for in_dim = 14, 15, 32, 34, 35, 36, 37, 39
+    
+    """
     inputs = Input(shape=(in_dim, in_dim,channels),name="inputTensor") #TensorFlow format; Keep and add to x after a convolution
     inputs_bn = BatchNormalization()(inputs)
     inputs_bn = Conv2D(kernel_size=1, filters=64, strides=1, padding='valid')(inputs_bn)
@@ -837,6 +845,12 @@ def VGG_small_2(in_dim,channels,out_dim):
 
 
 def VGG_small_3(in_dim,channels,out_dim): #Very similar to VGG_small_2, but just less BN layers and one more dense layer
+    """Model aims to be simlar to VGG_small_2 but reduces the number of
+    Batchnorm layers in order to improve transfer learning capabilities of the model.
+    As in VGG_small_2, there is a skip connection which results in a limitation
+    of the input dimension which are:
+    Model only works for in_dim = 14, 15, 32, 34, 35, 36, 37, 39
+    """
     inputs = Input(shape=(in_dim, in_dim,channels),name="inputTensor") #TensorFlow format; Keep and add to x after a convolution
     inputs_ = Conv2D(kernel_size=1, filters=64, strides=1, padding='valid')(inputs)
     inputs_ = MaxPooling2D(pool_size=(3, 3))(inputs_) 
@@ -878,6 +892,13 @@ def VGG_small_3(in_dim,channels,out_dim): #Very similar to VGG_small_2, but just
 
 
 def VGG_small_4(in_dim,channels,out_dim): #Another change that allows input of different sizes
+    """
+    To ensure compatibility with any input dimension, some changes are introduced:
+    padding='same' (instead of 'valid') makes sure to keep same dimension after
+    convolutions. Additional maxpooling operation.
+    Model works for in_dim > 7
+    """
+    
     inputs = Input(shape=(in_dim, in_dim,channels),name="inputTensor") #TensorFlow format; Keep and add to x after a convolution
     inputs_ = Conv2D(kernel_size=1, filters=64, strides=1, padding='same')(inputs)
     inputs_ = MaxPooling2D(pool_size=(4, 4))(inputs_) 
