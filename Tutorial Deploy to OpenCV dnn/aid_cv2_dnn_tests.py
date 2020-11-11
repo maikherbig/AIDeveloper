@@ -194,9 +194,8 @@ def test_image_preprocessing():
     #h) target image wider and higher than orignal image
     test_A(h=57,w=73,target_imsize=129)
 
-test_image_preprocessing()
 
-def test_opencv_dnn(rtdc_path,model_keras_path,model_pb_path,meta_path):
+def test_forward_images_cv2(rtdc_path,model_pb_path,meta_path,model_keras_path):
     """
     Test if original model and frozen model (.pb) return the same predictions
     Keras is used for the original model (.model) and OpenCV is used for the frozen model (.pb)
@@ -208,42 +207,12 @@ def test_opencv_dnn(rtdc_path,model_keras_path,model_pb_path,meta_path):
     model_pb_path: str; path to a frozen model (.pb) which was generated using AID's model conversion tool
     model_keras_path: str; path to a .model file. This is the default model format of AID and is always generated when fitting a model
     """
-    #Load the meta-file to get information about the model
-    meta = pd.read_excel(meta_path,sheet_name="Parameters")
-    
-    try:
-        target_imsize = meta["Input image crop"].iloc[0]#input dimensions of the model
-    except:
-        target_imsize = meta["Input image size"].iloc[0]#input dimensions of the model
+    #Load the protobuf model
+    model_pb = cv2.dnn.readNet(model_pb_path)
 
-    normalization_method = meta["Normalization"].iloc[0]#normalization method
-    if normalization_method == "StdScaling using mean and std of all training data":                                
-        mean_trainingdata = meta["Mean of training data used for scaling"]
-        std_trainingdata = meta["Std of training data used for scaling"]
-    else:
-        mean_trainingdata = None
-        std_trainingdata = None
+    #Extract image preprocessing settings from meta file
+    img_processing_settings = aid_cv2_dnn.load_model_meta(meta_path)
     
-    zoom_factor = 1#should images be zoomed before forwarding through neural net?
-    
-    #Following parameters may not exist in meta files of older AID versions. Hence try/except
-    try:#Define the order for the zooming operation
-        zoom_interpol_method = meta["Zoom order"].iloc[0]
-    except:
-        zoom_interpol_method = "cv2.INTER_NEAREST"
-    try:#In case the grabbed images are smaller than model_in_dim, how should the image be padded to increase iamge size 
-        padding_mode = meta["paddingMode"].iloc[0]
-    except:
-        padding_mode = cv2.BORDER_CONSTANT
-    try:#Color mode: grayscale or RGB?
-        target_channels = meta["Color Mode"].iloc[0]
-    except:
-        target_channels = "grayscale"
-    if target_channels.lower() =="grayscale":
-        target_channels = 1
-    elif target_channels.lower() =="rgb":
-        target_channels = 3
-
     #Grab the images
     rtdc_ds = dclab.rtdc_dataset.RTDC_HDF5(rtdc_path)
     
@@ -251,8 +220,24 @@ def test_opencv_dnn(rtdc_path,model_keras_path,model_pb_path,meta_path):
     images = rtdc_ds["image"] #get the images
     images = np.array(images)
     pos_x,pos_y = rtdc_ds["pos_x"][:],rtdc_ds["pos_y"][:] 
+    
+    #Get output from forward_images_cv2
+    output_pb = aid_cv2_dnn.forward_images_cv2(model_pb,img_processing_settings,images,pos_x,pos_y,pix)
 
-    images = image_preprocessing(images,pos_x=pos_x,pos_y=pos_y,pix=pix,
+
+    #Load same model using Keras
+    model_keras = load_model(model_keras_path)
+    #Get image preprocessing settings (required before predicting using Keras)
+    target_imsize = int(img_processing_settings["target_imsize"].values[0])
+    target_channels = int(img_processing_settings["target_channels"].values[0])
+    zoom_factor = float(img_processing_settings["zoom_factor"].values[0])
+    zoom_interpol_method = str(img_processing_settings["zoom_interpol_method"].values[0])
+    padding_mode = str(img_processing_settings["padding_mode"].values[0])
+    normalization_method = str(img_processing_settings["normalization_method"].values[0])
+    mean_trainingdata = img_processing_settings["mean_trainingdata"].values[0]
+    std_trainingdata = img_processing_settings["std_trainingdata"].values[0]
+    #Preprocess images
+    images = aid_cv2_dnn.image_preprocessing(images,pos_x=pos_x,pos_y=pos_y,pix=pix,
                                  target_imsize=target_imsize,
                                  target_channels=target_channels,
                                  zoom_factor=zoom_factor,
@@ -261,22 +246,16 @@ def test_opencv_dnn(rtdc_path,model_keras_path,model_pb_path,meta_path):
                                  normalization_method=normalization_method,
                                  mean_trainingdata=mean_trainingdata,
                                  std_trainingdata=std_trainingdata)
-
-
-    #Load the model
-    model_pb = cv2.dnn.readNet(model_pb_path)
-    blob = cv2.dnn.blobFromImages(images, 1, (target_imsize,target_imsize), swapRB=False, crop=False)
-    model_pb.setInput(blob)
-    output_pb = model_pb.forward()
-    #print("output_pb:"+str(output_pb))
-    
-    
-    #load same model using keras
-    model_keras = load_model(model_keras_path)
+    #Get prediction using Keras
     output_keras = model_keras.predict(images)
-    #print("output_keras:"+str(output_keras))
     
-    assert np.allclose(output_pb,output_keras)
+    #Compare OpenCV.dnn's and Keras's outout
+    assert np.allclose(output_pb,output_keras,rtol=1e-04)
+    
+    dic=  {"output_pb":output_pb,"output_keras":output_keras}
+    return dic
+
+
 
 
 def pad_functions_compare(arguments):
@@ -563,11 +542,6 @@ def comp_time_padding():
     
    """ 
 
-
-
-
-
-
 def smiley_save_to_np():
     from keras.preprocessing.image import load_img
     #load a smiley png
@@ -576,75 +550,4 @@ def smiley_save_to_np():
     np.save("sunglasses_32pix.npy",smile) #save as numpy array
 
 
-#Eosinophil dataset
-#rtdc_path = "Eos - M1.rtdc"
-#Smiley-Blink dataset (10 images)
-rtdc_path = r"Smileys\Data\blink_10_gray.rtdc"
-
-#rtdc_ds = dclab.rtdc_dataset.RTDC_HDF5(rtdc_path)
-#pix = rtdc_ds.config["imaging"]["pixel size"] #get pixelation (um/pix)
-#images = rtdc_ds["image"] #get the images
-#images = np.array(images)
-
-target_imsize=24
-target_channels=1
-zoom_factor=1.0
-padding_mode = "symmetric"
-padding_mode = "cv2.BORDER_CONSTANT"
-zoom_factor = 1.2
-zoom_order = 1
-zoom_interpol_method = "cv2.INTER_LINEAR"
-
-#Blood model
-meta_path = "M09_LeNet5_Mean_Blood_36pix_40x_meta.xlsx"#Path to the meta file which was recorded when the model was trained
-model_keras_path = r"M09_LeNet5_Mean_Blood_36pix_40x_1650.model"#Path the the original model (keras hdf5 format)
-model_pb_path = 'M09_LeNet5_Mean_Blood_36pix_40x_1650_optimized.pb'#Path to the frozen model
-
-preds_cnn_blood = test_forward_dnn(rtdc_path,model_pb_path,meta_path)
-
-#Smiley model MLP64 grayscale
-meta_path = r"D:\BIOTEC-WORK\Paul - ShapeOut\04_AID_models_OpenCV_dnn\02_for_dclab\Smileys\Models_v02\\MLP64_gray_meta.xlsx"#Path to the meta file which was recorded when the model was trained
-model_keras_path = r"D:\BIOTEC-WORK\Paul - ShapeOut\04_AID_models_OpenCV_dnn\02_for_dclab\Smileys\Models_v02\\MLP64_gray_9479.model"#Path the the original model (keras hdf5 format)
-model_pb_path = r"D:\BIOTEC-WORK\Paul - ShapeOut\04_AID_models_OpenCV_dnn\02_for_dclab\Smileys\Models_v02\\MLP64_gray_9479_optimized.pb"#Path to the frozen model
-
-preds_mlp_gray = test_forward_dnn(rtdc_path,model_pb_path,meta_path)
-
-#Smiley model MLP64 rgb
-meta_path = r"D:\BIOTEC-WORK\Paul - ShapeOut\04_AID_models_OpenCV_dnn\02_for_dclab\Smileys\Models_v02\\MLP64_rgb_meta.xlsx"#Path to the meta file which was recorded when the model was trained
-model_keras_path = r"D:\BIOTEC-WORK\Paul - ShapeOut\04_AID_models_OpenCV_dnn\02_for_dclab\Smileys\Models_v02\\MLP64_rgb_9912.model"#Path the the original model (keras hdf5 format)
-model_pb_path = r"D:\BIOTEC-WORK\Paul - ShapeOut\04_AID_models_OpenCV_dnn\02_for_dclab\Smileys\Models_v02\\MLP64_rgb_9912_optimized.pb"#Path to the frozen model
-
-preds_mlp_rgb = test_forward_dnn(rtdc_path,model_pb_path,meta_path)
-
-#Smiley model MLP64 grayscale
-meta_path = r"D:\BIOTEC-WORK\Paul - ShapeOut\04_AID_models_OpenCV_dnn\02_for_dclab\Smileys\Models_v02\\LeNet_bn_do_gray_meta.xlsx"#Path to the meta file which was recorded when the model was trained
-model_keras_path = r"D:\BIOTEC-WORK\Paul - ShapeOut\04_AID_models_OpenCV_dnn\02_for_dclab\Smileys\Models_v02\\LeNet_bn_do_gray_9259.model"#Path the the original model (keras hdf5 format)
-model_pb_path = r"D:\BIOTEC-WORK\Paul - ShapeOut\04_AID_models_OpenCV_dnn\02_for_dclab\Smileys\Models_v02\\LeNet_bn_do_gray_9259_optimized.pb"#Path to the frozen model
-
-preds_cnn_gray = test_forward_dnn(rtdc_path,model_pb_path,meta_path)
-
-#Smiley model MLP64 rgb
-meta_path = r"D:\BIOTEC-WORK\Paul - ShapeOut\04_AID_models_OpenCV_dnn\02_for_dclab\Smileys\Models_v02\\LeNet_bn_do_rgb_meta.xlsx"#Path to the meta file which was recorded when the model was trained
-model_keras_path = r"D:\BIOTEC-WORK\Paul - ShapeOut\04_AID_models_OpenCV_dnn\02_for_dclab\Smileys\Models_v02\\LeNet_bn_do_rgb_9321.model"#Path the the original model (keras hdf5 format)
-model_pb_path = r"D:\BIOTEC-WORK\Paul - ShapeOut\04_AID_models_OpenCV_dnn\02_for_dclab\Smileys\Models_v02\\LeNet_bn_do_rgb_9321_optimized.pb"#Path to the frozen model
-
-preds_cnn_rgb = test_forward_dnn(rtdc_path,model_pb_path,meta_path)
-
-
-
-#test_opencv_dnn(rtdc_path,model_keras_path,model_pb_path,meta_path)
-    
-
-#Load the model to a global variable
-#model_pb = cv2.dnn.readNet(model_pb_path)
-#Load  image preprocessing settings corresponding to the model to a global var
-#img_processing_settings = load_model_meta(meta_path)
-
-
-rtdc_ds = dclab.rtdc_dataset.RTDC_HDF5(rtdc_path)
-
-pix = rtdc_ds.config["imaging"]["pixel size"] #get pixelation (um/pix)
-images = rtdc_ds["image"] #get the images
-images = np.array(images)
-pos_x,pos_y = rtdc_ds["pos_x"][:],rtdc_ds["pos_y"][:] 
 
