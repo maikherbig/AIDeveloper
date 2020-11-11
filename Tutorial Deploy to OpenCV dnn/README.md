@@ -111,30 +111,60 @@ Furthermore, details of the test-dataset are provided in [aid_cv2_dnn_tests.py](
 - Training the smiley classification model
 
 ## Test image preprocessing (test_image_preprocessing)
-For illustration, a smiley is placed on aribtrary positions on a noisy background.
+Irrespective of the location of the object, the function aid_cv2_dnn.image_preprocessing
+needs to return an image of the desired target size witht the object in the middle.
+To allow for a visual inspection, a smiley is placed on aribtrary positions on a noisy background.
+The following conditions need to be tested.
+
+Create grayscale (A) or RGB (B) images which reflect all possible phenotypes:     
+1) raw image has odd width, but target image should have even width
+2) raw image has odd height, but target image should have even height
+3) raw image has odd width, and target image should also have odd width
+4) raw image has odd height, and target image should also have odd height
+  
+for each of 1,2,3,4, test following conditions:
+      
+a) cell far on the left
+b) cell far on the right
+c) cell far on top
+d) cell far on bottom
+
+f) target image wider than orignal image
+g) target image higher than orignal image
+h) target image wider and higher than orignal image
+
+All tests can be carried out using the following command:
+```Python
+import aid_cv2_dnn_tests
+aid_cv2_dnn_tests.test_image_preprocessing()
+```
 The successful test returns images of the desired size showing the sunglasses smiley in the center:  
 ![alt text](https://github.com/maikherbig/AIDeveloper/blob/master/art/Test_ImagePreProcessing.png "Image Preprocessing Test")  
 
 
 ## Test model inference (forward_images_cv2)
 The following steps allow to test the integrity of **forward_images_cv2** and the export function of 
-AIDeveloper. 
+AIDeveloper:
 1. Use Keras to load the original model and compute predictions for some images
 2. Use forward_images_cv2 to load the frozen model and compute predictions for the same images
 3. compare both outputs
 
-It should be assured that the principle works for simple and also for advanced 
-model architectures. Hence, two models were trained were trained on the smiley
-dataset:
+This logic is carried out by the function **aid_cv2_dnn_tests**, which you can find 
+in [aid_cv2_dnn_tests.py](https://github.com/maikherbig/AIDeveloper/blob/master/Tutorial%20Deploy%20to%20OpenCV%20dnn/aid_cv2_dnn_tests.py).
+To assure that forwarding images works for simple and also for advanced 
+model architectures, two models were trained on the smiley dataset:
 - a. multilayer perceptron with 3 layers
-- b. convolutional neural net with dropout and batchnormalization layers
+- b. convolutional neural net with dropout and batch-normalization layers
+Furthermore, models may be trained using Grayscale or RGB images. For both options, models were
+prepared using AIDeveloper. You can find the trained models in 
+[Smileys_Models.zip](https://github.com/maikherbig/AIDeveloper/blob/master/Tutorial%20Deploy%20to%20OpenCV%20dnn/Smileys_Models.zip).
 
-Finally, the routine should work for
+For each model architecture, forwarding images should work for
 - Grayscale, and
-- RGB images
+- RGB images.
 
-The test function is contained in aid_cv2_dnn_tests.py and which is used by 
-the following routine to conduct all tests.
+The respective test function is contained in aid_cv2_dnn_tests.py. Follwing script
+uses that function to conduct all tests.
 
 ```Python
 import aid_cv2_dnn_tests
@@ -143,32 +173,32 @@ import aid_cv2_dnn_tests
 datasets = [r"Smileys_Data\blink_10_gray.rtdc",r"Smileys_Data\blink_10.rtdc"]
 
 for rtdc_path in datasets:
-    #Smiley model MLP64 grayscale
+    # Simple MLP, trained on grayscale images
     meta_path = r"Smileys_Models\\MLP64_gray_meta.xlsx"#Path to the meta file which was recorded when the model was trained
     model_keras_path = r"Smileys_Models\\MLP64_gray_9479.model"#Path the the original model (keras hdf5 format)
     model_pb_path = r"Smileys_Models\\MLP64_gray_9479_optimized.pb"#Path to the frozen model
-    
+    # Run the test
     preds_mlp_gray = aid_cv2_dnn_tests.test_forward_images_cv2(rtdc_path,model_pb_path,meta_path,model_keras_path)
     
-    #Smiley model MLP64 rgb
+    # Simple MLP, trained on RGB images
     meta_path = r"Smileys_Models\\MLP64_rgb_meta.xlsx"#Path to the meta file which was recorded when the model was trained
     model_keras_path = r"Smileys_Models\\MLP64_rgb_9912.model"#Path the the original model (keras hdf5 format)
     model_pb_path = r"Smileys_Models\\MLP64_rgb_9912_optimized.pb"#Path to the frozen model
-    
+    # Run the test
     preds_mlp_rgb = aid_cv2_dnn_tests.test_forward_images_cv2(rtdc_path,model_pb_path,meta_path,model_keras_path)
     
-    #Smiley model MLP64 grayscale
+    # CNN with dropout and batchnorm layers, trained on grayscale images
     meta_path = r"Smileys_Models\\LeNet_bn_do_gray_meta.xlsx"#Path to the meta file which was recorded when the model was trained
     model_keras_path = r"Smileys_Models\\LeNet_bn_do_gray_9259.model"#Path the the original model (keras hdf5 format)
     model_pb_path = r"Smileys_Models\\LeNet_bn_do_gray_9259_optimized.pb"#Path to the frozen model
-    
+    # Run the test
     preds_cnn_gray = aid_cv2_dnn_tests.test_forward_images_cv2(rtdc_path,model_pb_path,meta_path,model_keras_path)
     
-    #Smiley model MLP64 rgb
+    # CNN with dropout and batchnorm layers, trained on RGB images
     meta_path = r"Smileys_Models\\LeNet_bn_do_rgb_meta.xlsx"#Path to the meta file which was recorded when the model was trained
     model_keras_path = r"Smileys_Models\\LeNet_bn_do_rgb_9321.model"#Path the the original model (keras hdf5 format)
     model_pb_path = r"Smileys_Models\\LeNet_bn_do_rgb_9321_optimized.pb"#Path to the frozen model
-    
+    # Run the test
     preds_cnn_rgb = aid_cv2_dnn_tests.test_forward_images_cv2(rtdc_path,model_pb_path,meta_path,model_keras_path)
 ```
 
