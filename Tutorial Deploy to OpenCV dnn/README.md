@@ -117,21 +117,21 @@ To allow for a visual inspection, a smiley is placed on aribtrary positions on a
 The following conditions need to be tested.
 
 Create grayscale (A) or RGB (B) images which reflect all possible phenotypes:     
-- 1 raw image has odd width, but target image should have even width
-- 2 raw image has odd height, but target image should have even height
-- 3 raw image has odd width, and target image should also have odd width
-- 4 raw image has odd height, and target image should also have odd height
+- 1. raw image has odd width, but target image should have even width
+- 2. raw image has odd height, but target image should have even height
+- 3. raw image has odd width, and target image should also have odd width
+- 4. raw image has odd height, and target image should also have odd height
   
 for each of 1,2,3,4, test following conditions:
       
-- a cell far on the left
-- b cell far on the right
-- c cell far on top
-- d cell far on bottom
+- a. cell far on the left
+- b. cell far on the right
+- c. cell far on top
+- d. cell far on bottom
 
-- f target image wider than orignal image
-- g target image higher than orignal image
-- h target image wider and higher than orignal image
+- f. target image wider than orignal image
+- g. target image higher than orignal image
+- h. target image wider and higher than orignal image
 
 All tests can be carried out using the following command:
 ```Python
