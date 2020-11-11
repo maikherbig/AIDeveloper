@@ -117,21 +117,21 @@ To allow for a visual inspection, a smiley is placed on aribtrary positions on a
 The following conditions need to be tested.
 
 Create grayscale (A) or RGB (B) images which reflect all possible phenotypes:     
-1) raw image has odd width, but target image should have even width
-2) raw image has odd height, but target image should have even height
-3) raw image has odd width, and target image should also have odd width
-4) raw image has odd height, and target image should also have odd height
+- 1) raw image has odd width, but target image should have even width
+- 2) raw image has odd height, but target image should have even height
+- 3) raw image has odd width, and target image should also have odd width
+- 4) raw image has odd height, and target image should also have odd height
   
 for each of 1,2,3,4, test following conditions:
       
-a) cell far on the left
-b) cell far on the right
-c) cell far on top
-d) cell far on bottom
+- a) cell far on the left
+- b) cell far on the right
+- c) cell far on top
+- d) cell far on bottom
 
-f) target image wider than orignal image
-g) target image higher than orignal image
-h) target image wider and higher than orignal image
+- f) target image wider than orignal image
+- g) target image higher than orignal image
+- h) target image wider and higher than orignal image
 
 All tests can be carried out using the following command:
 ```Python
@@ -153,15 +153,15 @@ This logic is carried out by the function **aid_cv2_dnn_tests**, which you can f
 in [aid_cv2_dnn_tests.py](https://github.com/maikherbig/AIDeveloper/blob/master/Tutorial%20Deploy%20to%20OpenCV%20dnn/aid_cv2_dnn_tests.py).
 To assure that forwarding images works for simple and also for advanced 
 model architectures, two models were trained on the smiley dataset:
-- a. multilayer perceptron with 3 layers
-- b. convolutional neural net with dropout and batch-normalization layers
+- multilayer perceptron with 3 layers  
+- convolutional neural net with dropout and batch-normalization layers   
 Furthermore, models may be trained using Grayscale or RGB images. For both options, models were
 prepared using AIDeveloper. You can find the trained models in 
 [Smileys_Models.zip](https://github.com/maikherbig/AIDeveloper/blob/master/Tutorial%20Deploy%20to%20OpenCV%20dnn/Smileys_Models.zip).
 
 For each model architecture, forwarding images should work for
-- Grayscale, and
-- RGB images.
+- Grayscale, and  
+- RGB images.  
 
 The respective test function is contained in aid_cv2_dnn_tests.py. Follwing script
 uses that function to conduct all tests.
