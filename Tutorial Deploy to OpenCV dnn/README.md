@@ -117,6 +117,61 @@ The successful test returns images of the desired size showing the sunglasses sm
 
 
 ## Test model inference (forward_images_cv2)
+The following steps allow to test the integrity of **forward_images_cv2** and the export function of 
+AIDeveloper. 
+1. Use Keras to load the original model and compute predictions for some images
+2. Use forward_images_cv2 to load the frozen model and compute predictions for the same images
+3. compare both outputs
+
+It should be assured that the principle works for simple and also for advanced 
+model architectures. Hence, two models were trained were trained on the smiley
+dataset:
+- a. multilayer perceptron with 3 layers
+- b. convolutional neural net with dropout and batchnormalization layers
+
+Finally, the routine should work for
+- Grayscale, and
+- RGB images
+
+The test function is contained in aid_cv2_dnn_tests.py and which is used by 
+the following routine to conduct all tests.
+
+```Python
+import aid_cv2_dnn_tests
+
+#paths Smiley-Blink datasets (10 images) for grayscale and rgb images
+datasets = [r"Smileys_Data\blink_10_gray.rtdc",r"Smileys_Data\blink_10.rtdc"]
+
+for rtdc_path in datasets:
+    #Smiley model MLP64 grayscale
+    meta_path = r"Smileys_Models\\MLP64_gray_meta.xlsx"#Path to the meta file which was recorded when the model was trained
+    model_keras_path = r"Smileys_Models\\MLP64_gray_9479.model"#Path the the original model (keras hdf5 format)
+    model_pb_path = r"Smileys_Models\\MLP64_gray_9479_optimized.pb"#Path to the frozen model
+    
+    preds_mlp_gray = aid_cv2_dnn_tests.test_forward_images_cv2(rtdc_path,model_pb_path,meta_path,model_keras_path)
+    
+    #Smiley model MLP64 rgb
+    meta_path = r"Smileys_Models\\MLP64_rgb_meta.xlsx"#Path to the meta file which was recorded when the model was trained
+    model_keras_path = r"Smileys_Models\\MLP64_rgb_9912.model"#Path the the original model (keras hdf5 format)
+    model_pb_path = r"Smileys_Models\\MLP64_rgb_9912_optimized.pb"#Path to the frozen model
+    
+    preds_mlp_rgb = aid_cv2_dnn_tests.test_forward_images_cv2(rtdc_path,model_pb_path,meta_path,model_keras_path)
+    
+    #Smiley model MLP64 grayscale
+    meta_path = r"Smileys_Models\\LeNet_bn_do_gray_meta.xlsx"#Path to the meta file which was recorded when the model was trained
+    model_keras_path = r"Smileys_Models\\LeNet_bn_do_gray_9259.model"#Path the the original model (keras hdf5 format)
+    model_pb_path = r"Smileys_Models\\LeNet_bn_do_gray_9259_optimized.pb"#Path to the frozen model
+    
+    preds_cnn_gray = aid_cv2_dnn_tests.test_forward_images_cv2(rtdc_path,model_pb_path,meta_path,model_keras_path)
+    
+    #Smiley model MLP64 rgb
+    meta_path = r"Smileys_Models\\LeNet_bn_do_rgb_meta.xlsx"#Path to the meta file which was recorded when the model was trained
+    model_keras_path = r"Smileys_Models\\LeNet_bn_do_rgb_9321.model"#Path the the original model (keras hdf5 format)
+    model_pb_path = r"Smileys_Models\\LeNet_bn_do_rgb_9321_optimized.pb"#Path to the frozen model
+    
+    preds_cnn_rgb = aid_cv2_dnn_tests.test_forward_images_cv2(rtdc_path,model_pb_path,meta_path,model_keras_path)
+```
+
 
 
 ## Generation of the smiley dataset
