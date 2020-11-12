@@ -229,16 +229,62 @@ Models were trained using AIDeveloper 0.1.2, which you can download [here](https
 
 
 # Benchmarks
-Image preprocessing workflows of [aid_cv2_dnn.py](https://github.com/maikherbig/AIDeveloper/blob/master/Tutorial%20Deploy%20to%20OpenCV%20dnn/aid_cv2_dnn.py)
-use OpenCV implementations, while AIDeveloper <=0.1.2 used numpy
+Since some aplications might want to do model inferece using pure C++, it would be 
+beneficial to use OpenCV operations instead of NumPy/SciPy. 
+Methods of OpenCV can be conducted indentically in Python and C++. 
+Currently, AIDeveloper (version<=0.1.2) uses NumPy/SciPy for the following image processing steps:
 
-The follwing image processing steps are affected
-- [Padding](#padding)
-- [Zooming](#zooming)
+- [Padding (np.pad, replace by cv2.copyMakeBorder)](#padding-np.pad-vs.-cv2.copymakeborder)
+- [Zooming (scipy.ndimage.zoom, replace by cv2.resize)](#zooming)
 
+In the following, computational times of NumPy/SciPy and OpenCV implementations are compared.
 
-## Padding
-
-AIDeveloper v<=0.1.2 uses np.pad, but OpenCV offers a similar implementation which 
+## Padding (np.pad vs. cv2.copyMakeBorder)
+AIDeveloper v<=0.1.2 uses np.pad, and OpenCV offers a similar implementation which 
 should be preferred as it would also be available in C++. 
-**aid_cv2_dnn_tests.pad_functions_compare** compares both functions and 
+The advantage of np.pad is that arrays of multiple images can be processed simultaneously, while
+OpenCV's cv2.copyMakeBorder only accepts one image at a time. Hence, copyMakeBorder requires to use 
+a for loop to process all images individually. To run a test of computational times, run the following code:
+```Python
+import aid_cv2_dnn_tests
+aid_cv2_dnn_tests.comp_time_padding()
+```
+On my PC (Intel Core i7-4810MQ@2.8GHz, 24GB RAM) this functions returns:
+```Python
+Numpy pad (stack of images): 1.01 seconds
+Numpy pad (loop over images): 0.86 seconds
+OpenCV pad (loop over images): 0.23 seconds
+```
+-> Stack processing images in NumPy does not make it faster
+-> Using OpenCV is fastest, despite using a for-loop!
+
+The functions 'np.pad' and 'cv2.copyMakeBorder' accept different arguments and
+the following code shows exemplarily how the same result can be obtained using both functions:
+```Python
+#Create an image (random noise)
+images = np.random.randint(low=0,high=255,size=(80,250)).astype(np.uint8)
+#number of pixels to pad
+top,bottom,left,right = 4,5,6,7   
+#Use NumPy to pad
+img_pad_np = np.pad(images,pad_width=( (top, bottom),(left, right) ), mode="constant")
+#Use OpenCV to pad
+img_pad_cv2 = cv2.copyMakeBorder(images, top, bottom, left, right, borderType=cv2.BORDER_CONSTANT,value=0)
+#Compare both resultig images
+compare = img_pad_np==img_pad_cv2
+assert compare.all(), "images returned from np.pad and cv2.copyMakeBorder are not identical!"
+```
+Apparently, results when using mode="constant" (in np.pad) or borderType=cv2.BORDER_CONSTANT (in cv2.copyMakeBorder)
+are identical. 
+To translate NumPy's mode to the corresponding borderType for OpenCV you can use:
+```Python
+import aid_cv2_dnn
+borderType = pad_arguments_np2cv("reflect")
+print(borderType)
+```
+
+## Zooming
+
+
+
+
+
