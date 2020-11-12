@@ -234,7 +234,7 @@ beneficial to use OpenCV operations instead of NumPy/SciPy.
 Methods of OpenCV can be conducted indentically in Python and C++. 
 Currently, AIDeveloper (version<=0.1.2) uses NumPy/SciPy for the following image processing steps:
 
-- [Padding (np.pad, replace by cv2.copyMakeBorder)](#padding--np.pad-vs.-cv2.copymakeborder)
+- [Padding: np.pad vs. cv2.copyMakeBorder](#padding-np.pad-vs.-cv2.copymakeborder)
 - [Zooming (scipy.ndimage.zoom, replace by cv2.resize)](#zooming)
 
 In the following, computational times of NumPy/SciPy and OpenCV implementations are compared.
