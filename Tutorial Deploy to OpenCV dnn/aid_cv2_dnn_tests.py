@@ -311,7 +311,7 @@ def comp_time_padding():
     temp = np.pad(images,pad_width=( (0,0),(pad, pad),(pad, pad) ),mode=padding_mode)
     t2 = time.time()
     dt = np.round(t2-t1,2)
-    print("Numpy pad (stack of images): " +str(dt)+" seconds")
+    print("NumPy pad (stack of images): " +str(dt)+" seconds")
 
     t1 = time.time()
     images = list(images)
@@ -319,7 +319,7 @@ def comp_time_padding():
         images[i] = np.pad(images[i],pad_width=( (pad, pad),(pad, pad) ),mode=padding_mode)
     t2 = time.time()
     dt = np.round(t2-t1,2)
-    print("Numpy pad (loop over images): " +str(dt)+" seconds")
+    print("NumPy pad (loop over images): " +str(dt)+" seconds")
        
     images = np.random.randint(low=0,high=255,size=(10000,80,250)).astype(np.uint8)
     images = list(images)
@@ -334,8 +334,8 @@ def comp_time_padding():
     """ 
     On my PC (Intel Core i7-4810MQ@2.8GHz, 24GB RAM) this functions returns:
     '
-    Numpy pad (stack of images): 1.01
-    Numpy pad (loop over images): 0.86
+    NumPy pad (stack of images): 1.01
+    NumPy pad (loop over images): 0.86
     OpenCV pad (loop over images): 0.23
     '
     -> Stack processing images in numpy does not make it faster
