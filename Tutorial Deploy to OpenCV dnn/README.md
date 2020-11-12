@@ -8,8 +8,8 @@ also offers the same API in C++, loading models and forwarding images would work
 - [An example](#example) is provided which shows how to load an .rtdc file, load a frozen model,
 perform image preprocessing, and finally forward images through the model.  
 - [A step by step instruction](#step-by-step-instruction) provides more explanation of the underlying code.  
-- [Test functions verify the integrity of the functions](#tests-and-benchmarks).
-- [Benchmarks justify usage of OpenCV instead of numpy for some image processing jobs](#benchmarks).
+- [Verify the integrity of the methods: Test functions](#test-functions).
+- [Benchmarks justify usage of OpenCV instead of numpy for some image processing jobs](#translate-numpyscipy-operations-to-opencv).
 
 
 # Example
@@ -104,7 +104,7 @@ predictions = aid_cv2_dnn.forward_images_cv2(model_pb,img_processing_settings,
 ```
 Tests for that function are provided [below](#test-model-inference-forward_images_cv2). 
 
-# Tests and benchmarks
+# Test functions
 Following paragraphs cover test functions which are contained in [aid_cv2_dnn_tests.py](https://github.com/maikherbig/AIDeveloper/blob/master/Tutorial%20Deploy%20to%20OpenCV%20dnn/aid_cv2_dnn_tests.py).  
 For testing, a dataset was generated and models were trained:  
 
@@ -228,7 +228,7 @@ The meta files contain information of the parameters used during training.
 Models were trained using AIDeveloper 0.1.2, which you can download [here](https://github.com/maikherbig/AIDeveloper/releases/tag/0.1.2).
 
 
-# Benchmarks
+# Translate Numpy/SciPy operations to OpenCV
 Since some applications might want use to do model inferencing using pure C++, it would be 
 beneficial to use OpenCV operations instead of NumPy/SciPy. 
 Methods of OpenCV can be conducted indentically in Python and C++. 
