@@ -121,14 +121,12 @@ Create grayscale (A) or RGB (B) images which reflect all possible phenotypes:
 - 2. raw image has odd height, but target image should have even height
 - 3. raw image has odd width, and target image should also have odd width
 - 4. raw image has odd height, and target image should also have odd height
-  
-for each of 1,2,3,4, test following conditions:
-      
+
+for each of i,ii,iii,iv, test following conditions:      
 - a. cell far on the left
 - b. cell far on the right
 - c. cell far on top
 - d. cell far on bottom
-
 - f. target image wider than orignal image
 - g. target image higher than orignal image
 - h. target image wider and higher than orignal image
@@ -136,7 +134,8 @@ for each of 1,2,3,4, test following conditions:
 All tests can be carried out using the following command:
 ```Python
 import aid_cv2_dnn_tests
-aid_cv2_dnn_tests.test_image_preprocessing()
+aid_cv2_dnn_tests.test_image_preprocessing("Grayscale")
+aid_cv2_dnn_tests.test_image_preprocessing("RGB")
 ```
 The successful test returns images of the desired size showing the sunglasses smiley in the center:  
 ![alt text](https://github.com/maikherbig/AIDeveloper/blob/master/art/Test_ImagePreProcessing.png "Image Preprocessing Test")  
@@ -145,8 +144,8 @@ The successful test returns images of the desired size showing the sunglasses sm
 ## Test model inference (forward_images_cv2)
 The following steps allow to test the integrity of **forward_images_cv2** and the export function of 
 AIDeveloper:
-1. Use Keras to load the original model and compute predictions for some images
-2. Use forward_images_cv2 to load the frozen model and compute predictions for the same images
+1. use Keras to load the original model and compute predictions for some images
+2. use forward_images_cv2 to load the frozen model and compute predictions for the same images
 3. compare both outputs
 
 This logic is carried out by the function **aid_cv2_dnn_tests**, which you can find 
@@ -160,7 +159,7 @@ prepared using AIDeveloper. You can find the trained models in
 [Smileys_Models.zip](https://github.com/maikherbig/AIDeveloper/blob/master/Tutorial%20Deploy%20to%20OpenCV%20dnn/Smileys_Models.zip).
 
 For each model architecture, forwarding images should work for
-- Grayscale, and  
+- grayscale, and  
 - RGB images.  
 
 The respective test function is contained in aid_cv2_dnn_tests.py. Follwing script
