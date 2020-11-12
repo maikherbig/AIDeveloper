@@ -295,30 +295,90 @@ def test_forward_images_cv2(rtdc_path,model_pb_path,meta_path,model_keras_path):
 
 
 
+def comp_time_padding():
+    """
+    Compare the computational time of some padding operations
+    """   
+    images = np.random.randint(low=0,high=255,size=(10000,80,250)).astype(np.uint8)
+    
+    padding_mode = 'constant'
+    pad = 10
+    top,bottom,left,right = pad,pad,pad,pad
+    borderType = cv2.BORDER_CONSTANT
 
-def pad_functions_compare(arguments):
+
+    t1 = time.time()
+    temp = np.pad(images,pad_width=( (0,0),(pad, pad),(pad, pad) ),mode=padding_mode)
+    t2 = time.time()
+    dt = np.round(t2-t1,2)
+    print("Numpy pad (stack of images): " +str(dt)+" seconds")
+
+    t1 = time.time()
+    images = list(images)
+    for i in range(len(images)):
+        images[i] = np.pad(images[i],pad_width=( (pad, pad),(pad, pad) ),mode=padding_mode)
+    t2 = time.time()
+    dt = np.round(t2-t1,2)
+    print("Numpy pad (loop over images): " +str(dt)+" seconds")
+       
+    images = np.random.randint(low=0,high=255,size=(10000,80,250)).astype(np.uint8)
+    images = list(images)
+
+    t1 = time.time()
+    for i in range(len(images)):
+        images[i] = cv2.copyMakeBorder(images[i], top, bottom, left, right, borderType)
+    t2 = time.time()
+    dt = np.round(t2-t1,2)
+    print("OpenCV pad (loop over images): " +str(dt)+" seconds")
+
+    """ 
+    On my PC (Intel Core i7-4810MQ@2.8GHz, 24GB RAM) this functions returns:
+    '
+    Numpy pad (stack of images): 1.01
+    Numpy pad (loop over images): 0.86
+    OpenCV pad (loop over images): 0.23
+    '
+    -> Stack processing images in numpy does not make it faster
+    -> Using OpenCV and looping through images is fastest,
+    
+   """ 
+
+def pad_functions_compare(padding_mode,borderType):
     """
     numpy's pad and OpenCVs copyMakeBorder can do the same thing, but the 
     function arguments are called differntly.
 
     Find out, wich sets of arguments lead to the same result
     
+    Parameters
+    ---------- 
+    padding_mode: str; numpy padding mode
+        - "constant" (default): Pads with a constant value.
+        - "edge": Pads with the edge values of array.
+        - "linear_ramp": Pads with the linear ramp between end_value and the array edge value.
+        - "maximum": Pads with the maximum value of all or part of the vector along each axis.
+        - "mean": Pads with the mean value of all or part of the vector along each axis.
+        - "median": Pads with the median value of all or part of the vector along each axis.
+        - "minimum": Pads with the minimum value of all or part of the vector along each axis.
+        - "reflect": Pads with the reflection of the vector mirrored on the first and last values of the vector along each axis.
+        - "symmetric": Pads with the reflection of the vector mirrored along the edge of the array.
+        - "wrap": Pads with the wrap of the vector along the axis. The first values are used to pad the end and the end values are used to pad the beginning.
+    borderType:str; OpenCV borderType     
+        - "cv2.BORDER_CONSTANT": iiiiii|abcdefgh|iiiiiii with some specified i 
+        - "cv2.BORDER_REFLECT": fedcba|abcdefgh|hgfedcb
+        - "cv2.BORDER_REFLECT_101": gfedcb|abcdefgh|gfedcba
+        - "cv2.BORDER_DEFAULT": same as BORDER_REFLECT_101
+        - "cv2.BORDER_REPLICATE": aaaaaa|abcdefgh|hhhhhhh
+        - "cv2.BORDER_WRAP": cdefgh|abcdefgh|abcdefg
     """
     images = np.random.randint(low=0,high=255,size=(80,250)).astype(np.uint8)
     
-    #common arguments:
+    #number of pixels to pad:
     top,bottom,left,right = 4,5,6,7   
     
-    #np.pad argument
-    padding_mode = 'maximum' 
+    img_pad_np = np.pad(images,pad_width=( (top, bottom),(left, right) ), mode=padding_mode)
     
-    #cv2.copyMakeBorder arguments
-    borderType = cv2.BORDER_CONSTANT
-
-    img_pad_np = np.pad(images,pad_width=( (top, bottom),(left, right) ),mode=padding_mode)
-    
-    value = [255,110]#np.arange(0,images.shape[0])
-    img_pad_cv2 = cv2.copyMakeBorder(images, top, bottom, left, right, borderType,value=value)
+    img_pad_cv2 = cv2.copyMakeBorder(images, top, bottom, left, right, eval(borderType),value=0)
 
     compare = img_pad_np==img_pad_cv2
     assert compare.all(), "images returned from np.pad and cv2.copyMakeBorder are not identical!"
@@ -473,21 +533,6 @@ def zoom_functions_compare():
         For zoom_order=5, cv2.INTER_LANCZOS4 is closest
     """
     
-def zoom_arguments_scipy2cv(zoom_factor,zoom_interpol_method):
-    #Resulting images after performing ndimage.zoom or cv2.resize are never identical
-    #But with certain settings you get at least similar results, 
-
-    if zoom_factor>=0.8:
-        if zoom_interpol_method==0: return "cv2.INTER_NEAREST"
-        elif zoom_interpol_method==1: return "cv2.INTER_LINEAR"
-        elif zoom_interpol_method==2: return "cv2.INTER_CUBIC"
-        elif zoom_interpol_method==3: return "cv2.INTER_LANCZOS4"
-        elif zoom_interpol_method==4: return "cv2.INTER_LANCZOS4"
-        elif zoom_interpol_method==5: return "cv2.INTER_LANCZOS4"
-
-    if zoom_factor<=0.8: #for downsampling the image, all methods perform similar
-        #but cv2.INTER_LINEAR, is closest most of the time, irrespective of the zoom_order
-        return "cv2.INTER_LINEAR"
 
 
 def comp_time_zoom():
@@ -509,7 +554,7 @@ def comp_time_zoom():
         images_zoomed = ndimage.zoom(images, zoom=(1,zoom_factor,zoom_factor,1),order=int(zoom_order))
     t2 = time.time()
     dt = np.round(t2-t1,1)
-    print("scipy ndimage.zoom:" +str(dt))
+    print("scipy ndimage.zoom: " +str(dt)+" seconds")
     
     t1 = time.time()
     final_h = int(np.around(images.shape[1]*zoom_factor))
@@ -520,65 +565,18 @@ def comp_time_zoom():
         images_zoomed[i] = cv2.resize(images_zoomed[i], dsize=(final_w,final_h), interpolation=interpolation_method)
     t2 = time.time()
     dt = np.round(t2-t1,1)
-    print("OpenCV resize:" +str(dt))
+    print("OpenCV resize: " +str(dt)+" seconds")
 
     """ 
     This functions returns on my PC (Intel Core i7-4810MO@2.8GHz, 24GB RAM):
     '
-    scipy ndimage.zoom:13.5
-    OpenCV resize:0.5
+    SciPy ndimage.zoom: 13.5 seconds
+    OpenCV resize: 0.5 seconds
     '
     -> despite having to loop through a list, OpenCV is much faster compared to scipy,
     which gets all images at once and could do batch processing!
    """ 
 
-def comp_time_padding():
-    """
-    Compare the computational time of some padding operations
-    """   
-    images = np.random.randint(low=0,high=255,size=(10000,80,250)).astype(np.uint8)
-    
-    padding_mode = 'constant'
-    pad = 10
-    top,bottom,left,right = pad,pad,pad,pad
-    borderType = cv2.BORDER_CONSTANT
-
-
-    t1 = time.time()
-    temp = np.pad(images,pad_width=( (0,0),(pad, pad),(pad, pad) ),mode=padding_mode)
-    t2 = time.time()
-    dt = np.round(t2-t1,2)
-    print("Numpy pad (stack of images): " +str(dt))
-
-    t1 = time.time()
-    images = list(images)
-    for i in range(len(images)):
-        images[i] = np.pad(images[i],pad_width=( (pad, pad),(pad, pad) ),mode=padding_mode)
-    t2 = time.time()
-    dt = np.round(t2-t1,2)
-    print("Numpy pad (loop over images): " +str(dt))
-       
-    images = np.random.randint(low=0,high=255,size=(10000,80,250)).astype(np.uint8)
-    images = list(images)
-
-    t1 = time.time()
-    for i in range(len(images)):
-        images[i] = cv2.copyMakeBorder(images[i], top, bottom, left, right, borderType)
-    t2 = time.time()
-    dt = np.round(t2-t1,2)
-    print("OpenCV pad (loop over images): " +str(dt))
-
-    """ 
-    This functions returns on my PC (Intel Core i7-4810MO@2.8GHz, 24GB RAM):
-    '
-    Numpy pad (stack of images): 1.01
-    Numpy pad (loop over images): 0.86
-    OpenCV pad (loop over images): 0.23
-    '
-    -> Stack processing images in numpy does not make it faster
-    -> Using OpenCV and looping through images is fastest,
-    
-   """ 
 
 def smiley_save_to_np():
     from keras.preprocessing.image import load_img
