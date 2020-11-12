@@ -10,40 +10,11 @@ import aid_cv2_dnn
 
 #this script contains all functions from AIDeveloper, that are required
 #to preprocess images before forwarding through a neural net
-def check_10_images(images,pos_x,pos_y,target_imsize):
-    
-    #preprocess the images
-    images = aid_cv2_dnn.image_preprocessing(images,pos_x=pos_x,pos_y=pos_y,pix=1,
-                                 target_imsize=target_imsize,
-                                 target_channels=1,
-                                 zoom_factor=1.0,
-                                 zoom_interpol_method=None,
-                                 padding_mode="cv2.BORDER_CONSTANT",
-                                 normalization_method="Div. by 255",
-                                 mean_trainingdata=None,
-                                 std_trainingdata=None)
-    
-    #Check that images have the correct dimension
-    assert images.shape[1]==target_imsize
-    assert images.shape[2]==target_imsize
-
-    #The best check is to have a look
-    fig = plt.figure(figsize=(10, 1))
-    columns = 10
-    rows = 1
-    indx = 0
-    for i in range(1, columns*rows +1):
-        img = images[indx,:,:,0]
-        fig.add_subplot(rows, columns, i)
-        plt.imshow(img,cmap="gray")
-        plt.axis('off')
-        indx+=1
-    plt.show()
 
 
-def test_image_preprocessing():
+def test_image_preprocessing(color_mode="Grayscale"):
     """
-    Create grayscale (A) or RGB (B) images which reflect all possible phenotypes:
+    Create grayscale or RGB (color_mode) images which reflect all possible phenotypes:
         
     1) raw image has odd width, but target image should have even width
     2) raw image has odd height, but target image should have even height
@@ -61,22 +32,58 @@ def test_image_preprocessing():
     f) target image wider than orignal image
     g) target image higher than orignal image
     h) target image wider and higher than orignal image
-        
+
+    Parameters
+    ---------- 
+    color_mode: str - either 'Grayscale', or 'RGB'; indicate whether the test 
+    should be performed for grayscale or for RGB images
     """
+
+    def check_10_images(images,pos_x,pos_y,target_imsize,target_channels):
+        #preprocess the images
+        images = aid_cv2_dnn.image_preprocessing(images,pos_x=pos_x,pos_y=pos_y,pix=1,
+                                     target_imsize=target_imsize,
+                                     target_channels=target_channels,
+                                     zoom_factor=1.0,
+                                     zoom_interpol_method=None,
+                                     padding_mode="cv2.BORDER_CONSTANT",
+                                     normalization_method="Div. by 255",
+                                     mean_trainingdata=None,
+                                     std_trainingdata=None)
+        
+        #Check that images have the correct dimension
+        assert images.shape[1]==target_imsize
+        assert images.shape[2]==target_imsize
     
-    #load an array that shows a smiley
-    smile = np.load("sunglasses_32pix.npy") #save as numpy array
+        #The best check is to have a look
+        fig = plt.figure(figsize=(10, 1))
+        columns = 10
+        rows = 1
+        indx = 0
+        for i in range(1, columns*rows +1):
+            if target_channels==1:
+                img = images[indx,:,:,0]
+            if target_channels==3:
+                img = images[indx]
+            fig.add_subplot(rows, columns, i)
+            plt.imshow(img,cmap="gray")
+            plt.axis('off')
+            indx+=1
+        plt.show()
 
-    #A: Grayscale
-    smile = (0.21 * smile[:,:,:1]) + (0.72 * smile[:,:,1:2]) + (0.07 * smile[:,:,-1:])
-    smile = smile[:,:,0] 
-    smile = smile.astype(np.uint8)           
-
-    def test_A(h,w,target_imsize):
-
+    def test_run(h,w,target_imsize,smile):
+        if len(smile.shape)==2:
+            target_channels = 1
+        if len(smile.shape)==3:
+            target_channels = 3
+        
         ###A1a (cells placed very far left)
         #random noise
-        images = np.random.randint(low=0,high=255,size=(10,h,w)).astype(np.uint8)
+        if len(smile.shape)==2:
+            images = np.random.randint(low=0,high=255,size=(10,h,w)).astype(np.uint8)
+        if len(smile.shape)==3:
+            images = np.random.randint(low=0,high=255,size=(10,h,w,3)).astype(np.uint8)
+
         #x position very far left:
         pos_x = np.random.randint(low=16,high=24,size=images.shape[0])
         #arbitrary height
@@ -84,11 +91,14 @@ def test_image_preprocessing():
         #put smileys on images
         for i in range(len(images)):
             images[i][pos_y[i]-16:pos_y[i]+16,pos_x[i]-16:pos_x[i]+16] = smile
-        check_10_images(images,pos_x,pos_y,target_imsize)
+        check_10_images(images,pos_x,pos_y,target_imsize,target_channels)
         
         ###A1b (cells placed very far right)
         #random noise
-        images = np.random.randint(low=0,high=255,size=(10,h,w)).astype(np.uint8)
+        if len(smile.shape)==2:
+            images = np.random.randint(low=0,high=255,size=(10,h,w)).astype(np.uint8)
+        if len(smile.shape)==3:
+            images = np.random.randint(low=0,high=255,size=(10,h,w,3)).astype(np.uint8)
         #x position very far right:
         pos_x = np.random.randint(low=w-24,high=w-16,size=images.shape[0])
         #arbitrary height
@@ -96,11 +106,14 @@ def test_image_preprocessing():
         #put smileys on images
         for i in range(len(images)):
             images[i][pos_y[i]-16:pos_y[i]+16,pos_x[i]-16:pos_x[i]+16] = smile
-        check_10_images(images,pos_x,pos_y,target_imsize)
+        check_10_images(images,pos_x,pos_y,target_imsize,target_channels)
     
         ###A1c (cells placed on top)
         #random noise
-        images = np.random.randint(low=0,high=255,size=(10,h,w)).astype(np.uint8)
+        if len(smile.shape)==2:
+            images = np.random.randint(low=0,high=255,size=(10,h,w)).astype(np.uint8)
+        if len(smile.shape)==3:
+            images = np.random.randint(low=0,high=255,size=(10,h,w,3)).astype(np.uint8)
         #x position random:
         pos_x = np.random.randint(low=16,high=w-16,size=images.shape[0])
         #cells very far up:
@@ -108,11 +121,14 @@ def test_image_preprocessing():
         #put smileys on images
         for i in range(len(images)):
             images[i][pos_y[i]-16:pos_y[i]+16,pos_x[i]-16:pos_x[i]+16] = smile
-        check_10_images(images,pos_x,pos_y,target_imsize)
+        check_10_images(images,pos_x,pos_y,target_imsize,target_channels)
     
         ###A1d (cells placed on bottom)
         #random noise
-        images = np.random.randint(low=0,high=255,size=(10,h,w)).astype(np.uint8)
+        if len(smile.shape)==2:
+            images = np.random.randint(low=0,high=255,size=(10,h,w)).astype(np.uint8)
+        if len(smile.shape)==3:
+            images = np.random.randint(low=0,high=255,size=(10,h,w,3)).astype(np.uint8)
         #x position random:
         pos_x = np.random.randint(low=16,high=w-16,size=images.shape[0])
         #cells very far down:
@@ -120,13 +136,16 @@ def test_image_preprocessing():
         #put smileys on images
         for i in range(len(images)):
             images[i][pos_y[i]-16:pos_y[i]+16,pos_x[i]-16:pos_x[i]+16] = smile
-        check_10_images(images,pos_x,pos_y,target_imsize)
+        check_10_images(images,pos_x,pos_y,target_imsize,target_channels)
     
         
         ###A1e (cells in each corner)
         ###Left  upper corner
         #random noise
-        images = np.random.randint(low=0,high=255,size=(10,h,w)).astype(np.uint8)
+        if len(smile.shape)==2:
+            images = np.random.randint(low=0,high=255,size=(10,h,w)).astype(np.uint8)
+        if len(smile.shape)==3:
+            images = np.random.randint(low=0,high=255,size=(10,h,w,3)).astype(np.uint8)
         #x position very far left:
         pos_x = np.random.randint(low=16,high=24,size=images.shape[0])
         #quite high
@@ -134,11 +153,14 @@ def test_image_preprocessing():
         #put smileys on images
         for i in range(len(images)):
             images[i][pos_y[i]-16:pos_y[i]+16,pos_x[i]-16:pos_x[i]+16] = smile
-        check_10_images(images,pos_x,pos_y,target_imsize)
+        check_10_images(images,pos_x,pos_y,target_imsize,target_channels)
         
         ###Right upper corner
         #random noise
-        images = np.random.randint(low=0,high=255,size=(10,h,w)).astype(np.uint8)
+        if len(smile.shape)==2:
+            images = np.random.randint(low=0,high=255,size=(10,h,w)).astype(np.uint8)
+        if len(smile.shape)==3:
+            images = np.random.randint(low=0,high=255,size=(10,h,w,3)).astype(np.uint8)
         #x position very far right:
         pos_x = np.random.randint(low=w-24,high=w-16,size=images.shape[0])
         #cells very far up:
@@ -146,11 +168,14 @@ def test_image_preprocessing():
         #put smileys on images
         for i in range(len(images)):
             images[i][pos_y[i]-16:pos_y[i]+16,pos_x[i]-16:pos_x[i]+16] = smile
-        check_10_images(images,pos_x,pos_y,target_imsize)
+        check_10_images(images,pos_x,pos_y,target_imsize,target_channels)
     
         ###Right lower corner    
         #random noise
-        images = np.random.randint(low=0,high=255,size=(10,h,w)).astype(np.uint8)
+        if len(smile.shape)==2:
+            images = np.random.randint(low=0,high=255,size=(10,h,w)).astype(np.uint8)
+        if len(smile.shape)==3:
+            images = np.random.randint(low=0,high=255,size=(10,h,w,3)).astype(np.uint8)
         #x position left:
         pos_x = np.random.randint(low=w-24,high=w-16,size=images.shape[0])
         #cells very far down:
@@ -158,11 +183,14 @@ def test_image_preprocessing():
         #put smileys on images
         for i in range(len(images)):
             images[i][pos_y[i]-16:pos_y[i]+16,pos_x[i]-16:pos_x[i]+16] = smile
-        check_10_images(images,pos_x,pos_y,target_imsize)
+        check_10_images(images,pos_x,pos_y,target_imsize,target_channels)
     
         ###Left lower corner    
         #random noise
-        images = np.random.randint(low=0,high=255,size=(10,h,w)).astype(np.uint8)
+        if len(smile.shape)==2:
+            images = np.random.randint(low=0,high=255,size=(10,h,w)).astype(np.uint8)
+        if len(smile.shape)==3:
+            images = np.random.randint(low=0,high=255,size=(10,h,w,3)).astype(np.uint8)
         #x position left:
         pos_x = np.random.randint(low=16,high=24,size=images.shape[0])
         #cells very far down:
@@ -170,29 +198,39 @@ def test_image_preprocessing():
         #put smileys on images
         for i in range(len(images)):
             images[i][pos_y[i]-16:pos_y[i]+16,pos_x[i]-16:pos_x[i]+16] = smile
-        check_10_images(images,pos_x,pos_y,target_imsize)
+        check_10_images(images,pos_x,pos_y,target_imsize,target_channels)
 
+    #load an array that shows a smiley
+    smile = np.load("sunglasses_32pix.npy") #save as numpy array
+    if color_mode=="Grayscale":
+        print("Perform tests for grayscale images")
+        #A: Grayscale
+        smile = (0.21 * smile[:,:,:1]) + (0.72 * smile[:,:,1:2]) + (0.07 * smile[:,:,-1:])
+        smile = smile[:,:,0] 
+        smile = smile.astype(np.uint8)           
+    if color_mode=="RGB":
+        print("Perform tests for RGB images")
 
     #1) raw image has odd width, but target image should have even width
-    test_A(h=80,w=249,target_imsize=48)
+    test_run(h=80,w=249,target_imsize=48,smile=smile)
     
     #2) raw image has odd height, but target image should have even height
-    test_A(h=79,w=250,target_imsize=48)
+    test_run(h=79,w=250,target_imsize=48,smile=smile)
 
     #3) raw image has odd width, and target image should also have odd width
-    test_A(h=80,w=249,target_imsize=47)
+    test_run(h=80,w=249,target_imsize=47,smile=smile)
 
     #4) raw image has odd height, and target image should also have odd height
-    test_A(h=79,w=250,target_imsize=47)
+    test_run(h=79,w=250,target_imsize=47,smile=smile)
 
     #f) target image wider than orignal image
-    test_A(h=79,w=48,target_imsize=64)
+    test_run(h=79,w=48,target_imsize=64,smile=smile)
     
     #g) target image higher than orignal image
-    test_A(h=48,w=249,target_imsize=64)
+    test_run(h=48,w=249,target_imsize=64,smile=smile)
 
     #h) target image wider and higher than orignal image
-    test_A(h=57,w=73,target_imsize=129)
+    test_run(h=57,w=73,target_imsize=129,smile=smile)
 
 
 def test_forward_images_cv2(rtdc_path,model_pb_path,meta_path,model_keras_path):
