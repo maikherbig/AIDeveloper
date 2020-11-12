@@ -235,7 +235,7 @@ Methods of OpenCV can be conducted indentically in Python and C++.
 Currently, AIDeveloper (version<=0.1.2) uses NumPy/SciPy for the following image processing steps:
 
 - [Padding: np.pad vs. cv2.copyMakeBorder](#padding-nppad-vs-cv2copymakeborder)
-- [Zooming (scipy.ndimage.zoom, replace by cv2.resize)](#zooming)
+- [Zooming: scipy.ndimage.zoom vs. cv2.resize)](#Zooming-scipyndimagezoom-vs-cv2resize)
 
 In the following, it is dicussed how a translation can be done and how the
 computational times compare.
@@ -284,7 +284,7 @@ borderType = pad_arguments_np2cv(mode)
 print(borderType)
 ```
 
-## Zooming
+## Zooming: scipy.ndimage.zoom vs. cv2.resize
 AIDeveloper v<=0.1.2 uses scipy.ndimage.zoom, and OpenCV offers a similar implementation (cv2.resize)
 which should be preferred as it would also be available in C++. 
 The advantage of scipy.ndimage.zoom is that arrays of multiple images can be processed simultaneously, while
