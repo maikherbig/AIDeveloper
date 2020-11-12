@@ -53,7 +53,7 @@ The following paragraphs show how to deploy a model, step by step:
 1. Start AIDeveloper and go to the "History"-Tab.
 2. Click the button 'Load model' on the lower left and choose a model that was trained earlier. 
 3. Use the dropdown menu on the lower right and choose 'Optimized TensorFlow .pb'. 
-4. Click the button 'Convert' on the lower right to run the conversion. After that you will find the correspoding model file in the same directory as the original model.  
+4. Click the button 'Convert' on the lower right to run the conversion. After that you will find the corresponding model file in the same directory as the original model.  
 ![alt text](https://github.com/maikherbig/AIDeveloper/blob/master/art/Export_Model_Combined_v01.png "Export Model")  
   
 ## Preprocess images 
@@ -66,7 +66,7 @@ You can load those settings using:
 img_processing_settings = aid_cv2_dnn.load_model_meta(meta_path)
 ```
 For image preprocessing, a dedicated function **aid_cv2_dnn.image_preprocessing**
-carries out the followig methods:
+carries out the following methods:
 
 - **image_adjust_channels**: adjust the number of channels of the images. Models in AIDeveloper can be trained using
 grayscale or RGB images and the resulting model then expects images with either 1, or 3 channels.
@@ -79,8 +79,8 @@ the magnification that was used during capturing the training set, zooming allow
 For example, lets say a model was trained using data that was captured using a 40x magnification.
 If your imaging system offers just a 20x objective, the difference in magnification could 
 be corrected by a zooming factor of 2.0. Keep in mind that objectives can result 
-in images of unique phenotype. Especially  differences in numerical aperture (NA) can lead to 
-differnt look of images and as a result the model will fail to predict correctly.
+in images of unique phenotype. Especially differences in numerical aperture (NA) can lead to 
+different look of images and as a result the model will fail to predict correctly.
 - **image_crop_pad_cv2**: crop images to particular size. In RT-DC, the location of 
 objects is known and given by pos_x and pos_y. Images are cropped such that the
 object is in the middle. If an object is too close to the border such that the 
@@ -89,7 +89,7 @@ pixels are padded accordingly.
 - **image_normalization**: This function carries out a normalization of the pixel
 values.
 
-Tests for that function are provedided [below](#test-image-preprocessing-test_image_preprocessing). 
+Tests for that function are provided [below](#test-image-preprocessing-test_image_preprocessing). 
 
 ## Forward images through neural net
 To load an exported model, use:
@@ -116,8 +116,8 @@ For testing, a dataset was generated and models were trained:
 
 ## Test image preprocessing (test_image_preprocessing)
 Irrespective of the location of the object, the function aid_cv2_dnn.image_preprocessing
-needs to return an image of the desired target size witht the object in the middle.
-To allow for a visual inspection, a smiley is placed on aribtrary positions on a noisy background.
+needs to return an image of the desired target size with the object in the middle.
+To allow for a visual inspection, a smiley is placed on arbitrary positions on a noisy background.
 The following conditions need to be tested.
 
 Create grayscale (A) or RGB (B) images which reflect all possible phenotypes:     
@@ -131,9 +131,9 @@ for each of i,ii,iii,iv, test following conditions:
 - b. cell far on the right
 - c. cell far on top
 - d. cell far on bottom
-- f. target image wider than orignal image
-- g. target image higher than orignal image
-- h. target image wider and higher than orignal image
+- f. target image wider than original image
+- g. target image higher than original image
+- h. target image wider and higher than original image
 
 All tests can be carried out using the following command:
 ```Python
@@ -168,12 +168,12 @@ For each model architecture, forwarding images should work for
 - RGB images.  
 
 The respective test function (test_forward_images_cv2) is contained in [aid_cv2_dnn_tests.py](https://github.com/maikherbig/AIDeveloper/blob/master/Tutorial%20Deploy%20to%20OpenCV%20dnn/aid_cv2_dnn_tests.py).
-Follwing script uses that function to conduct all tests.
+Following script uses that function to conduct all tests.
 
 ```Python
 import aid_cv2_dnn_tests
 
-#paths Smiley-Blink datasets (10 images) for grayscale and rgb images
+# paths to Smiley-Blink datasets (10 images) for grayscale and rgb images
 datasets = [r"Smileys_Data\blink_10_gray.rtdc",r"Smileys_Data\blink_10.rtdc"]
 
 for rtdc_path in datasets:
@@ -210,7 +210,7 @@ for rtdc_path in datasets:
 10 example smileys for each of the following phenotypes were downloaded: 'blink', 'happy', or 'sunglasses'.
 After resizing each smiley to 32x32 pixels, they were placed at random positions on a noisy background image (60x100 pixels):
 ![alt text](https://github.com/maikherbig/AIDeveloper/blob/master/art/Smiley_Blink_Examples_Gray.png "Smiley blink example images")  
-Finally, the images were written to a .rtdc file. 
+Finally, the images were written to an .rtdc file. 
 For details please see Create_rtdc_gray.py which is contained in 
 [Smileys_Data.zip](https://github.com/maikherbig/AIDeveloper/blob/master/Tutorial%20Deploy%20to%20OpenCV%20dnn/Smileys_Data.zip).
 
@@ -232,13 +232,13 @@ Models were trained using AIDeveloper 0.1.2, which you can download [here](https
 # Translate Numpy/SciPy operations to OpenCV
 Since some applications might want use to do model inferencing using pure C++, it would be 
 beneficial to use OpenCV operations instead of NumPy/SciPy. 
-Methods of OpenCV can be conducted indentically in Python and C++. 
+Methods of OpenCV can be conducted identically in Python and C++. 
 Currently, AIDeveloper (version<=0.1.2) uses NumPy/SciPy for the following image processing steps:
 
 - [Padding: np.pad vs. cv2.copyMakeBorder](#padding-nppad-vs-cv2copymakeborder)
 - [Zooming: scipy.ndimage.zoom vs. cv2.resize)](#Zooming-scipyndimagezoom-vs-cv2resize)
 
-In the following, it is dicussed how a translation can be done and how the
+In the following, it is discussed how a translation can be done and how the
 computational times compare.
 
 ## Padding: np.pad vs. cv2.copyMakeBorder
@@ -253,8 +253,8 @@ aid_cv2_dnn_tests.comp_time_padding()
 ```
 On my PC (Intel Core i7-4810MQ@2.8GHz, 24GB RAM) this functions returns:
 ```Python
-Numpy pad (stack of images): 1.01 seconds
-Numpy pad (loop over images): 0.86 seconds
+NumPy pad (stack of images): 1.01 seconds
+NumPy pad (loop over images): 0.86 seconds
 OpenCV pad (loop over images): 0.23 seconds
 ```
 -> Processing a stack of images in NumPy does not make it faster.  
