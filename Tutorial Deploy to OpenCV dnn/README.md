@@ -1,14 +1,16 @@
 
 ![alt text](https://github.com/maikherbig/AIDeveloper/blob/master/art/Logo_AID_2_OpenCV.png "AID to OpenCV Logo")  
 
-Along with this tutorial, all required materials/scripts will be provided to 
-export models from AID and run them using OpenCV's dnn module. Since the OpenCV 
+Along with this tutorial, all required materials/scripts are be provided to 
+export models from AID and run them using OpenCV's dnn module. Since OpenCV 
 also offers the same API in C++, loading models and forwarding images would work equivalently.  
 
-[First, an example](#example) is provided which shows how to load an .rtdc file, load a frozen model,
-perform image pre-processing and finally forward images throught the model.  
-[Next, a step by step instruction](#step-by-step-instruction) is provided with more explanation of the underlying code.  
-[Finally, tests and benchmarks](#tests-and-benchmarks) are provided. 
+- [An example](#example) is provided which shows how to load an .rtdc file, load a frozen model,
+perform image preprocessing, and finally forward images through the model.  
+- [A step by step instruction](#step-by-step-instruction) provides more explanation of the underlying code.  
+- [Test functions verify the integrity of the functions](#tests-and-benchmarks).
+- [Benchmarks justify usage of OpenCV instead of numpy for some image processing jobs](#benchmarks).
+
 
 # Example
 
@@ -44,7 +46,7 @@ predictions = aid_cv2_dnn.forward_images_cv2(model_pb,img_processing_settings,
 # Step by step instruction
 The following paragraphs show how to deploy a model, step by step:
 - [Export a model in AIDeveloper](#export-a-model-in-AIDeveloper) 
-- [Pre-process images](#pre-process-images)
+- [Preprocess images](#preprocess-images)
 - [Forward images through neural net](#forward-images-through-neural-net)
   
 ## Export a model in AIDeveloper
@@ -54,7 +56,7 @@ The following paragraphs show how to deploy a model, step by step:
 4. Click the button 'Convert' on the lower right to run the conversion. After that you will find the correspoding model file in the same directory as the original model.  
 ![alt text](https://github.com/maikherbig/AIDeveloper/blob/master/art/Export_Model_Combined_v01.png "Export Model")  
   
-## Pre-process images 
+## Preprocess images 
 The script [aid_cv2_dnn.py](https://github.com/maikherbig/AIDeveloper/blob/master/Tutorial%20Deploy%20to%20OpenCV%20dnn/aid_cv2_dnn.py) 
 contains all functions, required for preprocessing images of an .rtdc file. 
 It depends on the model, how image preprocessing is done and AIDeveloper saves these
@@ -63,7 +65,7 @@ You can load those settings using:
 ```Python
 img_processing_settings = aid_cv2_dnn.load_model_meta(meta_path)
 ```
-For image pre-processing, a dedicated function **aid_cv2_dnn.image_preprocessing**
+For image preprocessing, a dedicated function **aid_cv2_dnn.image_preprocessing**
 carries out the followig methods:
 
 - **image_adjust_channels**: adjust the number of channels of the images. Models in AIDeveloper can be trained using
@@ -94,21 +96,22 @@ To load an exported model, use:
 ```Python
 model_pb = cv2.dnn.readNet(model_pb_path)
 ```
-That model, along with the image pre-processing settings can now be used to 
+That model, along with the image preprocessing settings can now be used to 
 forward images of an rtdc file:
 ```Python
 predictions = aid_cv2_dnn.forward_images_cv2(model_pb,img_processing_settings,
                                              images,pos_x,pos_y,pix)
 ```
-Tests for that function are provided [below](#test-model-inference-forward_images_cv2)). 
+Tests for that function are provided [below](#test-model-inference-forward_images_cv2). 
 
 # Tests and benchmarks
 Following paragraphs cover test functions which are contained in [aid_cv2_dnn_tests.py](https://github.com/maikherbig/AIDeveloper/blob/master/Tutorial%20Deploy%20to%20OpenCV%20dnn/aid_cv2_dnn_tests.py).  
-Furthermore, details of the test-dataset are provided in [aid_cv2_dnn_tests.py](https://github.com/maikherbig/AIDeveloper/blob/master/Tutorial%20Deploy%20to%20OpenCV%20dnn/aid_cv2_dnn_tests.py).
+For testing, a dataset was generated and models were trained:  
+
 - [Test image preprocessing (image_preprocessing)](#test-image-preprocessing-test_image_preprocessing)
 - [Test model inference (forward_images_cv2)](#test-model-inference-forward_images_cv2)
 - [Generation of the smiley dataset](#generation-of-the-smiley-dataset)
-- Training the smiley classification model
+- [Training the smiley classification models](#training-the-smiley-classification-models)
 
 ## Test image preprocessing (test_image_preprocessing)
 Irrespective of the location of the object, the function aid_cv2_dnn.image_preprocessing
@@ -154,6 +157,7 @@ To assure that forwarding images works for simple and also for advanced
 model architectures, two models were trained on the smiley dataset:
 - multilayer perceptron with 3 layers  
 - convolutional neural net with dropout and batch-normalization layers   
+
 Furthermore, models may be trained using Grayscale or RGB images. For both options, models were
 prepared using AIDeveloper. You can find the trained models in 
 [Smileys_Models.zip](https://github.com/maikherbig/AIDeveloper/blob/master/Tutorial%20Deploy%20to%20OpenCV%20dnn/Smileys_Models.zip).
@@ -162,8 +166,8 @@ For each model architecture, forwarding images should work for
 - grayscale, and  
 - RGB images.  
 
-The respective test function is contained in aid_cv2_dnn_tests.py. Follwing script
-uses that function to conduct all tests.
+The respective test function (test_forward_images_cv2) is contained in [aid_cv2_dnn_tests.py](https://github.com/maikherbig/AIDeveloper/blob/master/Tutorial%20Deploy%20to%20OpenCV%20dnn/aid_cv2_dnn_tests.py).
+Follwing script uses that function to conduct all tests.
 
 ```Python
 import aid_cv2_dnn_tests
@@ -201,20 +205,40 @@ for rtdc_path in datasets:
     preds_cnn_rgb = aid_cv2_dnn_tests.test_forward_images_cv2(rtdc_path,model_pb_path,meta_path,model_keras_path)
 ```
 
-
-
 ## Generation of the smiley dataset
-Smileys of size 32x32 pixels showing 'blink', 'happy', or 'sunglasses' were placed at arbitrary positions on a noisy background:  
+10 example smileys for each of the following phenotypes were downloaded: 'blink', 'happy', or 'sunglasses'.
+After resizing each smiley to 32x32 pixels, they were placed at random positions on a noisy background image (60x100 pixels):
 ![alt text](https://github.com/maikherbig/AIDeveloper/blob/master/art/Smiley_Blink_Examples_Gray.png "Smiley blink example images")  
+Finally, the images were written to a .rtdc file. 
+For details please see Create_rtdc_gray.py which is contained in 
+[Smileys_Data.zip](https://github.com/maikherbig/AIDeveloper/blob/master/Tutorial%20Deploy%20to%20OpenCV%20dnn/Smileys_Data.zip).
+
+## Training the smiley classification models
+In total, 4 models were trained:
+- MLP64_gray: A multilayer perceptron with three layers, trained on grayscale images
+- MLP64_rgb: A multilayer perceptron with three layers, trained on RGB images
+- LeNet_bn_do_gray: A CNN with dropout and batchnorm layers, trained on grayscale images
+- LeNet_bn_do_rgb: A CNN with dropout and batchnorm layers, trained on RGB images
+
+Each model was trained for 10.000 iterations. Since the dataset contains only 10
+images, each model overfitted dramatically. This is OK since we just want to
+use the models to predict the exact same images and no new images. Please find
+final models and meta files in [Smileys_Models.zip](https://github.com/maikherbig/AIDeveloper/blob/master/Tutorial%20Deploy%20to%20OpenCV%20dnn/Smileys_Models.zip).
+The meta files contain information of the parameters used during training.
+Models were trained using AIDeveloper 0.1.2, which you can download [here](https://github.com/maikherbig/AIDeveloper/releases/tag/0.1.2).
 
 
+# Benchmarks
+Image preprocessing workflows of [aid_cv2_dnn.py](https://github.com/maikherbig/AIDeveloper/blob/master/Tutorial%20Deploy%20to%20OpenCV%20dnn/aid_cv2_dnn.py)
+use OpenCV implementations, while AIDeveloper <=0.1.2 used numpy
+
+The follwing image processing steps are affected
+- [Padding](#padding)
+- [Zooming](#zooming)
 
 
+## Padding
 
-
-
-## Benchmarks
-### Padding
 AIDeveloper v<=0.1.2 uses np.pad, but OpenCV offers a similar implementation which 
 should be preferred as it would also be available in C++. 
 **aid_cv2_dnn_tests.pad_functions_compare** compares both functions and 
