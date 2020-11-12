@@ -9,7 +9,7 @@ also offers the same API in C++, loading models and forwarding images would work
 perform image preprocessing, and finally forward images through the model.  
 - [A step by step instruction](#step-by-step-instruction) provides more explanation of the underlying code.  
 - [Verify the integrity of the methods: Test functions](#test-functions).
-- [Benchmarks justify usage of OpenCV instead of numpy for some image processing jobs](#translate-numpyscipy-operations-to-opencv).
+- [Benchmarks to justify usage of OpenCV instead of NumPy/SciPy for some image processing jobs](#translate-numpyscipy-operations-to-opencv).
 
 
 # Example
@@ -106,10 +106,11 @@ Tests for that function are provided [below](#test-model-inference-forward_image
 
 # Test functions
 Following paragraphs cover test functions which are contained in [aid_cv2_dnn_tests.py](https://github.com/maikherbig/AIDeveloper/blob/master/Tutorial%20Deploy%20to%20OpenCV%20dnn/aid_cv2_dnn_tests.py).  
-For testing, a dataset was generated and models were trained:  
 
 - [Test image preprocessing (image_preprocessing)](#test-image-preprocessing-test_image_preprocessing)
 - [Test model inference (forward_images_cv2)](#test-model-inference-forward_images_cv2)
+
+For testing, a dataset was generated and models were trained:  
 - [Generation of the smiley dataset](#generation-of-the-smiley-dataset)
 - [Training the smiley classification models](#training-the-smiley-classification-models)
 
@@ -241,7 +242,7 @@ In the following, it is dicussed how a translation can be done and how the
 computational times compare.
 
 ## Padding: np.pad vs. cv2.copyMakeBorder
-AIDeveloper v<=0.1.2 uses np.pad, and OpenCV offers a similar implementation (cv2.copyMakeBorder)
+AIDeveloper v.<=0.1.2 uses np.pad, and OpenCV offers a similar implementation (cv2.copyMakeBorder)
 which should be preferred as it would also be available in C++. 
 The advantage of np.pad is that arrays of multiple images can be processed simultaneously, while
 OpenCV's cv2.copyMakeBorder only accepts one image at a time. Hence, copyMakeBorder requires to use 
@@ -285,7 +286,7 @@ print(borderType)
 ```
 
 ## Zooming: scipy.ndimage.zoom vs. cv2.resize
-AIDeveloper v<=0.1.2 uses scipy.ndimage.zoom, and OpenCV offers a similar implementation (cv2.resize)
+AIDeveloper v.<=0.1.2 uses scipy.ndimage.zoom, and OpenCV offers a similar implementation (cv2.resize)
 which should be preferred as it would also be available in C++. 
 The advantage of scipy.ndimage.zoom is that arrays of multiple images can be processed simultaneously, while
 OpenCV's cv2.resize only accepts one image at a time. Hence, cv2.resize requires to use 
