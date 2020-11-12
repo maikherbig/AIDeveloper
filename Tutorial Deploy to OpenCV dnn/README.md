@@ -229,7 +229,7 @@ Models were trained using AIDeveloper 0.1.2, which you can download [here](https
 
 
 # Benchmarks
-Since some aplications might want to do model inferece using pure C++, it would be 
+Since some applications might want use to do model inferencing using pure C++, it would be 
 beneficial to use OpenCV operations instead of NumPy/SciPy. 
 Methods of OpenCV can be conducted indentically in Python and C++. 
 Currently, AIDeveloper (version<=0.1.2) uses NumPy/SciPy for the following image processing steps:
@@ -237,11 +237,12 @@ Currently, AIDeveloper (version<=0.1.2) uses NumPy/SciPy for the following image
 - [Padding: np.pad vs. cv2.copyMakeBorder](#padding-nppad-vs-cv2copymakeborder)
 - [Zooming (scipy.ndimage.zoom, replace by cv2.resize)](#zooming)
 
-In the following, computational times of NumPy/SciPy and OpenCV implementations are compared.
+In the following, it is dicussed how a translation can be done and how the
+computational times compare.
 
 ## Padding: np.pad vs. cv2.copyMakeBorder
-AIDeveloper v<=0.1.2 uses np.pad, and OpenCV offers a similar implementation which 
-should be preferred as it would also be available in C++. 
+AIDeveloper v<=0.1.2 uses np.pad, and OpenCV offers a similar implementation (cv2.copyMakeBorder)
+which should be preferred as it would also be available in C++. 
 The advantage of np.pad is that arrays of multiple images can be processed simultaneously, while
 OpenCV's cv2.copyMakeBorder only accepts one image at a time. Hence, copyMakeBorder requires to use 
 a for loop to process all images individually. To run a test of computational times, run the following code:
@@ -255,8 +256,8 @@ Numpy pad (stack of images): 1.01 seconds
 Numpy pad (loop over images): 0.86 seconds
 OpenCV pad (loop over images): 0.23 seconds
 ```
--> Stack processing images in NumPy does not make it faster
--> Using OpenCV is fastest, despite using a for-loop!
+-> Processing a stack of images in NumPy does not make it faster.  
+-> Using OpenCV is fastest, despite using a for-loop!  
 
 The functions 'np.pad' and 'cv2.copyMakeBorder' accept different arguments and
 the following code shows exemplarily how the same result can be obtained using both functions:
@@ -278,11 +279,43 @@ are identical.
 To translate NumPy's mode to the corresponding borderType for OpenCV you can use:
 ```Python
 import aid_cv2_dnn
-borderType = pad_arguments_np2cv("reflect")
+mode = "reflect" #a mode for np.pad
+borderType = pad_arguments_np2cv(mode)
 print(borderType)
 ```
 
 ## Zooming
+AIDeveloper v<=0.1.2 uses scipy.ndimage.zoom, and OpenCV offers a similar implementation (cv2.resize)
+which should be preferred as it would also be available in C++. 
+The advantage of scipy.ndimage.zoom is that arrays of multiple images can be processed simultaneously, while
+OpenCV's cv2.resize only accepts one image at a time. Hence, cv2.resize requires to use 
+a for loop to process all images individually. To run a test of computational times, run the following code:
+```Python
+import aid_cv2_dnn_tests
+aid_cv2_dnn_tests.comp_time_zoom()
+```
+On my PC (Intel Core i7-4810MQ@2.8GHz, 24GB RAM) this functions returns:
+```Python
+SciPy ndimage.zoom: 13.5 seconds
+OpenCV resize: 0.5 seconds
+```
+-> The implementation of OpenCV is 27x faster (despite using a for loop)!  
+  
+The functions 'scipy.ndimage.zoom' and 'cv2.resize' accept different arguments and
+I prepared a function that allows to compare the results of both functions given
+certain arguments (see **zoom_functions_compare** in [aid_cv2_dnn_tests.py](https://github.com/maikherbig/AIDeveloper/blob/master/Tutorial%20Deploy%20to%20OpenCV%20dnn/aid_cv2_dnn_tests.py).)
+Unfortunately, I could'nt find any set of function arguments where SciPy and OpenCV returned 
+identical images! Hence, I conducted a pixel-wise comparison to find arguments,
+that return at least somewhat similar images. The following code shows how to
+translate arguments from scipy.ndimage.zoom to the corresponding arguments for cv2.resize:
+```Python
+import aid_cv2_dnn
+zoom_factor = 1.2
+zoom_interpol_method = 0 # The order of the spline interpolation
+zoom_interpol_method_cv2 =  aid_cv2_dnn.zoom_arguments_scipy2cv(zoom_factor,zoom_interpol_method)
+print(zoom_interpol_method_cv2)
+```
+
 
 
 
