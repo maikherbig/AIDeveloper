@@ -80,7 +80,8 @@ pip install tensorflow==1.12.3
 pip install scikit-learn==0.20.0
 pip install dclab==0.22.1
 pip install Pillow==5.4.1
-pip install pandas==0.24.0 psutil==5.4.7
+pip install pandas==0.24.0 
+pip install psutil==5.4.7
 pip install mkl==2019.0
 pip install pyqt5==5.9.2
 pip install pyqtgraph==0.11.0
@@ -89,7 +90,7 @@ pip install opencv-contrib-python-headless==4.4.0.42
 pip install openpyxl==2.5.6
 pip install xlrd==1.1.0
 pip install keras2onnx==1.4.0
-pip install libopencv
+pip install libopencv==0.0.1
 pip install ffmpeg==1.4
 pip install tf2onnx==1.4.1
 pip install numpy==1.16.4
