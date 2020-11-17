@@ -667,7 +667,7 @@ def zoom_arguments_scipy2cv(zoom_factor,zoom_interpol_method):
         elif zoom_interpol_method==4: return "cv2.INTER_LANCZOS4"
         elif zoom_interpol_method==5: return "cv2.INTER_LANCZOS4"
 
-    if zoom_factor<=0.8: #for downsampling the image, all methods perform similar
+    if zoom_factor<0.8: #for downsampling the image, all methods perform similar
         #but cv2.INTER_LINEAR, is closest most of the time, irrespective of the zoom_order
         return "cv2.INTER_LINEAR"
 
