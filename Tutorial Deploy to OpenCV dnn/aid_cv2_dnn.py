@@ -658,6 +658,10 @@ def zoom_arguments_scipy2cv(zoom_factor,zoom_interpol_method):
     ----------    
     str; OpenCV interpolation flag
     """
+    opencv_zoom_options = ["cv2.INTER_NEAREST","cv2.INTER_LINEAR","cv2.INTER_AREA","cv2.INTER_CUBIC","cv2.INTER_LANCZOS4"]
+    if type(zoom_interpol_method)==str:
+        if zoom_interpol_method in opencv_zoom_options:
+            return zoom_interpol_method
     
     if zoom_factor>=0.8:
         if zoom_interpol_method==0: return "cv2.INTER_NEAREST"
@@ -670,6 +674,7 @@ def zoom_arguments_scipy2cv(zoom_factor,zoom_interpol_method):
     if zoom_factor<0.8: #for downsampling the image, all methods perform similar
         #but cv2.INTER_LINEAR, is closest most of the time, irrespective of the zoom_order
         return "cv2.INTER_LINEAR"
+
 
 
 
