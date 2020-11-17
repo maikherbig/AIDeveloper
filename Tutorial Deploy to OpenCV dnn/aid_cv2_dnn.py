@@ -469,6 +469,11 @@ def load_model_meta(meta_path):
     zoom_factor = meta["zoom_factor"].iloc[0]#should images be zoomed before forwarding through neural net?
 
     meta = pd.read_excel(xlsx,sheet_name="Parameters")
+
+    try:
+        model_type = meta["Chosen Model"].iloc[0]#input dimensions of the model
+    except:
+        model_type = "Unknown"
     
     try:
         target_imsize = meta["Input image crop"].iloc[0]#input dimensions of the model
@@ -515,6 +520,7 @@ def load_model_meta(meta_path):
 
     #Write information in one DataFrame
     img_processing_settings = pd.DataFrame()
+    img_processing_settings["model_type"]=model_type,
     img_processing_settings["target_imsize"]=target_imsize,
     img_processing_settings["target_channels"]=target_channels,
     img_processing_settings["normalization_method"]=normalization_method,
@@ -525,6 +531,7 @@ def load_model_meta(meta_path):
     img_processing_settings["padding_mode"]=padding_mode,
     
     return img_processing_settings
+
 
 
 def forward_images_cv2(model_pb,img_processing_settings,images,pos_x,pos_y,pix):
