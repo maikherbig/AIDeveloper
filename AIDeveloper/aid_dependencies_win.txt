@@ -1,4 +1,3 @@
-#Windows
 # Name                    Version                   Build  Channel
 absl-py                   0.9.0                     <pip>
 altgraph                  0.17                      <pip>
@@ -24,7 +23,7 @@ mkl                       2019.0                    <pip>
 numpy                     1.16.4                    <pip>
 onnx                      1.6.0                     <pip>
 onnxconverter-common      1.6.1                     <pip>
-opencv-contrib-python-headless 4.4.0.42                  <pip>
+opencv-contrib-python-headless 4.1.1.26                  <pip>
 openpyxl                  2.5.6                     <pip>
 pandas                    0.24.0                    <pip>
 pefile                    2019.4.18                 <pip>
@@ -34,7 +33,7 @@ protobuf                  3.11.3                    <pip>
 psutil                    5.4.7                     <pip>
 pyinstaller               4.0.dev0+80d5078081           <pip>
 PyQt5                     5.9.2                     <pip>
-pyqtgraph                 0.11.0rc0                 <pip>
+pyqtgraph                 0.11.0                    <pip>
 python                    3.5.6                he025d50_0
 python-dateutil           2.8.1                     <pip>
 pytz                      2020.1                    <pip>
@@ -42,6 +41,7 @@ pywin32-ctypes            0.2.0                     <pip>
 PyYAML                    5.3.1                     <pip>
 scikit-learn              0.20.0                    <pip>
 scipy                     1.4.1                     <pip>
+setuptools                40.2.0                   py35_0
 setuptools                46.1.3                    <pip>
 sip                       4.19.8                    <pip>
 six                       1.14.0                    <pip>
