@@ -41,7 +41,7 @@ protobuf                  3.11.3                   pypi_0    pypi
 psutil                    5.4.7                    pypi_0    pypi
 pyinstaller               4.0.dev0+4c7739a615          pypi_0    pypi
 pyqt5                     5.9.2                    pypi_0    pypi
-pyqtgraph                 0.11.0rc0                pypi_0    pypi
+pyqtgraph                 0.11.0                   pypi_0    pypi
 python                    3.5.6                hc3d631a_0  
 python-dateutil           2.8.1                    pypi_0    pypi
 pytz                      2020.1                   pypi_0    pypi
