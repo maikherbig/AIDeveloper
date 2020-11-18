@@ -31,7 +31,7 @@ ncurses                   6.2                  he6710b0_1
 numpy                     1.16.4                   pypi_0    pypi
 onnx                      1.7.0                    pypi_0    pypi
 onnxconverter-common      1.6.1                    pypi_0    pypi
-opencv-contrib-python-headless 4.1.1.26                 pypi_0    pypi
+opencv-contrib-python-headless 4.4.0.42                 pypi_0    pypi
 openpyxl                  2.5.6                    pypi_0    pypi
 openssl                   1.0.2u               h7b6447c_0  
 pandas                    0.24.0                   pypi_0    pypi
