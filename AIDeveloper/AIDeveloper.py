@@ -119,7 +119,7 @@ import aid_img, aid_dl, aid_bin
 import aid_frontend
 from partial_trainability import partial_trainability
 
-VERSION = "0.1.2_dev5" #Python 3.5.6 Version
+VERSION = "0.1.2_dev7" #Python 3.5.6 Version
 model_zoo_version = model_zoo.__version__()
 print("AIDeveloper Version: "+VERSION)
 print("model_zoo.py Version: "+model_zoo.__version__())
@@ -383,7 +383,7 @@ class MainWindow(QtWidgets.QMainWindow):
                         Default_dict["Image_import_dimension"] = final_h
 
                         if self.popup_imgRes_ui.radioButton_imgResize_cropPad.isChecked():#cropping and padding method
-                            images = aid_img.image_resize_crop_pad(images,pos_x,pos_y,final_h,final_w,channels,verbose=False,padding_mode='constant')
+                            images = aid_img.image_crop_pad_cv2(images,pos_x,pos_y,final_h,final_w,channels,padding_mode="cv2.BORDER_CONSTANT")
                         elif self.popup_imgRes_ui.radioButton_imgResize_interpolate.isChecked():
                             interpolation_method = str(self.popup_imgRes_ui.comboBox_resizeMethod.currentText())
                             Default_dict["Image_import_interpol_method"] = interpolation_method
@@ -5378,9 +5378,9 @@ class MainWindow(QtWidgets.QMainWindow):
             #get it to theano image format (channels first)
             #X_valid = X_valid.swapaxes(-1,-2).swapaxes(-2,-3)
             if norm == "StdScaling using mean and std of all training data":
-                X_valid = aid_img.norm_imgs(X_valid,norm,mean_trainingdata,std_trainingdata)
+                X_valid = aid_img.image_normalization(X_valid,norm,mean_trainingdata,std_trainingdata)
             else:
-                X_valid = aid_img.norm_imgs(X_valid,norm)
+                X_valid = aid_img.image_normalization(X_valid,norm)
     
             #Validation data can be cropped to final size already since no augmentation
             #will happen on this data set
@@ -6047,9 +6047,9 @@ class MainWindow(QtWidgets.QMainWindow):
     
                             t3 = time.time()
                             if norm == "StdScaling using mean and std of all training data":
-                                X_batch = aid_img.norm_imgs(X_batch,norm,mean_trainingdata,std_trainingdata)
+                                X_batch = aid_img.image_normalization(X_batch,norm,mean_trainingdata,std_trainingdata)
                             else:
-                                X_batch = aid_img.norm_imgs(X_batch,norm)
+                                X_batch = aid_img.image_normalization(X_batch,norm)
                             t4 = time.time()
                             if verbose == 1:
                                 print("Time to apply normalization="+str(t4-t3))
@@ -7209,9 +7209,9 @@ class MainWindow(QtWidgets.QMainWindow):
                 X_valid = np.expand_dims(X_valid,3)
     
             if norm == "StdScaling using mean and std of all training data":
-                X_valid = aid_img.norm_imgs(X_valid,norm,mean_trainingdata,std_trainingdata)
+                X_valid = aid_img.image_normalization(X_valid,norm,mean_trainingdata,std_trainingdata)
             else:
-                X_valid = aid_img.norm_imgs(X_valid,norm)
+                X_valid = aid_img.image_normalization(X_valid,norm)
     
             #Validation data can be cropped to final size already since no augmentation
             #will happen on this data set
@@ -7360,9 +7360,9 @@ class MainWindow(QtWidgets.QMainWindow):
 
             t3 = time.time()
             if norm == "StdScaling using mean and std of all training data":
-                X_train = aid_img.norm_imgs(X_train,norm,mean_trainingdata,std_trainingdata)
+                X_train = aid_img.image_normalization(X_train,norm,mean_trainingdata,std_trainingdata)
             else:
-                X_train = aid_img.norm_imgs(X_train,norm)
+                X_train = aid_img.image_normalization(X_train,norm)
             t4 = time.time()
             if verbose == 1:
                 print("Time to apply normalization="+str(t4-t3))
@@ -7730,9 +7730,9 @@ class MainWindow(QtWidgets.QMainWindow):
             X_batch = aid_img.brightn_noise_augm_cv2(X_batch,brightness_add_lower,brightness_add_upper,brightness_mult_lower,brightness_mult_upper,gaussnoise_mean,gaussnoise_scale)
 
             if norm == "StdScaling using mean and std of all training data":
-                X_batch = aid_img.norm_imgs(X_batch,norm,mean_trainingdata,std_trainingdata)
+                X_batch = aid_img.image_normalization(X_batch,norm,mean_trainingdata,std_trainingdata)
             else:
-                X_batch = aid_img.norm_imgs(X_batch,norm)
+                X_batch = aid_img.image_normalization(X_batch,norm)
             
             X = X_batch
             if verbose: print("Shape of the shown images is:"+str(X.shape))
@@ -7771,9 +7771,9 @@ class MainWindow(QtWidgets.QMainWindow):
                 X = np.expand_dims(X,3)
         
         if norm == "StdScaling using mean and std of all training data":
-            X = aid_img.norm_imgs(X,norm,mean_trainingdata,std_trainingdata)
+            X = aid_img.image_normalization(X,norm,mean_trainingdata,std_trainingdata)
         else:
-            X = aid_img.norm_imgs(X,norm)
+            X = aid_img.image_normalization(X,norm)
         
         if verbose: print("Shape of the shown images is: "+str(X.shape))
                 
@@ -8035,9 +8035,9 @@ class MainWindow(QtWidgets.QMainWindow):
             X_batch = aid_img.brightn_noise_augm_cv2(X_batch,brightness_add_lower,brightness_add_upper,brightness_mult_lower,brightness_mult_upper,gaussnoise_mean,gaussnoise_scale)
             
             if norm == "StdScaling using mean and std of all training data":
-                X_batch = aid_img.norm_imgs(X_batch,norm,mean_trainingdata,std_trainingdata)
+                X_batch = aid_img.image_normalization(X_batch,norm,mean_trainingdata,std_trainingdata)
             else:
-                X_batch = aid_img.norm_imgs(X_batch,norm)
+                X_batch = aid_img.image_normalization(X_batch,norm)
             X = X_batch
             
         elif w_or_wo_augm=='Original image':
@@ -8074,9 +8074,9 @@ class MainWindow(QtWidgets.QMainWindow):
                 X = np.expand_dims(X,3)
 
             if norm == "StdScaling using mean and std of all training data":
-                X = aid_img.norm_imgs(X,norm,mean_trainingdata,std_trainingdata)
+                X = aid_img.image_normalization(X,norm,mean_trainingdata,std_trainingdata)
             else:
-                X = aid_img.norm_imgs(X,norm)
+                X = aid_img.image_normalization(X,norm)
                 
         #Is there already anything shown on the widget?
         children = self.fittingpopups_ui[listindex].widget_ViewImages_pop.findChildren(QtWidgets.QGridLayout)
@@ -9317,21 +9317,21 @@ class MainWindow(QtWidgets.QMainWindow):
                 msg.setStandardButtons(QtWidgets.QMessageBox.Ok)
                 msg.exec_()
                 return
-                
 
-            path,fname = os.path.split(self.load_model_path)        
+            modelindex = int(self.spinBox_ModelIndex_2.value())
+            path,fname = os.path.split(self.load_model_path)    
             fname = fname.split(str(modelindex)+".model")[0]+"meta.xlsx"
             metafile_path = os.path.join(path,fname)
 
             try:
-                parameters = pd.read_excel(metafile_path,sheet_name='Parameters')
-                norm = str(parameters["Normalization"].values[0])
-                model_type = str(parameters["Chosen Model"].values[0])
+                img_processing_settings = aid_img.load_model_meta(metafile_path)
+                self.img_processing_settings = img_processing_settings
+                model_type = str(img_processing_settings["model_type"].values[0])                
+                normalization_method = str(img_processing_settings["normalization_method"].values[0])
                 
-                index = self.comboBox_Normalization_2.findText(norm, QtCore.Qt.MatchFixedString)
+                index = self.comboBox_Normalization_2.findText(normalization_method, QtCore.Qt.MatchFixedString)
                 if index >= 0:
                     self.comboBox_Normalization_2.setCurrentIndex(index)
-                    
                 else:
                     msg = QtWidgets.QMessageBox()
                     msg.setIcon(QtWidgets.QMessageBox.Information)       
@@ -9615,9 +9615,9 @@ class MainWindow(QtWidgets.QMainWindow):
 
         if get_normalized == True:
             if norm == "StdScaling using mean and std of all training data":
-                X_valid = aid_img.norm_imgs(X_valid,norm,mean_trainingdata,std_trainingdata)
+                X_valid = aid_img.image_normalization(X_valid,norm,mean_trainingdata,std_trainingdata)
             else:
-                X_valid = aid_img.norm_imgs(X_valid,norm)
+                X_valid = aid_img.image_normalization(X_valid,norm)
         else:
             X_valid = None
         dic = {"SelectedFiles_valid":SelectedFiles_valid,"nr_events_epoch_valid":nr_events_epoch_valid,"rtdc_path_valid":rtdc_path_valid,"X_valid_orig":X_valid_orig,"X_valid":X_valid,"y_valid":y_valid,"Indices":Indices,"Xtra_in":Xtra_in}
@@ -9693,7 +9693,7 @@ class MainWindow(QtWidgets.QMainWindow):
         filename = QtWidgets.QFileDialog.getOpenFileName(self, 'Open Valid_Data.rtdc', Default_dict["Path of last model"],".rtdc file (*_Valid_Data.rtdc)")
         filename = filename[0]
         rtdc_path = filename
-        #Load the images:
+
         if len(filename)==0:
             msg = QtWidgets.QMessageBox()
             msg.setIcon(QtWidgets.QMessageBox.Information)       
@@ -9728,10 +9728,19 @@ class MainWindow(QtWidgets.QMainWindow):
             msg.exec_()
             return
         
+        #Load meta file
+        #filename_meta = filename.split("Valid_Data.rtdc")[0]+"meta.xlsx"
+
         #Make the Image dimensions matching the requirements of the model
         model_in = int(self.spinBox_Crop_2.value())
         model_out = int(self.spinBox_OutClasses_2.value())
         color_mode = str(self.comboBox_loadedRGBorGray.currentText())
+        
+#        if color_mode=='RGB': #User wants RGB images
+#            target_channels = 3
+#        if color_mode=='Grayscale': # User want to have Grayscale
+#            target_channels = 1
+
         if model_in==1 and model_out==1:
             msg = QtWidgets.QMessageBox()
             msg.setIcon(QtWidgets.QMessageBox.Information)       
@@ -9742,70 +9751,26 @@ class MainWindow(QtWidgets.QMainWindow):
             return
         
         x_valid = np.array(rtdc_ds["image"])
-        dim = x_valid.shape[1]
-        channels = x_valid.shape[-1]
-        if channels==3 and color_mode=="RGB": #this would fit :)
-            pass
-        if channels==3 and color_mode=="Grayscale": #we have to convert to grayscale
-            print("Use luminosity formula to convert RGB input data to grayscale")
-            x_valid = (0.21 * x_valid[:,:,:,:1]) + (0.72 * x_valid[:,:,:,1:2]) + (0.07 * x_valid[:,:,:,-1:])
-            x_valid = x_valid[:,:,:,0] 
-            x_valid  = x_valid.astype(np.uint8)           
-            channels=1
-            
-        if channels==1 and color_mode=="Grayscale":#this would fit :)
-            pass
-        if channels==1 and color_mode=="RGB": #this would require conversion from gray to RGB, but this is not trivial!
-            msg = QtWidgets.QMessageBox()
-            msg.setIcon(QtWidgets.QMessageBox.Information)       
-            msg.setText("Loaded data is only Grayscale, while the model needs RGB. There is no conversion possible.")
-            msg.setWindowTitle("Grayscale vs RGB error")
-            msg.setStandardButtons(QtWidgets.QMessageBox.Ok)
-            msg.exec_()
-            return
+        #dim = x_valid.shape[1]
+        #channels = x_valid.shape[-1]
 
-        #The shape of Original images is not squared
-        if x_valid.shape[1]!=x_valid.shape[2]:
-            print("Images are non-squared->use aid_img.gen_crop_img")
-            #Use aid_img.gen_crop_img to crop with respect to centroid
-            gen_valid = aid_img.gen_crop_img(model_in,rtdc_path,random_images=False)
-            x_valid,index,xtra_valid = next(gen_valid)
-            #When object is too far at side of image, the frame is dropped.
-            #Consider this for y_valid
-            y_valid = y_valid[index]
-        #Otherwise, if the shape is squared:
-        elif x_valid.shape[1]==x_valid.shape[2]:
-            #simply grab the images, if the shape is fitting already:
-            if model_in==x_valid.shape[1]:
-                print("Images already have the correct dimensions")
-                x_valid = x_valid        
-            #Otherwise, adjust the dimensions by cropping:
-            elif model_in<x_valid.shape[1]: #Model input is smaller and images in rtdc_ds are already squared
-                print("Squared images are cropped to correct size")
-                remove = int(dim/2.0 - model_in/2.0)
-                print("Crop validation images to " +str(model_in) +"x"+str(model_in) +" pix")
-                x_valid = x_valid[:,remove:remove+model_in,remove:remove+model_in] #crop 
+        #Get further image processing settings from self.
+        zoom_factor = float(self.img_processing_settings["zoom_factor"].values[0])
+        zoom_interpol_method = str(self.img_processing_settings["zoom_interpol_method"].values[0])
+        padding_mode = str(self.img_processing_settings["padding_mode"].values[0])
+        
+        #normalization_method = str(self.img_processing_settings["normalization_method"].values[0])
+        norm = self.comboBox_Normalization_2.currentText()
+        norm = str(norm)
+        mean_trainingdata = self.img_processing_settings["mean_trainingdata"].values[0]
+        std_trainingdata = self.img_processing_settings["std_trainingdata"].values[0]
 
-            elif model_in>x_valid.shape[1]: #Model needs larger images than what was found in .rtdc! Ups!
-                #Inform user!
-                msg = QtWidgets.QMessageBox()
-                msg.setIcon(QtWidgets.QMessageBox.Information)       
-                msg.setText("Model input dimension ("+str(model_in)+"x"+str(model_in)+"pix)\
-                            is larger than validation data dimension ("+str(x_valid.shape)+"). \
-                            Program will use padding to increase image dimensions. \
-                            It would be better to get original images that are larger and crop them!")
-                msg.setWindowTitle("Wrong image dimension")
-                msg.setStandardButtons(QtWidgets.QMessageBox.Ok)
-                msg.exec_()
-
-                diff = int(0.5*(model_in-dim))
-                #attach this number of rows and cols to the left,right,up,down
-                if color_mode=="Grayscale":
-                    x_valid = [np.pad(x_valid[i,:,:], ((diff,diff),(diff,diff)), 'constant') for i in range(len(x_valid))]
-                elif color_mode=="RGB":
-                    x_valid = [np.pad(x_valid[i,:,:,:], ((diff,diff),(diff,diff),(0,0)), 'constant') for i in range(len(x_valid))]
-                    
-                x_valid = np.r_[x_valid]
+        gen_valid = aid_img.gen_crop_img(cropsize=model_in,rtdc_path=rtdc_path,random_images=False,zoom_factor=zoom_factor,zoom_order=zoom_interpol_method,color_mode=color_mode,padding_mode=padding_mode,xtra_in=False)
+        x_valid,index,xtra_valid = next(gen_valid)
+        #When object is too far at side of image, the frame is dropped.
+        #Consider this for y_valid
+        y_valid = y_valid[index]
+       
 
         if not model_in==x_valid.shape[-2]:
             msg = QtWidgets.QMessageBox()
@@ -9816,33 +9781,19 @@ class MainWindow(QtWidgets.QMainWindow):
             msg.exec_()
 
         #Normalize the images
-        norm = self.comboBox_Normalization_2.currentText()
-        norm = str(norm)
-        #if normalization method needs mean/std of training set, the metafile needs to be loaded:
-        if norm == "StdScaling using mean and std of all training data":
-            modelindex = int(self.spinBox_ModelIndex_2.value())
-            path,fname = os.path.split(self.load_model_path)    
-            fname = fname.split(str(modelindex)+".model")[0]+"meta.xlsx"
-            metafile_path = os.path.join(path,fname)
-            parameters = pd.read_excel(metafile_path,sheet_name='Parameters')
-            mean_trainingdata = parameters["Mean of training data used for scaling"]
-            std_trainingdata = parameters["Std of training data used for scaling"]
-        else:
-            mean_trainingdata = None
-            std_trainingdata = None
-
         X_valid_orig = np.copy(x_valid) #copy the cropped but non-normalized images
         if norm == "StdScaling using mean and std of all training data":
-            X_valid = aid_img.norm_imgs(x_valid,norm,mean_trainingdata,std_trainingdata)
+            X_valid = aid_img.image_normalization(x_valid,norm,mean_trainingdata,std_trainingdata)
         else:
-            X_valid = aid_img.norm_imgs(x_valid,norm)
+            X_valid = aid_img.image_normalization(x_valid,norm)
+        
         Indices = np.array(range(X_valid.shape[0])) #those are just indices to identify single cells in the file ->not cell-type indices!
         SelectedFiles_valid = None #[].append(rtdc_path)#
         nr_events_epoch_valid = None
 
         rtdc_h5 = h5py.File(rtdc_path, 'r')
         try:
-            Xtra_in = np.array(rtdc_h5["xtra_in"])
+            Xtra_in = np.array(rtdc_h5["xtra_in"])[index]
         except:
             Xtra_in = []
         rtdc_h5.close() #close the hdf5 
@@ -10423,13 +10374,14 @@ class MainWindow(QtWidgets.QMainWindow):
             msg.setWindowTitle("Too many classes in validation set")
             msg.setStandardButtons(QtWidgets.QMessageBox.Ok)
             msg.exec_()
-        
+            #return
+       
         CellNames = []            
         for ind in inds_uni:
             #check if that index is present on table
             where = np.where(np.array(indices_on_table)==ind)[0]
             if len(where)==1:#if there is exaclty one item...
-                CellNames.append(np.array(names_on_table)[where]) #apend the corresponding user defined name to a list
+                CellNames.append(np.array(names_on_table)[where]) #append the corresponding user defined name to a list
             else:
                 CellNames.append(str(ind))
 
@@ -10681,15 +10633,20 @@ class MainWindow(QtWidgets.QMainWindow):
         
         #Get the user-defined colors from table
         colors_on_table = [self.tableWidget_Info_2.item(row, 2).background() for row in range(rowCount)]
+        
         #it can be that the table was not updated and there are more scores than table-items
         if len(colors_on_table)!=len(scores_i):
             #update table
             SelectedFiles = self.items_clicked_no_rtdc_ds()
             self.update_data_overview(SelectedFiles)
             self.update_data_overview_2(SelectedFiles)
-            #update colors on table
-            colors_on_table = [self.tableWidget_Info_2.item(row, 2).background() for row in range(rowCount)]
             
+            #update colors on table
+            rowCount = self.tableWidget_Info_2.rowCount()
+            #only count rows with content
+            rowCount = sum([self.tableWidget_Info_2.item(row, 0)!=None for row in range(rowCount)])
+            colors_on_table = [self.tableWidget_Info_2.item(row, 2).background() for row in range(rowCount)]
+
         #Clear the plot        
         self.widget_probHistPlot.clear()
         #Add plot        
@@ -10709,8 +10666,11 @@ class MainWindow(QtWidgets.QMainWindow):
                     width = np.lib.histograms._hist_bin_selectors['auto'](scores_i[i])
                 except:#numpy >1.15
                     width = np.lib.histograms._hist_bin_selectors['auto'](scores_i[i],(np.min(scores_i[i]),np.min(scores_i[i])))
+                try:#prevent crash if width=0
+                    n_equal_bins = int(np.ceil(np.lib.histograms._unsigned_subtract(last_edge, first_edge) / width))
+                except: 
+                    n_equal_bins = 1
                     
-                n_equal_bins = int(np.ceil(np.lib.histograms._unsigned_subtract(last_edge, first_edge) / width))
                 if n_equal_bins>1E4: #Who needs more than 10k bins?!:
                     n_equal_bins = int(1E4)
                 else:
@@ -11063,9 +11023,9 @@ class MainWindow(QtWidgets.QMainWindow):
                 x_train,index,xtra_train = next(gen_train) #x_train-images of all cells, index-original index of all cells           
                 
                 if norm == "StdScaling using mean and std of all training data":
-                    x_train = aid_img.norm_imgs(x_train,norm,mean_trainingdata,std_trainingdata)
+                    x_train = aid_img.image_normalization(x_train,norm,mean_trainingdata,std_trainingdata)
                 else:
-                    x_train = aid_img.norm_imgs(x_train,norm)
+                    x_train = aid_img.image_normalization(x_train,norm)
                             
                 #Check the input dimensions:
                 img_dim = x_train.shape[-2]
