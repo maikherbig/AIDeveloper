@@ -25,10 +25,327 @@ if device_types[0]=='GPU':
 
 dir_root = os.path.dirname(aid_bin.__file__)#ask the module for its origin
 
-def rgb_2_gray(images):
-    images = (0.21 * images[:,:,:,:1]) + (0.72 * images[:,:,:,1:2]) + (0.07 * images[:,:,:,-1:])
-    return images[:,:,:,0:1]#make sure to keep the 4th dimension
-   
+def image_adjust_channels(images,target_channels=1):
+    """
+    Check the number of channels of images.
+    Transform images (if needed) to get to the desired number of channels
+    
+    Parameters
+    ----------
+    images: numpy array of dimension (nr.images,height,width) for grayscale,
+    or of dimension (nr.images,height,width,channels) for RGB images
+
+    target_channels: int
+        target number of channels
+        can be one of the following:
+        
+        - 1: target is a grayscale image. In case RGB images are 
+        provided, the luminosity formula is used to convert of RGB to 
+        grayscale
+        - 3: target is an RGB image. In case grayscale images are provided,
+        the information of each image is copied to all three channels to 
+        convert grayscale to RGB"
+    
+    Returns
+    ----------
+    images: numpy array
+        images with adjusted number of channels
+    """
+
+    #images.shape is (N,H,W) for grayscale, or (N,H,W,C) for RGB images
+    #(N,H,W,C) means (nr.images,height,width,channels)
+
+    #Make sure either (N,H,W), or (N,H,W,C) is provided
+    assert len(images.shape)==4 or len(images.shape)==3, "Shape of 'images' \
+    is not supported: " +str(images.shape) 
+
+    if len(images.shape)==4:#Provided images are RGB
+        #Mare sure there are 3 channels (RGB)
+        assert images.shape[-1]==3, "Images have "+str(images.shape[-1])+" channels. This is (currently) not supported!"
+
+        if target_channels==1:#User wants Grayscale -> use the luminosity formula
+            images = (0.21 * images[:,:,:,:1]) + (0.72 * images[:,:,:,1:2]) + (0.07 * images[:,:,:,-1:])
+            images = images[:,:,:,0] 
+            images = images.astype(np.uint8)           
+            print("Used luminosity formula to convert RGB to Grayscale")
+            
+    if len(images.shape)==3:#Provided images are Grayscale
+        if target_channels==3:#User wants RGB -> copy the information to all 3 channels
+            images = np.stack((images,)*3, axis=-1)
+            print("Copied information to all three channels to convert Grayscale to RGB")
+    return images
+
+def zoom_arguments_scipy2cv(zoom_factor,zoom_interpol_method):
+    """
+    Resulting images after performing ndimage.zoom or cv2.resize are never identical,
+    but with certain settings you get at least similar results. 
+    Parameters
+    ----------    
+    zoom_factor: float, 
+        factor by which the size of the images should be zoomed
+    zoom_interpol_method: int, 
+        The order of the spline interpolation
+    
+    Returns
+    ----------    
+    str; OpenCV interpolation flag
+    """
+    opencv_zoom_options = ["cv2.INTER_NEAREST","cv2.INTER_LINEAR","cv2.INTER_AREA","cv2.INTER_CUBIC","cv2.INTER_LANCZOS4"]
+    if type(zoom_interpol_method)==str:
+        if zoom_interpol_method in opencv_zoom_options:
+            return zoom_interpol_method
+    
+    if zoom_factor>=0.8:
+        if zoom_interpol_method==0: return "cv2.INTER_NEAREST"
+        elif zoom_interpol_method==1: return "cv2.INTER_LINEAR"
+        elif zoom_interpol_method==2: return "cv2.INTER_CUBIC"
+        elif zoom_interpol_method==3: return "cv2.INTER_LANCZOS4"
+        elif zoom_interpol_method==4: return "cv2.INTER_LANCZOS4"
+        elif zoom_interpol_method==5: return "cv2.INTER_LANCZOS4"
+
+    if zoom_factor<0.8: #for downsampling the image, all methods perform similar
+        #but cv2.INTER_LINEAR, is closest most of the time, irrespective of the zoom_order
+        return "cv2.INTER_LINEAR"
+
+
+def pad_arguments_np2cv(padding_mode):
+    """
+    NumPy's pad and OpenCVs copyMakeBorder can do the same thing, but the 
+    function arguments are called differntly.
+
+    This function takes numpy padding_mode argument and returns the 
+    corresponsing borderType for cv2.copyMakeBorder
+
+    Parameters
+    ---------- 
+    padding_mode: str; numpy padding mode
+        - "constant" (default): Pads with a constant value.
+        - "edge": Pads with the edge values of array.
+        - "linear_ramp": Pads with the linear ramp between end_value and the array edge value.
+        - "maximum": Pads with the maximum value of all or part of the vector along each axis.
+        - "mean": Pads with the mean value of all or part of the vector along each axis.
+        - "median": Pads with the median value of all or part of the vector along each axis.
+        - "minimum": Pads with the minimum value of all or part of the vector along each axis.
+        - "reflect": Pads with the reflection of the vector mirrored on the first and last values of the vector along each axis.
+        - "symmetric": Pads with the reflection of the vector mirrored along the edge of the array.
+        - "wrap": Pads with the wrap of the vector along the axis. The first values are used to pad the end and the end values are used to pad the beginning.
+
+    Returns
+    ----------   
+    str: OpenCV borderType     
+        - "cv2.BORDER_CONSTANT": iiiiii|abcdefgh|iiiiiii with some specified i 
+        - "cv2.BORDER_REFLECT": fedcba|abcdefgh|hgfedcb
+        - "cv2.BORDER_REFLECT_101": gfedcb|abcdefgh|gfedcba
+        - "cv2.BORDER_DEFAULT": same as BORDER_REFLECT_101
+        - "cv2.BORDER_REPLICATE": aaaaaa|abcdefgh|hhhhhhh
+        - "cv2.BORDER_WRAP": cdefgh|abcdefgh|abcdefg
+    """
+    #Check if padding_mode is already an OpenCV borderType
+    padmodes_cv = ["Delete","cv2.BORDER_CONSTANT","cv2.BORDER_REFLECT",
+                   "cv2.BORDER_REFLECT_101","cv2.BORDER_DEFAULT",
+                   "cv2.BORDER_REPLICATE","cv2.BORDER_WRAP"]
+    #If padding_mode is already one of those, just return the identity
+    if padding_mode in padmodes_cv:
+        return padding_mode
+
+    #Check that the padding_mode is actually supported by OpenCV
+    supported = ["constant","edge","reflect","symmetric","wrap"]
+    assert padding_mode in supported, "The padding mode: '"+padding_mode+"' is not supported"
+    
+    #Otherwise, return the an OpenCV borderType corresponding to the numpy pad mode
+    if padding_mode=="constant":
+        return "cv2.BORDER_CONSTANT"
+    if padding_mode=="edge":
+        return "cv2.BORDER_REPLICATE"
+    if padding_mode=="reflect":
+        return "cv2.BORDER_REFLECT_101"
+    if padding_mode=="symmetric":
+        return "cv2.BORDER_REFLECT"
+    if padding_mode=="wrap":
+        return "cv2.BORDER_WRAP"
+
+def image_crop_pad_cv2(images,pos_x,pos_y,pix,final_h,final_w,padding_mode="cv2.BORDER_CONSTANT"):
+    """
+    Function takes a list images (list of numpy arrays) an resizes them to 
+    equal size by center cropping and/or padding.
+
+    Parameters
+    ----------
+    images: list of images of arbitrary shape
+    (nr.images,height,width,channels) 
+        can be a single image or multiple images
+    pos_x: float or ndarray of length N
+        The x coordinate(s) of the centroid of the event(s) [um]
+    pos_y: float or ndarray of length N
+        The y coordinate(s) of the centroid of the event(s) [um]
+        
+    final_h: int
+        target image height [pixels]
+    
+    final_w: int
+        target image width [pixels]
+        
+    padding_mode: str; OpenCV BorderType
+        Perform the following padding operation if the cell is too far at the 
+        border such that the  desired image size cannot be 
+        obtained without going beyond the order of the image:
+        
+        - "Delete": Return empty array (all zero) if the cell is too far at border (delete image)
+        
+        #the following text is copied from 
+        https://docs.opencv.org/3.4/d2/de8/group__core__array.html#ga209f2f4869e304c82d07739337eae7c5
+        
+        - "cv2.BORDER_CONSTANT": iiiiii|abcdefgh|iiiiiii with some specified i 
+        - "cv2.BORDER_REFLECT": fedcba|abcdefgh|hgfedcb
+        - "cv2.BORDER_REFLECT_101": gfedcb|abcdefgh|gfedcba
+        - "cv2.BORDER_DEFAULT": same as BORDER_REFLECT_101
+        - "cv2.BORDER_REPLICATE": aaaaaa|abcdefgh|hhhhhhh
+        - "cv2.BORDER_WRAP": cdefgh|abcdefgh|abcdefg
+    
+    Returns
+    ----------
+    images: list of images. Each image is a numpy array of shape 
+    (final_h,final_w,channels) 
+
+    """
+    #Convert position of cell from "um" to "pixel index"
+    #pos_x,pos_y = pos_x/pix,pos_y/pix  
+
+    for i in range(len(images)):
+        image = images[i]
+    
+        #Compute the edge-coordinates that define the cropped image
+        y1 = np.around(pos_y[i]-final_h/2.0)              
+        x1 = np.around(pos_x[i]-final_w/2.0) 
+        y2 = y1+final_h               
+        x2 = x1+final_w
+
+        #Are these coordinates within the oringinal image?
+        #If not, the image needs padding
+        pad_top,pad_bottom,pad_left,pad_right = 0,0,0,0
+
+        if y1<0:#Padding is required on top of image
+            pad_top = int(abs(y1))
+            y1 = 0 #set y1 to zero and pad pixels after cropping
+            
+        if y2>image.shape[0]:#Padding is required on bottom of image
+            pad_bottom = int(y2-image.shape[0])
+            y2 = image.shape[0]
+        
+        if x1<0:#Padding is required on left of image
+            pad_left = int(abs(x1))
+            x1 = 0
+        
+        if x2>image.shape[1]:#Padding is required on right of image
+            pad_right = int(x2-image.shape[1])
+            x2 = image.shape[1]
+        
+        #Crop the image
+        temp = image[int(y1):int(y2),int(x1):int(x2)]
+
+        if pad_top+pad_bottom+pad_left+pad_right>0:
+            if padding_mode=="Delete":
+                temp = np.zeros_like(temp)
+            else:
+                #Perform all padding operations in one go
+                temp = cv2.copyMakeBorder(temp, pad_top, pad_bottom, pad_left, pad_right, eval(padding_mode))
+        
+        images[i] = temp
+            
+    return images
+
+def load_model_meta(meta_path):
+    """
+    Extract meta information from a meta file that was created during training 
+    in AID. Function returns all information how images need ot be preprocessed 
+    before passing them throught the neural net. 
+
+    Parameters
+    ----------    
+    meta_path: str; path to a meta file (generated by AID when during model training)
+
+    Returns
+    ----------    
+    pd.DataFrame ; A DataFrame with the following keys:
+        target_imsize: input image size required by the neural net
+        target_channels: number of image channels required by the neural net
+        normalization_method: the method to normalize the pixel-values of the images
+        mean_trainingdata: the mean pixel value obtained from the training dataset
+        std_trainingdata: the std of the pixel values obtained from the training dataset
+        zoom_factor: factor by which the size of the images should be zoomed
+        zoom_interpol_method: OpenCV interpolation flag
+        padding_mode: OpenCV borderType flag
+    """
+    xlsx = pd.ExcelFile(meta_path)
+    
+    #The zooming factor is saved in the UsedData sheet
+    meta = pd.read_excel(xlsx,sheet_name="UsedData")
+    zoom_factor = meta["zoom_factor"].iloc[0]#should images be zoomed before forwarding through neural net?
+
+    meta = pd.read_excel(xlsx,sheet_name="Parameters")
+
+    try:
+        model_type = meta["Chosen Model"].iloc[0]#input dimensions of the model
+    except:
+        model_type = "Unknown"
+    
+    try:
+        target_imsize = meta["Input image crop"].iloc[0]#input dimensions of the model
+    except:
+        target_imsize = meta["Input image size"].iloc[0]#input dimensions of the model
+
+    normalization_method = meta["Normalization"].iloc[0]#normalization method
+    if normalization_method == "StdScaling using mean and std of all training data":                                
+        mean_trainingdata = meta["Mean of training data used for scaling"]
+        std_trainingdata = meta["Std of training data used for scaling"]
+    else:
+        mean_trainingdata = None
+        std_trainingdata = None
+  
+    #Following parameters may not exist in meta files of older AID versions. Hence try/except
+
+    #Color mode: grayscale or RGB?
+    try:
+        target_channels = meta["Color Mode"].iloc[0]
+    except:
+        target_channels = "grayscale"
+    if target_channels.lower() =="grayscale":
+        target_channels = 1
+    elif target_channels.lower() =="rgb":
+        target_channels = 3
+
+    #The order for the zooming operation
+    try:
+        zoom_interpol_method = meta["Zoom order"].iloc[0]
+    except:
+        zoom_interpol_method = "cv2.INTER_NEAREST"
+    #Translate zoom_interpol_method to OpenCV argument
+    if "cv2." not in str(zoom_interpol_method):
+        zoom_interpol_method = zoom_arguments_scipy2cv(zoom_factor,zoom_interpol_method)
+
+    #Padding mode
+    try:
+        padding_mode = meta["paddingMode"].iloc[0]
+    except:
+        padding_mode = "constant"#cv2.BORDER_CONSTANT
+    #translate padding_mode to OpenCV argument
+    if "cv2." not in padding_mode:
+        padding_mode = pad_arguments_np2cv(padding_mode)
+
+    #Write information in one DataFrame
+    img_processing_settings = pd.DataFrame()
+    img_processing_settings["model_type"]=model_type,
+    img_processing_settings["target_imsize"]=target_imsize,
+    img_processing_settings["target_channels"]=target_channels,
+    img_processing_settings["normalization_method"]=normalization_method,
+    img_processing_settings["mean_trainingdata"]=mean_trainingdata,
+    img_processing_settings["std_trainingdata"]=std_trainingdata,
+    img_processing_settings["zoom_factor"]=zoom_factor,
+    img_processing_settings["zoom_interpol_method"]=zoom_interpol_method,
+    img_processing_settings["padding_mode"]=padding_mode,
+    
+    return img_processing_settings
+
 def check_squared(images):
     if images.shape[1]==images.shape[2]:
         return images #everything is fine
@@ -42,7 +359,7 @@ def check_squared(images):
         print("Final size after correcting: "+str(images.shape))
     return images
 
-def gen_crop_img(cropsize,rtdc_path,nr_events=100,replace=True,random_images=True,zoom_factor=1,zoom_order=0,color_mode='Grayscale',padding_mode='constant',xtra_in=False):
+def gen_crop_img(cropsize,rtdc_path,nr_events=100,replace=True,random_images=True,zoom_factor=1,zoom_order="cv2.INTER_LINEAR",color_mode='Grayscale',padding_mode='constant',xtra_in=False):
 
     failed,rtdc_ds = aid_bin.load_rtdc(rtdc_path)
     if failed:
@@ -55,93 +372,34 @@ def gen_crop_img(cropsize,rtdc_path,nr_events=100,replace=True,random_images=Tru
         return
     
     pix = rtdc_ds.config["imaging"]["pixel size"] #get pixelation (um/pix)
-    images_shape = rtdc_ds["image"].shape #get shape of the images (nr.images,height,width,channels)
+    #images_shape = rtdc_ds["image"].shape #get shape of the images (nr.images,height,width,channels)
     images = rtdc_ds["image"] #get the images
+
+    if len(images)<1:
+        msg = QtWidgets.QMessageBox()
+        msg.setIcon(QtWidgets.QMessageBox.Information)       
+        msg.setText("There are no images")
+        msg.setWindowTitle("Empty dataset!")
+        msg.setStandardButtons(QtWidgets.QMessageBox.Ok)
+        msg.exec_()       
+        return               
     
-    if len(images_shape)==4:#Loaded images are RGB
-        if images_shape[-1]==3:
-            channels=3
-        else:
-            print("Images have "+str(images_shape[-1])+" channels. This is (currently) not supported by AID")
-            return
-        if color_mode=='Grayscale':#User want to have Grayscale: use the luminosity formula to convert RGB to gray
-            print("Used luminosity formula to convert RGB to Grayscale")
-            images = (0.21 * images[:,:,:,:1]) + (0.72 * images[:,:,:,1:2]) + (0.07 * images[:,:,:,-1:])
-            images = images[:,:,:,0] 
-            images  = images.astype(np.uint8)           
-            channels=1
-            
-    elif len(images_shape)==3:#Loaded images are Grayscale
-        channels=1
-        if color_mode=='RGB':#If the user wants to use RGB, but did only load Grayscale images, simply copy the information to all 3 channels
-            images = np.stack((images,)*3, axis=-1)
-            print("Copied information to all three channels to convert Grayscale to RGB")
-
-            channels = 3 #Updates the channel-info. After the conversion we now have RGB
-
-    #HEIGHT
-    #Compute, if after zooming, the image would need to be cropped or padded in height
-    #Difference between the (zoomed) image height and the required final height?
-    diff_h = int(abs(cropsize-np.round( zoom_factor*images_shape[1],0) ))
-    #Padding or Cropping?
-    if cropsize > zoom_factor*images_shape[1]: #Cropsize is larger than the image_shape
-        padding_h = True #if the requested image height is larger than the zoomed in version of the original images, I have to pad
-        diff_h = int(np.round(abs(cropsize-np.round( zoom_factor*images_shape[1],0) )/2.0,0))
-        print("I will pad in height: "+str(diff_h) + " pixels on each side")
-    elif cropsize <= zoom_factor*images_shape[1]:
-        padding_h = False
-        diff_h = int(np.round(abs(cropsize-np.round( zoom_factor*images_shape[1],0) )/2.0,0))
-        print("I will crop: "+str(diff_h) + " pixels in height")
-
-    #WIDTH
-    #Compute, if after zooming, the image would need to be cropped or padded in width
-    #Difference between the (zoomed) image width and the required final width?
-    diff_w = int(abs(cropsize-np.round( zoom_factor*images_shape[2],0)  ))
-    #Padding or Cropping?
-    if cropsize > zoom_factor*images_shape[2]: #Cropsize is larger than the image_shape
-        padding_w = True #if the requested image height is larger than the zoomed in version of the original images, I have to pad
-        diff_w = int(np.round(abs(cropsize-np.round( zoom_factor*images_shape[2],0) )/2.0,0))
-        print("I will pad in width: "+str(diff_w) + " pixels on each side")
-    elif cropsize <= zoom_factor*images_shape[2]:
-        padding_w = False
-        diff_w = int(np.round(abs(cropsize-np.round( zoom_factor*images_shape[2],0) )/2.0,0))
-        print("I will crop: "+str(diff_h) + " pixels in width")
-
-
-    #check if the resulting cropping or padding operation would return the correct size
-    odd_h,odd_w = -1,-1
-    if padding_w == True:
-        while cropsize!=np.round(zoom_factor*images_shape[2],0)+2*diff_w+odd_w:
-            odd_w+=1 #odd_w is increased until the resulting image is of correct size
-    elif padding_w == False:
-        while cropsize!=np.round(zoom_factor*images_shape[2],0)-2*diff_w+odd_w:
-            odd_w+=1 #odd_w is increased until the resulting image is of correct size
-    if padding_h == True:
-        while cropsize!=np.round(zoom_factor*images_shape[1],0)+2*diff_h+odd_h:
-            odd_h+=1 #odd_w is increased until the resulting image is of correct size
-    elif padding_h == False:
-        while cropsize!=np.round(zoom_factor*images_shape[1],0)-2*diff_h+odd_h:
-            odd_h+=1 #odd_w is increased until the resulting image is of correct size
-
-
-
+    if color_mode=='RGB': #User wants RGB images
+        channels = 3
+    if color_mode=='Grayscale': # User want to have Grayscale
+        channels = 1
+    
+    #Adjust number of channels
+    images = image_adjust_channels(images,target_channels=channels)
+    
     pos_x,pos_y = rtdc_ds["pos_x"][:]/pix,rtdc_ds["pos_y"][:]/pix #/pix converts to pixel index 
     #If there is a zooming to be applied, adjust pos_x and pos_y accordingly
     if zoom_factor != 1:
         pos_x,pos_y = zoom_factor*pos_x,zoom_factor*pos_y
         
     index = list(range(len(pos_x))) #define an index to track, which cells are used from the file
-    y1 = np.around(pos_y-cropsize/2.0)              
-    x1 = np.around(pos_x-cropsize/2.0) 
-    y2 = y1+cropsize                
-    x2 = x1+cropsize
+    ind = range(len(images))
 
-    if padding_w==False: #If there is no padding in width, means cells that are at the border can be out of frame
-        #Indices of cells that would fit into the required cropping frame (cells at the end of the image do not fit)
-        ind = np.where( (x1>=0) & (x2<=zoom_factor*images_shape[2]) & (y1>=0) & (y2<=zoom_factor*images_shape[1]))[0]        
-    if padding_w==True:
-        ind = range(len(images))
-    
     if xtra_in==True:
         xtra_data = np.array(rtdc_ds._h5["xtra_in"])
     if xtra_in==False:
@@ -150,15 +408,6 @@ def gen_crop_img(cropsize,rtdc_path,nr_events=100,replace=True,random_images=Tru
     if random_images==True:
         print("I'm loading random images (from disk)")
         #select a random amount of those cells 
-        if len(ind)<1:
-            msg = QtWidgets.QMessageBox()
-            msg.setIcon(QtWidgets.QMessageBox.Information)       
-            msg.setText("Discarded all events because too far at border of image (check zooming/cropping settings!)")
-            msg.setWindowTitle("Empty dataset!")
-            msg.setStandardButtons(QtWidgets.QMessageBox.Ok)
-            msg.exec_()       
-            return               
-
         random_ind = rand_state.choice(ind, size=nr_events, replace=replace) #get random indexes, either unique (replace=False) or not unique (replace=True)                   
         random_ind_unique = np.unique(random_ind,return_counts=True)
 
@@ -169,14 +418,12 @@ def gen_crop_img(cropsize,rtdc_path,nr_events=100,replace=True,random_images=Tru
         if xtra_in==True:
             xtra_data = xtra_data[random_ind_unique[0]] 
             
-        images,Pos_x,Pos_y,indices,Xtra_data = [],[],[],[],[] #overwrite images by defining the list images
+        images,Pos_x,Pos_y,indices,Xtra_data = [],[],[],[],[] #overwrite images by defining the list 'images'
+        zoom_interpol_method = zoom_arguments_scipy2cv(zoom_factor,zoom_order)
+
         for i in range(len(random_ind_unique[1])):
             for j in range(random_ind_unique[1][i]):#when shuffle=True it can happend that some images occure multiple times. This look makes sure this is possible
-                if channels==1:
-                    images.append(ndimage.zoom(images_required[i,:,:], zoom=zoom_factor,order=int(zoom_order)))
-                elif channels==3:
-                    images.append(ndimage.zoom(images_required[i,:,:], zoom=(zoom_factor,zoom_factor,1),order=int(zoom_order)))
-
+                images.append(cv2.resize(images_required[i], dsize=None,fx=zoom_factor, fy=zoom_factor, interpolation=eval(zoom_interpol_method)))
                 Pos_x.append(pos_x[i])
                 Pos_y.append(pos_y[i])
                 indices.append(index[i])
@@ -193,6 +440,7 @@ def gen_crop_img(cropsize,rtdc_path,nr_events=100,replace=True,random_images=Tru
  
         permut = np.random.permutation(images.shape[0])
         images = np.take(images,permut,axis=0,out=images) #Shuffle the images
+        images = list(images)
         pos_x = np.take(pos_x,permut,axis=0,out=pos_x) #Shuffle pos_x
         pos_y = np.take(pos_y,permut,axis=0,out=pos_y) #Shuffle pos_y
         index = np.take(index,permut,axis=0,out=index) #Shuffle index
@@ -203,101 +451,26 @@ def gen_crop_img(cropsize,rtdc_path,nr_events=100,replace=True,random_images=Tru
         print("I'm loading all images (from disk)")
         #simply take all available cells
         random_ind = ind #Here it is NOT a random index, but the index of all cells that are not too close to the image border
-        if len(ind)<1:
-            msg = QtWidgets.QMessageBox()
-            msg.setIcon(QtWidgets.QMessageBox.Information)       
-            msg.setText("Discarded all events because too far at border of image (check zooming/cropping settings!)")
-            msg.setWindowTitle("Empty dataset!")
-            msg.setStandardButtons(QtWidgets.QMessageBox.Ok)
-            msg.exec_()       
-            return               
+        #images = list(np.array(images)[random_ind])
+        images = list(images)
+        zoom_interpol_method = zoom_arguments_scipy2cv(zoom_factor,zoom_order)
 
-        images = np.array(images)[random_ind]
-        
-        if channels==1:                
-            images = ndimage.zoom(images, zoom=(1,zoom_factor,zoom_factor),order=int(zoom_order))
-        elif channels==3:                
-            images = ndimage.zoom(images, zoom=(1,zoom_factor,zoom_factor,1),order=int(zoom_order))
+        if zoom_factor!=1.0:
+            for i in range(len(images)):
+                images[i] = cv2.resize(images[i], dsize=None,fx=zoom_factor, fy=zoom_factor, interpolation=eval(zoom_interpol_method))
 
         pos_x,pos_y = pos_x[random_ind],pos_y[random_ind]
         index = np.array(index)[random_ind] #this is the original index of all used cells
         if xtra_in==True:         
             xtra_data = np.array(xtra_data)[random_ind] #this is the original index of all used cells
 
-    if padding_h==True and padding_w==True:
-        if channels==1:
-            images = np.pad(images,pad_width=( (0, 0),(diff_h, diff_h+odd_h),(diff_w, diff_w+odd_w) ),mode=padding_mode)
-        elif channels==3:
-            images = np.pad(images,pad_width=( (0, 0),(diff_h, diff_h+odd_h),(diff_w, diff_w+odd_w),(0, 0) ),mode=padding_mode)
-        else:
-            print("Invalid image dimensions: "+str(images.shape))
-            return
-        print("Final size:"+str(images.shape)+","+str(np.array(index).shape))
-        #terminate the function by yielding the result
-        yield check_squared(images),np.array(index).astype(int),np.array(xtra_data)
-
-
-    if padding_h==False and padding_w==False:
-        #Compute again the x,y locations of the cells (this is fast)
-        y1 = np.around(pos_y-cropsize/2.0)              
-        x1 = np.around(pos_x-cropsize/2.0) 
-        y2 = y1+cropsize                
-        x2 = x1+cropsize
-        Images_Cropped = []
-        for j in range(len(x2)):#crop the images
-            image_cropped = images[j,int(y1[j]):int(y2[j]),int(x1[j]):int(x2[j])]
-            #if image_cropped.shape==(cropsize,cropsize):
-            Images_Cropped.append(image_cropped)
-        images = np.r_[Images_Cropped]
-        print("Final size:"+str(images.shape)+","+str(np.array(index).shape))
-        #terminate the function by yielding the result
-        yield check_squared(images),np.array(index).astype(int),np.array(xtra_data)
-
-    if padding_h==True:
-        if channels==1:
-            images = np.pad(images,pad_width=( (0, 0),(diff_h, diff_h+odd_h),(0, 0) ),mode=padding_mode)
-        elif channels==3:
-            images = np.pad(images,pad_width=( (0, 0),(diff_h, diff_h+odd_h),(0, 0),(0, 0) ),mode=padding_mode)
-        else:
-            print("Invalid image dimensions: "+str(images.shape))
-            return
-        print("Image size after padding heigth :"+str(images.shape)+","+str(np.array(index).shape))
-        #dont yield here since cropping width could still be required
-        
-    if padding_w==True:
-        if channels==1:
-            images = np.pad(images,pad_width=( (0, 0),(0, 0),(diff_w, diff_w+odd_w) ),mode=padding_mode)
-        elif channels==3:
-            images = np.pad(images,pad_width=( (0, 0),(0, 0),(diff_w, diff_w+odd_w),(0, 0) ),mode=padding_mode)
-        else:
-            print("Invalid image dimensions: "+str(images.shape))
-            return
-        print("Image size after padding width :"+str(images.shape)+","+str(np.array(index).shape))
-        #dont yield here since cropping height could still be required
-
-    if padding_h==False:
-        #Compute again the x,y locations of the cells (this is fast)
-        y1 = np.around(pos_y-cropsize/2.0)              
-        y2 = y1+cropsize                
-        Images_Cropped = []
-        for j in range(len(y1)):#crop the images
-            image_cropped = images[j,int(y1[j]):int(y2[j]),:]
-            Images_Cropped.append(image_cropped)
-        images = np.r_[Images_Cropped]           
-        print("Image size after cropping height:"+str(images.shape)+","+str(np.array(index).shape))
-
-    if padding_w==False:
-        #Compute again the x,y locations of the cells (this is fast)
-        x1 = np.around(pos_x-cropsize/2.0) 
-        x2 = x1+cropsize
-        Images_Cropped = []
-        for j in range(len(x2)):#crop the images
-            image_cropped = images[j,:,int(x1[j]):int(x2[j])]
-            Images_Cropped.append(image_cropped)
-        images = np.r_[Images_Cropped]           
-        print("Image size after cropping width:"+str(images.shape)+","+str(np.array(index).shape))
-
+    #Cropping and padding operation to obtain images of desired size
+    padding_mode = pad_arguments_np2cv(padding_mode)
+    images = image_crop_pad_cv2(images=images,pos_x=pos_x,pos_y=pos_y,pix=pix,final_h=cropsize,final_w=cropsize,padding_mode=padding_mode)
+    
+    images = np.r_[images]
     print("Final size:"+str(images.shape)+","+str(np.array(index).shape))
+    #terminate the function by yielding the result
     yield check_squared(images),np.array(index).astype(int),np.array(xtra_data)
 
 def gen_crop_img_ram(dic,rtdc_path,nr_events=100,replace=True,random_images=True,xtra_in=False):        
@@ -647,9 +820,36 @@ def crop_imgs_to_ram(SelectedFiles,crop,zoom_factors=None,zoom_order=0,color_mod
     dic = {"rtdc_path":Rtdc_paths_uni,"Cropped_Images":X_train,"Indices":Indices,"Xtra_In":Xtra_in_data}
     return dic
 
+def image_normalization(images,normalization_method,mean_trainingdata=None,std_trainingdata=None):
+    """
+    Perform a normalization of the pixel values.
 
-def norm_imgs(X,norm,mean_trainingdata=None,std_trainingdata=None):
-    if norm == "StdScaling using mean and std of all training data":
+    Parameters
+    ----------
+    images: ndarray
+    normalization_method: str
+        Factor by which the size of the images should be zoomed
+    normalization_method: str; available are: (text copied from original docs: 
+        https://docs.opencv.org/2.4/modules/imgproc/doc/geometric_transformations.html#resize)
+        -"None" – No normalization is applied.
+        -"Div. by 255" – Each input image is divided by 255 (useful since pixel 
+        values go from 0 to 255, so the result will be in range 0-1)
+        -"StdScaling using mean and std of each image individually" – The mean 
+        and standard deviation of each input image itself is used to scale it 
+        by first subtracting the mean and then dividing by the standard deviation
+        -"StdScaling using mean and std of all training data" - During model 
+        training, the mean and std of the entire training set was determined. 
+        This mean and standard deviation is used to normalize images by first 
+        subtracting the mean and then dividing by the standard deviation    
+    mean_trainingdata: float; the mean pixel value obtained from the training dataset
+    std_trainingdata: float; the std of the pixel values obtained from the training dataset
+
+    Returns
+    ----------
+    ndarray of images
+  
+    """
+    if normalization_method == "StdScaling using mean and std of all training data":
         #make sure pandas series is converted to numpy array
         if type(mean_trainingdata)==pd.core.series.Series:
             mean_trainingdata=mean_trainingdata.values[0]
@@ -658,34 +858,34 @@ def norm_imgs(X,norm,mean_trainingdata=None,std_trainingdata=None):
             std_trainingdata = 0.0001
             print("Set the standard deviation (std_trainingdata) to 0.0001 because otherwise div. by 0 would have happend!")
 
-    if len(X.shape)==3: #single channel Grayscale rtdc data
+    if len(images.shape)==3: #single channel Grayscale rtdc data
         #Add the "channels" dimension
-        X = np.expand_dims(X,3)    
-    X = X.astype(np.float32)
+        images = np.expand_dims(images,3)    
+    images = images.astype(np.float32)
     
-    
-    for k in range(X.shape[0]):
-        line = X[k,:,:,:]
+    for k in range(images.shape[0]):
+        line = images[k,:,:,:]
         ###########Scaling############
-        if norm == "None":
-            pass
-        elif norm == "Div. by 255":
+        if normalization_method == "None":
+            pass #dont do anything
+        elif normalization_method == "Div. by 255":
             line = line/255.0
-        elif norm == "StdScaling using mean and std of each image individually":
+        elif normalization_method == "StdScaling using mean and std of each image individually":
             mean = np.mean(line)
             std = np.std(line)
             if np.allclose(std,0):
                 std = 0.0001
                 print("Set the standard deviation to 0.0001 because otherwise div. by 0 would have happend!")
             line = (line-mean)/std
-        elif norm == "StdScaling using mean and std of all training data":
+        elif normalization_method == "StdScaling using mean and std of all training data":
             line = (line-mean_trainingdata)/std_trainingdata
             
         #Under NO circumstances, training data should contain nan values
         ind = np.isnan(line)
         line[ind] = np.random.random() #replace nan with random values. This is better than nan, since .fit will collapse and never get back
-        X[k,:,:,:] = line   
-    return X        
+        images[k,:,:,:] = line   
+    return images        
+
 
 def imgs_2_rtdc(fname,images,pos_x,pos_y):
     #There needs to be an empty .rtdc file which will be copied
@@ -711,121 +911,121 @@ def imgs_2_rtdc(fname,images,pos_x,pos_y):
     hdf.close()
 
 
-def image_resize_crop_pad(images,pos_x,pos_y,final_h,final_w,channels,verbose=False,padding_mode='constant'):
-    """
-    Function takes a list images (list of numpy arrays) an resizes them to 
-    an equal size by center cropping and/or padding.
-    
-    images: list of images of arbitrary shape
-    final_h: integer, defines final height of the images
-    final_w: integer, defines final width of the images
-    """
-    for i in range(len(images)):
-        image = images[i]
-        #HEIGHT
-        diff_h = int(abs(final_h-image.shape[0]))
-        #Padding or Cropping?
-        if final_h > image.shape[0]: #Cropsize is larger than the image_shape
-            padding_h = True #if the requested image height is larger than the zoomed in version of the original images, I have to pad
-            diff_h = int(np.round(abs(final_h-image.shape[0])/2.0,0))
-            if verbose:
-                print("Padding height: "+str(diff_h) + " pixels each side")
-        elif final_h <= image.shape[0]:
-            padding_h = False
-            diff_h = int(np.round(abs(final_h-image.shape[0])/2.0,0))
-            if verbose:
-                print("Cropping height: "+str(diff_h) + " pixels each side")
-    
-        #WIDTH
-        diff_w = int(abs(final_w-image.shape[1]))
-        #Padding or Cropping?
-        if final_w > image.shape[1]: #Cropsize is larger than the image_shape
-            padding_w = True #if the requested image height is larger than the zoomed in version of the original images, I have to pad
-            diff_w = int(np.round(abs(final_w-image.shape[1])/2.0,0))
-            if verbose:
-                print("Padding width: "+str(diff_w) + " pixels each side")
-        elif final_w <= image.shape[1]:
-            padding_w = False
-            diff_w = int(np.round(abs(final_w-image.shape[1])/2.0,0))
-            if verbose:
-                print("Cropping width: "+str(diff_w) + " pixels each side")
-        #In case of odd image shapes:
-        #check if the resulting cropping or padding operation would return the correct size
-        odd_h,odd_w = -1,-1
-        if padding_w == True:
-            while final_w!=image.shape[1]+2*diff_w+odd_w:
-                odd_w+=1 #odd_w is increased until the resulting image is of correct size
-        elif padding_w == False:
-            while final_w!=image.shape[1]-2*diff_w+odd_w:
-                odd_w+=1 #odd_w is increased until the resulting image is of correct size
-        if padding_h == True:
-            while final_h!=image.shape[0]+2*diff_h+odd_h:
-                odd_h+=1 #odd_w is increased until the resulting image is of correct size
-        elif padding_h == False:
-            while final_h!=image.shape[0]-2*diff_h+odd_h:
-                odd_h+=1 #odd_w is increased until the resulting image is of correct size
-                
-        #Execute padding-only operation and overwrite original on list "images"
-        if padding_h==True and padding_w==True:
-            if channels==1:
-                images[i] = np.pad(image,pad_width=( (diff_h, diff_h+odd_h),(diff_w, diff_w+odd_w) ),mode=padding_mode)
-            elif channels==3:
-                images[i] = np.pad(image,pad_width=( (diff_h, diff_h+odd_h),(diff_w, diff_w+odd_w),(0, 0) ),mode=padding_mode)
-            else:
-                if verbose:
-                    print("Invalid image dimensions: "+str(image.shape))
-    
-        #Execute cropping-only operation and overwrite original on list "images"
-        elif padding_h==False and padding_w==False:
-            #Compute again the x,y locations of the cells (this is fast)
-            y1 = np.around(pos_y[i]-final_h/2.0)              
-            x1 = np.around(pos_x[i]-final_w/2.0) 
-            y2 = y1+final_h               
-            x2 = x1+final_w
-            #overwrite the original image
-            images[i] = image[int(y1):int(y2),int(x1):int(x2)]
-            
-        else:
-            if padding_h==True:
-                if channels==1:
-                    image = np.pad(image,pad_width=( (diff_h, diff_h+odd_h),(0, 0) ),mode=padding_mode)
-                elif channels==3:
-                    image = np.pad(image,pad_width=( (diff_h, diff_h+odd_h),(0, 0),(0, 0) ),mode=padding_mode)
-                else:
-                    if verbose:
-                        print("Invalid image dimensions: "+str(image.shape))
-                if verbose:
-                    print("Image size after padding heigth :"+str(image.shape))
-                
-            if padding_w==True:
-                if channels==1:
-                    image = np.pad(image,pad_width=( (0, 0),(diff_w, diff_w+odd_w) ),mode=padding_mode)
-                elif channels==3:
-                    image = np.pad(image,pad_width=( (0, 0),(diff_w, diff_w+odd_w),(0, 0) ),mode=padding_mode)
-                else:
-                    if verbose:
-                        print("Invalid image dimensions: "+str(image.shape))
-                if verbose:
-                    print("Image size after padding width :"+str(image.shape))
-        
-            if padding_h==False:
-                #Compute again the x,y locations of the cells (this is fast)
-                y1 = np.around(pos_y[i]-final_h/2.0)              
-                y2 = y1+final_h               
-                image = image[int(y1):int(y2),:]
-                if verbose:
-                    print("Image size after cropping height:"+str(image.shape))
-        
-            if padding_w==False:
-                #Compute again the x,y locations of the cells (this is fast)
-                x1 = np.around(pos_x[i]-final_w/2.0) 
-                x2 = x1+final_w
-                image = image[:,int(x1):int(x2)]
-                if verbose:
-                    print("Image size after cropping width:"+str(image.shape))
-            
-            images[i] = image
-    return images
+#def image_resize_crop_pad(images,pos_x,pos_y,final_h,final_w,channels,verbose=False,padding_mode='constant'):
+#    """
+#    Function takes a list images (list of numpy arrays) an resizes them to 
+#    an equal size by center cropping and/or padding.
+#    
+#    images: list of images of arbitrary shape
+#    final_h: integer, defines final height of the images
+#    final_w: integer, defines final width of the images
+#    """
+#    for i in range(len(images)):
+#        image = images[i]
+#        #HEIGHT
+#        diff_h = int(abs(final_h-image.shape[0]))
+#        #Padding or Cropping?
+#        if final_h > image.shape[0]: #Cropsize is larger than the image_shape
+#            padding_h = True #if the requested image height is larger than the zoomed in version of the original images, I have to pad
+#            diff_h = int(np.round(abs(final_h-image.shape[0])/2.0,0))
+#            if verbose:
+#                print("Padding height: "+str(diff_h) + " pixels each side")
+#        elif final_h <= image.shape[0]:
+#            padding_h = False
+#            diff_h = int(np.round(abs(final_h-image.shape[0])/2.0,0))
+#            if verbose:
+#                print("Cropping height: "+str(diff_h) + " pixels each side")
+#    
+#        #WIDTH
+#        diff_w = int(abs(final_w-image.shape[1]))
+#        #Padding or Cropping?
+#        if final_w > image.shape[1]: #Cropsize is larger than the image_shape
+#            padding_w = True #if the requested image height is larger than the zoomed in version of the original images, I have to pad
+#            diff_w = int(np.round(abs(final_w-image.shape[1])/2.0,0))
+#            if verbose:
+#                print("Padding width: "+str(diff_w) + " pixels each side")
+#        elif final_w <= image.shape[1]:
+#            padding_w = False
+#            diff_w = int(np.round(abs(final_w-image.shape[1])/2.0,0))
+#            if verbose:
+#                print("Cropping width: "+str(diff_w) + " pixels each side")
+#        #In case of odd image shapes:
+#        #check if the resulting cropping or padding operation would return the correct size
+#        odd_h,odd_w = -1,-1
+#        if padding_w == True:
+#            while final_w!=image.shape[1]+2*diff_w+odd_w:
+#                odd_w+=1 #odd_w is increased until the resulting image is of correct size
+#        elif padding_w == False:
+#            while final_w!=image.shape[1]-2*diff_w+odd_w:
+#                odd_w+=1 #odd_w is increased until the resulting image is of correct size
+#        if padding_h == True:
+#            while final_h!=image.shape[0]+2*diff_h+odd_h:
+#                odd_h+=1 #odd_w is increased until the resulting image is of correct size
+#        elif padding_h == False:
+#            while final_h!=image.shape[0]-2*diff_h+odd_h:
+#                odd_h+=1 #odd_w is increased until the resulting image is of correct size
+#                
+#        #Execute padding-only operation and overwrite original on list "images"
+#        if padding_h==True and padding_w==True:
+#            if channels==1:
+#                images[i] = np.pad(image,pad_width=( (diff_h, diff_h+odd_h),(diff_w, diff_w+odd_w) ),mode=padding_mode)
+#            elif channels==3:
+#                images[i] = np.pad(image,pad_width=( (diff_h, diff_h+odd_h),(diff_w, diff_w+odd_w),(0, 0) ),mode=padding_mode)
+#            else:
+#                if verbose:
+#                    print("Invalid image dimensions: "+str(image.shape))
+#    
+#        #Execute cropping-only operation and overwrite original on list "images"
+#        elif padding_h==False and padding_w==False:
+#            #Compute again the x,y locations of the cells (this is fast)
+#            y1 = np.around(pos_y[i]-final_h/2.0)              
+#            x1 = np.around(pos_x[i]-final_w/2.0) 
+#            y2 = y1+final_h               
+#            x2 = x1+final_w
+#            #overwrite the original image
+#            images[i] = image[int(y1):int(y2),int(x1):int(x2)]
+#            
+#        else:
+#            if padding_h==True:
+#                if channels==1:
+#                    image = np.pad(image,pad_width=( (diff_h, diff_h+odd_h),(0, 0) ),mode=padding_mode)
+#                elif channels==3:
+#                    image = np.pad(image,pad_width=( (diff_h, diff_h+odd_h),(0, 0),(0, 0) ),mode=padding_mode)
+#                else:
+#                    if verbose:
+#                        print("Invalid image dimensions: "+str(image.shape))
+#                if verbose:
+#                    print("Image size after padding heigth :"+str(image.shape))
+#                
+#            if padding_w==True:
+#                if channels==1:
+#                    image = np.pad(image,pad_width=( (0, 0),(diff_w, diff_w+odd_w) ),mode=padding_mode)
+#                elif channels==3:
+#                    image = np.pad(image,pad_width=( (0, 0),(diff_w, diff_w+odd_w),(0, 0) ),mode=padding_mode)
+#                else:
+#                    if verbose:
+#                        print("Invalid image dimensions: "+str(image.shape))
+#                if verbose:
+#                    print("Image size after padding width :"+str(image.shape))
+#        
+#            if padding_h==False:
+#                #Compute again the x,y locations of the cells (this is fast)
+#                y1 = np.around(pos_y[i]-final_h/2.0)              
+#                y2 = y1+final_h               
+#                image = image[int(y1):int(y2),:]
+#                if verbose:
+#                    print("Image size after cropping height:"+str(image.shape))
+#        
+#            if padding_w==False:
+#                #Compute again the x,y locations of the cells (this is fast)
+#                x1 = np.around(pos_x[i]-final_w/2.0) 
+#                x2 = x1+final_w
+#                image = image[:,int(x1):int(x2)]
+#                if verbose:
+#                    print("Image size after cropping width:"+str(image.shape))
+#            
+#            images[i] = image
+#    return images
 
 
 def image_resize_scale(images,pos_x,pos_y,final_h,final_w,channels,interpolation_method,verbose=False):
