@@ -27,7 +27,7 @@ mkl                            2019.0
 numpy                          1.16.4             
 onnx                           1.6.0              
 onnxconverter-common           1.6.0              
-opencv-contrib-python-headless 4.1.1.26           
+opencv-contrib-python-headless 4.4.0.42           
 openpyxl                       2.5.6              
 pandas                         0.24.0             
 Pillow                         5.4.1              
@@ -38,7 +38,7 @@ pycosat                        0.6.3
 PyInstaller                    4.0.dev0+89a5f6e9c9
 PyQt5                          5.9.2              
 PyQt5-sip                      12.7.1             
-pyqtgraph                      0.11.0rc0          
+pyqtgraph                      0.11.0          
 python-dateutil                2.7.5              
 pytz                           2019.3             
 PyYAML                         5.3                
