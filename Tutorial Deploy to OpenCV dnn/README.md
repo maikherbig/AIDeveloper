@@ -152,7 +152,7 @@ AIDeveloper:
 2. use forward_images_cv2 to load the frozen model and compute predictions for the same images
 3. compare both outputs
 
-This logic is carried out by the function **aid_cv2_dnn_tests**, which you can find 
+This logic is carried out by the function **test_forward_images_cv2**, which you can find 
 in [aid_cv2_dnn_tests.py](https://github.com/maikherbig/AIDeveloper/blob/master/Tutorial%20Deploy%20to%20OpenCV%20dnn/aid_cv2_dnn_tests.py).
 To assure that forwarding images works for simple and also for advanced 
 model architectures, two models were trained on the smiley dataset:
