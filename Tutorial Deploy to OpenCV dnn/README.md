@@ -211,7 +211,7 @@ for rtdc_path in datasets:
 After resizing each smiley to 32x32 pixels, they were placed at random positions on a noisy background image (60x100 pixels):
 ![alt text](https://github.com/maikherbig/AIDeveloper/blob/master/art/Smiley_Blink_Examples_Gray.png "Smiley blink example images")  
 Finally, the images were written to an .rtdc file. 
-For details please see Create_rtdc_gray.py which is contained in 
+For details please see **Create_rtdc_gray.py** which is contained in 
 [Smileys_Data.zip](https://github.com/maikherbig/AIDeveloper/blob/master/Tutorial%20Deploy%20to%20OpenCV%20dnn/Smileys_Data.zip).
 
 ## Training the smiley classification models
