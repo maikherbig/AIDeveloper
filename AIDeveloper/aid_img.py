@@ -144,10 +144,22 @@ def pad_arguments_np2cv(padding_mode):
     padmodes_cv = ["Delete","cv2.BORDER_CONSTANT","cv2.BORDER_REFLECT",
                    "cv2.BORDER_REFLECT_101","cv2.BORDER_DEFAULT",
                    "cv2.BORDER_REPLICATE","cv2.BORDER_WRAP"]
+    #padmodes_cv = [a.lower() for a in padmodes_cv]
     #If padding_mode is already one of those, just return the identity
     if padding_mode in padmodes_cv:
         return padding_mode
-
+    
+    if "cv2" in padding_mode and "constant" in padding_mode:
+        return "cv2.BORDER_CONSTANT"
+    elif "cv2" in padding_mode and "replicate" in padding_mode:
+        return "cv2.BORDER_REPLICATE"    
+    elif "cv2" in padding_mode and "reflect_101" in padding_mode:
+        return "cv2.BORDER_REFLECT_101"    
+    elif "cv2" in padding_mode and "reflect" in padding_mode:
+        return "cv2.BORDER_REFLECT"    
+    elif "cv2" in padding_mode and "wrap" in padding_mode:
+        return "cv2.BORDER_WRAP"    
+    
     #Check that the padding_mode is actually supported by OpenCV
     supported = ["constant","edge","reflect","symmetric","wrap"]
     assert padding_mode in supported, "The padding mode: '"+padding_mode+"' is not supported"
