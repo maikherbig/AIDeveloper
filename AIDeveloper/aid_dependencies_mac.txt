@@ -27,7 +27,7 @@ mkl                            2019.0
 numpy                          1.16.4             
 onnx                           1.6.0              
 onnxconverter-common           1.6.0              
-opencv-contrib-python-headless 4.4.0.42           
+opencv-contrib-python-headless 4.1.2.30           
 openpyxl                       2.5.6              
 pandas                         0.24.0             
 Pillow                         5.4.1              
