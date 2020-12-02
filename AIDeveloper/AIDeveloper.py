@@ -119,7 +119,7 @@ import aid_img, aid_dl, aid_bin
 import aid_frontend
 from partial_trainability import partial_trainability
 
-VERSION = "0.1.2_dev7" #Python 3.5.6 Version
+VERSION = "0.1.3" #Python 3.5.6 Version
 model_zoo_version = model_zoo.__version__()
 print("AIDeveloper Version: "+VERSION)
 print("model_zoo.py Version: "+model_zoo.__version__())
@@ -4378,7 +4378,7 @@ class MainWindow(QtWidgets.QMainWindow):
             optimizer_expert_on = bool(self.checkBox_optimizer.isChecked())
             optimizer_expert = str(self.comboBox_optimizer.currentText()).lower()
             optimizer_settings = self.optimizer_settings.copy() #get the current optimizer settings
-            paddingMode = str(self.comboBox_paddingMode.currentText()).lower()
+            paddingMode = str(self.comboBox_paddingMode.currentText())#.lower()
 
             model_metrics = self.get_metrics(nr_classes)    
             if "collection" in chosen_model.lower():
@@ -4893,7 +4893,7 @@ class MainWindow(QtWidgets.QMainWindow):
             optimizer_expert = str(self.comboBox_optimizer.currentText()).lower()
             optimizer_settings = self.fittingpopups_ui[listindex].optimizer_settings.copy()#make a copy to make sure that changes in the UI are not immediately used
 
-            paddingMode = str(self.comboBox_paddingMode.currentText()).lower()
+            paddingMode = str(self.comboBox_paddingMode.currentText())#.lower()
     
             train_last_layers = bool(self.checkBox_trainLastNOnly.isChecked())             
             train_last_layers_n = int(self.spinBox_trainLastNOnly.value())              
@@ -6954,7 +6954,7 @@ class MainWindow(QtWidgets.QMainWindow):
             loss_expert = str(self.comboBox_expt_loss.currentText()).lower()
             optimizer_expert = str(self.comboBox_optimizer.currentText()).lower()
             optimizer_settings = self.optimizer_settings.copy()
-            paddingMode = str(self.comboBox_paddingMode.currentText()).lower()
+            paddingMode = str(self.comboBox_paddingMode.currentText())#.lower()
     
             train_last_layers = bool(self.checkBox_trainLastNOnly.isChecked())             
             train_last_layers_n = int(self.spinBox_trainLastNOnly.value())              
@@ -7600,7 +7600,7 @@ class MainWindow(QtWidgets.QMainWindow):
         motionBlur_kernel = tuple(ast.literal_eval(motionBlur_kernel)) #translate string in the lineEdits to a tuple
         motionBlur_angle = tuple(ast.literal_eval(motionBlur_angle)) #translate string in the lineEdits to a tuple
 
-        paddingMode = str(self.comboBox_paddingMode.currentText()).lower()
+        paddingMode = str(self.comboBox_paddingMode.currentText())#.lower()
 
         #which index is requested by user:?
         req_index = int(self.spinBox_ShowIndex.value())
@@ -9563,7 +9563,7 @@ class MainWindow(QtWidgets.QMainWindow):
             std_trainingdata = None
             
         crop = int(self.spinBox_Crop_2.value()) 
-        paddingMode = str(self.comboBox_paddingMode.currentText()).lower()
+        paddingMode = str(self.comboBox_paddingMode.currentText())#.lower()
 
         #read self.ram to new variable ; DONT clear ram after since multiple assessments can run on the same data.
         DATA = self.ram
