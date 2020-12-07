@@ -6,7 +6,7 @@ import cv2
 import model_zoo 
 import aid_start,aid_dl,aid_bin #import a module that sits in the AIDeveloper folder
 dir_root = os.path.dirname(aid_start.__file__)#ask the module for its origin
-dir_settings = os.path.join(dir_root,"AIDeveloper_Settings.json")#dir to settings
+dir_settings = os.path.join(dir_root,"aid_settings.json")#dir to settings
 with open(dir_settings) as f:
     Default_dict = json.load(f)
     #Older versions of AIDeveloper might not have the Icon theme option->add it!
@@ -7296,6 +7296,89 @@ def get_hyper_params(Para_dict,ui_item):
 
     return Para_dict
 
+class Ui_Updates(QtWidgets.QWidget):
+    def setupUi(self, Updates):
+        Updates.setObjectName("Updates")
+        Updates.resize(565, 514)
+        icon = QtGui.QIcon()
+        icon.addPixmap(QtGui.QPixmap(os.path.join(dir_root,"art",Default_dict["Icon theme"],"main_icon_simple_04_update_01.png")), QtGui.QIcon.Normal, QtGui.QIcon.Off)
+
+        self.gridLayout_5 = QtWidgets.QGridLayout(Updates)
+        self.gridLayout_5.setObjectName("gridLayout_5")
+        self.pushButton_iconUpdate = QtWidgets.QPushButton(Updates)
+        self.pushButton_iconUpdate.setText("")
+
+        self.pushButton_iconUpdate.setIcon(icon)
+        self.pushButton_iconUpdate.setIconSize(QtCore.QSize(48, 48))
+        self.pushButton_iconUpdate.setFlat(True)
+        self.pushButton_iconUpdate.setObjectName("pushButton_iconUpdate")
+        self.gridLayout_5.addWidget(self.pushButton_iconUpdate, 0, 0, 1, 1)
+        self.groupBox_majorVersionInfo = QtWidgets.QGroupBox(Updates)
+        self.groupBox_majorVersionInfo.setObjectName("groupBox_majorVersionInfo")
+        self.gridLayout = QtWidgets.QGridLayout(self.groupBox_majorVersionInfo)
+        self.gridLayout.setObjectName("gridLayout")
+        self.label_yourVersion = QtWidgets.QLabel(self.groupBox_majorVersionInfo)
+        self.label_yourVersion.setObjectName("label_yourVersion")
+        self.gridLayout.addWidget(self.label_yourVersion, 0, 0, 1, 1)
+        self.lineEdit_yourVersion = QtWidgets.QLineEdit(self.groupBox_majorVersionInfo)
+        self.lineEdit_yourVersion.setEnabled(False)
+        self.lineEdit_yourVersion.setObjectName("lineEdit_yourVersion")
+        self.gridLayout.addWidget(self.lineEdit_yourVersion, 0, 1, 1, 1)
+        self.textBrowser_majorVersionInfo = QtWidgets.QTextBrowser(self.groupBox_majorVersionInfo)
+        self.textBrowser_majorVersionInfo.setEnabled(True)
+        self.textBrowser_majorVersionInfo.setObjectName("textBrowser_majorVersionInfo")
+        self.gridLayout.addWidget(self.textBrowser_majorVersionInfo, 1, 0, 1, 2)
+        self.gridLayout_5.addWidget(self.groupBox_majorVersionInfo, 0, 1, 1, 1)
+        self.groupBox_minorUpdates = QtWidgets.QGroupBox(Updates)
+        self.groupBox_minorUpdates.setObjectName("groupBox_minorUpdates")
+        self.gridLayout_4 = QtWidgets.QGridLayout(self.groupBox_minorUpdates)
+        self.gridLayout_4.setObjectName("gridLayout_4")
+        self.groupBox_localDisk = QtWidgets.QGroupBox(self.groupBox_minorUpdates)
+        self.groupBox_localDisk.setCheckable(False)
+        self.groupBox_localDisk.setObjectName("groupBox_localDisk")
+        self.gridLayout_2 = QtWidgets.QGridLayout(self.groupBox_localDisk)
+        self.gridLayout_2.setObjectName("gridLayout_2")
+        self.comboBox_updatesOndevice = QtWidgets.QComboBox(self.groupBox_localDisk)
+        self.comboBox_updatesOndevice.setObjectName("comboBox_updatesOndevice")
+        self.gridLayout_2.addWidget(self.comboBox_updatesOndevice, 0, 0, 1, 1)
+        self.pushButton_findFile = QtWidgets.QPushButton(self.groupBox_localDisk)
+        self.pushButton_findFile.setObjectName("pushButton_findFile")
+        self.gridLayout_2.addWidget(self.pushButton_findFile, 0, 1, 1, 1)
+        self.pushButton_installOndevice = QtWidgets.QPushButton(self.groupBox_localDisk)
+        self.pushButton_installOndevice.setObjectName("pushButton_installOndevice")
+        self.gridLayout_2.addWidget(self.pushButton_installOndevice, 1, 0, 1, 2)
+        self.gridLayout_4.addWidget(self.groupBox_localDisk, 1, 0, 1, 2)
+        self.groupBox_online = QtWidgets.QGroupBox(self.groupBox_minorUpdates)
+        self.groupBox_online.setCheckable(False)
+        self.groupBox_online.setObjectName("groupBox_online")
+        self.gridLayout_3 = QtWidgets.QGridLayout(self.groupBox_online)
+        self.gridLayout_3.setObjectName("gridLayout_3")
+        self.comboBox_updatesOnline = QtWidgets.QComboBox(self.groupBox_online)
+        self.comboBox_updatesOnline.setObjectName("comboBox_updatesOnline")
+        self.gridLayout_3.addWidget(self.comboBox_updatesOnline, 0, 0, 1, 1)
+        self.pushButton_installOnline = QtWidgets.QPushButton(self.groupBox_online)
+        self.pushButton_installOnline.setObjectName("pushButton_installOnline")
+        self.gridLayout_3.addWidget(self.pushButton_installOnline, 1, 0, 1, 1)
+        self.gridLayout_4.addWidget(self.groupBox_online, 1, 2, 1, 1)
+        self.gridLayout_5.addWidget(self.groupBox_minorUpdates, 1, 1, 1, 1)
+        self.groupBox_minorUpdates.raise_()
+        self.groupBox_majorVersionInfo.raise_()
+        self.pushButton_iconUpdate.raise_()
+
+        self.retranslateUi(Updates)
+        QtCore.QMetaObject.connectSlotsByName(Updates)
+
+    def retranslateUi(self, Updates):
+        _translate = QtCore.QCoreApplication.translate
+        Updates.setWindowTitle(_translate("Updates", "Update AIDeveloper",None))
+        self.groupBox_majorVersionInfo.setTitle(_translate("Updates", "General information",None))
+        self.label_yourVersion.setText(_translate("Updates", "Your version",None))
+        self.groupBox_minorUpdates.setTitle(_translate("Updates", "Select update",None))
+        self.groupBox_localDisk.setTitle(_translate("Updates", "From local disk",None))
+        self.pushButton_findFile.setText(_translate("Updates", "Find file"))
+        self.pushButton_installOndevice.setText(_translate("Updates", "Install",None))
+        self.groupBox_online.setTitle(_translate("Updates", "From online repository",None))
+        self.pushButton_installOnline.setText(_translate("Updates", "Download + Install",None))
 
 
 
