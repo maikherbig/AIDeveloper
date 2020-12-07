@@ -2,7 +2,7 @@
 """
 aid_bin
 some useful functions that I want to keep separate to
-make the main script a bit shorter
+keep the backbone script shorter
 ---------
 @author: maikherbig
 """
@@ -11,11 +11,12 @@ import os,shutil,json,re,urllib
 import numpy as np
 import dclab
 import h5py,time
+import six,tarfile, zipfile
 import aid_start #import a module that sits in the AIDeveloper folder
 dir_root = os.path.dirname(aid_start.__file__)#ask the module for its origin
 
 def save_aid_settings(Default_dict):
-    dir_settings = os.path.join(dir_root,"AIDeveloper_Settings.json")#dir to settings
+    dir_settings = os.path.join(dir_root,"aid_settings.json")#dir to settings
     #Save the layout to Default_dict
     with open(dir_settings, 'w') as f:
         json.dump(Default_dict,f)
@@ -443,60 +444,6 @@ def write_rtdc(fname,rtdc_datasets,X_valid,Indices,cropped=True,color_mode='Gray
                 pass
 
 
-
-
-def check_update(this_version):
-    """
-    got to GitHub and check if there are any new releases available
-    thisversion = version of the installed release
-    """
-    try:
-        url_releases = "https://github.com/maikherbig/AIDeveloper/releases"
-        content = urllib.request.urlopen(url_releases).read().decode('UTF-8')
-        tags = content.split("/maikherbig/AIDeveloper/releases/tag/")[1:]
-        tags = [t.split('">AIDeveloper')[0] for t in tags]
-#        tags_values =  [list(map(int, re.findall(r'\d+', t))) for t in tags]
-#        highest_major = np.max([t[0] for t in tags_values])
-#        highest_minor = np.max([t[1] for t in tags_values])
-#        highest_revis = np.max([t[2] for t in tags_values])
-#        tags_values = np.array(tags_values)
-#        #are there dev versions of the most recent version?
-#        latest_release = ".".join([str(highest_major),str(highest_minor),str(highest_revis)])
-        latest_release = tags[0]
-        highest_dev = [latest_release+"_dev" in tag for tag in tags]
-        ind = np.where(np.array(highest_dev)==True)[0]
-        if len(ind)>0:
-            highest_devs_tag = list(np.array(tags)[ind])
-            #corresponding numbers
-            devs_tag_values =  [list(map(int, re.findall(r'\d+', t))) for t in highest_devs_tag]
-            highest_dev_ind = np.argmax([t[3] for t in devs_tag_values])
-            #name of the highest dev
-            latest_release = highest_devs_tag[highest_dev_ind]
-            url = "https://github.com/maikherbig/AIDeveloper/releases/tag/"+latest_release
-        else:
-            url = "https://github.com/maikherbig/AIDeveloper/releases/tag/"+latest_release
-        
-        #if "latest_release" is different from "this_version" then, an update is available!
-        if this_version==latest_release:
-            #no need to update, overwrite latest_release variable
-            latest_release = "You are up to date"
-            changelog = "You are up to date"
-        else:
-            #Open the url of the latest release and get the changelog
-            content = urllib.request.urlopen(url).read().decode('UTF-8')
-            changelog = content.split('<div class="markdown-body">')[1].split("</p>\n  </div>")[0]
-            changelog = "Changelog:\n"+changelog.lstrip()
-        
-        dic = {"Errors":None,"latest_release":latest_release,"latest_release_url":url,"changelog":changelog}
-
-        return dic
-    
-    except Exception as e:
-        dic = {"Errors":e}
-        #There is an some issue. Maybe not online...
-        return dic
-
-
 def create_temp_folder():
     temp_path = os.path.join(dir_root,"temp")
     if os.path.exists(temp_path):
@@ -585,15 +532,258 @@ def ram_compare_data(ram_dic,new_dic):
     alltrue = all(dic.values())
     return alltrue
     
+def download_zip(url_zip,fpath):
+    """
+    Download a zip file
+    Parameters
+    ----------
+    url: str, URL to the downloadable zip file (e.g. https://github.com/maikherbig/AIDeveloper/releases/download/1.0.1-update/AIDeveloper_1.0.1-update.zip)
+    fpath: str, path to store the downloaded data locally
+    """
+    error_msg = 'URL fetch failure on {}: {} -- {}'
+        
+    try:
+      try:
+        six.moves.urllib.request.urlretrieve(url=url_zip,filename=fpath)
+      except six.moves.urllib.error.HTTPError as e:
+        raise Exception(error_msg.format(url_zip, e.code, e.msg))
+      except six.moves.urllib.error.URLError as e:
+        raise Exception(error_msg.format(url_zip, e.errno, e.reason))
+    except (Exception, KeyboardInterrupt) as a:
+      if os.path.exists(fpath):
+        os.remove(fpath)
+      raise
+
+def extract_archive(file_path, path='.', archive_format='auto'):
+  """
+  from:
+      https://github.com/tensorflow/tensorflow/blob/v2.3.1/tensorflow/python/keras/utils/data_utils.py#L168-L297
+      
+  Extracts an archive if it matches tar, tar.gz, tar.bz, or zip formats.
+  Arguments:
+      file_path: path to the archive file
+      path: path to extract the archive file
+      archive_format: Archive format to try for extracting the file.
+          Options are 'auto', 'tar', 'zip', and None.
+          'tar' includes tar, tar.gz, and tar.bz files.
+          The default 'auto' is ['tar', 'zip'].
+          None or an empty list will return no matches found.
+  Returns:
+      True if a match was found and an archive extraction was completed,
+      False otherwise.
+  """
+  if archive_format is None:
+    return False
+  if archive_format == 'auto':
+    archive_format = ['tar', 'zip']
+  if isinstance(archive_format, six.string_types):
+    archive_format = [archive_format]
+
+  #file_path = path_to_string(file_path)
+  #path = path_to_string(path)
+
+  for archive_type in archive_format:
+    if archive_type == 'tar':
+      open_fn = tarfile.open
+      is_match_fn = tarfile.is_tarfile
+    if archive_type == 'zip':
+      open_fn = zipfile.ZipFile
+      is_match_fn = zipfile.is_zipfile
+
+    if is_match_fn(file_path):
+      with open_fn(file_path) as archive:
+        try:
+          archive.extractall(path)
+        except (tarfile.TarError, RuntimeError, KeyboardInterrupt):
+          if os.path.exists(path):
+            if os.path.isfile(path):
+              os.remove(path)
+            else:
+              shutil.rmtree(path)
+          raise
+      return True
+  return False
+
+def updates_ondevice():
+    """
+    Searches the directory of AIDeveloper for available updates (zip folders)
+    Returns
+    list: list contains strings, each is a tag of an -update version    
+    """
+    update_zips = os.listdir(dir_root)
+    update_zips = [file for file in update_zips if "-update.zip" in file]
+    tags_update = [file.split("AIDeveloper_")[1] for file in update_zips]
+    tags_update = [file.split(".zip")[0] for file in tags_update]
+    return tags_update
+
+def check_update(this_version):
+    """
+    go to GitHub and check if there are new releases available
+    check local (on device) AIDeveloper folder for "-update.zip" files
+    
+    Parameters
+    ----------
+    this_version: str, version of the installed release
+    """
+    
+    #check local (on device)
+    tags_update_ondevice = updates_ondevice()
+    
+    #check online
+    try:
+        url_releases = "https://github.com/maikherbig/AIDeveloper/releases"
+        content = urllib.request.urlopen(url_releases).read().decode('UTF-8')
+        tags = content.split("/maikherbig/AIDeveloper/releases/tag/")[1:]
+        tags = [t.split('">AIDeveloper')[0] for t in tags]
+
+        #handle  -update versions separately
+        tags_update_online = [a for a in tags if "update" in a]
+        tags_update_online = [a.split("-update")[0]+"-update" for a in tags_update_online]
+        tags = [a for a in tags if not "update" in a]
+
+        latest_release = tags[0]
+        highest_dev = [latest_release+"_dev" in tag for tag in tags]
+        ind = np.where(np.array(highest_dev)==True)[0]
+        if len(ind)>0:
+            highest_devs_tag = list(np.array(tags)[ind])
+            #corresponding numbers
+            devs_tag_values =  [list(map(int, re.findall(r'\d+', t))) for t in highest_devs_tag]
+            highest_dev_ind = np.argmax([t[3] for t in devs_tag_values])
+            #name of the highest dev
+            latest_release = highest_devs_tag[highest_dev_ind]
+            url = "https://github.com/maikherbig/AIDeveloper/releases/tag/"+latest_release
+        else:
+            url = "https://github.com/maikherbig/AIDeveloper/releases/tag/"+latest_release
+        
+        #if "latest_release" is different from "this_version" then, an update is available!
+        if this_version==latest_release:
+            #no need to update, overwrite latest_release variable
+            latest_release = "You are up to date"
+            changelog = "You are up to date"
+        else:
+            #Open the url of the latest release and get the changelog
+            content = urllib.request.urlopen(url).read().decode('UTF-8')
+            changelog = content.split('<div class="markdown-body">')[1].split("</p>\n  </div>")[0]
+            changelog = "Changelog:\n"+changelog.lstrip()
+        
+        
+        dic = {"Errors":None,"latest_release":latest_release,"latest_release_url":url,"changelog":changelog,"tags_update_online":tags_update_online,"tags_update_ondevice":tags_update_ondevice}
+
+        return dic
+    
+    except Exception as e:
+        dic = {"Errors":e,"tags_update_ondevice":tags_update_ondevice}
+        #There is an some issue. Maybe not online...
+        return dic
+
+def currentversion_2_zip(VERSION):
+    """
+    Collect following files and folder:
+    """
+    files = [
+    "aid_backbone.py",
+    "aid_bin.py",
+    "aid_dependencies_linux.txt",
+    "aid_dependencies_mac.txt",
+    "aid_dependencies_win.txt",
+    "aid_dl.py",
+    "aid_frontend.py",
+    "aid_img.py",
+    "aid_imports.py",
+    "aid_main.py",
+    "aid_start.py",
+    "aid_settings.json",
+    "Empty.rtdc",
+    "layout_dark_notooltip.txt",
+    "layout_dark.txt",
+    "layout_darkorange_notooltip.txt",
+    "layout_darkorange.txt",
+    "main_icon_simple_04_48.ico",
+    "main_icon_simple_04_256.icns",
+    "main_icon_simple_04_256.ico",
+    "model_zoo.py",
+    "partial_trainability.py"]
+
+    #create a name for the zipfile (without overwriting) 
+    path_save = "AIDeveloper_"+VERSION+"-backup.zip"
+    path_save = os.path.join(dir_root,path_save)#path to save the update zip        
+    if not os.path.exists(path_save):#if such a file does not yet exist...
+        path_save = path_save
+    else:#such a file already exists!
+        #Avoid to overwriting an existing file:
+        print("Adding additional number since file exists!")
+        i = 1
+        while os.path.exists(path_save):
+            path_save = "AIDeveloper_"+VERSION+"-backup_"+str(i)+".zip"
+            path_save = os.path.join(dir_root,path_save)#path to save the update zip        
+            i+=1
+
+    #create a ZipFile object
+    with zipfile.ZipFile(path_save, 'w',compression=zipfile.ZIP_DEFLATED) as zipObj:
+        for file in files:
+            path_orig = os.path.join(dir_root,file)
+            zipObj.write(path_orig, os.path.basename(path_orig))
+
+        dirName = os.path.join(dir_root,"art")
+        #Iterate over all the files in "art" folder
+        for folder, subfolders, filenames in os.walk(dirName):
+            for filename in filenames:
+                filePath = os.path.join(folder, filename)
+                path_in_zip = os.path.join("art",filePath.split(os.sep+"art"+os.sep)[1])
+                zipObj.write(filePath,path_in_zip)
+               
+#    
+#    print(path_save)
+#    #Create that folder
+#    os.mkdir(path_save)
+#    
+#    for file in files:
+#        path_orig = os.path.join(dir_root,file)
+#        path_save_file = os.path.join(path_save,file)#path to save the update zip 
+#        if os.path.isfile(path_orig):
+#            shutil.copy(path_orig, path_save_file) #copy original file
+#        else:#os.path.isdir(path_orig)
+#            shutil.copytree(path_orig, path_save_file) #copy original file
+            
+    #append to hdf5 file
 
 
 
+
+def download_aid_update(tag):
+    url_zip = "https://github.com/maikherbig/AIDeveloper/releases/download/"+tag+"/AIDeveloper_"+tag+".zip"
+    path_save = "AIDeveloper_"+tag+".zip"
+    path_save = os.path.join(dir_root,path_save)#path to save the update zip
+    download_zip(url_zip,path_save)
+
+#import aid_start #import a module that sits in the AIDeveloper folder
+#dir_root = os.path.dirname(aid_start.__file__)#ask the module for its origin
+
+#def save_aid_settings(Default_dict):
+#    dir_settings = os.path.join(dir_root,"aid_settings.json")#dir to settings
+#    #Save the layout to Default_dict
+#    with open(dir_settings, 'w') as f:
+#        json.dump(Default_dict,f)
 
 
 
   
 
 #################Some functions that are not used anymore######################
+
+#def updates_online():
+#    """
+#    Searches the directory of AIDeveloper for available updates (zip folders)
+#    Returns
+#    list: list contains strings, each is a tag of an "a.b.c-update" version    
+#    """
+#    url_releases = "https://github.com/maikherbig/AIDeveloper/releases"
+#    content = urllib.request.urlopen(url_releases).read().decode('UTF-8')
+#    tags = content.split("/maikherbig/AIDeveloper/releases/tag/")[1:]
+#    tags = [t.split('">AIDeveloper')[0] for t in tags]
+#    tags_update = [a for a in tags if "update" in a]
+#    tags_update = [a.split("-update")[0]+"-update" for a in tags_update]
+#    return tags_update
 
 #def zoom(a, factor):
 #    a = np.asarray(a)
