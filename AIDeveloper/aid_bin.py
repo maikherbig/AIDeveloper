@@ -10,7 +10,7 @@ keep the backbone script shorter
 import os,shutil,json,re,urllib
 import numpy as np
 import dclab
-import h5py,time
+import h5py,time,datetime
 import six,tarfile, zipfile
 import aid_start #import a module that sits in the AIDeveloper folder
 dir_root = os.path.dirname(aid_start.__file__)#ask the module for its origin
@@ -610,22 +610,31 @@ def updates_ondevice():
     Returns
     list: list contains strings, each is a tag of an -update version    
     """
-    update_zips = os.listdir(dir_root)
-    update_zips = [file for file in update_zips if "-update.zip" in file]
-    tags_update = [file.split("AIDeveloper_")[1] for file in update_zips]
+    files = os.listdir(dir_root)
+    update_zips = [file for file in files if "-update.zip" in file]
+    backup_zips = [file for file in files if "backup" in file]
+    ondevice_zips = update_zips+backup_zips
+    tags_update = [file.split("AIDeveloper_")[1] for file in ondevice_zips]
     tags_update = [file.split(".zip")[0] for file in tags_update]
     return tags_update
 
-def check_update(this_version):
+def check_for_updates(this_version):
     """
-    go to GitHub and check if there are new releases available
-    check local (on device) AIDeveloper folder for "-update.zip" files
+    check GitHub for new releases (updates of AIDeveloper)
+    check local (on device) AIDeveloper folder for "-update.zip" and "-backup.zip" files
     
     Parameters
     ----------
     this_version: str, version of the installed release
     """
-    
+    #pre-define some variables
+    Errors = None
+    latest_release = None
+    url = ""
+    changelog = ""
+    tags_update_online = []
+    tags_update_ondevice = []
+
     #check local (on device)
     tags_update_ondevice = updates_ondevice()
     
@@ -638,7 +647,7 @@ def check_update(this_version):
 
         #handle  -update versions separately
         tags_update_online = [a for a in tags if "update" in a]
-        tags_update_online = [a.split("-update")[0]+"-update" for a in tags_update_online]
+        tags_update_online = [a.split("-update")[0]+"-update" for a in tags_update_online]+["Bleeding edge"]
         tags = [a for a in tags if not "update" in a]
 
         latest_release = tags[0]
@@ -666,21 +675,19 @@ def check_update(this_version):
             changelog = content.split('<div class="markdown-body">')[1].split("</p>\n  </div>")[0]
             changelog = "Changelog:\n"+changelog.lstrip()
         
-        
-        dic = {"Errors":None,"latest_release":latest_release,"latest_release_url":url,"changelog":changelog,"tags_update_online":tags_update_online,"tags_update_ondevice":tags_update_ondevice}
-
-        return dic
-    
     except Exception as e:
-        dic = {"Errors":e,"tags_update_ondevice":tags_update_ondevice}
-        #There is an some issue. Maybe not online...
-        return dic
+        #There is an issue. Maybe no internet connection...
+        Errors = e
+        
+    dic = {"Errors":Errors,"latest_release":latest_release,"latest_release_url":url
+           ,"changelog":changelog,"tags_update_online":tags_update_online,
+           "tags_update_ondevice":tags_update_ondevice}
 
-def currentversion_2_zip(VERSION):
-    """
-    Collect following files and folder:
-    """
+    return dic
+
+def aideveloper_filelist():
     files = [
+    "AIDeveloper.py",
     "aid_backbone.py",
     "aid_bin.py",
     "aid_dependencies_linux.txt",
@@ -690,7 +697,6 @@ def currentversion_2_zip(VERSION):
     "aid_frontend.py",
     "aid_img.py",
     "aid_imports.py",
-    "aid_main.py",
     "aid_start.py",
     "aid_settings.json",
     "Empty.rtdc",
@@ -703,6 +709,26 @@ def currentversion_2_zip(VERSION):
     "main_icon_simple_04_256.ico",
     "model_zoo.py",
     "partial_trainability.py"]
+    return files
+
+def check_aid_scripts_complete(aid_directory):
+    files = aideveloper_filelist()
+    #complete path to files/folders
+    files_paths = [os.path.join(aid_directory,file) for file in files] #full path
+
+    #check that all required files are there    
+    check = [os.path.isfile(path) or os.path.isdir(path) for path in files_paths]
+    ind = [i for i, x in enumerate(check) if not x]       
+    assert all(check), "Cannot create a backup! Following file(s) are missing: "+str([files_paths[i] for i in ind])
+
+    return files
+
+    
+def backup_current_version(VERSION):
+    """
+    Collect following files and folder:
+    """
+    files = check_aid_scripts_complete(dir_root)
 
     #create a name for the zipfile (without overwriting) 
     path_save = "AIDeveloper_"+VERSION+"-backup.zip"
@@ -710,7 +736,7 @@ def currentversion_2_zip(VERSION):
     if not os.path.exists(path_save):#if such a file does not yet exist...
         path_save = path_save
     else:#such a file already exists!
-        #Avoid to overwriting an existing file:
+        #Avoid to overwriting existing file:
         print("Adding additional number since file exists!")
         i = 1
         while os.path.exists(path_save):
@@ -732,29 +758,90 @@ def currentversion_2_zip(VERSION):
                 path_in_zip = os.path.join("art",filePath.split(os.sep+"art"+os.sep)[1])
                 zipObj.write(filePath,path_in_zip)
                
-#    
-#    print(path_save)
-#    #Create that folder
-#    os.mkdir(path_save)
-#    
-#    for file in files:
-#        path_orig = os.path.join(dir_root,file)
-#        path_save_file = os.path.join(path_save,file)#path to save the update zip 
-#        if os.path.isfile(path_orig):
-#            shutil.copy(path_orig, path_save_file) #copy original file
-#        else:#os.path.isdir(path_orig)
-#            shutil.copytree(path_orig, path_save_file) #copy original file
-            
-    #append to hdf5 file
+    return path_save #return the filename of the backup file
 
-
-
-
+def delete_current_version():
+    files = check_aid_scripts_complete(dir_root)
+    files_paths = [os.path.join(dir_root,file) for file in files] #full path
+    for file in files_paths:
+        if os.path.isfile(file):#if file exists
+            os.remove(file)
+    try:
+        file = os.path.join(dir_root,"art")
+        shutil.rmtree(file)
+    except:
+        pass
+   
 def download_aid_update(tag):
     url_zip = "https://github.com/maikherbig/AIDeveloper/releases/download/"+tag+"/AIDeveloper_"+tag+".zip"
     path_save = "AIDeveloper_"+tag+".zip"
     path_save = os.path.join(dir_root,path_save)#path to save the update zip
-    download_zip(url_zip,path_save)
+    if not os.path.isfile(path_save):
+        download_zip(url_zip,path_save)
+        return {"success":True,"path_save":path_save}
+    else:
+        return {"success":False,"path_save":path_save}
+
+def download_aid_repo():
+    #Check online for most recent scripts (bleeding edge update)
+    files = aideveloper_filelist()#+["art"]#TODO: also download the folder art
+    url_scripts_repo = ["https://raw.github.com/maikherbig/AIDeveloper/master/AIDeveloper/"+f for f in files]
+    path_temp = create_temp_folder()
+    path_temp = os.path.join(path_temp,"update_files_bleeding_edge")
+    
+    try:
+        if os.path.exists(path_temp):
+            #delete this folder
+            shutil.rmtree(path_temp)
+        #Create this folder (nice and empty)
+        os.mkdir(path_temp)
+    
+        for i  in range(len(files)):
+            save_to = os.path.join(path_temp,files[i])
+            download_zip(url_scripts_repo[i],save_to)
+        
+        #check completeness/integrity (certain scripts need to be there)
+        check_aid_scripts_complete(path_temp)
+        
+        #create a zip file 
+        date = datetime.datetime.now().strftime("%Y%m%d_%H-%M-%S")
+        path_save = os.path.join(dir_root,"AIDeveloper_"+date)
+        shutil.make_archive(path_save, 'zip', path_temp)
+        #delete the temporary files
+        shutil.rmtree(path_temp)
+        return {"success":True,"path_save":path_save+".zip"}
+    except:
+        return {"success":False,"path_save":""}
+
+def update_from_zip(item_path,VERSION):
+    #check that the zip contains all required files
+    #zip_content = zipfile.ZipFile(item_path, 'r').namelist()
+    
+    #Unzip it into temp/update_files
+    path_temp = create_temp_folder()
+    path_temp = os.path.join(path_temp,"update_files")
+    extract_archive(item_path, path_temp, archive_format='zip')
+    #check completeness/integrity (certain scripts need to be there)
+    check_aid_scripts_complete(path_temp)
+    #delete these files again
+    shutil.rmtree(path_temp)
+
+    #create a backup of the current version
+    path_backup = backup_current_version(VERSION)
+    #delete current version
+    delete_current_version()
+    
+    #Unzip update into dir_root
+    extract_archive(item_path, dir_root, archive_format='zip')
+
+    #check completeness/integrity again (certain scripts need to be there)
+    try:
+        check_aid_scripts_complete(dir_root)
+    except:#restore previous version from backup.zip 
+        extract_archive(path_backup, dir_root, archive_format='zip')
+
+
+
 
 #import aid_start #import a module that sits in the AIDeveloper folder
 #dir_root = os.path.dirname(aid_start.__file__)#ask the module for its origin
