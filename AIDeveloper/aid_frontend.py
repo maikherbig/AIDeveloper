@@ -6839,12 +6839,19 @@ class Ui_Form_expt_optim(QtWidgets.QWidget):
         self.pushButton_ok.setText(_translate("Form_expt_optim", "OK"))
 
 
-def errormessage(e):
+def message(e,msg_type="Error"):
     #There was an error!
     msg = QtWidgets.QMessageBox()
-    msg.setIcon(QtWidgets.QMessageBox.Critical)       
+    if msg_type=="Error":
+        msg.setIcon(QtWidgets.QMessageBox.Critical)       
+    elif msg_type=="Information":
+        msg.setIcon(QtWidgets.QMessageBox.Information)       
+    elif msg_type=="Question":
+        msg.setIcon(QtWidgets.QMessageBox.Question)       
+    elif msg_type=="Warning":
+        msg.setIcon(QtWidgets.QMessageBox.Warning)       
     msg.setText(str(e))
-    msg.setWindowTitle("Error")
+    msg.setWindowTitle(msg_type)
     msg.setStandardButtons(QtWidgets.QMessageBox.Ok)
     msg.exec_()
     pass
@@ -6879,24 +6886,24 @@ def load_hyper_params(ui_item,para):
         if index >= 0:
             ui_item.comboBox_GrayOrRGB.setCurrentIndex(index)
     except Exception as e:
-        errormessage(e)
+        message(e)
     try:
         prop = int(para["Zoom order"].iloc[-1])
         ui_item.comboBox_zoomOrder.setCurrentIndex(prop)
     except Exception as e:
-        errormessage(e)
+        message(e)
     try:
         prop = str(para["Normalization"].iloc[-1])
         index = ui_item.comboBox_Normalization.findText(prop, QtCore.Qt.MatchFixedString)
         if index >= 0:
             ui_item.comboBox_Normalization.setCurrentIndex(index)
     except Exception as e:
-        errormessage(e)
+        message(e)
     try:
         prop = int(para["Nr. epochs"].iloc[-1])
         ui_item.spinBox_NrEpochs.setValue(prop)
     except Exception as e:
-        errormessage(e)
+        message(e)
     try:
         prop = int(para["Keras refresh after nr. epochs"].iloc[-1])
         ui_item.spinBox_RefreshAfterEpochs.setValue(prop)
@@ -6915,7 +6922,7 @@ def load_hyper_params(ui_item,para):
         prop = str(para["shear"].iloc[-1])
         ui_item.lineEdit_shearRange.setText(prop)
     except Exception as e:
-        errormessage(e)
+        message(e)
     try:    
         prop = int(para["Keras refresh after nr. epochs"].iloc[-1])
         ui_item.spinBox_RefreshAfterNrEpochs.setValue(prop)
@@ -6932,7 +6939,7 @@ def load_hyper_params(ui_item,para):
         prop = float(para["Gaussnoise Scale"].iloc[-1])
         ui_item.doubleSpinBox_GaussianNoiseScale.setValue(prop)
     except Exception as e:
-        errormessage(e)
+        message(e)
     try:
         prop = bool(para["Contrast on"].iloc[-1])
         ui_item.checkBox_contrast.setChecked(prop)
@@ -6951,7 +6958,7 @@ def load_hyper_params(ui_item,para):
         prop = float(para["Hue delta"].iloc[-1])
         ui_item.doubleSpinBox_hueDelta.setValue(prop)
     except Exception as e:
-        errormessage(e)
+        message(e)
     try:
         prop = bool(para["Average blur on"].iloc[-1])
         ui_item.checkBox_avgBlur.setChecked(prop)
@@ -6972,12 +6979,12 @@ def load_hyper_params(ui_item,para):
         prop = str(para["Motion blur Angle"].iloc[-1])
         ui_item.lineEdit_motionBlurAngle.setText(prop)
     except Exception as e:
-        errormessage(e)
+        message(e)
     try:
         prop = bool(para["expert_mode"].iloc[-1])
         ui_item.groupBox_expertMode.setChecked(prop)
     except Exception as e:
-        errormessage(e)
+        message(e)
     try:
         prop = str(para["optimizer_settings"].iloc[-1])
         prop = eval(prop)
@@ -7006,7 +7013,7 @@ def load_hyper_params(ui_item,para):
         ui_item.optimizer_settings["doubleSpinBox_adamax_beta1"] = prop["doubleSpinBox_adamax_beta1"]
         ui_item.optimizer_settings["doubleSpinBox_adamax_beta2"] = prop["doubleSpinBox_adamax_beta2"]
     except Exception as e:
-        errormessage(e)
+        message(e)
     try:
         prop = bool(para["optimizer_expert_on"].iloc[-1])
         ui_item.checkBox_optimizer.setChecked(prop)
@@ -7015,26 +7022,26 @@ def load_hyper_params(ui_item,para):
         if index >= 0:
             ui_item.comboBox_optimizer.setCurrentIndex(index)
     except Exception as e:
-        errormessage(e)
+        message(e)
     try:
         prop = int(para["batchSize_expert"].iloc[-1])
         ui_item.spinBox_batchSize.setValue(prop)
         prop = int(para["epochs_expert"].iloc[-1])
         ui_item.spinBox_epochs.setValue(prop)
     except Exception as e:
-        errormessage(e)
+        message(e)
     try:
         prop = bool(para["learning_rate_expert_on"].iloc[-1])
         ui_item.groupBox_learningRate.setChecked(prop)
     except Exception as e:
-        errormessage(e)
+        message(e)
     try:
         prop = bool(para["learning_rate_const_on"].iloc[-1])
         ui_item.radioButton_LrConst.setChecked(prop)
         prop = float(para["learning_rate_const"].iloc[-1])
         ui_item.doubleSpinBox_learningRate.setValue(prop)
     except Exception as e:
-        errormessage(e)
+        message(e)
     try:
         prop = bool(para["learning_rate_cycLR_on"].iloc[-1])
         ui_item.radioButton_LrCycl.setChecked(prop)
@@ -7051,7 +7058,7 @@ def load_hyper_params(ui_item,para):
         ui_item.clr_settings["step_size"] = prop["step_size"]
         ui_item.clr_settings["gamma"] = prop["gamma"]
     except Exception as e:
-        errormessage(e)
+        message(e)
     try:
         prop = bool(para["learning_rate_expo_on"].iloc[-1])
         ui_item.radioButton_LrExpo.setChecked(prop)
@@ -7062,7 +7069,7 @@ def load_hyper_params(ui_item,para):
         prop = float(para["expDecRate"].iloc[-1])
         ui_item.doubleSpinBox_expDecRate.setValue(prop)
     except Exception as e:
-        errormessage(e)
+        message(e)
     try:
         prop = bool(para["loss_expert_on"].iloc[-1])
         ui_item.checkBox_expt_loss.setChecked(prop)
@@ -7071,14 +7078,14 @@ def load_hyper_params(ui_item,para):
         if index >= 0:
             ui_item.comboBox_expt_loss.setCurrentIndex(index)
     except Exception as e:
-        errormessage(e)
+        message(e)
     try:
         prop = str(para["paddingMode"].iloc[-1])
         index = ui_item.comboBox_paddingMode.findText(prop, QtCore.Qt.MatchFixedString)
         if index >= 0:
             ui_item.comboBox_paddingMode.setCurrentIndex(index)
     except Exception as e:
-        errormessage(e)
+        message(e)
     try:
         prop = bool(para["train_last_layers"].iloc[-1])
         ui_item.checkBox_trainLastNOnly.setChecked(prop)
@@ -7087,7 +7094,7 @@ def load_hyper_params(ui_item,para):
         prop = bool(para["train_dense_layers"].iloc[-1])
         ui_item.checkBox_trainDenseOnly.setChecked(prop)
     except Exception as e:
-        errormessage(e)
+        message(e)
     try:
         prop = bool(para["dropout_expert_on"].iloc[-1])
         ui_item.checkBox_dropout.setChecked(prop)
@@ -7095,7 +7102,7 @@ def load_hyper_params(ui_item,para):
         if prop!="()":
             ui_item.lineEdit_dropout.setText(prop[1:-1])
     except Exception as e:
-        errormessage(e)
+        message(e)
     try:
         prop = bool(para["lossW_expert_on"].iloc[-1])
         ui_item.checkBox_lossW.setChecked(prop)
@@ -7103,7 +7110,7 @@ def load_hyper_params(ui_item,para):
         if prop!="nan":
             ui_item.lineEdit_lossW.setText(prop)
     except Exception as e:
-        errormessage(e)
+        message(e)
     try:
         prop = str(para["metrics"].iloc[-1])
         if "accuracy" in prop.lower():
@@ -7115,7 +7122,7 @@ def load_hyper_params(ui_item,para):
         if "recall" in prop.lower():
             ui_item.checkBox_expertRecall.setChecked(True)
     except Exception as e:
-        errormessage(e)
+        message(e)
 
 
 def get_hyper_params(Para_dict,ui_item):
@@ -7137,7 +7144,7 @@ def get_hyper_params(Para_dict,ui_item):
     Para_dict["Color Mode"]=str(ui_item.comboBox_GrayOrRGB.currentText()),
     try: Para_dict["Zoom order"]=int(ui_item.comboBox_zoomOrder.currentIndex()), 
     except Exception as e:
-        errormessage(e)
+        message(e)
     try:
         if ui_item.radioButton_cpu.isChecked():
             gpu_used = False
@@ -7150,7 +7157,7 @@ def get_hyper_params(Para_dict,ui_item):
         Para_dict["gpu_used"]=gpu_used,
         Para_dict["gpu_memory"]=gpu_memory,
     except Exception as e:
-        errormessage(e)
+        message(e)
     Para_dict["Output Nr. classes"]=np.nan,
     norm = str(ui_item.comboBox_Normalization.currentText())
     Para_dict["Normalization"]=norm,
@@ -7165,7 +7172,7 @@ def get_hyper_params(Para_dict,ui_item):
         Para_dict["zoom"]=float(ui_item.lineEdit_zoomRange.text()),
         Para_dict["shear"]=float(ui_item.lineEdit_shearRange.text()),
     except Exception as e:
-        errormessage(e)
+        message(e)
     try:
         Para_dict["Brightness refresh after nr. epochs"]=int(ui_item.spinBox_RefreshAfterNrEpochs.value()),
         Para_dict["Brightness add. lower"]=float(ui_item.spinBox_PlusLower.value()),
@@ -7175,7 +7182,7 @@ def get_hyper_params(Para_dict,ui_item):
         Para_dict["Gaussnoise Mean"]=float(ui_item.doubleSpinBox_GaussianNoiseMean.value()),
         Para_dict["Gaussnoise Scale"]=float(ui_item.doubleSpinBox_GaussianNoiseScale.value()),
     except Exception as e:
-        errormessage(e)
+        message(e)
     try:
         Para_dict["Contrast on"]=bool(ui_item.checkBox_contrast.isChecked()) ,                
         Para_dict["Contrast Lower"]=float(ui_item.doubleSpinBox_contrastLower.value()),
@@ -7186,7 +7193,7 @@ def get_hyper_params(Para_dict,ui_item):
         Para_dict["Hue on"]=bool(ui_item.checkBox_hue.isChecked()),                
         Para_dict["Hue delta"]=float(ui_item.doubleSpinBox_hueDelta.value()),                
     except Exception as e:
-        errormessage(e)
+        message(e)
     try:
         Para_dict["Average blur on"]=bool(ui_item.checkBox_avgBlur.isChecked()),                
         Para_dict["Average blur Lower"]=int(ui_item.spinBox_avgBlurMin.value()),
@@ -7195,7 +7202,7 @@ def get_hyper_params(Para_dict,ui_item):
         Para_dict["Gauss blur Lower"]=int(ui_item.spinBox_gaussBlurMin.value()),
         Para_dict["Gauss blur Higher"]=int(ui_item.spinBox_gaussBlurMax.value()),
     except Exception as e:
-        errormessage(e)
+        message(e)
     try:
         Para_dict["Motion blur on"]=bool(ui_item.checkBox_motionBlur.isChecked()),
         motionBlur_kernel = str(ui_item.lineEdit_motionBlurKernel.text())
@@ -7205,7 +7212,7 @@ def get_hyper_params(Para_dict,ui_item):
         Para_dict["Motion blur Kernel"]=motionBlur_kernel,               
         Para_dict["Motion blur Angle"]=motionBlur_angle,          
     except Exception as e:
-        errormessage(e)
+        message(e)
 
     Para_dict["Epoch_Started_Using_These_Settings"]=np.nan,
     try:
@@ -7213,14 +7220,14 @@ def get_hyper_params(Para_dict,ui_item):
         Para_dict["batchSize_expert"]=int(ui_item.spinBox_batchSize.value()),
         Para_dict["epochs_expert"]=int(ui_item.spinBox_epochs.value()),
     except Exception as e:
-        errormessage(e)
+        message(e)
     try:
         Para_dict["learning_rate_expert_on"]=bool(ui_item.groupBox_learningRate.isChecked()),
         Para_dict["learning_rate_const_on"]=bool(ui_item.radioButton_LrConst.isChecked()),
         Para_dict["learning_rate_const"]=float(ui_item.doubleSpinBox_learningRate.value()),
         Para_dict["learning_rate_cycLR_on"]=bool(ui_item.radioButton_LrCycl.isChecked()),
     except Exception as e:
-        errormessage(e)
+        message(e)
     try:
         Para_dict["cycLrMin"]=float(ui_item.lineEdit_cycLrMin.text()),
         Para_dict["cycLrMax"]=float(ui_item.lineEdit_cycLrMax.text()),
@@ -7231,14 +7238,14 @@ def get_hyper_params(Para_dict,ui_item):
         Para_dict["cycLrMethod"] = str(ui_item.comboBox_cycLrMethod.currentText()),
         Para_dict["clr_settings"] = ui_item.clr_settings,
     except Exception as e:
-        errormessage(e)
+        message(e)
     try:
         Para_dict["learning_rate_expo_on"]=bool(ui_item.radioButton_LrExpo.isChecked()) ,
         Para_dict["expDecInitLr"]=float(ui_item.doubleSpinBox_expDecInitLr.value()),
         Para_dict["expDecSteps"]=int(ui_item.spinBox_expDecSteps.value()),
         Para_dict["expDecRate"]=float(ui_item.doubleSpinBox_expDecRate.value()),
     except Exception as e:
-        errormessage(e)
+        message(e)
     try:
         Para_dict["loss_expert_on"]= bool(ui_item.checkBox_expt_loss.isChecked()),
         Para_dict["loss_expert"]=str(ui_item.comboBox_expt_loss.currentText()).lower(),
@@ -7246,18 +7253,18 @@ def get_hyper_params(Para_dict,ui_item):
         Para_dict["optimizer_expert"]=str(ui_item.comboBox_optimizer.currentText()).lower(),                
         Para_dict["optimizer_settings"]=ui_item.optimizer_settings,                
     except Exception as e:
-        errormessage(e)
+        message(e)
     try:
         Para_dict["paddingMode"]=str(ui_item.comboBox_paddingMode.currentText())#.lower(),                
     except Exception as e:
-        errormessage(e)
+        message(e)
     try:
         Para_dict["train_last_layers"]=bool(ui_item.checkBox_trainLastNOnly.isChecked()),
         Para_dict["train_last_layers_n"]=int(ui_item.spinBox_trainLastNOnly.value())     ,
         Para_dict["train_dense_layers"]=bool(ui_item.checkBox_trainDenseOnly.isChecked()),
         Para_dict["dropout_expert_on"]=bool(ui_item.checkBox_dropout.isChecked()),
     except Exception as e:
-        errormessage(e)
+        message(e)
     try:
         dropout_expert = str(ui_item.lineEdit_dropout.text()) #due to the validator, there are no squ.brackets
         dropout_expert = "["+dropout_expert+"]"
@@ -7268,7 +7275,7 @@ def get_hyper_params(Para_dict,ui_item):
         Para_dict["dropout_expert"]=dropout_expert,
         Para_dict["lossW_expert_on"]=bool(ui_item.checkBox_lossW.isChecked()),
     except Exception as e:
-        errormessage(e)
+        message(e)
     try:
         lossW_expert = str(ui_item.lineEdit_lossW.text())
         SelectedFiles = ui_item.items_clicked()
@@ -7284,7 +7291,7 @@ def get_hyper_params(Para_dict,ui_item):
         Para_dict["lossW_expert"]=lossW_expert,
         Para_dict["class_weight"]=class_weight,
     except Exception as e:
-        errormessage(e)
+        message(e)
     try:
         Para_dict["metrics"]=ui_item.get_metrics(1),       
         if norm == "StdScaling using mean and std of all training data":                                
@@ -7292,7 +7299,7 @@ def get_hyper_params(Para_dict,ui_item):
             Para_dict["Mean of training data used for scaling"]=np.nan,
             Para_dict["Std of training data used for scaling"]=np.nan,
     except Exception as e:
-        errormessage(e)
+        message(e)
 
     return Para_dict
 
@@ -7375,7 +7382,7 @@ class Ui_Updates(QtWidgets.QWidget):
         self.label_yourVersion.setText(_translate("Updates", "Your version",None))
         self.groupBox_minorUpdates.setTitle(_translate("Updates", "Select update",None))
         self.groupBox_localDisk.setTitle(_translate("Updates", "From local disk",None))
-        self.pushButton_findFile.setText(_translate("Updates", "Find file"))
+        self.pushButton_findFile.setText(_translate("Updates", "Add file"))
         self.pushButton_installOndevice.setText(_translate("Updates", "Install",None))
         self.groupBox_online.setTitle(_translate("Updates", "From online repository",None))
         self.pushButton_installOnline.setText(_translate("Updates", "Download + Install",None))
