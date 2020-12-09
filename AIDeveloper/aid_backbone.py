@@ -9467,7 +9467,7 @@ class MainWindow(QtWidgets.QMainWindow):
 
     def update_check_worker(self,progress_callback,history_callback):
         #Retrieve information from GitHub
-        dic = aid_bin.check_update(VERSION)
+        dic = aid_bin.check_for_updates(VERSION)
         #dic = {"Errors":None,"latest_release":latest_release,"latest_release_url":url,"changelog":changelog}
         history_callback.emit(dic)
         progress_callback.emit(1) #when finished return one
@@ -9488,7 +9488,6 @@ class MainWindow(QtWidgets.QMainWindow):
                     #display the error in the textbrowser
                     text = str(dic["Errors"])
                     
-
                 elif dic["Errors"]==None:#No errors! Nice
                     latest_release = dic["latest_release"]
                     
@@ -9502,7 +9501,7 @@ class MainWindow(QtWidgets.QMainWindow):
                         text = text+"<br>Major updates need to be downloaded and installed manually. After that, you can install minor updates (which correspond to that major version) using the menu below."
                         text = "<html><head/><body><p>"+text+"</p></body></html>"
 
-                #Fill info text (on top)
+                #Fill info text (on top of Update Popup window)
                 self.popup_updates_ui.textBrowser_majorVersionInfo.setText(text)
                 
                 #Fill lineEdit "Your version"
@@ -9512,49 +9511,71 @@ class MainWindow(QtWidgets.QMainWindow):
                 self.popup_updates_ui.comboBox_updatesOnline.addItems(dic["tags_update_online"])
 
                 self.popup_updates.show()
-                self.popup_updates_ui.pushButton_installOndevice.clicked.connect(self.update_ondevice)
-                self.popup_updates_ui.pushButton_installOnline.clicked.connect(self.update_ondevice)
-                self.popup_updates_ui.pushButton_findFile.clicked.connect(self.update_findLocalFile)
+                self.popup_updates_ui.pushButton_installOndevice.clicked.connect(lambda: self.update_aideveloper("local"))
+                self.popup_updates_ui.pushButton_installOnline.clicked.connect(lambda: self.update_aideveloper("github"))
+                self.popup_updates_ui.pushButton_findFile.clicked.connect(self.update_addLocalFile)
 
-  
             worker.signals.history.connect(get_info_from_worker)    
             self.threadpool_single.start(worker)
 
-    def update_ondevice(self):
+
+    def update_aideveloper(self,source):
         #Count number of items of comboBox_availableUpdates
         item_count = self.popup_updates_ui.comboBox_updatesOndevice.count()
         
-        #define an error message menu 
-        def errormessage(title,text):
-            msg = QtWidgets.QMessageBox()
-            msg.setIcon(QtWidgets.QMessageBox.Critical)        
-            msg.setText()
-            msg.setWindowTitle("No updates available")
-            msg.setStandardButtons(QtWidgets.QMessageBox.Ok)
-            msg.exec_()
-            return
-
         #if there are 0 items, show error message
         if item_count==0:
-            title = "No update available"
-            errormessage(title,title)
-            
+            e = "No update available"
+            aid_frontend.message(e)
+            return
+
         #retrieve the current text on comboBox_availableUpdates
-        item_text = str(self.popup_updates_ui.comboBox_updatesOndevice.currentText())
+        if source=="local":            
+            item_text = str(self.popup_updates_ui.comboBox_updatesOndevice.currentText())
+        elif source=="github":            
+            item_text = str(self.popup_updates_ui.comboBox_updatesOnline.currentText())
         
         #Length of the version name should not be 0
         if len(item_text)==0:
-            title = "No update available"
-            errormessage(title,title)
+            e = "No update available"
+            aid_frontend.message(e)
+            return
         
-        #collect all files of current version
+        if source=="local":
+            #Complete file path (item_text not enough)
+            item_path = "AIDeveloper_"+item_text+".zip"
+            item_path = os.path.join(dir_root,item_path)  
         
-        #compress files of current version into a zip file
+        elif source=="github":
+            if item_text=="Bleeding edge":
+                #user want the most recent scripts from GitHub.
+                downloadprocess = aid_bin.download_aid_repo()
+            else:
+                #item_text is a tag of the version. Use tag to download the zip
+                downloadprocess = aid_bin.download_aid_update(item_text)
+            
+            #Check if download was successful
+            if downloadprocess["success"]==False:#if the download was not done show message
+                message = "Download was not conducted. Probably, the file is already present in:/n"+downloadprocess["path_save"]
+                aid_frontend.message(message,msg_type="Warning")
+                return
+            #Retrieve the path of the zip file (contains the update files)
+            item_path = downloadprocess["path_save"]
         
-        #Check if this version is already available on device
-        #ondevice_zips = aid_bin.updates_ondevice()
+        if not os.path.isfile(item_path):#in case that is no file (zip file not created...)
+            e = "Update requires a zip file. Could not find/create such a file!"
+            aid_frontend.message(e)
+            
+        #Perform the update (including backup of current version)
+        aid_bin.update_from_zip(item_path,VERSION)
+        
+        #message: Installation successful-> need to restart AID
+        msg = "Update successful. Please restart AIDeveloper. A backup of your previous version is stored in:/n"+dir_root
+        aid_frontend.message(msg,msg_type="Information")
 
-    def update_findLocalFile(self):
+              
+
+    def update_addLocalFile(self):
         print("Baustelle")        
         
         
