@@ -5565,7 +5565,7 @@ class MainWindow(QtWidgets.QMainWindow):
                     model_metrics_records[key] = 0 #those metrics start at zero and approach 1         
                     model_metrics_records["val_"+key] = 0 #those metrics start at zero and approach 1         
     
-            
+            gen_train_refresh = False
             time_start = time.time()
             t1 = time.time() #Initialize a timer; this is used to save the meta file every few seconds
             t2 =  time.time() #Initialize a timer; this is used update the fitting parameters
@@ -5578,9 +5578,10 @@ class MainWindow(QtWidgets.QMainWindow):
                     X_train,y_train,xtra_train = [],[],[]
                     t3 = time.time()
                     for i in range(len(SelectedFiles_train)):
-                        if len(DATA)==0:
+                        if len(DATA)==0 or gen_train_refresh:
                             #Replace true means that individual cells could occur several times
                             gen_train = aid_img.gen_crop_img(cropsize2,rtdc_path_train[i],nr_events_epoch_train[i],random_images=shuffle_train[i],replace=True,zoom_factor=zoom_factors_train[i],zoom_order=zoom_order,color_mode=self.get_color_mode(),padding_mode=paddingMode,xtra_in=xtra_in) 
+                            gen_train_refresh = False
                         else:
                             gen_train = aid_img.gen_crop_img_ram(DATA,rtdc_path_train[i],nr_events_epoch_train[i],random_images=shuffle_train[i],replace=True,xtra_in=xtra_in) #Replace true means that individual cells could occur several times
                             if self.actionVerbose.isChecked():
@@ -5771,8 +5772,13 @@ class MainWindow(QtWidgets.QMainWindow):
                                 optimizer_expert_on = bool(self.fittingpopups_ui[listindex].checkBox_optimizer_pop.isChecked())
                                 optimizer_expert = str(self.fittingpopups_ui[listindex].comboBox_optimizer.currentText())
                                 optimizer_settings = self.fittingpopups_ui[listindex].optimizer_settings.copy() #Get a copy of the current optimizer_settings. .copy prevents that changes in the UI have immediate effect
-                                paddingMode = str(self.fittingpopups_ui[listindex].comboBox_paddingMode_pop.currentText())
-    
+                                paddingMode_ = str(self.fittingpopups_ui[listindex].comboBox_paddingMode_pop.currentText())
+                                print("paddingMode_:"+str(paddingMode_))
+                                if paddingMode_ != paddingMode:
+                                    print("Changed the padding mode!")
+                                    gen_train_refresh = True#otherwise changing paddingMode will not have any effect
+                                    paddingMode = paddingMode_
+                                    
                                 train_last_layers = bool(self.fittingpopups_ui[listindex].checkBox_trainLastNOnly_pop.isChecked())             
                                 train_last_layers_n = int(self.fittingpopups_ui[listindex].spinBox_trainLastNOnly_pop.value())              
                                 train_dense_layers = bool(self.fittingpopups_ui[listindex].checkBox_trainDenseOnly_pop.isChecked())             
@@ -5981,7 +5987,6 @@ class MainWindow(QtWidgets.QMainWindow):
                             ##########Contrast/Saturation/Hue augmentation#########
                             #is there any of contrast/saturation/hue augmentation to do?
                             X_batch = X_batch.astype(np.uint8)
-                            t5 = time.time()
                             if contrast_on:
                                 t_con_aug_1 = time.time()
                                 X_batch = aid_img.contrast_augm_cv2(X_batch,contrast_lower,contrast_higher) #this function is almost 15 times faster than random_contrast from tf!
