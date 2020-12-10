@@ -396,7 +396,9 @@ def setup_main_ui(self,gpu_nr):
     self.comboBox_paddingMode.addItem("")
     self.comboBox_paddingMode.addItem("")
     self.comboBox_paddingMode.addItem("")
-
+    self.comboBox_paddingMode.addItem("")
+    self.comboBox_paddingMode.addItem("")
+    
     self.gridLayout_49.addWidget(self.comboBox_paddingMode, 1, 1, 1, 1)
     self.horizontalLayout_nrEpochs = QtWidgets.QHBoxLayout()
     self.horizontalLayout_nrEpochs.setObjectName("horizontalLayout_nrEpochs")
@@ -456,7 +458,6 @@ def setup_main_ui(self,gpu_nr):
     self.gridLayout_49.addLayout(self.horizontalLayout_2, 2, 0, 1, 1)
     self.comboBox_zoomOrder = QtWidgets.QComboBox(self.groupBox_imgProc)
     self.comboBox_zoomOrder.setObjectName("comboBox_zoomOrder")
-    self.comboBox_zoomOrder.addItem("")
     self.comboBox_zoomOrder.addItem("")
     self.comboBox_zoomOrder.addItem("")
     self.comboBox_zoomOrder.addItem("")
@@ -2980,37 +2981,22 @@ def retranslate_main_ui(self,gpu_nr,VERSION):
     self.label_zoomOrder.setText(_translate("MainWindow", "Zoom order", None))
     self.label_zoomOrder.setToolTip(_translate("MainWindow", tooltips["label_zoomIcon"], None))
 
-#    self.comboBox_paddingMode.setItemText(0, _translate("MainWindow", "constant", None))
-#    self.comboBox_paddingMode.setItemText(1, _translate("MainWindow", "edge", None))
-#    self.comboBox_paddingMode.setItemText(2, _translate("MainWindow", "linear_ramp", None))
-#    self.comboBox_paddingMode.setItemText(3, _translate("MainWindow", "maximum", None))
-#    self.comboBox_paddingMode.setItemText(4, _translate("MainWindow", "mean", None))
-#    self.comboBox_paddingMode.setItemText(5, _translate("MainWindow", "median", None))
-#    self.comboBox_paddingMode.setItemText(6, _translate("MainWindow", "minimum", None))
-#    self.comboBox_paddingMode.setItemText(7, _translate("MainWindow", "reflect", None))
-#    self.comboBox_paddingMode.setItemText(8, _translate("MainWindow", "symmetric", None))
-#    self.comboBox_paddingMode.setItemText(9, _translate("MainWindow", "wrap", None))
 
     self.comboBox_paddingMode.setItemText(0, _translate("MainWindow", "constant", None))
     self.comboBox_paddingMode.setItemText(1, _translate("MainWindow", "edge", None))
     self.comboBox_paddingMode.setItemText(2, _translate("MainWindow", "reflect", None))
     self.comboBox_paddingMode.setItemText(3, _translate("MainWindow", "symmetric", None))
     self.comboBox_paddingMode.setItemText(4, _translate("MainWindow", "wrap", None))
+    self.comboBox_paddingMode.setItemText(5, _translate("MainWindow", "delete", None))
+    self.comboBox_paddingMode.setItemText(6, _translate("MainWindow", "alternate", None))
 
-#    self.comboBox_zoomOrder.setItemText(0, _translate("MainWindow", "0 (nearest neighbor)", None))
-#    self.comboBox_zoomOrder.setItemText(1, _translate("MainWindow", "1 (lin. interp.)", None))
-#    self.comboBox_zoomOrder.setItemText(2, _translate("MainWindow", "2 (quadr. interp.)", None))
-#    self.comboBox_zoomOrder.setItemText(3, _translate("MainWindow", "3 (cubic interp.)", None))
-#    self.comboBox_zoomOrder.setItemText(4, _translate("MainWindow", "4", None))
-#    self.comboBox_zoomOrder.setItemText(5, _translate("MainWindow", "5", None))
-    
-    self.comboBox_zoomOrder.setItemText(0, _translate("MainWindow", "0 (nearest neighbor)", None))
-    self.comboBox_zoomOrder.setItemText(1, _translate("MainWindow", "1 (lin. interp.)", None))
-    self.comboBox_zoomOrder.setItemText(2, _translate("MainWindow", "2 (quadr. interp.)", None))
-    self.comboBox_zoomOrder.setItemText(3, _translate("MainWindow", "3 (cubic interp.)", None))
-    self.comboBox_zoomOrder.setItemText(4, _translate("MainWindow", "Lanczos 4", None))
- 
-    width=self.comboBox_zoomOrder.fontMetrics().boundingRect(max(["0 (nearest neighbor)"], key=len)).width()
+    self.comboBox_zoomOrder.setItemText(0, _translate("MainWindow", "nearest neighbor (cv2.INTER_NEAREST)", None))
+    self.comboBox_zoomOrder.setItemText(1, _translate("MainWindow", "lin. interp. (cv2.INTER_LINEAR)", None))
+    self.comboBox_zoomOrder.setItemText(2, _translate("MainWindow", "quadr. interp. (cv2.INTER_AREA)", None))
+    self.comboBox_zoomOrder.setItemText(3, _translate("MainWindow", "cubic interp. (cv2.INTER_CUBIC)", None))
+    self.comboBox_zoomOrder.setItemText(4, _translate("MainWindow", "Lanczos 4 (cv2.INTER_LANCZOS4)", None))
+    zoomitems = [self.comboBox_zoomOrder.itemText(i) for i in range(self.comboBox_zoomOrder.count())]
+    width=self.comboBox_zoomOrder.fontMetrics().boundingRect(max(zoomitems, key=len)).width()
     self.comboBox_zoomOrder.view().setFixedWidth(width+10)             
 
 
@@ -3767,15 +3753,12 @@ class Fitting_Ui(QtWidgets.QWidget):
         self.comboBox_zoomOrder.addItem("")
         self.comboBox_zoomOrder.addItem("")
         self.comboBox_zoomOrder.addItem("")
-        self.comboBox_zoomOrder.addItem("")
         self.comboBox_zoomOrder.setMaximumSize(QtCore.QSize(100, 16777215))
 
         self.horizontalLayout_6.addWidget(self.comboBox_zoomOrder)
         self.gridLayout_10.addLayout(self.horizontalLayout_6, 2, 0, 1, 1)
 
 
-
-        
         self.horizontalLayout_2 = QtWidgets.QHBoxLayout()
         self.horizontalLayout_2.setObjectName("horizontalLayout_2")
         self.label_padIcon_pop = QtWidgets.QLabel(self.groupBox_expt_imgProc_pop)
@@ -3790,6 +3773,8 @@ class Fitting_Ui(QtWidgets.QWidget):
         self.comboBox_paddingMode_pop = QtWidgets.QComboBox(self.groupBox_expt_imgProc_pop)
         self.comboBox_paddingMode_pop.setEnabled(True)
         self.comboBox_paddingMode_pop.setObjectName("comboBox_paddingMode_pop")
+        self.comboBox_paddingMode_pop.addItem("")
+        self.comboBox_paddingMode_pop.addItem("")
         self.comboBox_paddingMode_pop.addItem("")
         self.comboBox_paddingMode_pop.addItem("")
         self.comboBox_paddingMode_pop.addItem("")
@@ -5064,30 +5049,23 @@ class Fitting_Ui(QtWidgets.QWidget):
         self.groupBox_expt_imgProc_pop.setTitle(_translate("Form", "Image processing", None))
         self.label_paddingMode_pop.setText(_translate("Form", "Padding mode", None))
         self.comboBox_paddingMode_pop.setToolTip(_translate("Form", tooltips["label_paddingMode"], None))
-#        self.comboBox_paddingMode_pop.setItemText(0, _translate("Form", "constant", None))
-#        self.comboBox_paddingMode_pop.setItemText(1, _translate("Form", "edge", None))
-#        self.comboBox_paddingMode_pop.setItemText(2, _translate("Form", "linear_ramp", None))
-#        self.comboBox_paddingMode_pop.setItemText(3, _translate("Form", "maximum", None))
-#        self.comboBox_paddingMode_pop.setItemText(4, _translate("Form", "mean", None))
-#        self.comboBox_paddingMode_pop.setItemText(5, _translate("Form", "median", None))
-#        self.comboBox_paddingMode_pop.setItemText(6, _translate("Form", "minimum", None))
-#        self.comboBox_paddingMode_pop.setItemText(7, _translate("Form", "reflect", None))
-#        self.comboBox_paddingMode_pop.setItemText(8, _translate("Form", "symmetric", None))
-#        self.comboBox_paddingMode_pop.setItemText(9, _translate("Form", "wrap", None))
         
         self.comboBox_paddingMode_pop.setItemText(0, _translate("Form", "constant", None))
         self.comboBox_paddingMode_pop.setItemText(1, _translate("Form", "edge", None))
         self.comboBox_paddingMode_pop.setItemText(2, _translate("Form", "reflect", None))
         self.comboBox_paddingMode_pop.setItemText(3, _translate("Form", "symmetric", None))
         self.comboBox_paddingMode_pop.setItemText(4, _translate("Form", "wrap", None))
+        self.comboBox_paddingMode_pop.setItemText(5, _translate("Form", "delete", None))
+        self.comboBox_paddingMode_pop.setItemText(6, _translate("Form", "alternate", None))
 
-        self.comboBox_zoomOrder.setItemText(0, _translate("MainWindow", "0 (nearest neighbor)", None))
-        self.comboBox_zoomOrder.setItemText(1, _translate("MainWindow", "1 (lin. interp.)", None))
-        self.comboBox_zoomOrder.setItemText(2, _translate("MainWindow", "2 (quadr. interp.)", None))
-        self.comboBox_zoomOrder.setItemText(3, _translate("MainWindow", "3 (cubic interp.)", None))
-        self.comboBox_zoomOrder.setItemText(4, _translate("MainWindow", "Lanczos 4", None))
-        #self.comboBox_zoomOrder.setItemText(5, _translate("MainWindow", "5", None))
-        width=self.comboBox_zoomOrder.fontMetrics().boundingRect(max(["0 (nearest neighbor)"], key=len)).width()
+        self.comboBox_zoomOrder.setItemText(0, _translate("MainWindow", "nearest neighbor (cv2.INTER_NEAREST)", None))
+        self.comboBox_zoomOrder.setItemText(1, _translate("MainWindow", "lin. interp. (cv2.INTER_LINEAR)", None))
+        self.comboBox_zoomOrder.setItemText(2, _translate("MainWindow", "quadr. interp. (cv2.INTER_AREA)", None))
+        self.comboBox_zoomOrder.setItemText(3, _translate("MainWindow", "cubic interp. (cv2.INTER_CUBIC)", None))
+        self.comboBox_zoomOrder.setItemText(4, _translate("MainWindow", "Lanczos 4 (cv2.INTER_LANCZOS4)", None))
+        
+        zoomitems = [self.comboBox_zoomOrder.itemText(i) for i in range(self.comboBox_zoomOrder.count())]
+        width=self.comboBox_zoomOrder.fontMetrics().boundingRect(max(zoomitems, key=len)).width()
         self.comboBox_zoomOrder.view().setFixedWidth(width+10)             
 
         self.groupBox_regularization_pop.setTitle(_translate("Form", "Regularization", None))
