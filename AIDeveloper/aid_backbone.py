@@ -9477,21 +9477,12 @@ class MainWindow(QtWidgets.QMainWindow):
 
 
     def update_aideveloper(self,source):
-        #Count number of items of comboBox_availableUpdates
-        item_count = self.popup_updates_ui.comboBox_updatesOndevice.count()
-        
-        #if there are 0 items, show error message
-        if item_count==0:
-            e = "No update available"
-            aid_frontend.message(e)
-            return
 
         #retrieve the current text on comboBox_availableUpdates
         if source=="local":            
             item_text = str(self.popup_updates_ui.comboBox_updatesOndevice.currentText())
         elif source=="github":            
             item_text = str(self.popup_updates_ui.comboBox_updatesOnline.currentText())
-        
         #Length of the version name should not be 0
         if len(item_text)==0:
             e = "No update available"
