@@ -90,11 +90,30 @@ def zoom_arguments_scipy2cv(zoom_factor,zoom_interpol_method):
     ----------    
     str; OpenCV interpolation flag
     """
-    opencv_zoom_options = ["cv2.INTER_NEAREST","cv2.INTER_LINEAR","cv2.INTER_AREA","cv2.INTER_CUBIC","cv2.INTER_LANCZOS4"]
-    if type(zoom_interpol_method)==str:
-        if zoom_interpol_method in opencv_zoom_options:
-            return zoom_interpol_method
     
+    #Case 1: AIDeveloper>=0.2.1: zoom_interpol_method is already an OpenCV interpolation flag
+    opencv_zoom_options = ["cv2.INTER_NEAREST","cv2.INTER_LINEAR","cv2.INTER_AREA","cv2.INTER_CUBIC","cv2.INTER_LANCZOS4"]
+    if type(zoom_interpol_method)==str and "cv2" in zoom_interpol_method: 
+        ind = [o in zoom_interpol_method for o in opencv_zoom_options]
+        ind = np.where(np.array(ind)==True)[0][0]
+        return opencv_zoom_options[ind]
+    
+    #Case 2: AIDeveloper<0.2.1: zoom_interpol_method is ment for scipy, conversion needed
+    if type(zoom_interpol_method)==str and "cv2" not in zoom_interpol_method: 
+        if zoom_interpol_method == "0 (nearest neighbor)":
+            zoom_interpol_method = 0
+        elif zoom_interpol_method == "1 (lin. interp.)":
+            zoom_interpol_method = 1
+        elif zoom_interpol_method == "2 (quadr. interp.)":
+            zoom_interpol_method = 2
+        elif zoom_interpol_method == "3 (cubic interp.)":
+            zoom_interpol_method = 3
+        elif zoom_interpol_method == "4":
+            zoom_interpol_method = 4
+        elif zoom_interpol_method == "5":
+            zoom_interpol_method = 5
+    
+    #depending on the zoom_factor, a certain OpenCV interpolation flag should be used
     if zoom_factor>=0.8:
         if zoom_interpol_method==0: return "cv2.INTER_NEAREST"
         elif zoom_interpol_method==1: return "cv2.INTER_LINEAR"
@@ -132,7 +151,7 @@ def pad_arguments_np2cv(padding_mode):
 
     Returns
     ----------   
-    str: OpenCV borderType     
+    str: OpenCV borderType, or "delete" or "alternate"    
         - "cv2.BORDER_CONSTANT": iiiiii|abcdefgh|iiiiiii with some specified i 
         - "cv2.BORDER_REFLECT": fedcba|abcdefgh|hgfedcb
         - "cv2.BORDER_REFLECT_101": gfedcb|abcdefgh|gfedcba
@@ -141,10 +160,12 @@ def pad_arguments_np2cv(padding_mode):
         - "cv2.BORDER_WRAP": cdefgh|abcdefgh|abcdefg
     """
     #Check if padding_mode is already an OpenCV borderType
-    padmodes_cv = ["Delete","cv2.BORDER_CONSTANT","cv2.BORDER_REFLECT",
+    padmodes_cv = ["cv2.BORDER_CONSTANT","cv2.BORDER_REFLECT",
                    "cv2.BORDER_REFLECT_101","cv2.BORDER_DEFAULT",
                    "cv2.BORDER_REPLICATE","cv2.BORDER_WRAP"]
+    padmodes_cv += ["delete","alternate"]
     #padmodes_cv = [a.lower() for a in padmodes_cv]
+    
     #If padding_mode is already one of those, just return the identity
     if padding_mode in padmodes_cv:
         return padding_mode
@@ -158,11 +179,11 @@ def pad_arguments_np2cv(padding_mode):
     elif "cv2" in padding_mode and "reflect" in padding_mode:
         return "cv2.BORDER_REFLECT"    
     elif "cv2" in padding_mode and "wrap" in padding_mode:
-        return "cv2.BORDER_WRAP"    
-    
+        return "cv2.BORDER_WRAP" 
+
     #Check that the padding_mode is actually supported by OpenCV
-    supported = ["constant","edge","reflect","symmetric","wrap"]
-    assert padding_mode in supported, "The padding mode: '"+padding_mode+"' is not supported"
+    supported = ["constant","edge","reflect","symmetric","wrap","delete","alternate"]
+    assert padding_mode.lower() in supported, "The padding mode: '"+padding_mode+"' is not supported"
     
     #Otherwise, return the an OpenCV borderType corresponding to the numpy pad mode
     if padding_mode=="constant":
@@ -201,19 +222,18 @@ def image_crop_pad_cv2(images,pos_x,pos_y,pix,final_h,final_w,padding_mode="cv2.
         Perform the following padding operation if the cell is too far at the 
         border such that the  desired image size cannot be 
         obtained without going beyond the order of the image:
-        
-        - "Delete": Return empty array (all zero) if the cell is too far at border (delete image)
-        
+                
         #the following text is copied from 
-        https://docs.opencv.org/3.4/d2/de8/group__core__array.html#ga209f2f4869e304c82d07739337eae7c5
-        
+        https://docs.opencv.org/3.4/d2/de8/group__core__array.html#ga209f2f4869e304c82d07739337eae7c5        
         - "cv2.BORDER_CONSTANT": iiiiii|abcdefgh|iiiiiii with some specified i 
         - "cv2.BORDER_REFLECT": fedcba|abcdefgh|hgfedcb
         - "cv2.BORDER_REFLECT_101": gfedcb|abcdefgh|gfedcba
         - "cv2.BORDER_DEFAULT": same as BORDER_REFLECT_101
         - "cv2.BORDER_REPLICATE": aaaaaa|abcdefgh|hhhhhhh
         - "cv2.BORDER_WRAP": cdefgh|abcdefgh|abcdefg
-    
+
+        - "delete": Return empty array (all zero) if the cell is too far at border (delete image)
+        - "alternate": randomize the padding operation
     Returns
     ----------
     images: list of images. Each image is a numpy array of shape 
@@ -222,7 +242,8 @@ def image_crop_pad_cv2(images,pos_x,pos_y,pix,final_h,final_w,padding_mode="cv2.
     """
     #Convert position of cell from "um" to "pixel index"
     #pos_x,pos_y = pos_x/pix,pos_y/pix  
-
+    padding_modes = ["cv2.BORDER_CONSTANT","cv2.BORDER_REFLECT","cv2.BORDER_REFLECT_101","cv2.BORDER_REPLICATE","cv2.BORDER_WRAP"]
+    
     for i in range(len(images)):
         image = images[i]
     
@@ -256,15 +277,21 @@ def image_crop_pad_cv2(images,pos_x,pos_y,pix,final_h,final_w,padding_mode="cv2.
         temp = image[int(y1):int(y2),int(x1):int(x2)]
 
         if pad_top+pad_bottom+pad_left+pad_right>0:
-            if padding_mode=="Delete":
+            if padding_mode.lower()=="delete":
                 temp = np.zeros_like(temp)
             else:
                 #Perform all padding operations in one go
-                temp = cv2.copyMakeBorder(temp, pad_top, pad_bottom, pad_left, pad_right, eval(padding_mode))
+                if padding_mode.lower()=="alternate":
+                    ind = rand_state.randint(low=0,high=len(padding_modes))
+                    padding_mode = padding_modes[ind]
+                    temp = cv2.copyMakeBorder(temp, pad_top, pad_bottom, pad_left, pad_right, eval(padding_modes[ind]))
+                else:
+                    temp = cv2.copyMakeBorder(temp, pad_top, pad_bottom, pad_left, pad_right, eval(padding_mode))
         
         images[i] = temp
             
     return images
+
 
 def load_model_meta(meta_path):
     """
