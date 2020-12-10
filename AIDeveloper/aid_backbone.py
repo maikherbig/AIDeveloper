@@ -2292,26 +2292,23 @@ class MainWindow(QtWidgets.QMainWindow):
             self.label_cropimage = QtWidgets.QLabel(self.w)
 
             #zoom image such that longest side is 512
-            factor = np.round(float(512.0/np.max(img.shape)),0)
+            zoom_factor = np.round(float(512.0/np.max(img.shape)),0)
             #Get the order, specified in Image processing->Zoom Order
-            order = int(self.comboBox_zoomOrder.currentIndex()) #the combobox-index is already the zoom order
-            #zoom_methods = [self.actionOrder0.isChecked(),self.actionOrder1.isChecked(),self.actionOrder2.isChecked(),self.actionOrder3.isChecked(),self.actionOrder4.isChecked(),self.actionOrder5.isChecked()]
-            #order = np.where(np.array(zoom_methods)==True)[0]
-            if channels==1:
-                img_zoom = ndimage.zoom(img, zoom=factor,order=int(order)) #Order 0 means nearest neighbor interplation
-            if channels==3:
-                img_zoom = ndimage.zoom(img, zoom=(factor,factor,1),order=int(order)) #Order 0 means nearest neighbor interplation
-            img_zoom = np.ascontiguousarray(img_zoom)
+            zoom_order = int(self.comboBox_zoomOrder.currentIndex()) #the combobox-index is already the zoom order
+            #Convert to corresponding cv2 zooming method
+            zoom_interpol_method = aid_img.zoom_arguments_scipy2cv(zoom_factor,zoom_order)
+
+            img_zoomed = cv2.resize(img, dsize=None,fx=zoom_factor, fy=zoom_factor, interpolation=eval(zoom_interpol_method))
             
             if channels==1:
-                height, width = img_zoom.shape
+                height, width = img_zoomed.shape
             if channels==3:
-                height, width, _ = img_zoom.shape
+                height, width, _ = img_zoomed.shape
             
             if channels==1:
-                qi=QtGui.QImage(img_zoom.data, width, height,width, QtGui.QImage.Format_Indexed8)
+                qi=QtGui.QImage(img_zoomed.data, width, height,width, QtGui.QImage.Format_Indexed8)
             if channels==3:
-                qi = QtGui.QImage(img_zoom.data,img_zoom.shape[1], img_zoom.shape[0], QtGui.QImage.Format_RGB888)
+                qi = QtGui.QImage(img_zoomed.data,img_zoomed.shape[1], img_zoomed.shape[0], QtGui.QImage.Format_RGB888)
                 
             self.label_image.setPixmap(QtGui.QPixmap.fromImage(qi))
             self.gridLayout_w.addWidget(self.label_image, 1,1)
@@ -2328,30 +2325,28 @@ class MainWindow(QtWidgets.QMainWindow):
             x1 = int(round(pos_x))-cropsize/2 
             y2 = y1+cropsize                
             x2 = x1+cropsize
+            
+            #Crop the image
             img_crop = img[int(y1):int(y2),int(x1):int(x2)]
             #zoom image such that the height gets the same as for non-cropped img
-            factor = float(float(height)/np.max(img_crop.shape[0]))
-            if factor == np.inf:
+            zoom_factor = float(img_zoomed.shape[0])/img_crop.shape[0]
+            
+            if zoom_factor == np.inf:
                 factor = 1
                 if self.actionVerbose.isChecked()==True:
                     print("Set resize factor to 1. Before, it was: "+str(factor))     
-            #img_crop = zoom(img_crop,factor)
             #Get the order, specified in Image processing->Zoom Order
-            #zoom_methods = [self.actionOrder0.isChecked(),self.actionOrder1.isChecked(),self.actionOrder2.isChecked(),self.actionOrder3.isChecked(),self.actionOrder4.isChecked(),self.actionOrder5.isChecked()]
-            order = int(self.comboBox_zoomOrder.currentIndex()) #the combobox-index is already the zoom order
-            if channels==1:
-                img_crop = ndimage.zoom(img_crop, zoom=factor,order=int(order))
-            if channels==3:
-                img_crop = ndimage.zoom(img_crop, zoom=(factor,factor,1),order=int(order))                
-            img_crop = np.ascontiguousarray(img_crop)
+            zoom_order = str(self.comboBox_zoomOrder.currentText()) #
+            zoom_interpol_method = aid_img.zoom_arguments_scipy2cv(zoom_factor,zoom_order)
+            img_crop = cv2.resize(img_crop, dsize=None,fx=zoom_factor, fy=zoom_factor, interpolation=eval(zoom_interpol_method))
+            
             if channels==1:
                 height, width = img_crop.shape
+                qi=QtGui.QImage(img_crop.data, width, height,width, QtGui.QImage.Format_Indexed8)
+
             if channels==3:
                 height, width, _ = img_crop.shape
-            if channels==1:
-                qi=QtGui.QImage(img_crop.data, width, height,width, QtGui.QImage.Format_Indexed8)
-            if channels==3:
-                qi = QtGui.QImage(img_crop.data,img_crop.shape[1], img_crop.shape[0], QtGui.QImage.Format_RGB888)
+                qi = QtGui.QImage(img_crop.data,width, height, QtGui.QImage.Format_RGB888)
             
             self.label_cropimage.setPixmap(QtGui.QPixmap.fromImage(qi))
             self.gridLayout_w.addWidget(self.label_cropimage, 1,2)
@@ -2473,8 +2468,6 @@ class MainWindow(QtWidgets.QMainWindow):
             
         clicked_x = self.feature_x[index]
         clicked_y = self.feature_y[index]
-#            print("index,clicked_x,clicked_y")
-#            print(index,clicked_x,clicked_y)
         
         self.scatter_xy.plot([clicked_x], [clicked_y],pen=None,symbol='o',symbolPen='w',clear=False)
         self.point_was_selected_before = True
@@ -2498,23 +2491,11 @@ class MainWindow(QtWidgets.QMainWindow):
                 print("Invalid image format: "+str(img.shape))
                 return
             
-            #zoom image such that longest side is 64              
-            factor = 1#float(64.0/np.max(img.shape))
-            #Get the order, specified in Options->Zoom Order
-            order = int(self.comboBox_zoomOrder.currentIndex()) #the combobox-index is already the zoom order
-            #zoom_methods = [self.actionOrder0.isChecked(),self.actionOrder1.isChecked(),self.actionOrder2.isChecked(),self.actionOrder3.isChecked(),self.actionOrder4.isChecked(),self.actionOrder5.isChecked()]
-            #order = np.where(np.array(zoom_methods)==True)[0]
-
-            if channels==1:
-                img_zoom = ndimage.zoom(img, zoom=factor,order=int(order)) #Order 0 means nearest neighbor interplation
-            if channels==3:
-                img_zoom = ndimage.zoom(img, zoom=(factor,factor,1),order=int(order)) #Order 0 means nearest neighbor interplation
-            img_zoom = np.ascontiguousarray(img_zoom)
-
+            img_zoom = img
             #from 0 to 255
-#            img_zoom = img_zoom-np.min(img_zoom)
-#            fac = np.max(img_zoom)
-#            img_zoom = (img_zoom/fac)*255.0
+            img_zoom = img_zoom-np.min(img_zoom)
+            fac = np.max(img_zoom)
+            img_zoom = (img_zoom/fac)*255.0
             img_zoom = img_zoom.astype(np.uint8)
 
             if channels==1:
@@ -7692,15 +7673,14 @@ class MainWindow(QtWidgets.QMainWindow):
             X = np.concatenate(X)
             X = X.astype(np.uint8) #make sure we stay in uint8
             y = np.concatenate(y)
+        
             if len(X.shape)==4:
                 channels=3
             elif len(X.shape)==3:
                 channels=1
+                X = np.expand_dims(X,3)#Add the "channels" dimension
             else:
                 print("Invalid data dimension:" +str(X.shape))
-            if channels==1:
-                #Add the "channels" dimension
-                X = np.expand_dims(X,3)
             
             X_batch, y_batch = aid_img.affine_augm(X,v_flip,h_flip,rotation,width_shift,height_shift,zoom,shear), y #Affine image augmentation
             X_batch = X_batch.astype(np.uint8) #make sure we stay in uint8
@@ -7765,12 +7745,10 @@ class MainWindow(QtWidgets.QMainWindow):
                 channels=3
             elif len(X.shape)==3:
                 channels=1
+                X = np.expand_dims(X,3) #Add the "channels" dimension
             else:
                 print("Invalid data dimension: " +str(X.shape))
-            if channels==1:
-                #Add the "channels" dimension
-                X = np.expand_dims(X,3)
-        
+                
         if norm == "StdScaling using mean and std of all training data":
             X = aid_img.image_normalization(X,norm,mean_trainingdata,std_trainingdata)
         else:
@@ -7794,29 +7772,16 @@ class MainWindow(QtWidgets.QMainWindow):
             if channels==3:
                 img = X[i,:,:,:] #TensorFlow 
             
-            #zoom image such that longest side is 64              
-            factor = 1#float(64.0/np.max(img.shape))
-            #Get the order, specified in Options->Zoom Order
-            #zoom_methods = [self.actionOrder0.isChecked(),self.actionOrder1.isChecked(),self.actionOrder2.isChecked(),self.actionOrder3.isChecked(),self.actionOrder4.isChecked(),self.actionOrder5.isChecked()]
-            #order = np.where(np.array(zoom_methods)==True)[0]
-            order = int(self.comboBox_zoomOrder.currentIndex()) #the combobox-index is already the zoom order
-
+            #Stretch pixel value to full 8bit range (0-255); only for display
+            img = img-np.min(img)
+            fac = np.max(img)
+            img = (img/fac)*255.0
+            img = img.astype(np.uint8)
             if channels==1:
-                img_zoom = ndimage.zoom(img, zoom=factor,order=int(order))
+                height, width = img.shape
             if channels==3:
-                img_zoom = ndimage.zoom(img, zoom=(factor,factor,1),order=int(order))                
-                
-            img_zoom = np.ascontiguousarray(img_zoom)
-            #from 0 to 255
-            img_zoom = img_zoom-np.min(img_zoom)
-            fac = np.max(img_zoom)
-            img_zoom = (img_zoom/fac)*255.0
-            img_zoom = img_zoom.astype(np.uint8)
-            if channels==1:
-                height, width = img_zoom.shape
-            if channels==3:
-                height, width, _ = img_zoom.shape
-
+                height, width, _ = img.shape
+            
 #            qi=QtGui.QImage(img_zoom.data, width, height,width, QtGui.QImage.Format_Indexed8)
 #            self.label_image_show = QtWidgets.QLabel(self.widget_ViewImages)
 #            self.label_image_show.setPixmap(QtGui.QPixmap.fromImage(qi))
@@ -7825,11 +7790,11 @@ class MainWindow(QtWidgets.QMainWindow):
             #Use pygtgraph instead, in order to allow for exporting images
             self.image_show = pg.ImageView(self.widget_ViewImages)
             self.image_show.show()
-            if verbose: print("Shape of zoomed image: "+str(img_zoom.shape))
+            if verbose: print("Shape of zoomed image: "+str(img.shape))
             if channels==1:
-                self.image_show.setImage(img_zoom.T,autoRange=False)
+                self.image_show.setImage(img.T,autoRange=False)
             if channels==3:
-                self.image_show.setImage(np.swapaxes(img_zoom,0,1),autoRange=False)
+                self.image_show.setImage(np.swapaxes(img,0,1),autoRange=False)
                 
             self.image_show.ui.histogram.hide()
             self.image_show.ui.roiBtn.hide()
@@ -7974,7 +7939,7 @@ class MainWindow(QtWidgets.QMainWindow):
             cropsize2 = np.sqrt(crop**2+crop**2)
             cropsize2 = np.ceil(cropsize2 / 2.) * 2 #round to the next even number
 
-            ############Get cropped images image augmentation#####################
+            ############Get cropped images with image augmentation#####################
             #Start the first iteration:                
             X,y = [],[]
             for i in range(len(SelectedFiles)):
@@ -8065,15 +8030,13 @@ class MainWindow(QtWidgets.QMainWindow):
             y = np.concatenate(y)
         
             if len(X.shape)==4:
-                channels=3
+                channels = 3
             elif len(X.shape)==3:
-                channels=1
+                channels = 1
+                X = np.expand_dims(X,3)#Add the "channels" dimension
             else:
                 print("Invalid data dimension:" +str(X.shape))
-            if channels==1:
-                #Add the "channels" dimension
-                X = np.expand_dims(X,3)
-
+                
             if norm == "StdScaling using mean and std of all training data":
                 X = aid_img.image_normalization(X,norm,mean_trainingdata,std_trainingdata)
             else:
@@ -8091,27 +8054,16 @@ class MainWindow(QtWidgets.QMainWindow):
 
         for i in range(5):
             if channels==1:
-                img = X[i,:,:,0] #TensorFlow 
+                img = X[i,:,:,0]
             if channels==3:
-                img = X[i,:,:,:] #TensorFlow 
-            #zoom image such that longest side is 64              
-            factor = 1#float(64.0/np.max(img.shape))
-            #Get the order, specified in Options->Zoom Order
-            #zoom_methods = [self.actionOrder0.isChecked(),self.actionOrder1.isChecked(),self.actionOrder2.isChecked(),self.actionOrder3.isChecked(),self.actionOrder4.isChecked(),self.actionOrder5.isChecked()]
-            #order = np.where(np.array(zoom_methods)==True)[0]
-            order = int(self.comboBox_zoomOrder.currentIndex()) #the combobox-index is already the zoom order
-            if channels==1:
-                img_zoom = ndimage.zoom(img, zoom=factor,order=int(order))
-            if channels==3:
-                img_zoom = ndimage.zoom(img, zoom=(factor,factor,1),order=int(order))                
+                img = X[i,:,:,:]
+            
+            #Normalize image to full 8bit range (from 0 to 255)
+            img = img-np.min(img)
+            fac = np.max(img)
+            img = (img/fac)*255.0
+            img = img.astype(np.uint8)
 
-            print("Dimension of shown image is: "+str(img_zoom.shape))
-            img_zoom = np.ascontiguousarray(img_zoom)
-            #from 0 to 255
-            img_zoom = img_zoom-np.min(img_zoom)
-            fac = np.max(img_zoom)
-            img_zoom = (img_zoom/fac)*255.0
-            img_zoom = img_zoom.astype(np.uint8)
 #            height, width = img_zoom.shape
 #            qi=QtGui.QImage(img_zoom.data, width, height,width, QtGui.QImage.Format_Indexed8)
 #            self.label_image_show = QtWidgets.QLabel(self.widget_ViewImages)
@@ -8123,9 +8075,9 @@ class MainWindow(QtWidgets.QMainWindow):
             self.fittingpopups_ui[listindex].image_show_pop.show()
             
             if channels==1:
-                self.fittingpopups_ui[listindex].image_show_pop.setImage(img_zoom.T,autoRange=False)
+                self.fittingpopups_ui[listindex].image_show_pop.setImage(img.T,autoRange=False)
             if channels==3:
-                self.fittingpopups_ui[listindex].image_show_pop.setImage(np.swapaxes(img_zoom,0,1),autoRange=False)
+                self.fittingpopups_ui[listindex].image_show_pop.setImage(np.swapaxes(img,0,1),autoRange=False)
                 
             self.fittingpopups_ui[listindex].image_show_pop.ui.histogram.hide()
             self.fittingpopups_ui[listindex].image_show_pop.ui.roiBtn.hide()
@@ -8141,7 +8093,7 @@ class MainWindow(QtWidgets.QMainWindow):
         else:
             return None
         
-    def checkBox_rollingMedian_statechange(self,item):
+    def checkBox_rollingMedian_statechange(self,item):#used in frontend
         self.horizontalSlider_rollmedi.setEnabled(item)
         
     def update_historyplot(self):
