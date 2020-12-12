@@ -611,7 +611,8 @@ def updates_ondevice():
     list: list contains strings, each is a tag of an -update version    
     """
     files = os.listdir(dir_root)
-    update_zips = [file for file in files if "-update.zip" in file]
+    files = [file for file in files if file.startswith("AIDeveloper_") and file.endswith(".zip")]
+    update_zips = [file for file in files if "update" in file]
     backup_zips = [file for file in files if "backup" in file]
     ondevice_zips = update_zips+backup_zips
     tags_update = [file.split("AIDeveloper_")[1] for file in ondevice_zips]
@@ -839,6 +840,7 @@ def update_from_zip(item_path,VERSION):
         check_aid_scripts_complete(dir_root)
     except:#restore previous version from backup.zip 
         extract_archive(path_backup, dir_root, archive_format='zip')
+    return path_backup
 
 
 
