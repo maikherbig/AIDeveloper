@@ -48,7 +48,7 @@ aid_start.banner() #show a fancy banner in console
 aid_start.keras_json_check(keras_json_path)
 
 import traceback,shutil,re,ast,io,platform
-import h5py,json,time,copy,urllib
+import h5py,json,time,copy,urllib,datetime
 from stat import S_IREAD,S_IRGRP,S_IROTH,S_IWRITE,S_IWGRP,S_IWOTH
 
 import tensorflow as tf
@@ -120,7 +120,7 @@ import aid_frontend
 from partial_trainability import partial_trainability
 import aid_imports
 
-VERSION = "0.2.1" #Python 3.5.6 Version
+VERSION = "0.2.2" #Python 3.5.6 Version
 model_zoo_version = model_zoo.__version__()
 print("AIDeveloper Version: "+VERSION)
 print("model_zoo.py Version: "+model_zoo.__version__())
@@ -9515,16 +9515,43 @@ class MainWindow(QtWidgets.QMainWindow):
             aid_frontend.message(e)
             
         #Perform the update (including backup of current version)
-        aid_bin.update_from_zip(item_path,VERSION)
+        path_backup = aid_bin.update_from_zip(item_path,VERSION)
         
         #message: Installation successful-> need to restart AID
-        msg = "Update successful. Please restart AIDeveloper. A backup of your previous version is stored in:/n"+dir_root
+        msg = "Update successful. Please restart AIDeveloper. A backup of your previous version is stored in:\n"+path_backup
         aid_frontend.message(msg,msg_type="Information")
 
               
 
     def update_addLocalFile(self):
-        print("Baustelle")        
+        #open a filedialog
+        filename = QtWidgets.QFileDialog.getOpenFileName(self, 'Choose update file', dir_root,"AID update file (*.zip)")
+        filename = filename[0]
+        print(filename)
+        #Check if the file is a zip
+        if not filename.endswith(".zip"):#file has to be .zip
+            text = "Chosen file is not a .zip archive!"
+            aid_frontend.message(msg_text=text,msg_type="Error")
+        #Check that file exists
+        if not os.path.isfile(filename):
+            text = "File not found"
+            aid_frontend.message(msg_text=text,msg_type="Error")
+            return
+        
+        base,_ = os.path.split(filename)
+        #ensure that filename obeys the name convention: "AIDeveloper_"+tag_name+".zip"        
+        tag_name = datetime.datetime.now().strftime("%Y%m%d_%H-%M-%S")+"-update"
+        save_name = "AIDeveloper_"+tag_name+".zip"
+        save_name = os.path.join(dir_root,save_name)
+        #copy the file to dir_root
+        shutil.copy(filename,save_name)
+
+        #append tag_name to combobox
+        self.popup_updates_ui.comboBox_updatesOndevice.addItem(tag_name)
+        text = "Update is now availabele via the Dropdown menu on the left ("+tag_name+")."
+        text += " The file was copied to:\n"
+        text += save_name
+        aid_frontend.message(msg_text=text,msg_type="Information")
         
         
     def get_validation_data_from_clicked(self,get_normalized=True):
