@@ -6806,7 +6806,7 @@ class Ui_Form_expt_optim(QtWidgets.QWidget):
         self.pushButton_ok.setText(_translate("Form_expt_optim", "OK"))
 
 
-def message(e,msg_type="Error"):
+def message(msg_text,msg_type="Error"):
     #There was an error!
     msg = QtWidgets.QMessageBox()
     if msg_type=="Error":
@@ -6817,7 +6817,7 @@ def message(e,msg_type="Error"):
         msg.setIcon(QtWidgets.QMessageBox.Question)       
     elif msg_type=="Warning":
         msg.setIcon(QtWidgets.QMessageBox.Warning)       
-    msg.setText(str(e))
+    msg.setText(str(msg_text))
     msg.setWindowTitle(msg_type)
     msg.setStandardButtons(QtWidgets.QMessageBox.Ok)
     msg.exec_()
@@ -7342,6 +7342,11 @@ class Ui_Updates(QtWidgets.QWidget):
         self.retranslateUi(Updates)
         QtCore.QMetaObject.connectSlotsByName(Updates)
 
+
+        ###Icons###
+        self.pushButton_installOndevice.setIcon(QtGui.QIcon(os.path.join(dir_root,"art",Default_dict["Icon theme"],"install_fromLocal.png")))
+        self.pushButton_installOnline.setIcon(QtGui.QIcon(os.path.join(dir_root,"art",Default_dict["Icon theme"],"install_fromGitHub.png")))
+        
     def retranslateUi(self, Updates):
         _translate = QtCore.QCoreApplication.translate
         Updates.setWindowTitle(_translate("Updates", "Update AIDeveloper",None))
