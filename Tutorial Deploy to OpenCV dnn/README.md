@@ -229,7 +229,7 @@ The meta files contain information of the parameters used during training.
 Models were trained using AIDeveloper 0.1.2, which you can download [here](https://github.com/maikherbig/AIDeveloper/releases/tag/0.1.2).
 
 
-# Translate Numpy/SciPy operations to OpenCV
+# Translate NumPy/SciPy operations to OpenCV
 Since some applications might want use to do model inferencing using pure C++, it would be 
 beneficial to use OpenCV operations instead of NumPy/SciPy. 
 Methods of OpenCV can be conducted identically in Python and C++. 
