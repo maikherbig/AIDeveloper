@@ -145,7 +145,7 @@ The successful test returns images of the desired size showing the sunglasses sm
 ![alt text](https://github.com/maikherbig/AIDeveloper/blob/master/art/Test_ImagePreProcessing.png "Image Preprocessing Test")  
 
 
-## Test model inference (forward_images_cv2)
+## Test model inference (test_forward_images_cv2)
 The following steps allow to test the integrity of **forward_images_cv2** and the export function of 
 AIDeveloper:
 1. use Keras to load the original model and compute predictions for some images
