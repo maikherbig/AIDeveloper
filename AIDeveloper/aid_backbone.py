@@ -382,9 +382,10 @@ class MainWindow(QtWidgets.QMainWindow):
                         final_w = int(self.popup_imgRes_ui.spinBox_ingResize_w_1.value())
                         print("Width:"+str(final_w))
                         Default_dict["Image_import_dimension"] = final_h
-
+                        
+                        pix = 1
                         if self.popup_imgRes_ui.radioButton_imgResize_cropPad.isChecked():#cropping and padding method
-                            images = aid_img.image_crop_pad_cv2(images,pos_x,pos_y,final_h,final_w,channels,padding_mode="cv2.BORDER_CONSTANT")
+                            images = aid_img.image_crop_pad_cv2(images,pos_x,pos_y,pix,final_h,final_w,padding_mode="cv2.BORDER_CONSTANT")
                         elif self.popup_imgRes_ui.radioButton_imgResize_interpolate.isChecked():
                             interpolation_method = str(self.popup_imgRes_ui.comboBox_resizeMethod.currentText())
                             Default_dict["Image_import_interpol_method"] = interpolation_method
