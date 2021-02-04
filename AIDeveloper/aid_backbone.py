@@ -9476,6 +9476,19 @@ class MainWindow(QtWidgets.QMainWindow):
             worker.signals.history.connect(get_info_from_worker)    
             self.threadpool_single.start(worker)
 
+    def actionTerminology_function(self):
+        #show a messagebox with link to terminology github page
+        icon = QtGui.QImage(os.path.join(dir_root,"art",Default_dict["Icon theme"],"main_icon_simple_04_256"+icon_suff))
+        icon = QtGui.QPixmap(icon).scaledToHeight(32, QtCore.Qt.SmoothTransformation)
+        msg = QtWidgets.QMessageBox()
+        msg.setIconPixmap(icon)
+        text = "To learn more about machine learning/ deep learning specific terminology, please visit:<br>"
+        url = "<a href=https://github.com/maikherbig/AIDeveloper/tree/master/Terminology>https://github.com/maikherbig/AIDeveloper/tree/master/Terminology</a>"
+        text = "<html><head/><body><p>"+text+url+"</p></body></html>"
+        msg.setText(text)
+        msg.setWindowTitle("ML/DL Terminology")
+        msg.setStandardButtons(QtWidgets.QMessageBox.Ok)
+        msg.exec_()
 
     def update_aideveloper(self,source):
 
