@@ -89,7 +89,7 @@ positive (TP) and false negative (FN) predictions:
 
 **Receiver operating characteristic curve (ROC curve)**  
 The ROC curve is a
-plot showing the false positive rate (<img src="https://render.githubusercontent.com/render/math?math= FPR = \frac{\text{FP}}{FP %2B TN}">)
+plot showing the false positive rate (<img src="https://render.githubusercontent.com/render/math?math=FPR = \frac{\text{FP}}{FP %2B TN}">)
 and recall on the abscissa and ordinate, respectively [2]. When
 using a model for classification, typically, the prediction is the class
 for which the model returned the maximum probability. E.g. if there are
