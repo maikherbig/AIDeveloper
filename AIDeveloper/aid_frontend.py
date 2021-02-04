@@ -2637,7 +2637,14 @@ def setup_main_ui(self,gpu_nr):
     self.actionDocumentation = QtWidgets.QAction(self)
     self.actionDocumentation.triggered.connect(self.actionDocumentation_function)
     self.actionDocumentation.setObjectName(_fromUtf8("actionDocumentation"))
+
+    self.actionTerminology = QtWidgets.QAction(self)
+    self.actionTerminology.triggered.connect(self.actionTerminology_function)
+    self.actionTerminology.setObjectName(_fromUtf8("actionTerminology"))
+
     self.menu_Help.addAction(self.actionDocumentation)
+    self.menu_Help.addAction(self.actionTerminology)
+
     self.actionSoftware = QtWidgets.QAction(self)
     self.actionSoftware.triggered.connect(self.actionSoftware_function)
     self.actionSoftware.setObjectName(_fromUtf8("actionSoftware"))
@@ -3490,6 +3497,8 @@ def retranslate_main_ui(self,gpu_nr,VERSION):
 
     self.menu_Help.setTitle(_translate("MainWindow", "Help",None))
     self.actionDocumentation.setText(_translate("MainWindow", "Documentation",None))
+    self.actionTerminology.setText(_translate("MainWindow", "Terminology",None))
+
     self.actionSoftware.setText(_translate("MainWindow", "Software",None))
     self.actionAbout.setText(_translate("MainWindow", "About",None))
     self.actionUpdate.setText(_translate("MainWindow", "Check for updates...",None))
