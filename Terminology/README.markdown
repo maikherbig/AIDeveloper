@@ -30,7 +30,7 @@ F1 score: The F1 score is a metric that describes the performance of a
 model and values range from 0-1 ^\[2\]^. It is calculated based on
 recall and precision:
 
-$$F_{1} = \frac{2}{\text{recall}^{- 1} + \text{precision}^{- 1}}$$
+<img src="https://render.githubusercontent.com/render/math?math=F_{1} = \frac{2}{\text{recall}^{- 1} + \text{precision}^{- 1}}">
 
 Learning rate: The learning rate defines how much model parameters are
 changed in each training iteration ^\[1\]^.
@@ -58,7 +58,7 @@ Precision: Precision is a metric that describes the performance of a
 model and values range from 0-1 ^\[2\]^. Precision is computed based on
 the number of true positive (TP) and false positive (FP) predictions:
 
-$$precision = \frac{\text{TP}}{TP + FP}$$
+<img src="https://render.githubusercontent.com/render/math?math=precision = \frac{\text{TP}}{TP + FP}">
 
 Precision recall curve (PR curve): The PR curve is a plot showing the
 precision and recall values on the abscissa and ordinate, respectively
@@ -71,10 +71,10 @@ is a metric that describes the performance of a model and values range
 from 0-1 ^\[2\]^. Recall is computed based on the number of true
 positive (TP) and false negative (FN) predictions:
 
-$$recall = \frac{\text{TP}}{TP + FN} = sensitivity = true\ positive\ rate$$
+<img src="https://render.githubusercontent.com/render/math?math=recall = \frac{\text{TP}}{TP + FN} = sensitivity = true\ positive\ rate">
 
 Receiver operating characteristic curve (ROC curve): The ROC curve is a
-plot showing the false positive rate ($FPR = \frac{\text{FP}}{FP + TN}$)
+plot showing the false positive rate (<img src="https://render.githubusercontent.com/render/math?math=FPR = \frac{\text{FP}}{FP + TN}">)
 and recall on the abscissa and ordinate, respectively ^\[2\]^. When
 using a model for classification, typically, the prediction is the class
 for which the model returned the maximum probability. E.g. if there are
