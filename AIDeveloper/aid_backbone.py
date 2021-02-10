@@ -120,7 +120,7 @@ import aid_frontend
 from partial_trainability import partial_trainability
 import aid_imports
 
-VERSION = "0.2.2" #Python 3.5.6 Version
+VERSION = "0.2.3" #Python 3.5.6 Version
 model_zoo_version = model_zoo.__version__()
 print("AIDeveloper Version: "+VERSION)
 print("model_zoo.py Version: "+model_zoo.__version__())
