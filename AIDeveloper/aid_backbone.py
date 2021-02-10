@@ -5069,7 +5069,7 @@ class MainWindow(QtWidgets.QMainWindow):
                 if collection==False:
                     aid_dl.model_compile(model_keras,loss_expert,optimizer_settings,learning_rate_const,model_metrics,nr_classes)
                 if collection==True:
-                    for m in model_keras[1]:
+                    for m in model_keras:
                         aid_dl.model_compile(m, loss_expert, optimizer_settings, learning_rate_const,model_metrics, nr_classes)
                 if model_keras_p!=None:#if this is NOT None, there exists a parallel model, which also needs to be re-compiled
                     aid_dl.model_compile(model_keras_p,loss_expert,optimizer_settings,learning_rate_const,model_metrics,nr_classes)
@@ -6174,7 +6174,8 @@ class MainWindow(QtWidgets.QMainWindow):
                                     #Expert-settings return automatically to default values when Expert-mode is unchecked
                                     history = model_keras[i].fit(X_batch, Y_batch, batch_size=batchSize_expert, epochs=epochs_expert,verbose=verbose, validation_data=(X_valid, Y_valid),class_weight=class_weight,callbacks=callbacks)
                                     HISTORIES[i].append(history.history)
-                                    
+                                    learningrate = K.get_value(history.model.optimizer.lr)
+
                                     print("model_keras_path[i]")
                                     print(model_keras_path[i])
     
