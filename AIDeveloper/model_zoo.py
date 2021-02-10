@@ -14,7 +14,7 @@ import keras
 import numpy as np
 
 
-version = "0.1.2_dev1" #1.) Use any string you like to specify/define your version of the model_zoo
+version = "0.1.2_dev2" #1.) Use any string you like to specify/define your version of the model_zoo
 def __version__():
     #print(version)
     return version
@@ -30,7 +30,7 @@ predefined_5 = ["MhNet1_bn_do_skipcon","MhNet2_bn_do_skipcon","CNN_4Conv2Dense_O
 predefined_6_1 = ["pretrained_squeezenet","pretrained_mobilenet_v2","pretrained_nasnetmobile","pretrained_nasnetlarge","pretrained_densenet","pretrained_mobilenet","pretrained_inception_v3","pretrained_vgg19","pretrained_vgg16","pretrained_xception"]
 predefined_6_2 = ["pretrained_resnet50","pretrained_resnet101","pretrained_resnet152","pretrained_resnet50_v2","pretrained_resnet101_v2","pretrained_resnet152_v2"]
 predefined_6_3 = ["pretrained_resnext50","pretrained_resnext101"]
-predefined_7 = ["Collection_1","Collection_2","Collection_3","Collection_4","Collection_5","Collection_6"]
+predefined_7 = ["Collection_1","Collection_2","Collection_3","Collection_4","Collection_5","Collection_6","collection_r1"]
 multiInputModels = ["MLP_MultiIn_3Lay_24","MLP_MultiIn_3Lay_64","MLP_MultiIn_4Lay_72","Nitta6l_MultiIn"]
 predefined_coll_test = ["Collection_test"]
 
@@ -153,6 +153,9 @@ def get_model(modelname,in_dim,channels,out_dim):
         model = collection_5(in_dim,in_dim,channels,out_dim)
     elif modelname=="Collection_6":
         model = collection_6(in_dim,in_dim,channels,out_dim)
+    elif modelname=="collection_r1":
+        model = collection_r1(in_dim,in_dim,channels,out_dim)
+        
 
     return model
 
@@ -1850,6 +1853,22 @@ def collection_6(in_dim1,in_dim2,channels,out_dim):
         models_100.append(model)
     return modelnames_100, models_100
 
+def collection_r1(in_dim1,in_dim2,channels,out_dim):
+    """
+    For Retina Sorting Paper: CPU Optimized MLP's
+    """
+    modelnames = ["MLP_24_16_24","MLP_240","MLP_96_80","MLP_24_88_144"]
+    model_objects = []
+    for modelname in modelnames:
+        modelname = modelname.split("MLP")[1]
+        model = mlp_generator(modelname,in_dim1,channels,out_dim)
+        model_objects.append(model)
+    #Add some CNN models
+    #model_objects.append(nitta_et_al_6layer(in_dim1,in_dim2,channels,out_dim))
+    #modelnames.append("Nitta_et_al_6layer")
+    
+    return modelnames, model_objects
+
 
 def collection_test(in_dim1, in_dim2, channels, out_dim):
     """
@@ -1945,48 +1964,6 @@ def MLP_MultiIn_4Lay_72(in_dim,channels,out_dim):
     
     model = Model(inputs=[inputA, inputB], outputs=predictions)
 
-    return model
-
-
-
-
-
-
-
-
-
-
-
-
-
-def nitta_et_al_6layer(in_dim1,in_dim2,channels,out_dim):
-    """
-    The settins of this model are shown in the paper
-    "Intelligent Image-Activated Cell Sorting" on Figure 5A
-    """
-    model = Sequential()
-    
-    model.add(Conv2D(32,3,3,input_shape=(in_dim1, in_dim2,channels),name="inputTensor")) #TensorFlow    
-    model.add(Activation('relu'))
-    model.add(Conv2D(32, 3,3))
-    model.add(Activation('relu'))
-    model.add(MaxPooling2D(pool_size=(2, 2)))
-    model.add(Dropout(0.25))
-
-    model.add(Conv2D(64, 3,3))
-    model.add(Activation('relu'))
-    model.add(Conv2D(64, 3,3))
-    model.add(Activation('relu'))
-    model.add(MaxPooling2D(pool_size=(2, 2)))
-    model.add(Dropout(0.25))
-
-    model.add(Flatten())  # this converts our 3D feature maps to 1D feature vectors
-    
-    model.add(Dense(256))
-    model.add(Activation('relu'))
-    model.add(Dropout(0.5))
-    model.add(Dense(out_dim))
-    model.add(Activation('softmax',name="outputTensor"))
     return model
 
 
