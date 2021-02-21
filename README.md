@@ -47,9 +47,9 @@ Furthermore, there is a video showing the analysis procedure from beginning to e
   
   
 ## More tutorials  
-[Adding models to the model zoo](https://www.youtube.com/watch?v=XboH-YsG6LA&t=31s)  
+[Adding models to the model zoo](https://www.youtube.com/watch?v=XboH-YsG6LA&t)  
 [Create standalone using PyInstaller](https://figshare.com/articles/Krater_et_al_2020_Data_zip/9902636)  
-[AIDeveloper on AWS with GPU support](https://www.youtube.com/watch?v=C3pMNAg68XQ&t=1818s)  
+[AIDeveloper on AWS with GPU support](https://www.youtube.com/watch?v=C3pMNAg68XQ&t)  
 [Deploy a model using OpenCV](https://github.com/maikherbig/AIDeveloper/tree/master/Tutorial%20Deploy%20to%20OpenCV%20dnn)  
 
 # Prerequisites  
