@@ -97,10 +97,10 @@ pip install tf2onnx==1.4.1
 pip install numpy==1.16.4
 ```
 # AIDeveloper in scientific literature  
-[1]	[M. Kräter et al., “AIDeveloper: deep learning image classification in life science and beyond,” bioRxiv, p. 2020.03.03.975250, Mar. 2020.](https://www.biorxiv.org/content/10.1101/2020.03.03.975250v1)  
+[1]	[M. Kräter et al., “AIDeveloper: Deep Learning Image Classification in Life Science and Beyond,” Advanced Science, Mar. 2021.](https://onlinelibrary.wiley.com/doi/10.1002/advs.202003743)  
 [2]	[A. A. Nawaz et al., “Intelligent image-based deformation-assisted cell sorting with molecular specificity,” Nat. Methods, May 2020.](https://rdcu.be/b4ow4)    
 [3]	[T. Krüger et al., “Reliable isolation of human mesenchymal stromal cells from bone marrow biopsy specimens in patients after allogeneic hematopoietic cell transplantation,” Cytotherapy, vol. 22, no. 1, pp. 21–26, Jan. 2020.](https://www.ncbi.nlm.nih.gov/pubmed/31883948)   
 
 # Citing AIDeveloper  
 If you use AIDeveloper in a scientific publication, citation of the following paper is appreciated:  
-[M. Kräter et al., “AIDeveloper: deep learning image classification in life science and beyond,” bioRxiv, p. 2020.03.03.975250, Mar. 2020.](https://www.biorxiv.org/content/10.1101/2020.03.03.975250v1)  
+[M. Kräter et al., “AIDeveloper: Deep Learning Image Classification in Life Science and Beyond,” Advanced Science, Mar. 2021.](https://onlinelibrary.wiley.com/doi/10.1002/advs.202003743)  
