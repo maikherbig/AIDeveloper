@@ -229,9 +229,8 @@ class MainWindow(QtWidgets.QMainWindow):
         #l is a list of some filenames (.rtdc) or folders (containing .jpg, jpeg, .png)
         
         #Iterate over l and check if it is a folder or a file (directory)
-        isfile = [os.path.isfile(url) for url in l]
-        isfolder = [os.path.isdir(url) for url in l]
-
+        isfile = [os.path.isfile(str(url)) for url in l]
+        isfolder = [os.path.isdir(str(url)) for url in l]
 
         #####################For folders with images:##########################            
         #where are folders?
