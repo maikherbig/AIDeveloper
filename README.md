@@ -73,7 +73,7 @@ The script based version was tested using Python 3.5 on Windows, Mac and Linux. 
 * Run AIDeveloper using `python AIDeveloper.py`  
 ### Option 2: Manually install all dependencies:
 ```
-conda create -n aid_env_cpu python=3.5
+conda create -n aid_env_cpu python=3.5 cmake
 activate aid_env_cpu
 pip install --upgrade setuptools
 pip install keras==2.2.4
