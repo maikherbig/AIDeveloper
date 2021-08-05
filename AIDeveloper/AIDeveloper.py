@@ -4,7 +4,6 @@ AIDeveloper
 ---------
 @author: maikherbig
 """
-import aid_backbone
 import os,sys,gc
 
 os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'#suppress warnings/info from tensorflow
@@ -40,6 +39,7 @@ try:
 except:
     pass
 
+import aid_backbone
 
 def main():
     global app
