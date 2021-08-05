@@ -90,6 +90,7 @@ pip install imageio==2.4.1
 pip install opencv-contrib-python-headless==4.4.0.42
 pip install openpyxl==2.5.6
 pip install xlrd==1.1.0
+pip install onnx==1.7.0
 pip install keras2onnx==1.4.0
 pip install libopencv==0.0.1
 pip install ffmpeg==1.4
