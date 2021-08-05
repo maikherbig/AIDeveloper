@@ -14,13 +14,14 @@ import keras
 import numpy as np
 
 
-version = "0.1.2_dev2" #1.) Use any string you like to specify/define your version of the model_zoo
+version = "0.1.2_dev3" #1.) Use any string you like to specify/define your version of the model_zoo
 def __version__():
     #print(version)
     return version
 
 #2.) Insert the name of your model in this list. All those names here, will appear later in the GUI
 predefined_1 = ["MLP_4_4_4", "MLP_8_8_8", "MLP_16_8_16", "MLP_24_16_24", 
+                "MLP_240","MLP_96_80","MLP_24_88_144",
                 "MLP_64_32_16", "MLP_72_80_32","MLP_64_80_32","MLP_72_64_48_48",
                 "MLP_72_48_24_32","MLP_24_16_24_skipcon","MLP_256_128_64_do"]
 predefined_2 = ["LeNet5","LeNet5_do","LeNet5_bn_do","LeNet5_bn_do_skipcon","TinyResNet","TinyCNN"]
@@ -155,7 +156,8 @@ def get_model(modelname,in_dim,channels,out_dim):
         model = collection_6(in_dim,in_dim,channels,out_dim)
     elif modelname=="collection_r1":
         model = collection_r1(in_dim,in_dim,channels,out_dim)
-        
+    elif modelname=="Collection_test":
+        model = collection_test(in_dim,in_dim,channels,out_dim)
 
     return model
 
@@ -1999,6 +2001,36 @@ def Nitta6l_MultiIn(in_dim,channels,out_dim):
     return model
 
 
+#import pandas as pd
+##import model_zoo
+#in_dim = 224
+#predefined_1 = ["MLP_24_16_24_skipcon","MLP_256_128_64_do"]
+#predefined_2 = ["LeNet5","LeNet5_do","LeNet5_bn_do","LeNet5_bn_do_skipcon"]
+#predefined_3 = ["VGG_small_1", "VGG_small_2","VGG_small_3","VGG_small_4"]
+#predefined_4 = ["Nitta_et_al_6layer","Nitta_et_al_8layer"]
+#predefined_5 = ["MhNet1_bn_do_skipcon","MhNet2_bn_do_skipcon"]
+#predefined_6_1 = ["pretrained_squeezenet","pretrained_mobilenet","pretrained_mobilenet_v2","pretrained_nasnetmobile","pretrained_nasnetlarge","pretrained_densenet","pretrained_vgg16","pretrained_vgg19","pretrained_inception_v3","pretrained_xception"]
+#predefined_6_2 = ["pretrained_resnet50","pretrained_resnet101","pretrained_resnet152","pretrained_resnet50_v2","pretrained_resnet101_v2","pretrained_resnet152_v2"]
+#predefined_6_3 = ["pretrained_resnext50","pretrained_resnext101"]
+#predefined_models = predefined_1+predefined_2+predefined_3+predefined_4+\
+#predefined_5+predefined_6_1+predefined_6_2+predefined_6_3
+#
+#TrainableParams =  []
+#for modelname in predefined_models:
+#    print(modelname)
+#    try:
+#        M1 = get_model(modelname,in_dim,3,10)
+#        total_params = M1.count_params()
+#        TrainableParams.append(total_params)
+#    except Exception as e:
+#        print("Exception for "+modelname)
+#        print(e)
+#        TrainableParams.append(np.nan)
+#        
+#DF = pd.DataFrame()
+#DF["modelname"] = predefined_models
+#DF["Total nr. of parameters"] = TrainableParams
+#DF.to_csv("Models_params_"+str(in_dim)+".csv")
 
 
 
