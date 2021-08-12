@@ -228,9 +228,10 @@ class MainWindow(QtWidgets.QMainWindow):
             self.statusbar.showMessage("Newly added data is not yet in RAM. Only RAM data will be used. Use ->'File'->'Data to RAM now' to update RAM",5000)
         #l is a list of some filenames (.rtdc) or folders (containing .jpg, jpeg, .png)
         
-        #Iterate over l and check if it is a folder or a file (directory)
+        #Iterate over l and check if it is a folder or a file (directory)    
         isfile = [os.path.isfile(str(url)) for url in l]
         isfolder = [os.path.isdir(str(url)) for url in l]
+
 
         #####################For folders with images:##########################            
         #where are folders?
@@ -463,6 +464,7 @@ class MainWindow(QtWidgets.QMainWindow):
         fileinfo = []
         for i in range(len(filenames)):
             rtdc_path = filenames[i]
+            
             try:
                 failed,rtdc_ds = aid_bin.load_rtdc(rtdc_path)
                 if failed:
@@ -474,12 +476,12 @@ class MainWindow(QtWidgets.QMainWindow):
                     msg.exec_()
                     return
                 
-                features = rtdc_ds.features
+                features = list(rtdc_ds["events"].keys())
                 #Make sure that there is "images", "pos_x" and "pos_y" available
                 if "image" in features and "pos_x" in features and "pos_y" in features:
-                    nr_images = rtdc_ds["image"].len()
-                    pix = rtdc_ds.config["imaging"]["pixel size"]
-                    xtra_in_available = len(rtdc_ds._h5.keys())>2 #Is True, only if there are more than 2 elements. 
+                    nr_images = rtdc_ds["events"]["image"].len()
+                    pix = rtdc_ds.attrs["imaging:pixel size"]
+                    xtra_in_available = len(rtdc_ds.keys())>2 #Is True, only if there are more than 2 elements. 
                     fileinfo.append({"rtdc_ds":rtdc_ds,"rtdc_path":rtdc_path,"features":features,"nr_images":nr_images,"pix":pix,"xtra_in":xtra_in_available})
                 else:
                     missing = []
@@ -494,8 +496,8 @@ class MainWindow(QtWidgets.QMainWindow):
                     msg.setStandardButtons(QtWidgets.QMessageBox.Ok)
                     msg.exec_()                      
                                 
-            except:
-                pass
+            except Exception as e:
+                print(e)
         
         #Add the stuff to the combobox on Plot/Peak Tab
         url_list = [fileinfo[iterator]["rtdc_path"] for iterator in range(len(fileinfo))]
@@ -576,7 +578,8 @@ class MainWindow(QtWidgets.QMainWindow):
             columnPosition = 7
             #Pixel size
             item = QtWidgets.QTableWidgetItem()
-            pix = fileinfo[rowNumber]["pix"]
+            pix = float(fileinfo[rowNumber]["pix"])
+            print(pix)
             item.setData(QtCore.Qt.EditRole,pix)
             self.table_dragdrop.setItem(rowPosition, columnPosition, item)
 
@@ -813,7 +816,7 @@ class MainWindow(QtWidgets.QMainWindow):
         
     def update_hist1(self):
         feature = str(self.comboBox_feat1.currentText())
-        feature_values = self.rtdc_ds[feature]
+        feature_values = self.rtdc_ds["events"][feature]
         #if len(feature_values)==len(self.rtdc_ds['area_cvx']):
 #        self.histogram = pg.GraphicsWindow()        
         #plt1 = self.histogram.addPlot()
@@ -823,7 +826,7 @@ class MainWindow(QtWidgets.QMainWindow):
 #        self.w.show()
     def update_hist2(self):
         feature = str(self.comboBox_feat2.currentText())
-        feature_values = self.rtdc_ds[feature]
+        feature_values = self.rtdc_ds["events"][feature]
         #if len(feature_values)==len(self.rtdc_ds['area_cvx']):
         #self.histogram = pg.GraphicsWindow()        
         #plt1 = self.histogram.addPlot()
@@ -833,9 +836,9 @@ class MainWindow(QtWidgets.QMainWindow):
 #        self.w.show()
     def update_scatter(self):
         feature_x = str(self.comboBox_feat1.currentText())
-        feature_x_values = self.rtdc_ds[feature_x]
+        feature_x_values = self.rtdc_ds["events"][feature_x]
         feature_y = str(self.comboBox_feat2.currentText())
-        feature_y_values = self.rtdc_ds[feature_y]
+        feature_y_values = self.rtdc_ds["events"][feature_y]
         if len(feature_x_values)==len(feature_y_values):
             #self.histogram = pg.GraphicsWindow()        
             #plt1 = self.histogram.addPlot()
@@ -884,11 +887,12 @@ class MainWindow(QtWidgets.QMainWindow):
         self.horizontalLayout_w.setObjectName(_fromUtf8("horizontalLayout_w"))
         self.comboBox_feat1 = QtWidgets.QComboBox(self.widget)
         self.comboBox_feat1.setObjectName(_fromUtf8("comboBox_feat1"))
-        self.comboBox_feat1.addItems(self.rtdc_ds.features)
+        features = list(self.rtdc_ds["events"].keys())
+        self.comboBox_feat1.addItems(features)
         self.horizontalLayout_w.addWidget(self.comboBox_feat1)
         self.comboBox_feat2 = QtWidgets.QComboBox(self.widget)
         self.comboBox_feat2.setObjectName(_fromUtf8("comboBox_feat2"))
-        self.comboBox_feat2.addItems(self.rtdc_ds.features)
+        self.comboBox_feat2.addItems(features)
         self.horizontalLayout_w.addWidget(self.comboBox_feat2)
         self.verticalLayout_w.addLayout(self.horizontalLayout_w)
         self.horizontalLayout_w2 = QtWidgets.QHBoxLayout()
@@ -1782,9 +1786,9 @@ class MainWindow(QtWidgets.QMainWindow):
                     msg.exec_()
                     return
                     
-                hash_ = rtdc_ds.hash
-                features = rtdc_ds.features
-                nr_images = rtdc_ds["image"].len()
+                hash_ = aid_bin.hashfunction(rtdc_path)#rtdc_ds.hash
+                features = list(rtdc_ds["events"].keys())
+                nr_images = rtdc_ds["events"]["image"].len()
                 SelectedFiles.append({"rtdc_ds":rtdc_ds,"rtdc_path":rtdc_path,"features":features,"nr_images":nr_images,"class":index,"TrainOrValid":"Train","nr_events":nr_events,"nr_events_epoch":nr_events_epoch,"shuffle":shuffle,"zoom_factor":zoom_factor,"hash":hash_,"xtra_in":xtra_in})
             
             cb_v = self.table_dragdrop.item(rowPosition, 3)
@@ -1798,9 +1802,9 @@ class MainWindow(QtWidgets.QMainWindow):
                     msg.setStandardButtons(QtWidgets.QMessageBox.Ok)
                     msg.exec_()
                     return
-                hash_ = rtdc_ds.hash
-                features = rtdc_ds.features
-                nr_images = rtdc_ds["image"].len()
+                hash_ = aid_bin.hashfunction(rtdc_path)
+                features = list(rtdc_ds["events"].keys())
+                nr_images = rtdc_ds["events"]["image"].len()
                 SelectedFiles.append({"rtdc_ds":rtdc_ds,"rtdc_path":rtdc_path,"features":features,"nr_images":nr_images,"class":index,"TrainOrValid":"Valid","nr_events":nr_events,"nr_events_epoch":nr_events_epoch,"shuffle":shuffle,"zoom_factor":zoom_factor,"hash":hash_,"xtra_in":xtra_in})
         return SelectedFiles
 
@@ -1903,7 +1907,7 @@ class MainWindow(QtWidgets.QMainWindow):
                     msg.setStandardButtons(QtWidgets.QMessageBox.Ok)
                     msg.exec_()
                     return
-                nr_images = rtdc_ds["image"].len()
+                nr_images = rtdc_ds["events"]["image"].len()
         
                 columnPosition = 6
                 item = QtWidgets.QTableWidgetItem()
@@ -2234,7 +2238,7 @@ class MainWindow(QtWidgets.QMainWindow):
                         msg.setStandardButtons(QtWidgets.QMessageBox.Ok)
                         msg.exec_()
                         return
-                    nr_images = rtdc_ds["image"].len()
+                    nr_images = rtdc_ds["events"]["image"].len()
             
                     columnPosition = 6
                     item = QtWidgets.QTableWidgetItem()
@@ -2275,9 +2279,9 @@ class MainWindow(QtWidgets.QMainWindow):
                 msg.setStandardButtons(QtWidgets.QMessageBox.Ok)
                 msg.exec_()
                     
-            nr_images = rtdc_ds["image"].len()
+            nr_images = rtdc_ds["events"]["image"].len()
             ind = np.random.randint(0,nr_images)
-            img = rtdc_ds["image"][ind]
+            img = rtdc_ds["events"]["image"][ind]
             if len(img.shape)==2:
                 height, width = img.shape
                 channels = 1
@@ -2319,7 +2323,7 @@ class MainWindow(QtWidgets.QMainWindow):
             #pix = rtdc_ds.config["imaging"]["pixel size"]
             PIX = pix
             
-            pos_x,pos_y = rtdc_ds["pos_x"][ind]/PIX,rtdc_ds["pos_y"][ind]/PIX
+            pos_x,pos_y = rtdc_ds["events"]["pos_x"][ind]/PIX,rtdc_ds["events"]["pos_y"][ind]/PIX
             cropsize = self.spinBox_imagecrop.value()
             y1 = int(round(pos_y))-cropsize/2                
             x1 = int(round(pos_x))-cropsize/2 
@@ -2392,7 +2396,7 @@ class MainWindow(QtWidgets.QMainWindow):
                 msg.exec_()
                 return
 
-            features = rtdc_ds.features
+            features = list(rtdc_ds["events"].keys())
             #Fill those feautues in the comboboxes at the scatterplot
             self.comboBox_featurex.addItems(features)
             self.comboBox_featurey.addItems(features)
@@ -2480,8 +2484,8 @@ class MainWindow(QtWidgets.QMainWindow):
 
         rtdc_ds = self.rtdc_ds
         #Get the corresponding image:
-        if "image" in rtdc_ds.features:
-            img = rtdc_ds["image"][index]
+        if "image" in list(rtdc_ds["events"].keys()):
+            img = rtdc_ds["events"]["image"][index]
 
             if len(img.shape)==2:
                 channels = 1
@@ -2508,9 +2512,9 @@ class MainWindow(QtWidgets.QMainWindow):
             self.widget_showCell.ui.menuBtn.hide()
             
             #Indicate the centroid of the cell
-            pix = rtdc_ds.config["imaging"]["pixel size"]
-            pos_x = rtdc_ds["pos_x"][index]/pix
-            pos_y = rtdc_ds["pos_y"][index]/pix
+            pix = rtdc_ds.attrs["imaging:pixel size"]
+            pos_x = rtdc_ds["events"]["pos_x"][index]/pix
+            pos_y = rtdc_ds["events"]["pos_y"][index]/pix
             if self.checkBox_centroid.isChecked():
                 self.dot = pg.CircleROI(pos=(pos_x-2, pos_y-2), size=4, pen=QtGui.QPen(QtCore.Qt.red, 0.1), movable=False)
                 self.widget_showCell.getView().addItem(self.dot)
@@ -2522,11 +2526,11 @@ class MainWindow(QtWidgets.QMainWindow):
             self.plot_fl_trace.clear() #clear the plot
         except:
             pass
-        if "trace" in rtdc_ds.features:
+        if "trace" in list(rtdc_ds["events"].keys()):
             #Show the flourescence traces
-            trace = rtdc_ds["trace"]
+            trace = rtdc_ds["events"]["trace"]
             fl_keys = list(trace.keys())
-            feature_keys = rtdc_ds.features
+            feature_keys = list(rtdc_ds["events"].keys())
             fl1_max,fl1_pos,fl2_max,fl2_pos,fl3_max,fl3_pos = 0,0,0,0,0,0
             Traces_flx = []
             for i in range(len(fl_keys)):
@@ -2536,27 +2540,27 @@ class MainWindow(QtWidgets.QMainWindow):
                     Traces_flx.append(trace_flx)
                     self.plot_fl_trace_ = self.plot_fl_trace.plot(range(len(trace_flx)),trace_flx,width=6,pen=pencolor,clear=False)
                     if "fl1_max" in feature_keys and "fl1_pos" in feature_keys: #if also the maxima and position of the max are available: use it to put the region accordingly
-                        fl1_max,fl1_pos = rtdc_ds["fl1_max"][index],rtdc_ds["fl1_pos"][index]
+                        fl1_max,fl1_pos = rtdc_ds["events"]["fl1_max"][index],rtdc_ds["events"]["fl1_pos"][index]
                 elif "fl2_median" in fl_keys[i] and self.checkBox_fl2.isChecked():
                     trace_flx = trace[fl_keys[i]][index]
                     Traces_flx.append(trace_flx)
                     pencolor = (255,128,0) #orange
                     self.plot_fl_trace_ = self.plot_fl_trace.plot(range(len(trace_flx)),trace_flx,width=6,pen=pencolor,clear=False)
                     if "fl2_max" in feature_keys and "fl2_pos" in feature_keys: #if also the maxima and position of the max are available: use it to put the region accordingly
-                        fl2_max,fl2_pos = rtdc_ds["fl2_max"][index],rtdc_ds["fl2_pos"][index]
+                        fl2_max,fl2_pos = rtdc_ds["events"]["fl2_max"][index],rtdc_ds["events"]["fl2_pos"][index]
                 elif "fl3_median" in fl_keys[i] and self.checkBox_fl3.isChecked():
                     trace_flx = trace[fl_keys[i]][index]
                     Traces_flx.append(trace_flx)
                     pencolor = "r"
                     self.plot_fl_trace_ = self.plot_fl_trace.plot(range(len(trace_flx)),trace_flx,width=6,pen=pencolor,clear=False)
                     if "fl3_max" in feature_keys and "fl3_pos" in feature_keys: #if also the maxima and position of the max are available: use it to put the region accordingly
-                        fl3_max,fl3_pos = rtdc_ds["fl3_max"][index],rtdc_ds["fl3_pos"][index]
+                        fl3_max,fl3_pos = rtdc_ds["events"]["fl3_max"][index],rtdc_ds["events"]["fl3_pos"][index]
     
             #get the maximum of [fl1_max,fl2_max,fl3_max] and put the region to the corresponding fl-position
             ind = np.argmax(np.array([fl1_max,fl2_max,fl3_max]))
             region_pos = np.array([fl1_pos,fl2_pos,fl3_pos])[ind] #this region is already given in us. translate this back to range
             peak_height = np.array([fl1_max,fl2_max,fl3_max])[ind]
-            sample_rate = rtdc_ds.config["fluorescence"]["sample rate"]
+            sample_rate = rtdc_ds.attrs["fluorescence:sample rate"]
             fl_pos_ind = float((sample_rate*region_pos))/1E6 #
             #Indicate the used flx_max and flx_pos by a scatter dot
             self.peak_dot = self.plot_fl_trace.plot([float(fl_pos_ind)], [float(peak_height)],pen=None,symbol='o',symbolPen='w',clear=False)
@@ -2567,10 +2571,10 @@ class MainWindow(QtWidgets.QMainWindow):
     #            self.region_width = 50 #width of the region in us
     #            self.region_width = float((sample_rate*self.region_width))/1E6 #
                 #to get a reasonable initial range, use 20% of the nr. of availeble samples
-                samples_per_event = self.rtdc_ds.config["fluorescence"]["samples per event"]
+                samples_per_event = self.rtdc_ds.attrs["fluorescence:samples per event"]
                 self.region_width = 0.2*samples_per_event #width of the region in samples
                 #Convert to SI unit:
-                sample_rate = self.rtdc_ds.config["fluorescence"]["sample rate"]
+                sample_rate = self.rtdc_ds.attrs["fluorescence:sample rate"]
                 self.region_width = (float(self.region_width)/float(sample_rate))*1E6 #range[samples]*(1/sample_rate[1/s]) = range[s]; div by 1E6 to convert to us
     
             region_width_samples = (self.region_width*float(sample_rate))/1E6
@@ -2649,9 +2653,9 @@ class MainWindow(QtWidgets.QMainWindow):
         feature_x_name = str(self.comboBox_featurex.currentText())
         feature_y_name = str(self.comboBox_featurey.currentText())
         
-        features = self.rtdc_ds.features
+        features = list(self.rtdc_ds["events"].keys())
         if feature_x_name in features:
-            self.feature_x = self.rtdc_ds[feature_x_name]
+            self.feature_x = self.rtdc_ds["events"][feature_x_name]
         else:
             msg = QtWidgets.QMessageBox()
             msg.setIcon(QtWidgets.QMessageBox.Information)       
@@ -2661,7 +2665,7 @@ class MainWindow(QtWidgets.QMainWindow):
             msg.exec_()
             return
         if feature_y_name in features:    
-            self.feature_y = self.rtdc_ds[feature_y_name]
+            self.feature_y = self.rtdc_ds["events"][feature_y_name]
         else:
             msg = QtWidgets.QMessageBox()
             msg.setIcon(QtWidgets.QMessageBox.Information)       
@@ -2727,11 +2731,11 @@ class MainWindow(QtWidgets.QMainWindow):
         item.setData(QtCore.Qt.EditRole, float(self.new_peak["fl_max"]))
         self.tableWidget_showSelectedPeaks.setItem(rowPosition, 0, item)
         item = QtWidgets.QTableWidgetItem()
-        fl_pos_us = float(float(self.new_peak["fl_pos"])*float(1E6))/float(self.rtdc_ds.config["fluorescence"]["sample rate"])
+        fl_pos_us = float(float(self.new_peak["fl_pos"])*float(1E6))/float(self.rtdc_ds.attrs["fluorescence:sample rate"])
         item.setData(QtCore.Qt.EditRole,fl_pos_us)
         self.tableWidget_showSelectedPeaks.setItem(rowPosition, 1, item)
         item = QtWidgets.QTableWidgetItem()
-        pos_x_um = float(self.new_peak["pos_x"])*float(self.rtdc_ds.config["imaging"]["pixel size"])
+        pos_x_um = float(self.new_peak["pos_x"])*float(self.rtdc_ds.attrs["imaging:pixel size"])
         item.setData(QtCore.Qt.EditRole,pos_x_um)
         self.tableWidget_showSelectedPeaks.setItem(rowPosition, 2, item)
         item = QtWidgets.QTableWidgetItem()
@@ -2749,7 +2753,7 @@ class MainWindow(QtWidgets.QMainWindow):
     def selectPeakRange(self):
         new_region = self.region.getRegion()
         region_width = np.max(new_region) - np.min(new_region) #in [samples]
-        sample_rate = self.rtdc_ds.config["fluorescence"]["sample rate"]
+        sample_rate = self.rtdc_ds.attrs["fluorescence:sample rate"]
         region_width = (float(region_width)/float(sample_rate))*1E6 #range[samples]*(1/sample_rate[1/s]) = range[s]; div by 1E6 to conver to us
         self.region_width = region_width
         #put this in the table
@@ -2803,10 +2807,10 @@ class MainWindow(QtWidgets.QMainWindow):
 
         if not hasattr(self, 'region_width'): #if there was no region_width defined yet...
             #to get a reasonable initial range, use 20% of the nr. of availeble samples
-            samples_per_event = self.rtdc_ds.config["fluorescence"]["samples per event"]
+            samples_per_event = self.rtdc_ds.attrs["fluorescence:samples per event"]
             self.region_width = 0.2*samples_per_event #width of the region in samples
             #Convert to SI unit:
-            sample_rate = self.rtdc_ds.config["fluorescence"]["sample rate"]
+            sample_rate = self.rtdc_ds.attrs["fluorescence:sample rate"] 
             self.region_width = (float(self.region_width)/float(sample_rate))*1E6 #range[samples]*(1/sample_rate[1/s]) = range[s]; div by 1E6 to convert to us
 
         #which model should be used?
@@ -2862,7 +2866,7 @@ class MainWindow(QtWidgets.QMainWindow):
             #run the function updateScatterPlot()
             self.updateScatterPlot()
             
-        trace = self.rtdc_ds["trace"]
+        trace = self.rtdc_ds["events"]["trace"]
         fl_keys = list(trace.keys())
         fl1_max,fl1_pos,fl2_max,fl2_pos,fl3_max,fl3_pos,pos_x = [],[],[],[],[],[],[]
         for i in range(len(fl_keys)):
@@ -2879,7 +2883,7 @@ class MainWindow(QtWidgets.QMainWindow):
                 sorter = sorter[0:int(x_pct/100.0*len(fl1_max))]
                 fl1_max = fl1_max[sorter]
                 fl1_pos = fl1_pos[sorter]
-                pos_x.append(self.rtdc_ds["pos_x"][sorter])
+                pos_x.append(self.rtdc_ds["events"]["pos_x"][sorter])
                 
             elif "fl2_median" in fl_keys[i] and self.checkBox_fl2.isChecked():
                 for index in range(len(trace[fl_keys[i]])):
@@ -2894,7 +2898,7 @@ class MainWindow(QtWidgets.QMainWindow):
                 sorter = sorter[0:int(x_pct/100.0*len(fl2_max))]
                 fl2_max = fl2_max[sorter]
                 fl2_pos = fl2_pos[sorter]
-                pos_x.append(self.rtdc_ds["pos_x"][sorter])
+                pos_x.append(self.rtdc_ds["events"]["pos_x"][sorter])
 
             elif "fl3_median" in fl_keys[i] and self.checkBox_fl3.isChecked():
                 for index in range(len(trace[fl_keys[i]])):
@@ -2909,13 +2913,13 @@ class MainWindow(QtWidgets.QMainWindow):
                 sorter = sorter[0:int(x_pct/100.0*len(fl3_max))]
                 fl3_max = fl3_max[sorter]
                 fl3_pos = fl3_pos[sorter]
-                pos_x.append(self.rtdc_ds["pos_x"][sorter])
+                pos_x.append(self.rtdc_ds["events"]["pos_x"][sorter])
 
         #Add fl1 fl2 and fl3 information
         flx_max = np.array(list(fl1_max)+list(fl2_max)+list(fl3_max))
         flx_pos = np.array(list(fl1_pos)+list(fl2_pos)+list(fl3_pos))
         pos_x_um = np.concatenate(np.atleast_2d(np.array(pos_x)))
-        pix = self.rtdc_ds.config["imaging"]["pixel size"]
+        pix = self.rtdc_ds.attrs["imaging:pixel size"]
         pos_x = pos_x_um/pix #convert from um to pix
 
         rowcount = self.tableWidget_showSelectedPeaks.rowCount()
@@ -2927,7 +2931,7 @@ class MainWindow(QtWidgets.QMainWindow):
             item.setData(QtCore.Qt.EditRole, float(flx_max[i]))
             self.tableWidget_showSelectedPeaks.setItem(rowPosition, 0, item)
             item = QtWidgets.QTableWidgetItem()
-            fl_pos_us = float(float(flx_pos[i])*float(1E6))/float(self.rtdc_ds.config["fluorescence"]["sample rate"])
+            fl_pos_us = float(float(flx_pos[i])*float(1E6))/float(self.rtdc_ds.attrs["fluorescence:sample rate"] )
             item.setData(QtCore.Qt.EditRole,fl_pos_us)
             self.tableWidget_showSelectedPeaks.setItem(rowPosition, 1, item)
             item = QtWidgets.QTableWidgetItem()
@@ -3107,7 +3111,7 @@ class MainWindow(QtWidgets.QMainWindow):
                     savename = savename.split("_"+str(addon-1))[0]
                 savename = savename+"_"+str(addon)+".rtdc"
                 addon += 1
-            print(savename)
+            print("Saving to : "+savename)
 
             failed,rtdc_ds = aid_bin.load_rtdc(rtdc_path)
             if failed:
@@ -3120,7 +3124,7 @@ class MainWindow(QtWidgets.QMainWindow):
                 return
 
             #Convert quantities to [index]
-            sample_rate = rtdc_ds.config["fluorescence"]["sample rate"]
+            sample_rate = rtdc_ds.attrs["fluorescence:sample rate"] 
             range_ = (range_us*float(sample_rate))/1E6 #range was given in us->Divide by 1E6 to get to s and then multiply by the sample rate
             
 #            #check if an rtdc_ds is already chosen:
@@ -3133,12 +3137,12 @@ class MainWindow(QtWidgets.QMainWindow):
 #                msg.exec_()
 #                return
                                 
-            trace = rtdc_ds["trace"]
+            trace = rtdc_ds["events"]["trace"]
             fl_keys = list(trace.keys()) #Which traces are available
             fl1_max,fl1_pos,fl2_max,fl2_pos,fl3_max,fl3_pos,pos_x = [],[],[],[],[],[],[]
             
             #Iterate over the available cells
-            pos_x = rtdc_ds["pos_x"] #is already given in [um]
+            pos_x = rtdc_ds["events"]["pos_x"] #is already given in [um]
             indices = range(len(pos_x))
     
             if model == "Linear dependency and max in range":
@@ -3175,6 +3179,9 @@ class MainWindow(QtWidgets.QMainWindow):
               
             #Save those new fluorescence features into free spots in .rtdc file
             #Those names can be found via dclab.dfn.feature_names called (userdef0...userdef9)
+
+            #TODO  (dont use dclab anymore for saving)
+            #But just in case anyone uses that function?!
             
             #get metadata of the dataset
             meta = {}
@@ -3191,19 +3198,18 @@ class MainWindow(QtWidgets.QMainWindow):
             nev = len(rtdc_ds)
             
             #["Overwrite Fl_max and Fl_pos","Save to userdef"]
-            features = rtdc_ds._events.keys()
+            features = list(rtdc_ds["events"].keys())
             if str(self.comboBox_toFlOrUserdef.currentText())=='Save to userdef':
                 features = features+["userdef"+str(i) for i in range(10)]
-                
+            
             with dclab.rtdc_dataset.write_hdf5.write(path_or_h5file=savename,meta=meta, mode="append") as h5obj:
                 # write each feature individually
                 for feat in features:
-                    print(feat)
                     # event-wise, because
                     # - tdms-based datasets don't allow indexing with numpy
                     # - there might be memory issues
                     if feat == "contour":
-                        cont_list = [rtdc_ds["contour"][ii] for ii in indices]
+                        cont_list = [rtdc_ds["events"]["contour"][ii] for ii in indices]
                         dclab.rtdc_dataset.write_hdf5.write(h5obj,
                               data={"contour": cont_list},
                               mode="append",
@@ -3297,16 +3303,16 @@ class MainWindow(QtWidgets.QMainWindow):
                         # store image stacks (reduced file size and save time)
                         m = 64
                         if feat=='mask':
-                            im0 = rtdc_ds[feat][0]
+                            im0 = rtdc_ds["events"][feat][0]
                         if feat=="image":
-                            im0 = rtdc_ds[feat][0]
+                            im0 = rtdc_ds["events"][feat][0]
                         imstack = np.zeros((m, im0.shape[0], im0.shape[1]),
                                            dtype=im0.dtype)
                         jj = 0
                         if feat=='mask':
-                            image_list = [rtdc_ds[feat][ii] for ii in indices]
+                            image_list = [rtdc_ds["events"][feat][ii] for ii in indices]
                         elif feat=='image':
-                            image_list = [rtdc_ds[feat][ii] for ii in indices]
+                            image_list = [rtdc_ds["events"][feat][ii] for ii in indices]
                         for ii in range(len(image_list)):
                             dat = image_list[ii]
                             #dat = rtdc_ds[feat][ii]
@@ -3326,11 +3332,11 @@ class MainWindow(QtWidgets.QMainWindow):
                                   mode="append",
                                   compression=compression)
                     elif feat == "trace":
-                        for tr in rtdc_ds["trace"].keys():
-                            tr0 = rtdc_ds["trace"][tr][0]
+                        for tr in rtdc_ds["events"]["trace"].keys():
+                            tr0 = rtdc_ds["events"]["trace"][tr][0]
                             trdat = np.zeros((nev, tr0.size), dtype=tr0.dtype)
                             jj = 0
-                            trace_list = [rtdc_ds["trace"][tr][ii] for ii in indices]
+                            trace_list = [rtdc_ds["events"]["trace"][tr][ii] for ii in indices]
                             for ii in range(len(trace_list)):
                                 trdat[jj] = trace_list[ii]
                                 jj += 1
@@ -3340,7 +3346,7 @@ class MainWindow(QtWidgets.QMainWindow):
                                   compression=compression)
                     else:
                         dclab.rtdc_dataset.write_hdf5.write(h5obj,
-                              data={feat: rtdc_ds[feat][indices]},mode="append")
+                              data={feat: rtdc_ds["events"][feat][indices]},mode="append")
                     
                 h5obj.close()
 
@@ -4564,8 +4570,6 @@ class MainWindow(QtWidgets.QMainWindow):
                 if self.groupBox_expertMode.isChecked()==True:
                     self.groupBox_expertMode.setChecked(False)
                     print("Turned off expert mode. Not implemented yet for collections of models. This does not affect user-specified metrics (precision/recall/f1)")
-    #            print("new_modelname")
-    #            print(new_modelname)
                 
                 self.model_keras_arch_path = [new_modelname[0]+os.sep+new_modelname[1].split(".model")[0]+"_"+model_keras[0][i]+".arch" for i in range(len(model_keras[0]))]                
                 for i in range(len(model_keras[1])):
@@ -8865,7 +8869,7 @@ class MainWindow(QtWidgets.QMainWindow):
                 #get the hashes 
                 hashes = list(np.array(UsedData_false["hash"])[ind_false])
                 paths = list(np.array(UsedData_false["rtdc_path"])[ind_false])
-
+                    
                 paths_new,info = aid_bin.find_files(user_selected_path,paths,hashes)
                 text = ('\n'.join([str(a) +"\t"+ b for a,b in zip(paths_new,info)]))
                 self.textBrowser_Info_pop2.setText(text)
@@ -9137,7 +9141,7 @@ class MainWindow(QtWidgets.QMainWindow):
                     msg.exec_()
                     return
     
-                images = rtdc_ds["image"] #get the images
+                images = rtdc_ds["events"]["image"] #get the images
                 #Save the images data to .png/.jpeg...
                 for img in images:
                     img = PIL.Image.fromarray(img)
@@ -9805,7 +9809,7 @@ class MainWindow(QtWidgets.QMainWindow):
             msg.exec_()
             return
         
-        x_valid = np.array(rtdc_ds["image"])
+        x_valid = np.array(rtdc_ds["events"]["image"])
         #dim = x_valid.shape[1]
         #channels = x_valid.shape[-1]
 
@@ -11155,7 +11159,7 @@ class MainWindow(QtWidgets.QMainWindow):
                         return
                     
                     failed,rtdc_ds = aid_bin.load_rtdc(rtdc_path)
-                    rtdc_ds_len = rtdc_ds["image"].shape[0] #this way is actually faster than asking any other feature for its len :)
+                    rtdc_ds_len = rtdc_ds["events"]["image"].shape[0] #this way is actually faster than asking any other feature for its len :)
                     prediction_fillnan = np.full([rtdc_ds_len], np.nan)#put initially np.nan for all cells
     
                     if export_option == "Add pred&scores to .rtdc file (userdef0 to 9)":
