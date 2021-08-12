@@ -410,9 +410,9 @@ def gen_crop_img(cropsize,rtdc_path,nr_events=100,replace=True,random_images=Tru
         msg.exec_()
         return
     
-    pix = rtdc_ds.config["imaging"]["pixel size"] #get pixelation (um/pix)
+    pix = rtdc_ds.attrs["imaging:pixel size"] #get pixelation (um/pix)
     #images_shape = rtdc_ds["image"].shape #get shape of the images (nr.images,height,width,channels)
-    images = rtdc_ds["image"] #get the images
+    images = rtdc_ds["events"]["image"] #get the images
 
     if len(images)<1:
         msg = QtWidgets.QMessageBox()
@@ -431,7 +431,7 @@ def gen_crop_img(cropsize,rtdc_path,nr_events=100,replace=True,random_images=Tru
     #Adjust number of channels
     images = image_adjust_channels(images,target_channels=channels)
     
-    pos_x,pos_y = rtdc_ds["pos_x"][:]/pix,rtdc_ds["pos_y"][:]/pix #/pix converts to pixel index 
+    pos_x,pos_y = rtdc_ds["events"]["pos_x"][:]/pix,rtdc_ds["events"]["pos_y"][:]/pix #/pix converts to pixel index 
     #If there is a zooming to be applied, adjust pos_x and pos_y accordingly
     if zoom_factor != 1:
         pos_x,pos_y = zoom_factor*pos_x,zoom_factor*pos_y
@@ -440,7 +440,7 @@ def gen_crop_img(cropsize,rtdc_path,nr_events=100,replace=True,random_images=Tru
     ind = range(len(images))
 
     if xtra_in==True:
-        xtra_data = np.array(rtdc_ds._h5["xtra_in"])
+        xtra_data = np.array(rtdc_ds["xtra_in"])
     if xtra_in==False:
         xtra_data = []#in case xtra_in==None, this empty list will be returned
     
