@@ -12,6 +12,11 @@ import numpy as np
 import dclab
 import h5py,time,datetime
 import six,tarfile, zipfile
+import hashlib
+import warnings
+import pathlib
+import aid_img
+
 import aid_start #import a module that sits in the AIDeveloper folder
 dir_root = os.path.dirname(aid_start.__file__)#ask the module for its origin
 
@@ -41,6 +46,72 @@ def splitall(path):
             allparts.insert(0, parts[1])
     return allparts
 
+def hashfile(fname, blocksize=65536, count=0, constructor=hashlib.md5,
+             hasher_class=None):
+    """Compute md5 hex-hash of a file
+    Parameters
+    ----------
+    fname: str or pathlib.Path
+        path to the file
+    blocksize: int
+        block size in bytes read from the file
+        (set to `0` to hash the entire file)
+    count: int
+        number of blocks read from the file
+    hasher_class: callable
+        deprecated, see use `constructor` instead
+    constructor: callable
+        hash algorithm constructor
+    """
+    if hasher_class is not None:
+        warnings.warn("The `hasher_class` argument is deprecated, please use "
+                      "`constructor` instead.")
+        constructor = hasher_class
+    hasher = constructor()
+    fname = pathlib.Path(fname)
+    with fname.open('rb') as fd:
+        buf = fd.read(blocksize)
+        ii = 0
+        while len(buf) > 0:
+            hasher.update(buf)
+            buf = fd.read(blocksize)
+            ii += 1
+            if count and ii == count:
+                break
+    return hasher.hexdigest()
+
+def obj2bytes(obj):
+    """Bytes representation of an object for hashing"""
+    if isinstance(obj, str):
+        return obj.encode("utf-8")
+    elif isinstance(obj, pathlib.Path):
+        return obj2bytes(str(obj))
+    elif isinstance(obj, (bool, int, float)):
+        return str(obj).encode("utf-8")
+    elif obj is None:
+        return b"none"
+    elif isinstance(obj, np.ndarray):
+        return obj.tobytes()
+    elif isinstance(obj, tuple):
+        return obj2bytes(list(obj))
+    elif isinstance(obj, list):
+        return b"".join(obj2bytes(o) for o in obj)
+    elif isinstance(obj, dict):
+        return obj2bytes(sorted(obj.items()))
+    elif hasattr(obj, "identifier"):
+        return obj2bytes(obj.identifier)
+    elif isinstance(obj, h5py.Dataset):
+        return obj2bytes(obj[0])
+    else:
+        raise ValueError("No rule to convert object '{}' to string.".
+                         format(obj.__class__))
+
+def hashfunction(rtdc_path):
+    """Hash value based on file name and content"""
+    tohash = [os.path.basename(rtdc_path),
+              # Hash a maximum of ~1MB of the hdf5 file
+              hashfile(rtdc_path, blocksize=65536, count=20)]
+    return hashlib.md5(obj2bytes(tohash)).hexdigest()
 
 
 def load_rtdc(rtdc_path):
@@ -54,9 +125,9 @@ def load_rtdc(rtdc_path):
             #therefore try opening a second time in case of an error.
             #This is very strange, and seems like a dirty solution,
             #but I never saw it failing two times in a row
-            rtdc_ds = dclab.rtdc_dataset.RTDC_HDF5(rtdc_path)
+            rtdc_ds = h5py.File(rtdc_path, 'r')
         except:
-            rtdc_ds = dclab.rtdc_dataset.RTDC_HDF5(rtdc_path)
+            rtdc_ds = h5py.File(rtdc_path, 'r')
         return False,rtdc_ds #failed=False
     except Exception as e:
         #There is an issue loading the files!
@@ -148,7 +219,7 @@ def find_files(user_selected_path,paths,hashes):
             if failed:
                 print("Error occurred during loading file\n"+str(p)+"\n"+str(rtdc_ds))
             else:
-                hash_new.append(rtdc_ds.hash)
+                hash_new.append(hashfunction(p))
 
         ind = [ h==hash_ for h in hash_new ] #where do the hashes agree?
         #get the corresponding Path_new
@@ -163,6 +234,142 @@ def find_files(user_selected_path,paths,hashes):
             Paths_new.append(str(path_new[0]))
             Info.append("Found the required file multiple times! Choose one!")
     return(Paths_new,Info)
+
+
+#: Chunk size for storing HDF5 data
+CHUNK_SIZE = 100
+
+def store_contour(h5group,name, data, compression):
+    if not isinstance(data, (list, tuple)):
+        # single event
+        data = [data]
+    grp = h5group.require_group(name)
+    curid = len(grp.keys())
+    for ii, cc in enumerate(data):
+        grp.create_dataset("{}".format(curid + ii),
+                           data=cc,
+                           fletcher32=True,
+                           compression=compression)
+
+
+def store_image(h5group, name, data, compression, background=False):
+    """Store image data in an HDF5 group
+    Parameters
+    ----------
+    h5group: h5py.Group
+        The group (usually "events") where to store the image data
+    data: 2d or 3d ndarray
+        The image data. If 3d, then the first axis enumerates
+        the images.
+    compression: str
+        Dataset compression method
+    background: bool
+        If set to False (default), then the regular "image" is stored;
+        If set to True, then the background image ("image_bg") is
+        stored.
+    """
+    if len(data.shape) == 2:
+        # single event
+        data = data.reshape(1, data.shape[0], data.shape[1])
+    if name not in h5group:
+        maxshape = (None, data.shape[1], data.shape[2])
+        chunks = (CHUNK_SIZE, data.shape[1], data.shape[2])
+        dset = h5group.create_dataset(name,
+                                      data=data,
+                                      dtype=np.uint8,
+                                      maxshape=maxshape,
+                                      chunks=chunks,
+                                      fletcher32=True,
+                                      compression=compression)
+        # Create and Set image attributes:
+        # HDFView recognizes this as a series of images.
+        # Use np.string_ as per
+        # http://docs.h5py.org/en/stable/strings.html#compatibility
+        dset.attrs.create('CLASS', np.string_('IMAGE'))
+        dset.attrs.create('IMAGE_VERSION', np.string_('1.2'))
+        dset.attrs.create('IMAGE_SUBCLASS', np.string_('IMAGE_GRAYSCALE'))
+    else:
+        dset = h5group[name]
+        oldsize = dset.shape[0]
+        dset.resize(oldsize + data.shape[0], axis=0)
+        dset[oldsize:] = data
+
+
+def store_mask(h5group,name, data, compression):
+    # store binary mask data as uint8 to allow visualization in HDFView
+    data = np.asarray(data, dtype=np.uint8)
+    if data.max() != 255 and data.max() != 0 and data.min() == 0:
+        data = data / data.max() * 255
+    if len(data.shape) == 2:
+        # single event
+        data = data.reshape(1, data.shape[0], data.shape[1])
+    if "mask" not in h5group:
+        maxshape = (None, data.shape[1], data.shape[2])
+        chunks = (CHUNK_SIZE, data.shape[1], data.shape[2])
+        dset = h5group.create_dataset(name,
+                                      data=data,
+                                      dtype=np.uint8,
+                                      maxshape=maxshape,
+                                      chunks=chunks,
+                                      fletcher32=True,
+                                      compression=compression)
+        # Create and Set image attributes
+        # HDFView recognizes this as a series of images
+        dset.attrs.create('CLASS', np.string_('IMAGE'))
+        dset.attrs.create('IMAGE_VERSION', np.string_('1.2'))
+        dset.attrs.create('IMAGE_SUBCLASS', np.string_('IMAGE_GRAYSCALE'))
+    else:
+        dset = h5group[name]
+        oldsize = dset.shape[0]
+        dset.resize(oldsize + data.shape[0], axis=0)
+        dset[oldsize:] = data
+
+
+def store_scalar(h5group, name, data, compression):
+    if np.isscalar(data):
+        # single event
+        data = np.atleast_1d(data)
+    if name not in h5group:
+        h5group.create_dataset(name,
+                               data=data,
+                               maxshape=(None,),
+                               chunks=(CHUNK_SIZE,),
+                               fletcher32=True,
+                               compression=compression
+                               )
+    else:
+        dset = h5group[name]
+        oldsize = dset.shape[0]
+        dset.resize(oldsize + data.shape[0], axis=0)
+        dset[oldsize:] = data
+
+
+def store_trace(h5group,name, data, compression):
+    firstkey = sorted(list(data.keys()))[0]
+    if len(data[firstkey].shape) == 1:
+        # single event
+        for dd in data:
+            data[dd] = data[dd].reshape(1, -1)
+    # create trace group
+    grp = h5group.require_group(name)
+
+    for flt in data:
+        # create traces datasets
+        if flt not in grp:
+            maxshape = (None, data[flt].shape[1])
+            chunks = (CHUNK_SIZE, data[flt].shape[1])
+            grp.create_dataset(flt,
+                               data=data[flt],
+                               maxshape=maxshape,
+                               chunks=chunks,
+                               fletcher32=True,
+                               compression=compression)
+        else:
+            dset = grp[flt]
+            oldsize = dset.shape[0]
+            dset.resize(oldsize + data[flt].shape[0], axis=0)
+            dset[oldsize:] = data[flt]
+
 
 def write_rtdc(fname,rtdc_datasets,X_valid,Indices,cropped=True,color_mode='Grayscale',xtra_in=[]):
     """
@@ -186,7 +393,7 @@ def write_rtdc(fname,rtdc_datasets,X_valid,Indices,cropped=True,color_mode='Gray
             print("Error occurred during loading file\n"+str(rtdc_datasets[i])+"\n"+str(rtdc_ds))
         else:
             #get the shape for all used files
-            images_shape.append(rtdc_ds["image"].shape) 
+            images_shape.append(rtdc_ds["events"]["image"].shape) 
     #Allow RGB export only, of all files have 3 channels
     if cropped==False: #only if the original images should be exported
         #the length of the images is shape=3 for grayscale images and =4 for RGB images
@@ -216,9 +423,9 @@ def write_rtdc(fname,rtdc_datasets,X_valid,Indices,cropped=True,color_mode='Gray
                 indices = Indices[i]
                 if len(indices>0):
                     if cropped==False:
-                        images.append([rtdc_ds["image"][ii] for ii in indices])
-                    pos_x.append([rtdc_ds["pos_x"][ii] for ii in indices])
-                    pos_y.append([rtdc_ds["pos_y"][ii] for ii in indices])
+                        images.append([rtdc_ds["events"]["image"][ii] for ii in indices])
+                    pos_x.append([rtdc_ds["events"]["pos_x"][ii] for ii in indices])
+                    pos_y.append([rtdc_ds["events"]["pos_y"][ii] for ii in indices])
                     
         if cropped==True:
             images = X_valid
@@ -247,10 +454,9 @@ def write_rtdc(fname,rtdc_datasets,X_valid,Indices,cropped=True,color_mode='Gray
         #"experiment:event count" = Nr. of images
         hdf.attrs["experiment:event count"]=images.shape[0]
         hdf.attrs["experiment:sample"]=fname
-        hdf.attrs["imaging:pixel size"]=1.00
+        hdf.attrs["imaging:pixel size"]=rtdc_ds.attrs["imaging:pixel size"]
         hdf.close()
         return
-
 
     Features,Trace_lengths,Mask_dims_x,Mask_dims_y,Img_dims_x,Img_dims_y = [],[],[],[],[],[]
     for i in range(len(rtdc_datasets)):
@@ -258,21 +464,21 @@ def write_rtdc(fname,rtdc_datasets,X_valid,Indices,cropped=True,color_mode='Gray
         if failed:
             print("Error occurred during loading file\n"+str(rtdc_datasets[i])+"\n"+str(rtdc_ds))
         else:
-            features = rtdc_ds._events.keys()#all features
+            features = list(rtdc_ds["events"].keys())#rtdc_ds._events.keys()#all features
             Features.append(features)
     
             #The lengths of the fluorescence traces have to be equal, otherwise those traces also have to be dropped
             if "trace" in features:
-                trace_lengths = [(rtdc_ds["trace"][tr][0]).size for tr in rtdc_ds["trace"].keys()]
+                trace_lengths = [(rtdc_ds["events"]["trace"][tr][0]).size for tr in rtdc_ds["trace"].keys()]
                 Trace_lengths.append(trace_lengths)
             #Mask Image dimensions have to be equal, otherwise those mask have to be dropped
             if "mask" in features:
-                mask_dim = (rtdc_ds["mask"][0]).shape
+                mask_dim = (rtdc_ds["events"]["mask"][0]).shape
                 Mask_dims_x.append(mask_dim[0])
                 Mask_dims_y.append(mask_dim[1])
             #Mask Image dimensions have to be equal, otherwise those mask have to be dropped
             if "image" in features:
-                img_dim = (rtdc_ds["image"][0]).shape
+                img_dim = (rtdc_ds["events"]["image"][0]).shape
                 Img_dims_x.append(img_dim[0])
                 Img_dims_y.append(img_dim[1])
  
@@ -285,6 +491,10 @@ def write_rtdc(fname,rtdc_datasets,X_valid,Indices,cropped=True,color_mode='Gray
         return list(result)     
     features = commonElements(Features)
 
+    # features = ["index_orig"] + features
+    # if "index" not in features:
+    #     features = ["index"] + features
+        
     if "trace" in features:
         Trace_lengths = np.concatenate(Trace_lengths)
         trace_lengths = np.unique(np.array(Trace_lengths))            
@@ -319,120 +529,92 @@ def write_rtdc(fname,rtdc_datasets,X_valid,Indices,cropped=True,color_mode='Gray
             if len(Images)>0 and len(Images.shape)==3:
                 index_new_ = index_new[0:len(indices)]
                 index_new = np.delete(index_new,range(len(indices)))
-                #get metadata of the dataset
-                meta = {}
-                # only export configuration meta data (no user-defined config)
-                for sec in dclab.definitions.CFG_METADATA:
-                    if sec in ["fmt_tdms"]:
-                        # ignored sections
-                        continue
-                    if sec in rtdc_ds.config:
-                        meta[sec] = rtdc_ds.config[sec].copy()
+
+                h5obj = h5py.File(fname,'a')
+                events = h5obj.require_group("events")
+                
+                # with dclab.rtdc_dataset.write_hdf5.write(path_or_h5file=fname,meta=meta, mode="append") as h5obj:
+                # write each feature individually
+                for feat in features:
+                    if feat == "contour":
+                        cont_list = [rtdc_ds["contour"][ii] for ii in indices]
+                        store_contour(h5group=events,name=feat,data=cont_list, compression="gzip")
+
+                    # elif feat == "index_orig":
+                    #     store_scalar(h5group=events,name=feat, data=index_new_, compression="gzip")
+
+                    # elif feat == "index_orig":
+                    #     values = np.array(rtdc_ds["events"]["index"])[indices]
+                    #     store_scalar(h5group=events,name=feat, data=values, compression="gzip")
+                    
+                    elif feat=="mask":# in ["mask", "image"]:
+                        mask = np.array(rtdc_ds["events"]["mask"])[indices]
+                        if cropped:
+                            pix = rtdc_ds.attrs["imaging:pixel size"]
+                            pos_x = np.array(rtdc_ds["events"]["pos_x"])[indices]/pix
+                            pos_y = np.array(rtdc_ds["events"]["pos_y"])[indices]/pix
+                            img_dim_x = Images[0].shape[1]
+                            img_dim_y = Images[0].shape[0]
+                            mask = aid_img.image_crop_pad_cv2(list(mask),pos_x,pos_y,pix,img_dim_x,img_dim_y,padding_mode="cv2.BORDER_CONSTANT")
                         
-                #Adjust the meta for the nr. of stored cells
-                meta["experiment"]["event count"] = np.sum(np.array([len(indi) for indi in Indices])) 
+                        store_mask(h5group=events,name=feat, data=mask, compression="gzip")
+
+                    elif "image" in feat:
+                        if cropped and feat=="image":
+                            image_list = np.array(Images)
+                        elif cropped and feat != "image":#there are images of another channel, they need ot be cropped first
+                            pix = rtdc_ds.attrs["imaging:pixel size"]
+                            pos_x = np.array(rtdc_ds["events"]["pos_x"])[indices]/pix
+                            pos_y = np.array(rtdc_ds["events"]["pos_y"])[indices]/pix
+                            img_dim_x = Images[0].shape[1]
+                            img_dim_y = Images[0].shape[0]
+                            image_list = np.array(rtdc_ds["events"][feat])[indices]
+                            image_list = aid_img.image_crop_pad_cv2(list(image_list),pos_x,pos_y,pix,img_dim_x,img_dim_y,padding_mode="cv2.BORDER_CONSTANT")
+                            image_list = np.array(image_list)
+                        else:
+                            image_list = np.array(rtdc_ds["events"][feat])[indices]
+                        store_image(h5group=events,name=feat, data=image_list, compression="gzip")
+
+                    elif feat == "trace":
+                        # create events group
+                        trace = np.array(rtdc_ds["events"]["trace"])[indices]
+                        dclab.rtdc_dataset.write_hdf5.store_trace(h5group=events,name=feat,data=trace,compression="gzip")
+
+                    elif feat == "pos_x" and cropped==True:
+                        values = np.zeros(shape=len(indices))+np.round(img_dim_x/2.0)*rtdc_ds.attrs["imaging:pixel size"]
+                        dclab.rtdc_dataset.write_hdf5.store_scalar(h5group=events, 
+                            name=feat, data=values, compression="gzip")
+
+                    elif feat == "pos_y" and cropped==True:
+                        values = np.zeros(shape=len(indices))+np.round(img_dim_y/2.0)*rtdc_ds.attrs["imaging:pixel size"]
+                        dclab.rtdc_dataset.write_hdf5.store_scalar(h5group=events,
+                            name=feat, data=values, compression="gzip")
+                        
+                    else:
+                        values = np.array(rtdc_ds["events"][feat])[indices]
+                        dclab.rtdc_dataset.write_hdf5.store_scalar(h5group=events, 
+                            name=feat, data=values, compression="gzip")
+
+                #Adjust metadata:
+                #"experiment:event count" = Nr. of images
+                h5obj.attrs["experiment:event count"] = np.sum(np.array([len(indi) for indi in Indices])) 
                 if cropped:
                     #Adjust the meta for cropped images
                     img_dim_x = Images[0].shape[1]
                     img_dim_y = Images[0].shape[0]
-                    meta["imaging"]['roi size x'] = img_dim_x
-                    meta["imaging"]['roi size y'] = img_dim_y
-                
-                #features = rtdc_ds._events.keys() #Get the names of the online features
-                compression = 'gzip'    
-                
-                with dclab.rtdc_dataset.write_hdf5.write(path_or_h5file=fname,meta=meta, mode="append") as h5obj:
-                    # write each feature individually
-                    for feat in features:
-                        # event-wise, because
-                        # - tdms-based datasets don't allow indexing with numpy
-                        # - there might be memory issues
-                        if feat == "contour":
-                            cont_list = [rtdc_ds["contour"][ii] for ii in indices]
-                            dclab.rtdc_dataset.write_hdf5.write(h5obj,
-                                  data={"contour": cont_list},
-                                  mode="append",
-                                  compression=compression)
-                        elif feat == "index":
-                            dclab.rtdc_dataset.write_hdf5.write(h5obj,
-                                  data={"index": index_new_},
-                                  mode="append",
-                                  compression=compression)
-                        elif feat in ["mask", "image"]:
-                            # store image stacks (reduced file size and save time)
-                            m = 64
-                            if feat=='mask':
-                                im0 = rtdc_ds[feat][0]
-                            if feat=="image":
-                                if cropped:
-                                    im0 = Images[0]
-                                else:
-                                    im0 = rtdc_ds[feat][0]
-                            imstack = np.zeros((m, im0.shape[0], im0.shape[1]),
-                                               dtype=im0.dtype)
-                            jj = 0
-                            if feat=='mask':
-                                image_list = [rtdc_ds[feat][ii] for ii in indices]
-                            elif feat=='image':
-                                if cropped:
-                                    image_list = Images
-                                else:
-                                    image_list = [rtdc_ds[feat][ii] for ii in indices]
-                            for ii in range(len(image_list)):
-                                dat = image_list[ii]
-                                if len(dat.shape)==3:#len(shape)=3 when there are multiple channels (RGB!)
-                                    dat = (0.21 * dat[:,:,:1]) + (0.72 * dat[:,:,1:2]) + (0.07 * dat[:,:,-1:])
-                                    dat = dat[:,:,0] 
-                                    dat  = dat.astype(np.uint8)           
-                                    if ii==0:
-                                        print("Used Luminosity formula")
-                                    
-                                #dat = rtdc_ds[feat][ii]
-                                imstack[jj] = dat
-                                if (jj + 1) % m == 0:
-                                    jj = 0
-                                    dclab.rtdc_dataset.write_hdf5.write(h5obj,
-                                          data={feat: imstack},
-                                          mode="append",
-                                          compression=compression)
-                                else:
-                                    jj += 1
-                            # write rest
-                            if jj:
-                                dclab.rtdc_dataset.write_hdf5.write(h5obj,
-                                      data={feat: imstack[:jj, :, :]},
-                                      mode="append",
-                                      compression=compression)
-                        elif feat == "trace":
-                            for tr in rtdc_ds["trace"].keys():
-                                tr0 = rtdc_ds["trace"][tr][0]
-                                trdat = np.zeros((len(indices), tr0.size), dtype=tr0.dtype)
-                                jj = 0
-                                trace_list = [rtdc_ds["trace"][tr][ii] for ii in indices]
-                                for ii in range(len(trace_list)):
-                                    trdat[jj] = trace_list[ii]
-                                    jj += 1
-                                dclab.rtdc_dataset.write_hdf5.write(h5obj,
-                                      data={"trace": {tr: trdat}},
-                                      mode="append",
-                                      compression=compression)
-    
-                        elif feat == "pos_x" and cropped==True:
-                            data = np.zeros(shape=len(indices))+np.round(img_dim_x/2.0)*rtdc_ds.config["imaging"]["pixel size"]
-                            dclab.rtdc_dataset.write_hdf5.write(h5obj,
-                                  data={feat: np.array(data)},mode="append")
-                        elif feat == "pos_y" and cropped==True:
-                            data = np.zeros(shape=len(indices))+np.round(img_dim_y/2.0)*rtdc_ds.config["imaging"]["pixel size"]
-                            dclab.rtdc_dataset.write_hdf5.write(h5obj,
-                                  data={feat: np.array(data)},mode="append")
-    
-    
-                        else:
-                                data = [rtdc_ds[feat][ii] for ii in indices]
-                                dclab.rtdc_dataset.write_hdf5.write(h5obj,
-                                      data={feat: np.array(data)},mode="append")
-                        
-                    h5obj.close()
+                    h5obj.attrs["imaging:roi size x"] = img_dim_x
+                    h5obj.attrs["imaging:roi size y"] = img_dim_y
+
+                meta_keys = list(rtdc_ds.attrs)
+                if "experiment:date" not in meta_keys:
+                    h5obj.attrs["experiment:date"] = time.strftime("%Y-%m-%d")
+                if "experiment:time" not in meta_keys:
+                    h5obj.attrs["experiment:time"] = time.strftime("%Y-%m-%d")
+                    
+                for meta_key in meta_keys:
+                    h5obj.attrs[meta_key] = rtdc_ds.attrs[meta_key]
+
+                h5obj.close()
                     
     #Append xtra_in data to the rtdc file
     if len((np.array(xtra_in)).ravel())>0: #in case there is some xtra_in data
