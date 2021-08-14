@@ -537,7 +537,7 @@ def write_rtdc(fname,rtdc_datasets,X_valid,Indices,cropped=True,color_mode='Gray
                 # write each feature individually
                 for feat in features:
                     if feat == "contour":
-                        cont_list = [rtdc_ds["contour"][ii] for ii in indices]
+                        cont_list = [rtdc_ds["events"]["contour"][ii] for ii in indices]
                         store_contour(h5group=events,name=feat,data=cont_list, compression="gzip")
 
                     # elif feat == "index_orig":
