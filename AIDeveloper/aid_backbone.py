@@ -2400,7 +2400,23 @@ class MainWindow(QtWidgets.QMainWindow):
             #Fill those feautues in the comboboxes at the scatterplot
             self.comboBox_featurex.addItems(features)
             self.comboBox_featurey.addItems(features)
+            #find features that correspond to images
+            keys = list(rtdc_ds["events"].keys())
+            #find keys of image_channels
+            keys_image = []
+            for key in keys:
+                shape = rtdc_ds["events"][key].shape
+                if len(shape)==3: #images have special shape (2D arrays)
+                    keys_image.append(key)
+            #Sort keys_image: "image" first; "mask" last 
+            keys_image.insert(0, keys_image.pop(keys_image.index("image")))
+            keys_image.insert(len(keys_image), keys_image.pop(keys_image.index("mask")))
+            keys_image.insert(0, "None")
 
+            #populate the combobox
+            self.comboBox_coloring.addItems(keys_image)
+            
+            
     def activate_deactivate_spinbox(self,newstate):
         #get the checkstate of the Input model crop 
         if newstate==2:
@@ -2483,9 +2499,11 @@ class MainWindow(QtWidgets.QMainWindow):
         self.changedbyuser = True
 
         rtdc_ds = self.rtdc_ds
+        #which channel shouldbe displayed
+        channel_name = str(self.comboBox_coloring.currentText())
         #Get the corresponding image:
-        if "image" in list(rtdc_ds["events"].keys()):
-            img = rtdc_ds["events"]["image"][index]
+        if channel_name != "None":#"image" in list(rtdc_ds["events"].keys()):
+            img = rtdc_ds["events"][channel_name][index]
 
             if len(img.shape)==2:
                 channels = 1
