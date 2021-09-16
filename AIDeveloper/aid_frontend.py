@@ -3416,7 +3416,7 @@ def retranslate_main_ui(self,gpu_nr,VERSION):
     self.checkBox_fl2.setText(_translate("MainWindow", "FL2", None))
     self.checkBox_fl3.setText(_translate("MainWindow", "FL3", None))
     self.checkBox_centroid.setText(_translate("MainWindow", "Centroid", None))
-    self.label_coloring.setText(_translate("MainWindow", "Coloring", None))
+    self.label_coloring.setText(_translate("MainWindow", "Image channel", None))
     self.checkBox_colorLog.setText(_translate("MainWindow", "Logscaled", None))
     self.pushButton_updateScatterPlot.setText(_translate("MainWindow", "Update", None))
     self.groupBox.setTitle(_translate("MainWindow", "Info", None))
