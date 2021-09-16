@@ -1654,7 +1654,7 @@ class MainWindow(QtWidgets.QMainWindow):
         item_ui.popup_optim.show()
 
 
-    def onLayoutChange(self):
+    def onLayoutChange(self,app):
         #Get the text of the triggered layout
         layout_trig = (self.sender().text()).split(" layout")[0]
         layout_current = Default_dict["Layout"]
@@ -1694,7 +1694,7 @@ class MainWindow(QtWidgets.QMainWindow):
         with open(dir_settings, 'w') as f:
             json.dump(Default_dict,f)
         
-    def onTooltipOnOff(self):
+    def onTooltipOnOff(self,app):
         #what is the current layout?
         if bool(self.actionLayout_Normal.isChecked())==True: #use normal layout
             if bool(self.actionTooltipOnOff.isChecked())==True: #with tooltips
@@ -2691,9 +2691,9 @@ class MainWindow(QtWidgets.QMainWindow):
         curve = pg.PlotCurveItem(-1.*x, y, stepMode=True, fillLevel=0, brush=(0, 0, 255, 150),clear=True)
         curve.rotate(-90)
         self.hist_y.addItem(curve)
-
-        self.scatter_x_norm = (self.feature_x.astype(float))/float(np.max(self.feature_x))
-        self.scatter_y_norm = (self.feature_y.astype(float))/float(np.max(self.feature_y))
+        
+        self.scatter_x_norm = (np.array(self.feature_x).astype(np.float32))/float(np.max(self.feature_x))
+        self.scatter_y_norm = (np.array(self.feature_y).astype(np.float32))/float(np.max(self.feature_y))
 
         #Adjust the horizontalSlider_cellInd and spinBox_cellInd
         self.horizontalSlider_cellInd.setSingleStep(1)
