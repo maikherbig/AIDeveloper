@@ -2405,9 +2405,10 @@ class MainWindow(QtWidgets.QMainWindow):
             #find keys of image_channels
             keys_image = []
             for key in keys:
-                shape = rtdc_ds["events"][key].shape
-                if len(shape)==3: #images have special shape (2D arrays)
-                    keys_image.append(key)
+                if type(rtdc_ds["events"][key])==h5py._hl.dataset.Dataset:
+                    shape = rtdc_ds["events"][key].shape
+                    if len(shape)==3: #images have special shape (2D arrays)
+                        keys_image.append(key)
             #Sort keys_image: "image" first; "mask" last 
             keys_image.insert(0, keys_image.pop(keys_image.index("image")))
             keys_image.insert(len(keys_image), keys_image.pop(keys_image.index("mask")))
