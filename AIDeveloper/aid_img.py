@@ -491,6 +491,7 @@ def gen_crop_img(cropsize,rtdc_path,nr_events=100,replace=True,random_images=Tru
         #simply take all available cells
         random_ind = ind #Here it is NOT a random index, but the index of all cells that are not too close to the image border
         #images = list(np.array(images)[random_ind])
+        images = images[:]
         images = list(images)
         zoom_interpol_method = zoom_arguments_scipy2cv(zoom_factor,zoom_order)
 
