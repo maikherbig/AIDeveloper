@@ -944,17 +944,18 @@ def backup_current_version(VERSION):
                
     return path_save #return the filename of the backup file
 
-def delete_current_version():
+def delete_current_version(delete_art=False):
     files = check_aid_scripts_complete(dir_root)
     files_paths = [os.path.join(dir_root,file) for file in files] #full path
     for file in files_paths:
         if os.path.isfile(file):#if file exists
             os.remove(file)
-    try:
-        file = os.path.join(dir_root,"art")
-        shutil.rmtree(file)
-    except:
-        pass
+    if delete_art:
+        try:
+            file = os.path.join(dir_root,"art")
+            shutil.rmtree(file)
+        except:
+            pass
    
 def download_aid_update(tag):
     url_zip = "https://github.com/maikherbig/AIDeveloper/releases/download/"+tag+"/AIDeveloper_"+tag+".zip"
@@ -1001,7 +1002,8 @@ def update_from_zip(item_path,VERSION):
     #check that the zip contains all required files
     #zip_content = zipfile.ZipFile(item_path, 'r').namelist()
     
-    #Unzip it into temp/update_files
+    #Unzip it into temp/update_files (only to check that everything is complete)
+    #these files will actally be deleted immediately after checking
     path_temp = create_temp_folder()
     path_temp = os.path.join(path_temp,"update_files")
     extract_archive(item_path, path_temp, archive_format='zip')
@@ -1013,9 +1015,16 @@ def update_from_zip(item_path,VERSION):
     #create a backup of the current version
     path_backup = backup_current_version(VERSION)
     #delete current version
-    delete_current_version()
-    
+    if item_path.endswith("update.zip"):#A released verion was downloaded. art folder is contained
+        #Delete all scripts and the art folder
+        delete_current_version(delete_art=True)
+    else:
+        #Delete all scripts but keep the art folder
+        delete_current_version(delete_art=False)
+        
     #Unzip update into dir_root
+    print("Path of the zipfile for update:")
+    print(item_path)
     extract_archive(item_path, dir_root, archive_format='zip')
 
     #check completeness/integrity again (certain scripts need to be there)
