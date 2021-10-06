@@ -1015,7 +1015,7 @@ def update_from_zip(item_path,VERSION):
     #create a backup of the current version
     path_backup = backup_current_version(VERSION)
     #delete current version
-    if item_path.endswith("update.zip"):#A released verion was downloaded. art folder is contained
+    if item_path.endswith("update.zip"):#A release was downloaded. There, an art folder is contained
         #Delete all scripts and the art folder
         delete_current_version(delete_art=True)
     else:
