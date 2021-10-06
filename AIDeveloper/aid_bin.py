@@ -1023,8 +1023,6 @@ def update_from_zip(item_path,VERSION):
         delete_current_version(delete_art=False)
         
     #Unzip update into dir_root
-    print("Path of the zipfile for update:")
-    print(item_path)
     extract_archive(item_path, dir_root, archive_format='zip')
 
     #check completeness/integrity again (certain scripts need to be there)
