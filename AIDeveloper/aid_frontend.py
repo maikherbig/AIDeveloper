@@ -3540,7 +3540,7 @@ def retranslate_main_ui(self,gpu_nr,VERSION):
     nr_temp_files = aid_bin.count_temp_folder()
     if nr_temp_files>0:
         #inform user
-        self.statusbar.showMessage("Files are left in temporary folder. Find temp via: ->Edit->Open temp directory",10000)    
+        self.statusbar.showMessage("Files are left in temporary folder. Find temp via: ->Options->Open temp directory",10000)    
 
 
 
