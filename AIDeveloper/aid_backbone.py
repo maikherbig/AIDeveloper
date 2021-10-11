@@ -579,7 +579,7 @@ class MainWindow(QtWidgets.QMainWindow):
             #Pixel size
             item = QtWidgets.QTableWidgetItem()
             pix = float(fileinfo[rowNumber]["pix"])
-            print(pix)
+            #print(pix)
             item.setData(QtCore.Qt.EditRole,pix)
             self.table_dragdrop.setItem(rowPosition, columnPosition, item)
 
@@ -2381,43 +2381,128 @@ class MainWindow(QtWidgets.QMainWindow):
             return
             #raise ValueError("Invalid Normalization method")
 
-    def update_comboBox_feature_xy(self):           
+    def update_plottingTab(self):           
         #Get current text of combobox (url to data set)
         url = str(self.comboBox_chooseRtdcFile.currentText())
-        if len(url)>0:
+        if len(url)==0:
+            return
 
-            failed,rtdc_ds = aid_bin.load_rtdc(url)
-            if failed:
-                msg = QtWidgets.QMessageBox()
-                msg.setIcon(QtWidgets.QMessageBox.Critical)       
-                msg.setText(str(rtdc_ds))
-                msg.setWindowTitle("Error occurred during loading file")
-                msg.setStandardButtons(QtWidgets.QMessageBox.Ok)
-                msg.exec_()
-                return
+        failed,rtdc_ds = aid_bin.load_rtdc(url)
+        if failed:
+            msg = QtWidgets.QMessageBox()
+            msg.setIcon(QtWidgets.QMessageBox.Critical)       
+            msg.setText(str(rtdc_ds))
+            msg.setWindowTitle("Error occurred during loading file")
+            msg.setStandardButtons(QtWidgets.QMessageBox.Ok)
+            msg.exec_()
+            return
 
-            features = list(rtdc_ds["events"].keys())
-            #Fill those feautues in the comboboxes at the scatterplot
-            self.comboBox_featurex.addItems(features)
-            self.comboBox_featurey.addItems(features)
-            #find features that correspond to images
-            keys = list(rtdc_ds["events"].keys())
-            #find keys of image_channels
-            keys_image = []
-            for key in keys:
-                if type(rtdc_ds["events"][key])==h5py._hl.dataset.Dataset:
-                    shape = rtdc_ds["events"][key].shape
-                    if len(shape)==3: #images have special shape (2D arrays)
-                        keys_image.append(key)
-            #Sort keys_image: "image" first; "mask" last 
-            keys_image.insert(0, keys_image.pop(keys_image.index("image")))
-            keys_image.insert(len(keys_image), keys_image.pop(keys_image.index("mask")))
-            keys_image.insert(0, "None")
+        keys = list(rtdc_ds["events"].keys())
+        #find keys of image_channels
+        keys_0d,keys_1d,keys_2d = [],[],[]
+        for key in keys:
+            if type(rtdc_ds["events"][key])==h5py._hl.dataset.Dataset:
+                shape = rtdc_ds["events"][key].shape
+                if len(shape)==1: #images have special shape (2D arrays)
+                    keys_0d.append(key)
+                elif len(shape)==2: #images have special shape (2D arrays)
+                    keys_1d.append(key)
+                elif len(shape)==3: #images have special shape (2D arrays)
+                    keys_2d.append(key)
+        
+        #Sort keys_2d: "image" first; "mask" last 
+        keys_2d.insert(0, keys_2d.pop(keys_2d.index("image")))
+        keys_2d.insert(len(keys_2d), keys_2d.pop(keys_2d.index("mask")))        
+        
+        #Fill those feautues in the comboboxes at the scatterplot
+        self.comboBox_featurex.addItems(keys_0d)
+        self.comboBox_featurey.addItems(keys_0d)
 
-            #populate the combobox
-            self.comboBox_coloring.addItems(keys_image)
+        #check if masks or contours are available
+        cont_available = "mask" in keys or "contour" in keys
+        self.checkBox_contour.setEnabled(cont_available)
+        self.checkBox_contour.setChecked(cont_available)
+        #Centroid is always available (prerequisite for AIDeveloper)
+        self.checkBox_centroid.setEnabled(True)
+        self.checkBox_centroid.setChecked(True)
+
+        #Intialize option menus 
+        self.contour_options_nr = 0
+        self.centroid_options_nr = 0
+        self.show_1d_options_nr = 0
+        self.show_2d_options_nr = 0
+        self.init_contour_options(keys_2d)
+        self.init_centroid_options(keys_1d)
+        self.init_2d_options(keys_2d)
+        self.init_1d_options(keys_1d)
             
-            
+    def init_contour_options(self,keys_2d):
+        print("Work in progress")
+        # self.popup_layercontrols = MyPopup()
+        # self.popup_layercontrols_ui = frontend.Ui_LayerControl()
+        # self.popup_layercontrols_ui.setupUi(self.popup_layercontrols,keys_2d) #open a popup
+    def init_centroid_options(self,keys_image):
+        print("Work in progress")
+        # self.popup_centroid_options = MyPopup()
+        # self.popup_centroid_options_ui = aid_frontend.Ui_centroid_options()
+        # self.popup_centroid_options_ui.setupUi(self.popup_centroid_options,keys_image) #open a popup
+
+    def init_2d_options(self,keys_2d):
+        #Initialize 2d Option Menu. Range values are saved and manipulated here
+        self.popup_2dOptions = MyPopup()
+        self.popup_2dOptions_ui = aid_frontend.Ui_2dOptions()
+        self.popup_2dOptions_ui.setupUi(self.popup_2dOptions,keys_2d) #open a popup
+
+    def init_1d_options(self,keys_2d):
+        self.popup_1dOptions = MyPopup()
+        self.popup_1dOptions_ui = aid_frontend.Ui_2dOptions()
+        self.popup_1dOptions_ui.setupUi(self.popup_1dOptions,keys_2d) #open a popup
+
+    def show_contour_options():
+        self.contour_options_nr += 1
+        print("Work in progress")
+
+    def show_centroid_options(self):
+        self.centroid_options_nr += 1
+        #self.popup_layercontrols_ui.pushButton_close.clicked.connect(self.visualization_settings)
+        if self.centroid_options_nr==1:
+            for iterator in range(len(self.popup_layercontrols_ui.spinBox_minChX)):
+                print(1)
+
+    def show_2d_options(self):
+        self.show_2d_options_nr += 1
+        #self.popup_layercontrols_ui.pushButton_close.clicked.connect(self.visualization_settings)
+        if self.show_2d_options_nr==1:
+            for iterator in range(len(self.popup_2dOptions_ui.spinBox_minChX)):
+                slider = self.popup_2dOptions_ui.horizontalSlider_chX[iterator]
+                slider.startValueChanged.connect(lambda _, b=None: self.put_image(ind=b))
+                slider.endValueChanged.connect(lambda _, b=None: self.put_image(ind=b))
+                checkBox = self.popup_2dOptions_ui.checkBox_show_chX[iterator]
+                checkBox.stateChanged.connect(lambda _, b=None: self.put_image(ind=b))
+                comboBox = self.popup_2dOptions_ui.comboBox_cmap_chX[iterator]
+                comboBox.currentIndexChanged.connect(lambda _, b=None: self.put_image(ind=b))
+                checkBox = self.popup_2dOptions_ui.checkBox_auto_chX[iterator]
+                checkBox.stateChanged.connect(lambda _, b=None: self.put_image(ind=b))
+        self.popup_2dOptions.show()
+
+
+    def show_1d_options(self):
+        self.show_1d_options_nr += 1
+        #self.popup_layercontrols_ui.pushButton_close.clicked.connect(self.visualization_settings)
+        if self.show_1d_options_nr==1:
+            for iterator in range(len(self.popup_2dOptions_ui.spinBox_minChX)):
+                slider = self.popup_2dOptions_ui.horizontalSlider_chX[iterator]
+                slider.startValueChanged.connect(lambda _, b=None: self.put_image(ind=b))
+                slider.endValueChanged.connect(lambda _, b=None: self.put_image(ind=b))
+                checkBox = self.popup_2dOptions_ui.checkBox_show_chX[iterator]
+                checkBox.stateChanged.connect(lambda _, b=None: self.put_image(ind=b))
+                comboBox = self.popup_2dOptions_ui.comboBox_cmap_chX[iterator]
+                comboBox.currentIndexChanged.connect(lambda _, b=None: self.put_image(ind=b))
+                checkBox = self.popup_2dOptions_ui.checkBox_auto_chX[iterator]
+                checkBox.stateChanged.connect(lambda _, b=None: self.put_image(ind=b))
+        self.popup_2dOptions.show()
+
+
     def activate_deactivate_spinbox(self,newstate):
         #get the checkstate of the Input model crop 
         if newstate==2:
@@ -2468,12 +2553,11 @@ class MainWindow(QtWidgets.QMainWindow):
            
     def onClick(self,points,pointermethod):
         #delete the last item if the user selected already one:
-        if self.point_was_selected_before:
-            self.scatter_xy.removeItem(self.scatter_xy.listDataItems()[-1])
-            try:
-                self.widget_showCell.removeItem(self.dot)
-            except:
-                pass
+        try:
+            self.scatter_xy.removeItem(self.point_clicked)
+        except:
+            pass
+        
         if pointermethod=="point":
             points = points[0]
             p = points.pos()
@@ -2490,55 +2574,158 @@ class MainWindow(QtWidgets.QMainWindow):
         clicked_x = self.feature_x[index]
         clicked_y = self.feature_y[index]
         
-        self.scatter_xy.plot([clicked_x], [clicked_y],pen=None,symbol='o',symbolPen='w',clear=False)
+        self.point_clicked = pg.ScatterPlotItem()
+        self.point_clicked.setData([clicked_x], [clicked_y],brush="r",symbol='o',symbolPen="w",size=15)
+        self.scatter_xy.addItem(self.point_clicked)
+        #self.scatter_xy.plot([clicked_x], [clicked_y],pen=None,symbol='o',symbolPen='w',clear=False)
         self.point_was_selected_before = True
 
-        #I dont care if the user click or used the slider->always adjust spinboc and slider without running the onChange functions 
+        #I dont care if the user click or used the slider->always adjust spinbox and slider without running the onChange functions 
         self.changedbyuser = False
         self.spinBox_cellInd.setValue(index)
         self.horizontalSlider_cellInd.setValue(index)
         self.changedbyuser = True
-
-        rtdc_ds = self.rtdc_ds
-        #which channel shouldbe displayed
-        channel_name = str(self.comboBox_coloring.currentText())
-        #Get the corresponding image:
-        if channel_name != "None":#"image" in list(rtdc_ds["events"].keys()):
-            img = rtdc_ds["events"][channel_name][index]
-
-            if len(img.shape)==2:
-                channels = 1
-            elif len(img.shape)==3:
-                height, width, channels = img.shape
-            else:
-                print("Invalid image format: "+str(img.shape))
-                return
-            
-            img_zoom = img
-            #from 0 to 255
-            img_zoom = img_zoom-np.min(img_zoom)
-            fac = np.max(img_zoom)
-            img_zoom = (img_zoom/fac)*255.0
-            img_zoom = img_zoom.astype(np.uint8)
-
-            if channels==1:
-                self.widget_showCell.setImage(img_zoom.T,autoRange=False)
-            elif channels==3:                
-                self.widget_showCell.setImage(img_zoom.T,autoRange=False)
-                #self.widget_showCell.setImage(np.swapaxes(img_zoom,0,1),autoRange=False)
-            self.widget_showCell.ui.histogram.hide()
-            self.widget_showCell.ui.roiBtn.hide()
-            self.widget_showCell.ui.menuBtn.hide()
-            
-            #Indicate the centroid of the cell
-            pix = rtdc_ds.attrs["imaging:pixel size"]
-            pos_x = rtdc_ds["events"]["pos_x"][index]/pix
-            pos_y = rtdc_ds["events"]["pos_y"][index]/pix
-            if self.checkBox_centroid.isChecked():
-                self.dot = pg.CircleROI(pos=(pos_x-2, pos_y-2), size=4, pen=QtGui.QPen(QtCore.Qt.red, 0.1), movable=False)
-                self.widget_showCell.getView().addItem(self.dot)
-                self.widget_showCell.show()
         
+        self.put_image(index)
+    
+    def put_image(self,ind):
+        #check that the user is looking at the plotting tab
+        curr_ind = self.tabWidget_Modelbuilder.currentIndex()
+        if curr_ind!=3:
+            return
+        try:
+            self.widget_showCell.removeItem(self.dot)
+        except:
+            pass
+        try:
+            self.widget_showCell.removeItem(self.plot_contour)
+        except:
+            pass
+        
+        if ind==None:
+            index = int(self.spinBox_cellInd.value())
+        else:
+            index = ind
+            
+        rtdc_ds = self.rtdc_ds
+        
+        #which channel shouldbe displayed                
+        channels = len(self.popup_2dOptions_ui.spinBox_minChX)
+        keys_2d = [self.popup_2dOptions_ui.label_layername_chX[i].text() for i in range(channels)]
+
+        #Define variable on self that carries all image information
+        if channels==1: 
+            img = np.expand_dims(rtdc_ds["events"]["image"][index],-1)
+        elif channels>1:
+            img = np.stack( [rtdc_ds["events"][key][index] for key in keys_2d] ,axis=-1)            
+
+        if len(img.shape)==2:
+            channels = 1
+        elif len(img.shape)==3:
+            height, width, channels = img.shape
+        else:
+            print("Invalid image format: "+str(img.shape))
+            return
+
+        color_mode = str(self.comboBox_GrayOrRGB_2.currentText())
+        
+        if color_mode=="Grayscale": #Slider allows to show individual layers: each is shown as grayscale
+            img = img
+            
+        elif color_mode == "RGB":#User can define, which layers are shown in R,G,and B
+            #Retrieve the setting from self.popup_layercontrols_ui
+            ui_item = self.popup_2dOptions_ui
+            layer_names = [obj.text() for obj in ui_item.label_layername_chX]
+            layer_active = [obj.isChecked() for obj in ui_item.checkBox_show_chX]
+            layer_range = [obj.getRange() for obj in ui_item.horizontalSlider_chX]
+            layer_auto = [obj.isChecked() for obj in ui_item.checkBox_auto_chX]
+            layer_cmap = [obj.currentText() for obj in ui_item.comboBox_cmap_chX]
+    
+            #Assemble the image according to the settings in self.popup_layercontrols_ui
+            #Find activated layers for each color:
+            ind_active_r,ind_active_g,ind_active_b = [],[],[]
+            for ch in range(len(layer_cmap)):
+            #for color,active in zip(layer_cmap,layer_active):
+                if layer_cmap[ch]=="Red" and layer_active[ch]==True:
+                    ind_active_r.append(ch)
+                if layer_cmap[ch]=="Green" and layer_active[ch]==True:
+                    ind_active_g.append(ch)
+                if layer_cmap[ch]=="Blue" and layer_active[ch]==True:
+                    ind_active_b.append(ch)
+            
+            if len(ind_active_r)>0:
+                img_ch = img[:,:,np.array(ind_active_r)]
+                layer_range_ch = np.array(layer_range)[np.array(ind_active_r)] #Range of all red channels 
+                layer_auto_ch = np.array(layer_auto)[np.array(ind_active_r)] #Automatic range
+                #Scale each red channel according to layer_range
+                for layer in range(img_ch.shape[-1]):
+                    limits,auto = layer_range_ch[layer],layer_auto_ch[layer]
+                    img_ch[:,:,layer] = aid_img.clip_contrast(img=img_ch[:,:,layer],low=limits[0],high=limits[1],auto=auto)
+                img_r = np.mean(img_ch,axis=-1).astype(np.uint8)
+            else:
+                img_r = np.zeros(shape=(img.shape[0],img.shape[1]),dtype=np.uint8)
+                
+            if len(ind_active_g)>0:
+                img_ch = img[:,:,np.array(ind_active_g)]
+                layer_range_ch = np.array(layer_range)[np.array(ind_active_g)] #Range of all red channels 
+                layer_auto_ch = np.array(layer_auto)[np.array(ind_active_g)] #Automatic range
+                #Scale each red channel according to layer_range
+                for layer in range(img_ch.shape[-1]):
+                    limits,auto = layer_range_ch[layer],layer_auto_ch[layer]
+                    img_ch[:,:,layer] = aid_img.clip_contrast(img=img_ch[:,:,layer],low=limits[0],high=limits[1],auto=auto)
+                img_g = np.mean(img_ch,axis=-1).astype(np.uint8)
+            else:
+                img_g = np.zeros(shape=(img.shape[0],img.shape[1]),dtype=np.uint8)
+    
+            if len(ind_active_b)>0:
+                img_ch = img[:,:,np.array(ind_active_b)]
+                layer_range_ch = np.array(layer_range)[np.array(ind_active_b)] #Range of all red channels 
+                layer_auto_ch = np.array(layer_auto)[np.array(ind_active_b)] #Automatic range
+                #Scale each red channel according to layer_range
+                for layer in range(img_ch.shape[-1]):
+                    limits,auto = layer_range_ch[layer],layer_auto_ch[layer]
+                    img_ch[:,:,layer] = aid_img.clip_contrast(img=img_ch[:,:,layer],low=limits[0],high=limits[1],auto=auto)
+                img_b = np.mean(img_ch,axis=-1).astype(np.uint8)
+            else:
+                img_b = np.zeros(shape=(img.shape[0],img.shape[1]),dtype=np.uint8)
+            
+            #Assemble image by stacking all layers
+            img = np.stack([img_r,img_g,img_b],axis=-1)        
+
+        
+        #Get the levels of the previous frame
+        levels_init = self.widget_showCell.getLevels()
+        if levels_init==(0,1.0):
+            levels_init = (0,255)
+        
+        #Get the layer index of the previous frame
+        index_ = self.widget_showCell.currentIndex
+            
+        if color_mode=="Grayscale":
+            self.widget_showCell.setImage(img.T,autoRange=False,levels=levels_init,levelMode="mono")
+            
+            self.widget_showCell.setCurrentIndex(index_)
+        elif color_mode=="RGB":
+            self.widget_showCell.setImage(np.swapaxes(img,0,1))
+
+        pix = rtdc_ds.attrs["imaging:pixel size"]
+        pos_x = rtdc_ds["events"]["pos_x"][index]/pix
+        pos_y = rtdc_ds["events"]["pos_y"][index]/pix
+
+        #Indicate the centroid of the cell        
+        if self.checkBox_centroid.isChecked():
+            self.dot = pg.CircleROI(pos=(pos_x-2, pos_y-2), size=4, pen=QtGui.QPen(QtCore.Qt.red, 0.1), movable=False)
+            self.widget_showCell.getView().addItem(self.dot)
+            self.widget_showCell.show()
+        
+        if self.checkBox_contour.isChecked():
+            #get the contour based on the mask
+            contour,_ = cv2.findContours(rtdc_ds["events"]["mask"][index], cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_NONE)
+            contour = contour[0][:,0,:]
+            self.plot_contour = pg.PlotCurveItem(contour[:,0],contour[:,1],width=6,pen="r")
+            self.widget_showCell.getView().addItem(self.plot_contour)
+
+
         #Fluorescence traces: clear first
         try:
             self.plot_fl_trace_.clear() #clear the plot
@@ -2645,6 +2832,12 @@ class MainWindow(QtWidgets.QMainWindow):
             self.widget_showCell.removeItem(self.dot)
         except:
             pass
+        
+        try:
+            self.scatter_xy.removeItem(self.point_clicked)
+        except:
+            pass
+
         self.point_was_selected_before = False
         #read url from current comboBox_chooseRtdcFile
         url = str(self.comboBox_chooseRtdcFile.currentText())
@@ -2696,9 +2889,41 @@ class MainWindow(QtWidgets.QMainWindow):
 
         self.changedbyuser = True #variable used to prevent plotting if spinbox or slider is changed programmatically
         
+        #density estimation
+        kde = self.comboBox_kde.currentText()
+        if kde=="None":
+            brush = "b"
+        
+        elif kde=="2d Histogram" or kde=="Gauss":
+            if kde=="2d Histogram":
+                density = aid_bin.kde_histogram(np.array(self.feature_x), np.array(self.feature_y))
+            elif kde=="Gauss":
+                density = aid_bin.kde_gauss(np.array(self.feature_x), np.array(self.feature_y))
+            
+            density_min,density_max = np.min(density),np.max(density)
+            density = (density-density_min)/density_max
+            
+            # define colormap
+            brush = []
+            from pyqtgraph.graphicsItems.GradientEditorItem import Gradients
+            cmap = pg.ColorMap(*zip(*Gradients["viridis"]["ticks"]))
+            for k in density:
+                brush.append(cmap.mapToQColor(k))
+
         #Add plot  
-        self.scatter = self.scatter_xy.plot(np.array(self.feature_x), np.array(self.feature_y),pen=None,symbol='o',symbolPen=None,symbolBrush='b',clear=True)        
-        self.scatter.sigPointsClicked.connect(self.onScatterClick) #When scatterplot is clicked, show the desired cell
+        #self.scatter = self.scatter_xy.plot(np.array(self.feature_x), np.array(self.feature_y),symbolPen=None,pen=None,symbol='o',brush=brush[100],clear=True)
+        #try to remove existing scatterplot
+        try:
+            self.scatter_xy.removeItem(self.scatter)
+        except:
+            print("Not cleared")
+
+        self.scatter = pg.ScatterPlotItem()
+        self.scatter.setData(np.array(self.feature_x), np.array(self.feature_y),brush=brush,symbolPen=None,pen=None,symbol='o',size=10)
+        self.scatter_xy.addItem(self.scatter)
+        #pen=None,symbol='o',symbolPen=None,symbolBrush=density,clear=True)   
+        
+        self.scatter.sigClicked.connect(self.onScatterClick) #When scatterplot is clicked, show the desired cell
 
         #Fill histogram for x-axis; widget_histx
         y,x = np.histogram(self.feature_x, bins='auto')
@@ -2720,6 +2945,7 @@ class MainWindow(QtWidgets.QMainWindow):
         self.horizontalSlider_cellInd.setMaximum(len(self.feature_x)-1)
         self.spinBox_cellInd.setMinimum(0)
         self.spinBox_cellInd.setMaximum(len(self.feature_x)-1)                  
+
 
     def selectPeakPos(self):
         #Check if self.region exists
