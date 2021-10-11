@@ -1997,42 +1997,103 @@ def setup_main_ui(self,gpu_nr):
     self.gridLayout_27.addLayout(self.horizontalLayout_27, 0, 0, 1, 1)
     self.groupBox_plottingOptions = QtWidgets.QGroupBox(self.splitter_14)
     self.groupBox_plottingOptions.setObjectName("groupBox_plottingOptions")
+    
+    
+    
+    # self.gridLayout_26 = QtWidgets.QGridLayout(self.groupBox_plottingOptions)
+    # self.gridLayout_26.setObjectName("gridLayout_26")
+    # self.verticalLayout_14 = QtWidgets.QVBoxLayout()
+    # self.verticalLayout_14.setObjectName("verticalLayout_14")
+    # self.horizontalLayout_29 = QtWidgets.QHBoxLayout()
+    # self.horizontalLayout_29.setObjectName("horizontalLayout_29")
+    # self.checkBox_fl1 = QtWidgets.QCheckBox(self.groupBox_plottingOptions)
+    # self.checkBox_fl1.setObjectName("checkBox_fl1")
+    # self.horizontalLayout_29.addWidget(self.checkBox_fl1)
+    # self.checkBox_fl2 = QtWidgets.QCheckBox(self.groupBox_plottingOptions)
+    # self.checkBox_fl2.setObjectName("checkBox_fl2")
+    # self.horizontalLayout_29.addWidget(self.checkBox_fl2)
+    # self.checkBox_fl3 = QtWidgets.QCheckBox(self.groupBox_plottingOptions)
+    # self.checkBox_fl3.setObjectName("checkBox_fl3")
+    # self.horizontalLayout_29.addWidget(self.checkBox_fl3)
+    # self.checkBox_centroid = QtWidgets.QCheckBox(self.groupBox_plottingOptions)
+    # self.checkBox_centroid.setObjectName("checkBox_centroid")
+    # self.horizontalLayout_29.addWidget(self.checkBox_centroid)
+
+    # self.verticalLayout_14.addLayout(self.horizontalLayout_29)
+    # self.horizontalLayout_26 = QtWidgets.QHBoxLayout()
+    # self.horizontalLayout_26.setObjectName("horizontalLayout_26")
+    # self.label_coloring = QtWidgets.QLabel(self.groupBox_plottingOptions)
+    # self.label_coloring.setObjectName("label_coloring")
+    # self.horizontalLayout_26.addWidget(self.label_coloring)
+    
+    # self.comboBox_coloring = QtWidgets.QComboBox(self.groupBox_plottingOptions)
+    # self.comboBox_coloring.setObjectName("comboBox_coloring")
+    # self.horizontalLayout_26.addWidget(self.comboBox_coloring)
+    # self.checkBox_colorLog = QtWidgets.QCheckBox(self.groupBox_plottingOptions)
+    # self.checkBox_colorLog.setObjectName("checkBox_colorLog")
+    # self.horizontalLayout_26.addWidget(self.checkBox_colorLog)
+    # self.pushButton_updateScatterPlot = QtWidgets.QPushButton(self.groupBox_plottingOptions)
+    # self.pushButton_updateScatterPlot.setObjectName("pushButton_updateScatterPlot")
+    # self.horizontalLayout_26.addWidget(self.pushButton_updateScatterPlot)
+    # self.verticalLayout_14.addLayout(self.horizontalLayout_26)
+    # self.gridLayout_26.addLayout(self.verticalLayout_14, 0, 0, 1, 1)
+    
+    
+
     self.gridLayout_26 = QtWidgets.QGridLayout(self.groupBox_plottingOptions)
     self.gridLayout_26.setObjectName("gridLayout_26")
-    self.verticalLayout_14 = QtWidgets.QVBoxLayout()
-    self.verticalLayout_14.setObjectName("verticalLayout_14")
-    self.horizontalLayout_29 = QtWidgets.QHBoxLayout()
-    self.horizontalLayout_29.setObjectName("horizontalLayout_29")
-    self.checkBox_fl1 = QtWidgets.QCheckBox(self.groupBox_plottingOptions)
-    self.checkBox_fl1.setObjectName("checkBox_fl1")
-    self.horizontalLayout_29.addWidget(self.checkBox_fl1)
-    self.checkBox_fl2 = QtWidgets.QCheckBox(self.groupBox_plottingOptions)
-    self.checkBox_fl2.setObjectName("checkBox_fl2")
-    self.horizontalLayout_29.addWidget(self.checkBox_fl2)
-    self.checkBox_fl3 = QtWidgets.QCheckBox(self.groupBox_plottingOptions)
-    self.checkBox_fl3.setObjectName("checkBox_fl3")
-    self.horizontalLayout_29.addWidget(self.checkBox_fl3)
+    self.label_kde = QtWidgets.QLabel(self.groupBox_plottingOptions)
+    self.label_kde.setLayoutDirection(QtCore.Qt.LeftToRight)
+    self.label_kde.setAlignment(QtCore.Qt.AlignCenter)
+    self.label_kde.setObjectName("label_kde")
+    self.gridLayout_26.addWidget(self.label_kde, 0, 0, 1, 1)
+    self.line_plotting1 = QtWidgets.QFrame(self.groupBox_plottingOptions)
+    self.line_plotting1.setFrameShape(QtWidgets.QFrame.VLine)
+    self.line_plotting1.setFrameShadow(QtWidgets.QFrame.Sunken)
+    self.line_plotting1.setObjectName("line_plotting1")
+    self.gridLayout_26.addWidget(self.line_plotting1, 0, 1, 2, 1)
     self.checkBox_centroid = QtWidgets.QCheckBox(self.groupBox_plottingOptions)
+    self.checkBox_centroid.setLayoutDirection(QtCore.Qt.LeftToRight)
+    self.checkBox_centroid.setChecked(True)
     self.checkBox_centroid.setObjectName("checkBox_centroid")
-    self.horizontalLayout_29.addWidget(self.checkBox_centroid)
-
-    self.verticalLayout_14.addLayout(self.horizontalLayout_29)
-    self.horizontalLayout_26 = QtWidgets.QHBoxLayout()
-    self.horizontalLayout_26.setObjectName("horizontalLayout_26")
-    self.label_coloring = QtWidgets.QLabel(self.groupBox_plottingOptions)
-    self.label_coloring.setObjectName("label_coloring")
-    self.horizontalLayout_26.addWidget(self.label_coloring)
-    self.comboBox_coloring = QtWidgets.QComboBox(self.groupBox_plottingOptions)
-    self.comboBox_coloring.setObjectName("comboBox_coloring")
-    self.horizontalLayout_26.addWidget(self.comboBox_coloring)
-    self.checkBox_colorLog = QtWidgets.QCheckBox(self.groupBox_plottingOptions)
-    self.checkBox_colorLog.setObjectName("checkBox_colorLog")
-    self.horizontalLayout_26.addWidget(self.checkBox_colorLog)
+    self.gridLayout_26.addWidget(self.checkBox_centroid, 0, 2, 1, 1)
+    self.pushButton_centroidOptions = QtWidgets.QPushButton(self.groupBox_plottingOptions)
+    self.pushButton_centroidOptions.setMaximumSize(QtCore.QSize(100, 16777215))
+    self.pushButton_centroidOptions.setLayoutDirection(QtCore.Qt.LeftToRight)
+    self.pushButton_centroidOptions.setObjectName("pushButton_centroidOptions")
+    self.pushButton_centroidOptions.setEnabled(False)
+    self.gridLayout_26.addWidget(self.pushButton_centroidOptions, 0, 3, 1, 1)
+    self.line_plotting2 = QtWidgets.QFrame(self.groupBox_plottingOptions)
+    self.line_plotting2.setFrameShape(QtWidgets.QFrame.VLine)
+    self.line_plotting2.setFrameShadow(QtWidgets.QFrame.Sunken)
+    self.line_plotting2.setObjectName("line_plotting2")
+    self.gridLayout_26.addWidget(self.line_plotting2, 0, 4, 2, 1)
+    self.comboBox_kde = QtWidgets.QComboBox(self.groupBox_plottingOptions)
+    self.comboBox_kde.setObjectName("comboBox_kde")
+    self.gridLayout_26.addWidget(self.comboBox_kde, 1, 0, 1, 1)
+    self.checkBox_contour = QtWidgets.QCheckBox(self.groupBox_plottingOptions)
+    self.checkBox_contour.setObjectName("checkBox_contour")
+    self.gridLayout_26.addWidget(self.checkBox_contour, 1, 2, 1, 1)
+    self.pushButton_contourOptions = QtWidgets.QPushButton(self.groupBox_plottingOptions)
+    self.pushButton_contourOptions.setMaximumSize(QtCore.QSize(100, 16777215))
+    self.pushButton_contourOptions.setObjectName("pushButton_contourOptions")
+    self.pushButton_contourOptions.setEnabled(False)
+    self.gridLayout_26.addWidget(self.pushButton_contourOptions, 1, 3, 1, 1)
     self.pushButton_updateScatterPlot = QtWidgets.QPushButton(self.groupBox_plottingOptions)
     self.pushButton_updateScatterPlot.setObjectName("pushButton_updateScatterPlot")
-    self.horizontalLayout_26.addWidget(self.pushButton_updateScatterPlot)
-    self.verticalLayout_14.addLayout(self.horizontalLayout_26)
-    self.gridLayout_26.addLayout(self.verticalLayout_14, 0, 0, 1, 1)
+    self.gridLayout_26.addWidget(self.pushButton_updateScatterPlot, 1, 6, 1, 1)
+    self.pushButton_2dOptions = QtWidgets.QPushButton(self.groupBox_plottingOptions)
+    self.pushButton_2dOptions.setObjectName("pushButton_2dOptions")
+    self.pushButton_2dOptions.setEnabled(False)
+
+    self.gridLayout_26.addWidget(self.pushButton_2dOptions, 0, 5, 1, 1)
+    self.pushButton_1dOptions = QtWidgets.QPushButton(self.groupBox_plottingOptions)
+    self.pushButton_1dOptions.setObjectName("pushButton_1dOptions")
+    self.gridLayout_26.addWidget(self.pushButton_1dOptions, 1, 5, 1, 1)
+    self.comboBox_GrayOrRGB_2 = QtWidgets.QComboBox(self.groupBox_plottingOptions)
+    self.comboBox_GrayOrRGB_2.setObjectName("comboBox_GrayOrRGB_2")
+    self.gridLayout_26.addWidget(self.comboBox_GrayOrRGB_2, 0, 6, 1, 1)
+  
     self.groupBox = QtWidgets.QGroupBox(self.splitter_14)
     self.groupBox.setObjectName("groupBox")
     self.gridLayout_33 = QtWidgets.QGridLayout(self.groupBox)
@@ -2063,23 +2124,31 @@ def setup_main_ui(self,gpu_nr):
     self.groupBox_showCell.setObjectName("groupBox_showCell")
     self.gridLayout_32 = QtWidgets.QGridLayout(self.groupBox_showCell)
     self.gridLayout_32.setObjectName("gridLayout_32")
-    self.widget_showFltrace = pg.GraphicsLayoutWidget(self.groupBox_showCell)
+    
+
+    self.splitter_16 = QtWidgets.QSplitter(self.groupBox_showCell)
+    self.splitter_16.setOrientation(QtCore.Qt.Vertical)
+    self.splitter_16.setObjectName("splitter_16")
+    self.widget_showCell = pg.ImageView(self.splitter_16)
+    self.widget_showCell.setMinimumSize(QtCore.QSize(0, 91))
+    #self.widget_showCell.setMaximumSize(QtCore.QSize(16777215, 91))
+    self.widget_showCell.setObjectName("widget_showCell")
+    # self.widget_showCell.ui.histogram.hide()
+    self.widget_showCell.ui.roiBtn.hide()
+    self.widget_showCell.ui.menuBtn.hide()
+
+    self.widget_showFltrace = pg.GraphicsLayoutWidget(self.splitter_16)
     self.widget_showFltrace.setMinimumSize(QtCore.QSize(0, 81))
     #self.widget_showFltrace.setMaximumSize(QtCore.QSize(16777215, 81))
     self.widget_showFltrace.setObjectName("widget_showFltrace")
-    self.gridLayout_32.addWidget(self.widget_showFltrace, 1, 0, 1, 1)
-    self.widget_showCell = pg.ImageView(self.groupBox_showCell)
-    self.widget_showCell.setMinimumSize(QtCore.QSize(0, 91))
-    #self.widget_showCell.setMaximumSize(QtCore.QSize(16777215, 91))
-    self.widget_showCell.ui.histogram.hide()
-    self.widget_showCell.ui.roiBtn.hide()
-    self.widget_showCell.ui.menuBtn.hide()
-    self.widget_showCell.setObjectName("widget_showCell")
-    self.gridLayout_32.addWidget(self.widget_showCell, 0, 0, 1, 1)
+    self.gridLayout_32.addWidget(self.splitter_16, 0, 0, 1, 1)
     
+
     self.groupBox_showSelectedPeaks = QtWidgets.QGroupBox(self.splitter_10)
     self.groupBox_showSelectedPeaks.setObjectName("groupBox_showSelectedPeaks")
     self.gridLayout_28 = QtWidgets.QGridLayout(self.groupBox_showSelectedPeaks)
+    #Hide that groupbox (not needed anymore)
+    self.groupBox_showSelectedPeaks.setMaximumSize(QtCore.QSize(16777215, 0))
     self.gridLayout_28.setObjectName("gridLayout_28")
     self.splitter_11 = QtWidgets.QSplitter(self.groupBox_showSelectedPeaks)
     self.splitter_11.setOrientation(QtCore.Qt.Horizontal)
@@ -2146,6 +2215,9 @@ def setup_main_ui(self,gpu_nr):
 
     self.groupBox_peakDetModel = QtWidgets.QGroupBox(self.splitter_10)
     self.groupBox_peakDetModel.setObjectName("groupBox_peakDetModel")
+    #Hide that groupbox (not needed anymore)
+    self.groupBox_peakDetModel.setMaximumSize(QtCore.QSize(16777215, 0))
+
     self.gridLayout_31 = QtWidgets.QGridLayout(self.groupBox_peakDetModel)
     self.gridLayout_31.setObjectName("gridLayout_31")
     self.horizontalLayout_25 = QtWidgets.QHBoxLayout()
@@ -2484,12 +2556,19 @@ def setup_main_ui(self,gpu_nr):
 
     ##################Plot/Peak Tab########################################
     self.tabWidget_filter_peakdet.setCurrentIndex(1)
-    self.comboBox_chooseRtdcFile.currentIndexChanged.connect(self.update_comboBox_feature_xy)
+    self.comboBox_chooseRtdcFile.currentIndexChanged.connect(self.update_plottingTab)
+    
     self.pushButton_updateScatterPlot.clicked.connect(self.updateScatterPlot)        
     font = QtGui.QFont()
     font.setBold(True)
     font.setWeight(75)  
-    self.pushButton_updateScatterPlot.setFont(font)        
+    self.pushButton_updateScatterPlot.setFont(font)
+
+    self.pushButton_centroidOptions.clicked.connect(self.show_centroid_options)        
+    self.pushButton_contourOptions.clicked.connect(self.show_contour_options)        
+    self.pushButton_2dOptions.clicked.connect(self.show_2d_options)        
+    self.pushButton_1dOptions.clicked.connect(self.show_1d_options)        
+     
     #set infobox to minimal size
     #self.widget_infoBox.resize(QtCore.QSize(100, 100))
     self.widget_infoBox.setMaximumSize(QtCore.QSize(100, 100))
@@ -2515,6 +2594,15 @@ def setup_main_ui(self,gpu_nr):
     self.hist_y.setYLink(self.scatter_xy) ## test linking by name
     self.hist_y.showGrid(x=True,y=True)
 
+    def rgb_options_switch(text):
+        if text == "Grayscale":
+            self.pushButton_2dOptions.setEnabled(False)
+        if text == "RGB":
+            self.pushButton_2dOptions.setEnabled(True)
+            
+    self.comboBox_GrayOrRGB_2.currentTextChanged.connect(rgb_options_switch)
+
+
     #PlotItem for the Fl-trace:
     self.plot_fl_trace = self.widget_showFltrace.addPlot()
     self.plot_fl_trace.showGrid(x=True,y=True)
@@ -2522,6 +2610,10 @@ def setup_main_ui(self,gpu_nr):
     #When horizontalSlider_cellInd is changed, initiate an onClick event and the points have to be accordigly
     self.horizontalSlider_cellInd.valueChanged.connect(self.onIndexChange)
     self.spinBox_cellInd.valueChanged.connect(self.onIndexChange)
+    self.checkBox_centroid.stateChanged.connect(lambda: self.put_image(None))
+    self.checkBox_contour.stateChanged.connect(lambda: self.put_image(None))
+    self.comboBox_GrayOrRGB_2.currentIndexChanged.connect(lambda: self.put_image(None))
+
 
     #Select a peak
     self.pushButton_selectPeakPos.clicked.connect(self.selectPeakPos)
@@ -2557,9 +2649,9 @@ def setup_main_ui(self,gpu_nr):
 
     self.pushButton_highestXPercent.clicked.connect(self.addHighestXPctPeaks)
     self.pushButton_SavePeakDetModel.clicked.connect(self.savePeakDetModel)
-    self.checkBox_fl1.setChecked(True)
-    self.checkBox_fl2.setChecked(True)
-    self.checkBox_fl3.setChecked(True)
+    # self.checkBox_fl1.setChecked(True)
+    # self.checkBox_fl2.setChecked(True)
+    # self.checkBox_fl3.setChecked(True)
     self.checkBox_centroid.setChecked(True)
     self.doubleSpinBox_highestXPercent.setMinimum(0)
     self.doubleSpinBox_highestXPercent.setMaximum(100)
@@ -3412,12 +3504,16 @@ def retranslate_main_ui(self,gpu_nr,VERSION):
     #Plotting Peakdet-Tab
     self.groupBox_plottingregion.setTitle(_translate("MainWindow", "Plotting region", None))
     self.groupBox_plottingOptions.setTitle(_translate("MainWindow", "Plotting options", None))
-    self.checkBox_fl1.setText(_translate("MainWindow", "FL1", None))
-    self.checkBox_fl2.setText(_translate("MainWindow", "FL2", None))
-    self.checkBox_fl3.setText(_translate("MainWindow", "FL3", None))
+    self.label_kde.setText(_translate("MainWindow", "KDE", None))
+    self.comboBox_kde.addItems(["None","2d Histogram","Gauss"])
+    self.comboBox_GrayOrRGB_2.addItems(["Grayscale","RGB"])
+
     self.checkBox_centroid.setText(_translate("MainWindow", "Centroid", None))
-    self.label_coloring.setText(_translate("MainWindow", "Image channel", None))
-    self.checkBox_colorLog.setText(_translate("MainWindow", "Logscaled", None))
+    self.checkBox_contour.setText(_translate("MainWindow", "Contour", None))
+    self.pushButton_centroidOptions.setText(_translate("MainWindow", "...", None))
+    self.pushButton_contourOptions.setText(_translate("MainWindow", "...", None))
+    self.pushButton_2dOptions.setText(_translate("MainWindow", "2D image", None))
+    self.pushButton_1dOptions.setText(_translate("MainWindow", "1D plot", None))
     self.pushButton_updateScatterPlot.setText(_translate("MainWindow", "Update", None))
     self.groupBox.setTitle(_translate("MainWindow", "Info", None))
     self.tabWidget_filter_peakdet.setTabText(self.tabWidget_filter_peakdet.indexOf(self.tab_filter), _translate("MainWindow", "Placeholder", None))
@@ -3439,7 +3535,7 @@ def retranslate_main_ui(self,gpu_nr,VERSION):
     self.pushButton_export.setText(_translate("MainWindow", "Export to...", None))
     self.tabWidget_filter_peakdet.setTabText(self.tabWidget_filter_peakdet.indexOf(self.tab_peakdet), _translate("MainWindow", "Peakdetection", None))
     self.tabWidget_filter_peakdet.setTabText(self.tabWidget_filter_peakdet.indexOf(self.tab_defineModel), _translate("MainWindow", "Placeholder", None))
-    self.tabWidget_Modelbuilder.setTabText(self.tabWidget_Modelbuilder.indexOf(self.tab_Plotting), _translate("MainWindow", "Plot/Peak", None))
+    self.tabWidget_Modelbuilder.setTabText(self.tabWidget_Modelbuilder.indexOf(self.tab_Plotting), _translate("MainWindow", "Plotting", None))
 
     ##############################Python Tab###############################
     self.groupBox_pythonMenu.setTitle(_translate("MainWindow", "File", None))
@@ -3462,9 +3558,9 @@ def retranslate_main_ui(self,gpu_nr,VERSION):
     self.horizontalSlider_cellInd.setToolTip(_translate("MainWindow", tooltips["horizontalSlider_cellInd"] , None))
     self.spinBox_cellInd.setToolTip(_translate("MainWindow",tooltips["spinBox_cellInd"] , None))
     self.widget_scatter.setToolTip(_translate("MainWindow",tooltips["widget_scatter"] , None))
-    self.checkBox_fl1.setToolTip(_translate("MainWindow",tooltips["checkBox_fl1"], None))
-    self.checkBox_fl2.setToolTip(_translate("MainWindow", tooltips["checkBox_fl2"], None))
-    self.checkBox_fl3.setToolTip(_translate("MainWindow", tooltips["checkBox_fl3"], None))
+    # self.checkBox_fl1.setToolTip(_translate("MainWindow",tooltips["checkBox_fl1"], None))
+    # self.checkBox_fl2.setToolTip(_translate("MainWindow", tooltips["checkBox_fl2"], None))
+    # self.checkBox_fl3.setToolTip(_translate("MainWindow", tooltips["checkBox_fl3"], None))
     self.checkBox_centroid.setToolTip(_translate("MainWindow",tooltips["checkBox_centroid"] , None))
     self.pushButton_selectPeakPos.setToolTip(_translate("MainWindow",tooltips["pushButton_selectPeakPos"] , None))
     self.pushButton_selectPeakRange.setToolTip(_translate("MainWindow",tooltips["pushButton_selectPeakRange"]  , None))
@@ -7369,6 +7465,480 @@ class Ui_Updates(QtWidgets.QWidget):
         self.pushButton_installOnline.setText(_translate("Updates", "Download + Install",None))
 
 
+DEFAULT_CSS = """
+QRangeSlider * {
+    border: 0px;
+    padding: 0px;
+}
+QRangeSlider #Head {
+    background: #222;
+}
+QRangeSlider #Span {
+    background: #393;
+}
+QRangeSlider #Span:active {
+    background: #282;
+}
+QRangeSlider #Tail {
+    background: #222;
+}
+QRangeSlider > QSplitter::handle {
+    background: #393;
+}
+QRangeSlider > QSplitter::handle:vertical {
+    height: 4px;
+}
+QRangeSlider > QSplitter::handle:pressed {
+    background: #ca5;
+}
+"""
+
+def scale(val, src, dst):
+    return int(((val - src[0]) / float(src[1]-src[0])) * (dst[1]-dst[0]) + dst[0])
+
+
+class Ui_Form(object):
+    def setupUi(self, Form):
+        Form.setObjectName("QRangeSlider")
+        Form.resize(300, 30)
+        Form.setStyleSheet(DEFAULT_CSS)
+        self.gridLayout = QtWidgets.QGridLayout(Form)
+        self.gridLayout.setContentsMargins(0, 0, 0, 0)
+        self.gridLayout.setSpacing(0)
+        self.gridLayout.setObjectName("gridLayout")
+        self._splitter = QtWidgets.QSplitter(Form)
+        self._splitter.setMinimumSize(QtCore.QSize(0, 0))
+        self._splitter.setMaximumSize(QtCore.QSize(16777215, 16777215))
+        self._splitter.setOrientation(QtCore.Qt.Horizontal)
+        self._splitter.setObjectName("splitter")
+        self._head = QtWidgets.QGroupBox(self._splitter)
+        self._head.setTitle("")
+        self._head.setObjectName("Head")
+        self._handle = QtWidgets.QGroupBox(self._splitter)
+        self._handle.setTitle("")
+        self._handle.setObjectName("Span")
+        self._tail = QtWidgets.QGroupBox(self._splitter)
+        self._tail.setTitle("")
+        self._tail.setObjectName("Tail")
+        self.gridLayout.addWidget(self._splitter, 0, 0, 1, 1)
+        self.retranslateUi(Form)
+        QtCore.QMetaObject.connectSlotsByName(Form)
+
+    def retranslateUi(self, Form):
+        _translate = QtCore.QCoreApplication.translate
+        Form.setWindowTitle(_translate("QRangeSlider", "QRangeSlider"))
+
+
+class Element(QtWidgets.QGroupBox):
+    def __init__(self, parent, main):
+        super(Element, self).__init__(parent)
+        self.main = main
+
+    def setStyleSheet(self, style):
+        self.parent().setStyleSheet(style)
+
+    def textColor(self):
+        return getattr(self, '__textColor', QtGui.QColor(125, 125, 125))
+
+    def setTextColor(self, color):
+        if type(color) == tuple and len(color) == 3:
+            color = QtGui.QColor(color[0], color[1], color[2])
+        elif type(color) == int:
+            color = QtGui.QColor(color, color, color)
+        setattr(self, '__textColor', color)
+
+    def paintEvent(self, event):
+        qp = QtGui.QPainter()
+        qp.begin(self)
+        if self.main.drawValues():
+            self.drawText(event, qp)
+        qp.end()
+
+
+class Head(Element):
+    def __init__(self, parent, main):
+        super(Head, self).__init__(parent, main)
+
+    def drawText(self, event, qp):
+        qp.setPen(self.textColor())
+        qp.setFont(QtGui.QFont('Arial', 10))
+        qp.drawText(event.rect(), QtCore.Qt.AlignLeft, str(self.main.min()))
+
+
+class Tail(Element):
+    def __init__(self, parent, main):
+        super(Tail, self).__init__(parent, main)
+
+    def drawText(self, event, qp):
+        qp.setPen(self.textColor())
+        qp.setFont(QtGui.QFont('Arial', 10))
+        qp.drawText(event.rect(), QtCore.Qt.AlignRight, str(self.main.max()))
+
+
+class Handle(Element):
+    def __init__(self, parent, main):
+        super(Handle, self).__init__(parent, main)
+
+    def drawText(self, event, qp):
+        qp.setPen(self.textColor())
+        qp.setFont(QtGui.QFont('Arial', 10))
+        qp.drawText(event.rect(), QtCore.Qt.AlignLeft, str(self.main.start()))
+        qp.drawText(event.rect(), QtCore.Qt.AlignRight, str(self.main.end()))
+
+    def mouseMoveEvent(self, event):
+        event.accept()
+        mx = event.globalX()
+        _mx = getattr(self, '__mx', None)
+        if not _mx:
+            setattr(self, '__mx', mx)
+            dx = 0
+        else:
+            dx = mx - _mx
+        setattr(self, '__mx', mx)
+        if dx == 0:
+            event.ignore()
+            return
+        elif dx > 0:
+            dx = 1
+        elif dx < 0:
+            dx = -1
+        s = self.main.start() + dx
+        e = self.main.end() + dx
+        if s >= self.main.min() and e <= self.main.max():
+            self.main.setRange(s, e)
+
+
+class QRangeSlider(QtWidgets.QWidget, Ui_Form):
+    endValueChanged = QtCore.pyqtSignal(int)
+    maxValueChanged = QtCore.pyqtSignal(int)
+    minValueChanged = QtCore.pyqtSignal(int)
+    startValueChanged = QtCore.pyqtSignal(int)
+    minValueChanged = QtCore.pyqtSignal(int)
+    maxValueChanged = QtCore.pyqtSignal(int)
+    startValueChanged = QtCore.pyqtSignal(int)
+    endValueChanged = QtCore.pyqtSignal(int)
+
+    _SPLIT_START = 1
+    _SPLIT_END = 2
+
+    def __init__(self, parent=None):
+        super(QRangeSlider, self).__init__(parent)
+        self.setupUi(self)
+        self.setMouseTracking(False)
+        self._splitter.splitterMoved.connect(self._handleMoveSplitter)
+        self._head_layout = QtWidgets.QHBoxLayout()
+        self._head_layout.setSpacing(0)
+        self._head_layout.setContentsMargins(0, 0, 0, 0)
+        self._head.setLayout(self._head_layout)
+        self.head = Head(self._head, main=self)
+        self._head_layout.addWidget(self.head)
+        self._handle_layout = QtWidgets.QHBoxLayout()
+        self._handle_layout.setSpacing(0)
+        self._handle_layout.setContentsMargins(0, 0, 0, 0)
+        self._handle.setLayout(self._handle_layout)
+        self.handle = Handle(self._handle, main=self)
+        self.handle.setTextColor((150, 255, 150))
+        self._handle_layout.addWidget(self.handle)
+        self._tail_layout = QtWidgets.QHBoxLayout()
+        self._tail_layout.setSpacing(0)
+        self._tail_layout.setContentsMargins(0, 0, 0, 0)
+        self._tail.setLayout(self._tail_layout)
+        self.tail = Tail(self._tail, main=self)
+        self._tail_layout.addWidget(self.tail)
+        self.setMin(0)
+        self.setMax(99)
+        self.setStart(0)
+        self.setEnd(99)
+        self.setDrawValues(True)
+
+    def min(self):
+        return getattr(self, '__min', None)
+
+    def max(self):
+        return getattr(self, '__max', None)
+
+    def setMin(self, value):
+        setattr(self, '__min', value)
+        self.minValueChanged.emit(value)
+
+    def setMax(self, value):
+        setattr(self, '__max', value)
+        self.maxValueChanged.emit(value)
+
+    def start(self):
+        return getattr(self, '__start', None)
+
+    def end(self):
+        return getattr(self, '__end', None)
+
+    def _setStart(self, value):
+        setattr(self, '__start', value)
+        self.startValueChanged.emit(value)
+
+    def setStart(self, value):
+        v = self._valueToPos(value)
+        self._splitter.splitterMoved.disconnect()
+        self._splitter.moveSplitter(v, self._SPLIT_START)
+        self._splitter.splitterMoved.connect(self._handleMoveSplitter)
+        self._setStart(value)
+
+    def _setEnd(self, value):
+        setattr(self, '__end', value)
+        self.endValueChanged.emit(value)
+
+    def setEnd(self, value):
+        v = self._valueToPos(value)
+        self._splitter.splitterMoved.disconnect()
+        self._splitter.moveSplitter(v, self._SPLIT_END)
+        self._splitter.splitterMoved.connect(self._handleMoveSplitter)
+        self._setEnd(value)
+
+    def drawValues(self):
+        return getattr(self, '__drawValues', None)
+
+    def setDrawValues(self, draw):
+        setattr(self, '__drawValues', draw)
+
+    def getRange(self):
+        return (self.start(), self.end())
+
+    def setRange(self, start, end):
+        self.setStart(start)
+        self.setEnd(end)
+
+    def keyPressEvent(self, event):
+        key = event.key()
+        if key == QtCore.Qt.Key_Left:
+            s = self.start()-1
+            e = self.end()-1
+        elif key == QtCore.Qt.Key_Right:
+            s = self.start()+1
+            e = self.end()+1
+        else:
+            event.ignore()
+            return
+        event.accept()
+        if s >= self.min() and e <= self.max():
+            self.setRange(s, e)
+
+    def setBackgroundStyle(self, style):
+        self._tail.setStyleSheet(style)
+        self._head.setStyleSheet(style)
+
+    def setSpanStyle(self, style):
+        self._handle.setStyleSheet(style)
+
+    def _valueToPos(self, value):
+        return scale(value, (self.min(), self.max()), (0, self.width()))
+
+    def _posToValue(self, xpos):
+        return scale(xpos, (0, self.width()), (self.min(), self.max()))
+
+    def _handleMoveSplitter(self, xpos, index):
+        hw = self._splitter.handleWidth()
+        def _lockWidth(widget):
+            width = widget.size().width()
+            widget.setMinimumWidth(width)
+            widget.setMaximumWidth(width)
+        def _unlockWidth(widget):
+            widget.setMinimumWidth(0)
+            widget.setMaximumWidth(16777215)
+
+        if index == 1:
+            v = self._posToValue(xpos)
+        elif index == 2:
+            v = self._posToValue(xpos+hw)
+
+        if index == self._SPLIT_START:
+            _lockWidth(self._tail)
+            if v >= self.end():
+                return
+            offset = -20
+            w = xpos + offset
+            self._setStart(v)
+        elif index == self._SPLIT_END:
+            _lockWidth(self._head)
+            if v <= self.start():
+                return
+            offset = -40
+            w = self.width() - xpos + offset
+            self._setEnd(v)
+        _unlockWidth(self._tail)
+        _unlockWidth(self._head)
+        _unlockWidth(self._handle)
+
+class Ui_2dOptions(object):
+    def setupUi(self, Form,keys_image):
+        Form.setObjectName("Form")
+        Form.resize(481, 208)
+        self.gridLayout = QtWidgets.QGridLayout(Form)
+        self.gridLayout.setObjectName("gridLayout")
+        self.scrollArea_layerControls = QtWidgets.QScrollArea(Form)
+        self.scrollArea_layerControls.setWidgetResizable(True)
+        self.scrollArea_layerControls.setObjectName("scrollArea_layerControls")
+        self.scrollAreaWidgetContents = QtWidgets.QWidget()
+        self.scrollAreaWidgetContents.setGeometry(QtCore.QRect(0, 0, 459, 186))
+        self.scrollAreaWidgetContents.setObjectName("scrollAreaWidgetContents")
+        self.gridLayout_3 = QtWidgets.QGridLayout(self.scrollAreaWidgetContents)
+        self.gridLayout_3.setObjectName("gridLayout_3")
+        self.groupBox_layerControl = QtWidgets.QGroupBox(self.scrollAreaWidgetContents)
+        self.groupBox_layerControl.setObjectName("groupBox_layerControl")
+        self.gridLayout_2 = QtWidgets.QGridLayout(self.groupBox_layerControl)
+        self.gridLayout_2.setObjectName("gridLayout_2")
+
+        self.label_chName = QtWidgets.QLabel(self.groupBox_layerControl)
+        self.label_chName.setAlignment(QtCore.Qt.AlignCenter)
+        self.label_chName.setObjectName("label_chName")
+        self.gridLayout_2.addWidget(self.label_chName, 0, 0, 1, 1)
+        self.label_auto = QtWidgets.QLabel(self.groupBox_layerControl)
+        self.label_auto.setLayoutDirection(QtCore.Qt.LeftToRight)
+        self.label_auto.setAlignment(QtCore.Qt.AlignCenter)
+        self.label_auto.setObjectName("label_auto")
+        self.gridLayout_2.addWidget(self.label_auto, 0, 5, 1, 1)
+        self.label_show = QtWidgets.QLabel(self.groupBox_layerControl)
+        self.label_show.setAlignment(QtCore.Qt.AlignCenter)
+        self.label_show.setObjectName("label_show")
+        self.gridLayout_2.addWidget(self.label_show, 0, 1, 1, 1)
+        self.label_range = QtWidgets.QLabel(self.groupBox_layerControl)
+        self.label_range.setAlignment(QtCore.Qt.AlignCenter)
+        self.label_range.setObjectName("label_range")
+        self.gridLayout_2.addWidget(self.label_range, 0, 3, 1, 1)
+        self.label_min = QtWidgets.QLabel(self.groupBox_layerControl)
+        self.label_min.setAlignment(QtCore.Qt.AlignCenter)
+        self.label_min.setObjectName("label_min")
+        self.gridLayout_2.addWidget(self.label_min, 0, 2, 1, 1)
+        self.label_max = QtWidgets.QLabel(self.groupBox_layerControl)
+        self.label_max.setAlignment(QtCore.Qt.AlignCenter)
+        self.label_max.setObjectName("label_max")
+        self.gridLayout_2.addWidget(self.label_max, 0, 4, 1, 1)
+        self.label_cmap = QtWidgets.QLabel(self.groupBox_layerControl)
+        self.label_cmap.setAlignment(QtCore.Qt.AlignCenter)
+        self.label_cmap.setObjectName("label_cmap_ch0")
+        self.gridLayout_2.addWidget(self.label_cmap, 0, 6, 1, 1)
+
+        self.label_layername_chX = []
+        self.checkBox_show_chX = []
+        self.horizontalSlider_chX = []
+        self.checkBox_auto_chX = []
+        self.comboBox_cmap_chX = []
+        self.spinBox_minChX = []
+        self.spinBox_maxChX = []
+
+
+        for ith in range(len(keys_image)):
+            key_image = keys_image[ith]
+            print(key_image)
+
+            self.label_layername_chX.append( QtWidgets.QLabel(self.groupBox_layerControl) )
+            self.label_layername_chX[ith].setText(key_image)
+            self.label_layername_chX[ith].setObjectName("label_layername_ch"+str(ith))
+            self.gridLayout_2.addWidget(self.label_layername_chX[ith], ith+1, 0, 1, 1)
+    
+            self.checkBox_show_chX.append( QtWidgets.QCheckBox(self.groupBox_layerControl) )
+            self.checkBox_show_chX[ith].setLayoutDirection(QtCore.Qt.RightToLeft)
+            self.checkBox_show_chX[ith].setText("")
+            if ith==0:
+                self.checkBox_show_chX[ith].setChecked(True)
+            self.checkBox_show_chX[ith].setObjectName("checkBox_show_ch"+str(ith))
+            self.gridLayout_2.addWidget(self.checkBox_show_chX[ith], ith+1, 1, 1, 1)
+    
+            self.horizontalSlider_chX.append( QRangeSlider(self.groupBox_layerControl) )
+            self.horizontalSlider_chX[ith].setMin(0)
+            self.horizontalSlider_chX[ith].setMax(255)
+            self.horizontalSlider_chX[ith].setRange(0, 255)
+            # self.horizontalSlider_chX[ith].setRangeLimit(0, 255)
+            self.horizontalSlider_chX[ith].setObjectName("horizontalSlider_ch"+str(ith))
+            self.gridLayout_2.addWidget(self.horizontalSlider_chX[ith], ith+1, 3, 1, 1)
+            
+            self.checkBox_auto_chX.append( QtWidgets.QCheckBox(self.groupBox_layerControl) )
+            self.checkBox_auto_chX[ith].setLayoutDirection(QtCore.Qt.LeftToRight)
+            self.checkBox_auto_chX[ith].setText("")
+            self.checkBox_auto_chX[ith].setEnabled(False)
+            self.checkBox_auto_chX[ith].setObjectName("checkBox_auto_ch"+str(ith))
+            self.gridLayout_2.addWidget(self.checkBox_auto_chX[ith], ith+1, 5, 1, 1)
+    
+            self.comboBox_cmap_chX.append( QtWidgets.QComboBox(self.groupBox_layerControl) )
+            self.comboBox_cmap_chX[ith].setObjectName("comboBox_cmap_ch"+str(ith))
+            self.comboBox_cmap_chX[ith].addItems(["Red","Green","Blue"])
+            self.comboBox_cmap_chX[ith].setCurrentIndex(ith)
+            self.gridLayout_2.addWidget(self.comboBox_cmap_chX[ith], ith+1, 6, 1, 1)
+                    
+            self.spinBox_minChX.append( QtWidgets.QSpinBox(self.groupBox_layerControl) )
+            self.spinBox_minChX[ith].setMinimum(0)
+            self.spinBox_minChX[ith].setMaximum(255)
+            self.spinBox_minChX[ith].setValue(0)
+            self.spinBox_minChX[ith].setObjectName("spinBox_minCh"+str(ith))
+            self.gridLayout_2.addWidget(self.spinBox_minChX[ith], ith+1, 2, 1, 1)            
+            
+            self.spinBox_maxChX.append( QtWidgets.QSpinBox(self.groupBox_layerControl) )
+            self.spinBox_maxChX[ith].setObjectName("spinBox_maxCh"+str(ith))
+            self.spinBox_maxChX[ith].setMinimum(0)
+            self.spinBox_maxChX[ith].setMaximum(255)
+            self.spinBox_maxChX[ith].setValue(255)
+            self.gridLayout_2.addWidget(self.spinBox_maxChX[ith], ith+1, 4, 1, 1)
+
+        self.gridLayout_3.addWidget(self.groupBox_layerControl, 0, 0, 1, 3)
+        
+        spacerItem = QtWidgets.QSpacerItem(254, 20, QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Minimum)
+        self.gridLayout_3.addItem(spacerItem, 1, 0, 1, 1)
+        self.pushButton_reset = QtWidgets.QPushButton(self.scrollAreaWidgetContents)
+        self.pushButton_reset.setObjectName("pushButton_reset")
+        self.gridLayout_3.addWidget(self.pushButton_reset, 1, 1, 1, 1)
+        self.pushButton_close = QtWidgets.QPushButton(self.scrollAreaWidgetContents)
+        self.pushButton_close.setObjectName("pushButton_close")
+        self.pushButton_close.setEnabled(False)        
+        self.gridLayout_3.addWidget(self.pushButton_close, 1, 2, 1, 1)
+        self.scrollArea_layerControls.setWidget(self.scrollAreaWidgetContents)
+        self.gridLayout.addWidget(self.scrollArea_layerControls, 0, 1, 1, 1)
+
+        self.retranslateUi(Form)
+        QtCore.QMetaObject.connectSlotsByName(Form)
+
+        ################CONNECTIONS#################
+        self.pushButton_reset.clicked.connect(self.connect_slider_reset)
+        
+        for iterator in range(len(self.spinBox_minChX)):
+            sb = self.spinBox_minChX[iterator]
+            sb.valueChanged.connect(lambda _, b=iterator: self.connect_sb_to_slider(ith=b))
+
+            sb = self.spinBox_maxChX[iterator]
+            sb.valueChanged.connect(lambda _, b=iterator: self.connect_sb_to_slider(ith=b))
+        
+            slider = self.horizontalSlider_chX[iterator]
+            slider.startValueChanged.connect(lambda _, b=iterator: self.connect_slider_to_sb(ith=b))
+            slider.endValueChanged.connect(lambda _, b=iterator: self.connect_slider_to_sb(ith=b))
+
+    def retranslateUi(self, Form):
+        _translate = QtCore.QCoreApplication.translate
+        Form.setWindowTitle(_translate("Form", "LayerOptions"))
+        self.groupBox_layerControl.setTitle(_translate("Form", ""))
+        self.label_chName.setText(_translate("Form", "Ch.Name"))
+        self.label_show.setText(_translate("Form", "Show"))
+        self.label_min.setText(_translate("Form", "Min"))
+        self.label_range.setText(_translate("Form", "Range"))
+        self.label_max.setText(_translate("Form", "Max"))
+        self.label_auto.setText(_translate("Form", "Auto"))
+        self.label_cmap.setText(_translate("Form", "Colormap"))
+        self.pushButton_reset.setText(_translate("Form", "Reset"))
+        self.pushButton_close.setText(_translate("Form", "Hide"))
+
+    def connect_sb_to_slider(self,ith):
+        start = self.spinBox_minChX[ith].value()
+        stop = self.spinBox_maxChX[ith].value()
+        if start<=stop:
+            self.horizontalSlider_chX[ith].setRange(start,stop)
+
+    def connect_slider_reset(self):
+        for ith in range(len(self.spinBox_maxChX)):
+            self.horizontalSlider_chX[ith].setRange(0,255)
+            self.checkBox_show_chX[ith].setChecked(False)
+        self.checkBox_show_chX[0].setChecked(True)
+
+    def connect_slider_to_sb(self,ith):
+        start = self.horizontalSlider_chX[ith].start()
+        stop = self.horizontalSlider_chX[ith].end()
+        self.spinBox_minChX[ith].setValue(start)
+        self.spinBox_maxChX[ith].setValue(stop)
 
 
 
