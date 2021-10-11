@@ -1098,3 +1098,32 @@ def image_resize_scale(images,pos_x,pos_y,final_h,final_w,channels,interpolation
         #the order width,height in cv2.resize is not an error. OpenCV wants this order...
         images[i] = cv2.resize(images[i], dsize=(final_w,final_h), interpolation=interpolation_method)
     return images
+
+
+def clip_contrast(img,low,high,auto=False):
+    if auto==True:
+        low,high = np.min(img),np.max(img)
+    # limit_lower = limits[0]
+    # limit_upper = limits[1]
+    img[:,:] = np.clip(img[:,:],a_min=low,a_max=high)
+    mini,maxi = np.min(img[:,:]),np.max(img[:,:])/255
+    img[:,:] = (img[:,:]-mini)/maxi
+    return img
+
+# def stretch_contrast(img):
+#     mini,maxi = np.min(img),np.max(img)
+#     factor = 255/maxi
+#     img = img.astype(np.float32)
+#     img = (img-mini)*factor
+#     img = img.astype(np.uint8)
+#     return img
+    
+
+
+
+
+
+
+
+
+
