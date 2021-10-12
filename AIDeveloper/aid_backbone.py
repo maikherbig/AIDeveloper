@@ -2403,13 +2403,19 @@ class MainWindow(QtWidgets.QMainWindow):
         for key in keys:
             if type(rtdc_ds["events"][key])==h5py._hl.dataset.Dataset:
                 shape = rtdc_ds["events"][key].shape
-                if len(shape)==1: #images have special shape (2D arrays)
+                if len(shape)==1: #zero-dimensional info (single number per cell)
                     keys_0d.append(key)
-                elif len(shape)==2: #images have special shape (2D arrays)
+                elif len(shape)==2: #one-dimensional info (multiple numbers per cell)
                     keys_1d.append(key)
-                elif len(shape)==3: #images have special shape (2D arrays)
+                elif len(shape)==3: #two-dimensional info (images)
                     keys_2d.append(key)
-        
+
+        #add the traces to the 1d features
+        if "trace" in keys:
+            for key_trace in list(rtdc_ds["events"]["trace"].keys()):
+                keys_1d.append(key_trace+" (RTFDC)")
+
+
         #Sort keys_2d: "image" first; "mask" last 
         keys_2d.insert(0, keys_2d.pop(keys_2d.index("image")))
         keys_2d.insert(len(keys_2d), keys_2d.pop(keys_2d.index("mask")))        
@@ -2453,16 +2459,17 @@ class MainWindow(QtWidgets.QMainWindow):
         self.popup_2dOptions_ui = aid_frontend.Ui_2dOptions()
         self.popup_2dOptions_ui.setupUi(self.popup_2dOptions,keys_2d) #open a popup
 
-    def init_1d_options(self,keys_2d):
+    def init_1d_options(self,keys_1d):
         self.popup_1dOptions = MyPopup()
-        self.popup_1dOptions_ui = aid_frontend.Ui_2dOptions()
-        self.popup_1dOptions_ui.setupUi(self.popup_1dOptions,keys_2d) #open a popup
+        self.popup_1dOptions_ui = aid_frontend.Ui_1dOptions()
+        self.popup_1dOptions_ui.setupUi(self.popup_1dOptions,keys_1d) #open a popup
 
     def show_contour_options():
         self.contour_options_nr += 1
         print("Work in progress")
 
     def show_centroid_options(self):
+        print("Work in progress")
         self.centroid_options_nr += 1
         #self.popup_layercontrols_ui.pushButton_close.clicked.connect(self.visualization_settings)
         if self.centroid_options_nr==1:
@@ -2490,17 +2497,12 @@ class MainWindow(QtWidgets.QMainWindow):
         self.show_1d_options_nr += 1
         #self.popup_layercontrols_ui.pushButton_close.clicked.connect(self.visualization_settings)
         if self.show_1d_options_nr==1:
-            for iterator in range(len(self.popup_2dOptions_ui.spinBox_minChX)):
-                slider = self.popup_2dOptions_ui.horizontalSlider_chX[iterator]
-                slider.startValueChanged.connect(lambda _, b=None: self.put_image(ind=b))
-                slider.endValueChanged.connect(lambda _, b=None: self.put_image(ind=b))
-                checkBox = self.popup_2dOptions_ui.checkBox_show_chX[iterator]
-                checkBox.stateChanged.connect(lambda _, b=None: self.put_image(ind=b))
-                comboBox = self.popup_2dOptions_ui.comboBox_cmap_chX[iterator]
-                comboBox.currentIndexChanged.connect(lambda _, b=None: self.put_image(ind=b))
-                checkBox = self.popup_2dOptions_ui.checkBox_auto_chX[iterator]
-                checkBox.stateChanged.connect(lambda _, b=None: self.put_image(ind=b))
-        self.popup_2dOptions.show()
+            for iterator in range(len(self.popup_1dOptions_ui.checkBox_show_chX)):
+                checkBox = self.popup_1dOptions_ui.checkBox_show_chX[iterator]
+                checkBox.stateChanged.connect(lambda _, b=None: self.put_line(index=b))
+                comboBox = self.popup_1dOptions_ui.comboBox_cmap_chX[iterator]
+                comboBox.clicked.connect(lambda _, b=None: self.put_line(index=b))
+        self.popup_1dOptions.show()
 
 
     def activate_deactivate_spinbox(self,newstate):
@@ -2587,6 +2589,8 @@ class MainWindow(QtWidgets.QMainWindow):
         self.changedbyuser = True
         
         self.put_image(index)
+        self.put_line(index)
+
     
     def put_image(self,ind):
         #check that the user is looking at the plotting tab
@@ -2725,92 +2729,56 @@ class MainWindow(QtWidgets.QMainWindow):
             self.plot_contour = pg.PlotCurveItem(contour[:,0],contour[:,1],width=6,pen="r")
             self.widget_showCell.getView().addItem(self.plot_contour)
 
-
+    def put_line(self,index):
+        curr_ind = self.tabWidget_Modelbuilder.currentIndex()
+        if curr_ind!=3:
+            return
+        
         #Fluorescence traces: clear first
         try:
             self.plot_fl_trace_.clear() #clear the plot
             self.plot_fl_trace.clear() #clear the plot
         except:
             pass
-        if "trace" in list(rtdc_ds["events"].keys()):
-            #Show the flourescence traces
-            trace = rtdc_ds["events"]["trace"]
-            fl_keys = list(trace.keys())
-            feature_keys = list(rtdc_ds["events"].keys())
-            fl1_max,fl1_pos,fl2_max,fl2_pos,fl3_max,fl3_pos = 0,0,0,0,0,0
-            Traces_flx = []
-            for i in range(len(fl_keys)):
-                if "fl1_median" in fl_keys[i] and self.checkBox_fl1.isChecked():
-                    trace_flx = trace[fl_keys[i]][index]
-                    pencolor = "g"
-                    Traces_flx.append(trace_flx)
-                    self.plot_fl_trace_ = self.plot_fl_trace.plot(range(len(trace_flx)),trace_flx,width=6,pen=pencolor,clear=False)
-                    if "fl1_max" in feature_keys and "fl1_pos" in feature_keys: #if also the maxima and position of the max are available: use it to put the region accordingly
-                        fl1_max,fl1_pos = rtdc_ds["events"]["fl1_max"][index],rtdc_ds["events"]["fl1_pos"][index]
-                elif "fl2_median" in fl_keys[i] and self.checkBox_fl2.isChecked():
-                    trace_flx = trace[fl_keys[i]][index]
-                    Traces_flx.append(trace_flx)
-                    pencolor = (255,128,0) #orange
-                    self.plot_fl_trace_ = self.plot_fl_trace.plot(range(len(trace_flx)),trace_flx,width=6,pen=pencolor,clear=False)
-                    if "fl2_max" in feature_keys and "fl2_pos" in feature_keys: #if also the maxima and position of the max are available: use it to put the region accordingly
-                        fl2_max,fl2_pos = rtdc_ds["events"]["fl2_max"][index],rtdc_ds["events"]["fl2_pos"][index]
-                elif "fl3_median" in fl_keys[i] and self.checkBox_fl3.isChecked():
-                    trace_flx = trace[fl_keys[i]][index]
-                    Traces_flx.append(trace_flx)
-                    pencolor = "r"
-                    self.plot_fl_trace_ = self.plot_fl_trace.plot(range(len(trace_flx)),trace_flx,width=6,pen=pencolor,clear=False)
-                    if "fl3_max" in feature_keys and "fl3_pos" in feature_keys: #if also the maxima and position of the max are available: use it to put the region accordingly
-                        fl3_max,fl3_pos = rtdc_ds["events"]["fl3_max"][index],rtdc_ds["events"]["fl3_pos"][index]
-    
-            #get the maximum of [fl1_max,fl2_max,fl3_max] and put the region to the corresponding fl-position
-            ind = np.argmax(np.array([fl1_max,fl2_max,fl3_max]))
-            region_pos = np.array([fl1_pos,fl2_pos,fl3_pos])[ind] #this region is already given in us. translate this back to range
-            peak_height = np.array([fl1_max,fl2_max,fl3_max])[ind]
-            sample_rate = rtdc_ds.attrs["fluorescence:sample rate"]
-            fl_pos_ind = float((sample_rate*region_pos))/1E6 #
-            #Indicate the used flx_max and flx_pos by a scatter dot
-            self.peak_dot = self.plot_fl_trace.plot([float(fl_pos_ind)], [float(peak_height)],pen=None,symbol='o',symbolPen='w',clear=False)
-    
-            #Place a LinearRegionItem on the plot. FL_max is searched in this region
-            #Search, if a region_width was defined already
-            if not hasattr(self, 'region_width'): #if there was no region_width defined yet...
-    #            self.region_width = 50 #width of the region in us
-    #            self.region_width = float((sample_rate*self.region_width))/1E6 #
-                #to get a reasonable initial range, use 20% of the nr. of availeble samples
-                samples_per_event = self.rtdc_ds.attrs["fluorescence:samples per event"]
-                self.region_width = 0.2*samples_per_event #width of the region in samples
-                #Convert to SI unit:
-                sample_rate = self.rtdc_ds.attrs["fluorescence:sample rate"]
-                self.region_width = (float(self.region_width)/float(sample_rate))*1E6 #range[samples]*(1/sample_rate[1/s]) = range[s]; div by 1E6 to convert to us
-    
-            region_width_samples = (self.region_width*float(sample_rate))/1E6
-            self.region = pg.LinearRegionItem([fl_pos_ind-region_width_samples/2.0, fl_pos_ind+region_width_samples/2.0], bounds=[-20,33000], movable=True)
-            self.plot_fl_trace.addItem(self.region)
-            def region_changed():
-                #delete the current maximum indicator
-                self.plot_fl_trace.removeItem(self.peak_dot)
-                #where did the user drag the region to?
-                new_region = self.region.getRegion()
-                #for each fl-trace, search for the maximum in that region
-                Fl_max_pos_,Fl_max_ = [],[]
-                for i in range(len(Traces_flx)):
-                    trace_flx = Traces_flx[i]
-                    trace_flx_ = trace_flx[int(new_region[0]):int(new_region[1])]
-                    trace_flx_pos_ = range(len(trace_flx))[int(new_region[0]):int(new_region[1])]
-                    ind = np.argmax(trace_flx_)
-                    fl_max_ = trace_flx_[ind]
-                    fl_max_pos_ = trace_flx_pos_[ind]
-                    Fl_max_pos_.append(fl_max_pos_)
-                    Fl_max_.append(fl_max_)
-                #Get the highest maximum across all the traces
-                ind = np.argmax(np.array(Fl_max_))
-                fl_max__ = Fl_max_[ind]
-                fl_max_pos__ = Fl_max_pos_[ind]
-                self.new_peak = {"fl_pos":fl_max_pos__,"fl_max":fl_max__,"pos_x":pos_x}
-                self.new_peaks.append(self.new_peak)
-                self.peak_dot = self.plot_fl_trace.plot([float(fl_max_pos__)], [float(fl_max__)],pen=None,symbol='o',symbolPen='w',clear=False)
-    
-            self.region.sigRegionChangeFinished.connect(region_changed)
+
+        if index==None:
+            index = int(self.spinBox_cellInd.value())
+
+        rtdc_ds = self.rtdc_ds
+        feature_keys = list(rtdc_ds.keys())
+        
+        #which features shouldbe displayed                
+        features_nr = len(self.popup_1dOptions_ui.checkBox_show_chX)
+        keys_1d = [self.popup_1dOptions_ui.checkBox_show_chX[i].text() for i in range(features_nr)]
+        keys_1d_on = [self.popup_1dOptions_ui.checkBox_show_chX[i].isChecked() for i in range(features_nr)]
+        colors = [self.popup_1dOptions_ui.comboBox_cmap_chX[i].palette().button().color() for i in range(features_nr)]
+        colors = [list(c.getRgb()) for c in colors]
+        colors = [tuple(c) for c in colors]
+        ind = np.where(np.array(keys_1d_on)==True)[0]
+        keys_1d = list(np.array(keys_1d)[ind])
+        colors = list(np.array(colors)[ind])
+                
+        for key_1d,color in zip(keys_1d,colors):
+            if key_1d.endswith(" (RTFDC)"):
+                key_1d = key_1d.split(" (RTFDC)")[0]
+                trace_flx = rtdc_ds["events"]["trace"][key_1d][index]
+                pencolor = pg.mkPen(color, width=2)
+                self.plot_fl_trace_ = self.plot_fl_trace.plot(range(len(trace_flx)),trace_flx,width=6,pen=pencolor,clear=False)
+                # if "fl1_max" in feature_keys and "fl1_pos" in feature_keys: #if also the maxima and position of the max are available: use it to put the region accordingly
+                #     fl1_max,fl1_pos = rtdc_ds["events"]["fl1_max"][index],rtdc_ds["events"]["fl1_pos"][index]
+            else:
+                values = rtdc_ds["events"][key_1d][index]
+                pencolor = pg.mkPen(color, width=2)
+                self.plot_fl_trace_ = self.plot_fl_trace.plot(range(len(trace_flx)),trace_flx,width=6,pen=pencolor,clear=False)
+
+                #get the maximum of [fl1_max,fl2_max,fl3_max] and put the region to the corresponding fl-position
+                # ind = np.argmax(np.array([fl1_max,fl2_max,fl3_max]))
+                # region_pos = np.array([fl1_pos,fl2_pos,fl3_pos])[ind] #this region is already given in us. translate this back to range
+                # peak_height = np.array([fl1_max,fl2_max,fl3_max])[ind]
+                # sample_rate = rtdc_ds.attrs["fluorescence:sample rate"]
+                # fl_pos_ind = float((sample_rate*region_pos))/1E6 #
+                # #Indicate the used flx_max and flx_pos by a scatter dot
+                # self.peak_dot = self.plot_fl_trace.plot([float(fl_pos_ind)], [float(peak_height)],pen=None,symbol='o',symbolPen='w',clear=False)
 
     def onScatterClick(self,event, points):
         pointermethod = 'point'
@@ -2946,7 +2914,7 @@ class MainWindow(QtWidgets.QMainWindow):
         self.spinBox_cellInd.setMinimum(0)
         self.spinBox_cellInd.setMaximum(len(self.feature_x)-1)                  
 
-
+        
     def selectPeakPos(self):
         #Check if self.region exists
         #If not, show a message and return:
