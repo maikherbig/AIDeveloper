@@ -6452,8 +6452,6 @@ class popup_lrfinder(QtWidgets.QWidget):
         self.groupBox_LrRange.setToolTip(_translate("MainWindow", tooltips["groupBox_LrRange"],None))
 
 
-    
-
     def lr_color_picker(self):
         color = QtGui.QColorDialog.getColor()
         if color.getRgb()==(0, 0, 0, 255):#no black!
@@ -7827,8 +7825,6 @@ class Ui_2dOptions(object):
 
         for ith in range(len(keys_image)):
             key_image = keys_image[ith]
-            print(key_image)
-
             self.label_layername_chX.append( QtWidgets.QLabel(self.groupBox_layerControl) )
             self.label_layername_chX[ith].setText(key_image)
             self.label_layername_chX[ith].setObjectName("label_layername_ch"+str(ith))
@@ -7942,9 +7938,112 @@ class Ui_2dOptions(object):
 
 
 
+class Ui_1dOptions(object):
+    def setupUi(self, Form,keys_1d):
+        Form.setObjectName("Form")
+        Form.resize(224, 208)
+        self.gridLayout = QtWidgets.QGridLayout(Form)
+        self.gridLayout.setObjectName("gridLayout")
+        self.scrollArea_layerControls = QtWidgets.QScrollArea(Form)
+        self.scrollArea_layerControls.setWidgetResizable(True)
+        self.scrollArea_layerControls.setObjectName("scrollArea_layerControls")
+        self.scrollAreaWidgetContents = QtWidgets.QWidget()
+        self.scrollAreaWidgetContents.setGeometry(QtCore.QRect(0, 0, 459, 186))
+        self.scrollAreaWidgetContents.setObjectName("scrollAreaWidgetContents")
+        self.gridLayout_3 = QtWidgets.QGridLayout(self.scrollAreaWidgetContents)
+        self.gridLayout_3.setObjectName("gridLayout_3")
+        self.groupBox_layerControl = QtWidgets.QGroupBox(self.scrollAreaWidgetContents)
+        self.groupBox_layerControl.setObjectName("groupBox_layerControl")
+        self.gridLayout_2 = QtWidgets.QGridLayout(self.groupBox_layerControl)
+        self.gridLayout_2.setObjectName("gridLayout_2")
+
+        self.label_chName = QtWidgets.QLabel(self.groupBox_layerControl)
+        self.label_chName.setAlignment(QtCore.Qt.AlignCenter)
+        self.label_chName.setObjectName("label_chName")
+        self.gridLayout_2.addWidget(self.label_chName, 0, 0, 1, 1)
+        self.label_cmap = QtWidgets.QLabel(self.groupBox_layerControl)
+        self.label_cmap.setAlignment(QtCore.Qt.AlignCenter)
+        self.label_cmap.setObjectName("label_cmap_ch0")
+        self.gridLayout_2.addWidget(self.label_cmap, 0, 1, 1, 1)
+
+        self.label_layername_chX = []
+        self.checkBox_show_chX = []
+        self.comboBox_cmap_chX = []
+
+        for ith in range(len(keys_1d)):
+            key_1d = keys_1d[ith]
+            # self.label_layername_chX.append( QtWidgets.QCheckBox(self.groupBox_layerControl) )
+            # self.label_layername_chX[ith].setText(key_1d)
+            # self.label_layername_chX[ith].setObjectName("label_layername_ch"+str(ith))
+            # self.gridLayout_2.addWidget(self.label_layername_chX[ith], ith+1, 0, 1, 1)
+    
+            self.checkBox_show_chX.append( QtWidgets.QCheckBox(self.groupBox_layerControl) )
+            self.checkBox_show_chX[ith].setLayoutDirection(QtCore.Qt.RightToLeft)
+            self.checkBox_show_chX[ith].setText(key_1d)
+            self.checkBox_show_chX[ith].setObjectName("checkBox_show_ch"+str(ith))
+            self.gridLayout_2.addWidget(self.checkBox_show_chX[ith], ith+1, 0, 1, 1)
+    
+    
+            self.comboBox_cmap_chX.append( QtWidgets.QPushButton(self.groupBox_layerControl) )
+            self.comboBox_cmap_chX[ith].setObjectName("comboBox_cmap_ch"+str(ith))
+            if key_1d=="fl1_median (RTFDC)":
+                self.comboBox_cmap_chX[ith].setStyleSheet("background-color: "+ "green"+";")
+                self.checkBox_show_chX[ith].setChecked(True)
+            elif key_1d=="fl2_median (RTFDC)":
+                self.comboBox_cmap_chX[ith].setStyleSheet("background-color: "+ "#ff8000"+";")
+                self.checkBox_show_chX[ith].setChecked(True)
+            elif key_1d=="fl3_median (RTFDC)":
+                self.comboBox_cmap_chX[ith].setStyleSheet("background-color: "+ "red"+";")
+                self.checkBox_show_chX[ith].setChecked(True)
+                
+            #self.comboBox_cmap_chX[ith].addItems(["Red","Green","Blue"])
+            #self.comboBox_cmap_chX[ith].setCurrentIndex(ith)
+            self.comboBox_cmap_chX[ith].clicked.connect(lambda _, ith=ith: self.color_picker(idx=ith))
+            self.gridLayout_2.addWidget(self.comboBox_cmap_chX[ith], ith+1, 1, 1, 1)
+                    
+
+        self.gridLayout_3.addWidget(self.groupBox_layerControl, 0, 0, 1, 3)
+        
+        spacerItem = QtWidgets.QSpacerItem(254, 20, QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Minimum)
+        self.gridLayout_3.addItem(spacerItem, 1, 0, 1, 1)
+        self.pushButton_reset = QtWidgets.QPushButton(self.scrollAreaWidgetContents)
+        self.pushButton_reset.setObjectName("pushButton_reset")
+        self.gridLayout_3.addWidget(self.pushButton_reset, 1, 1, 1, 1)
+        self.scrollArea_layerControls.setWidget(self.scrollAreaWidgetContents)
+        self.gridLayout.addWidget(self.scrollArea_layerControls, 0, 1, 1, 1)
+
+        self.retranslateUi(Form)
+        QtCore.QMetaObject.connectSlotsByName(Form)
+
+        ################CONNECTIONS#################
+        self.pushButton_reset.clicked.connect(self.connect_1dOptions_reset)
+        
+
+    def retranslateUi(self, Form):
+        _translate = QtCore.QCoreApplication.translate
+        Form.setWindowTitle(_translate("Form", "1d options"))
+        self.groupBox_layerControl.setTitle(_translate("1d options", ""))
+        self.label_chName.setText(_translate("Form", "Feature"))
+        self.label_cmap.setText(_translate("Form", "Color"))
+        self.pushButton_reset.setText(_translate("Form", "Reset"))
 
 
+    def connect_1dOptions_reset(self):
+        for ith in range(len(self.checkBox_show_chX)):
+            if ith==0:
+                self.checkBox_show_chX[ith].setChecked(True)
+            else:
+                self.checkBox_show_chX[ith].setChecked(False)                
 
+    def color_picker(self,idx):
+        color = QtGui.QColorDialog.getColor()
+        #print(color.name())
+        if color.getRgb()==(0, 0, 0, 255):#no black!
+            return
+        else:
+            #self.pushButton_color.setBackground(color)
+            self.comboBox_cmap_chX[idx].setStyleSheet("background-color: "+ color.name()+";")
+    
 
 
 
