@@ -96,6 +96,7 @@ pip install libopencv==0.0.1
 pip install ffmpeg==1.4
 pip install tf2onnx==1.4.1
 pip install numpy==1.16.4
+pip install h5py==2.10.0
 ```
 # AIDeveloper in scientific literature  
 [1]	[M. Kräter et al., “AIDeveloper: Deep Learning Image Classification in Life Science and Beyond,” Advanced Science, Mar. 2021.](https://onlinelibrary.wiley.com/doi/10.1002/advs.202003743)  
