@@ -118,7 +118,7 @@ def hashfunction(rtdc_path):
 
 def load_rtdc(rtdc_path):
     """
-    This function load .rtdc files using dclab and takes care of catching all
+    This function load .rtdc files using h5py and takes care of catching all
     errors
     """
     try:
@@ -152,9 +152,9 @@ def calc_ram_need(crop):
     Imgs = []
     sizex,sizey = crop,crop
     for i in range(n):
-        Imgs.append(np.random.randint(low=0,high=255,size=(sizex,sizey)))
+        Imgs.append(np.random.randint(low=0,high=255,size=(sizex,sizey),dtype=np.uint8))
     Imgs = np.array(Imgs)
-    Imgs = Imgs.astype(np.uint8)
+    #Imgs = Imgs.astype(np.uint8)
     MB = Imgs.nbytes/1048576.0 #Amount of RAM for 1000 images
     MB = MB/float(n)
     return MB
@@ -213,8 +213,7 @@ def find_files(user_selected_path,paths,hashes):
         #where does a file of that name exist:
         ind = [fname_new == fname for fname_new in Fnames_available] #there could be several since they might originate from the same measurement, but differently filtered
         paths_new = list(np.array(Paths_available)[ind]) #get the corresponding paths to the files
-        #Therfore, open the files and get the hashes
-            #hash_new = [(dclab.rtdc_dataset.RTDC_HDF5(p)).hash for p in paths_new] #since reading hdf sometimes does cause error, better try and repaeat if necessary
+
         hash_new = []
         for p in paths_new:
             failed,rtdc_ds = load_rtdc(p)
@@ -535,7 +534,6 @@ def write_rtdc(fname,rtdc_datasets,X_valid,Indices,cropped=True,color_mode='Gray
                 h5obj = h5py.File(fname,'a')
                 events = h5obj.require_group("events")
                 
-                # with dclab.rtdc_dataset.write_hdf5.write(path_or_h5file=fname,meta=meta, mode="append") as h5obj:
                 # write each feature individually
                 for feat in features:
                     if feat == "contour":
@@ -1055,18 +1053,13 @@ def bin_num_doane(a):
 
 
 def bin_width_doane(a):
-    """Compute contour spacing based on Doane's formula
+    """Get a sensible bin width for a (2D) histogram, based on Doanes rule
     References
     ----------
     - `<https://en.wikipedia.org/wiki/Histogram#Number_of_bins_and_width>`_
     - `<https://stats.stackexchange.com/questions/55134/
       doanes-formula-for-histogram-binning>`_
-    Notes
     -----
-    Doane's formula is actually designed for histograms. This
-    function is kept here for backwards-compatibility reasons.
-    It is highly recommended to use :func:`bin_width_percentile`
-    instead.
     """
     bad = np.isnan(a) | np.isinf(a)
     data = a[~bad]
@@ -1076,95 +1069,101 @@ def bin_width_doane(a):
     k = 1 + np.log2(n) + np.log2(1 + np.abs(g1) / sigma_g1)
     acc = (data.max() - data.min()) / k
     return acc
-#Function copied from dclab:
-#https://github.com/ZELLMECHANIK-DRESDEN/dclab/blob/master/dclab/kde_methods.py
-def kde_histogram(events_x, events_y, xout=None, yout=None, bins=None):
+
+
+def kde_histogram(x, y, xout=None, yout=None, bins=None):
     """ Histogram-based Kernel Density Estimation
     Parameters
     ----------
-    events_x, events_y: 1D ndarray
-        The input points for kernel density estimation. Input
-        is flattened automatically.
-    xout, yout: ndarray
-        The coordinates at which the KDE should be computed.
-        If set to none, input coordinates are used.
+    x, y: 1D array
+        Input values for kernel density estimation.
+    xout, yout: 1D arrays
+        Coordinates at which the density should be determined. If set to none
+        the input values are used.
     bins: tuple (binsx, binsy)
-        The number of bins to use for the histogram.
+        The number of bins in x and y direction to construct the histogram.
     Returns
     -------
-    density: ndarray, same shape as `xout`
-        The KDE for the points in (xout, yout)
+    density: 1D array
+        The density estimatation for the points (xout, yout)
     See Also
     --------
     `numpy.histogram2d`
     `scipy.interpolate.RectBivariateSpline`
     """
-    valid_combi = ((xout is None and yout is None) or
-                   (xout is not None and yout is not None)
-                   )
-    if not valid_combi:
-        raise ValueError("Both `xout` and `yout` must be (un)set.")
+    valid_combination = ((xout==yout==None) or
+                   (xout is not None and yout is not None))
+    if not valid_combination:
+        raise ValueError("xout and yout must either be None, or provide values")
+    
+    if xout is not None and yout is not None:
+        valid_length = len(xout)==len(yout)
+        if not valid_length:
+            raise ValueError("xout and yout must have the same length")
 
-    if yout is None and yout is None:
-        xout = events_x
-        yout = events_y
+    else:#if xout==yout==None:
+        xout = x
+        yout = y
 
     if bins is None:
-        bins = (max(5, bin_num_doane(events_x)),
-                max(5, bin_num_doane(events_y)))
+        bins = (max(5, bin_num_doane(x)),max(5, bin_num_doane(y)))
 
     # Compute the histogram
-    hist2d, xedges, yedges = np.histogram2d(x=events_x,
-                                            y=events_y,
-                                            bins=bins,
-                                            normed=True)
+    hist2d, xedges, yedges = np.histogram2d(x=x,y=y,bins=bins,normed=True)
     xip = xedges[1:]-(xedges[1]-xedges[0])/2
     yip = yedges[1:]-(yedges[1]-yedges[0])/2
 
     estimator = RectBivariateSpline(x=xip, y=yip, z=hist2d)
     density = estimator.ev(xout, yout)
     density[density < 0] = 0
+    
+    density = density.reshape(xout.shape)
+    density = density-np.min(density)
+    density = density/np.max(density)
+    return density
 
-    return density.reshape(xout.shape)    
 
-
-#Function copied from dclab:
-#https://github.com/ZELLMECHANIK-DRESDEN/dclab/blob/master/dclab/kde_methods.py
-def kde_gauss(events_x, events_y, xout=None, yout=None):
+def kde_gauss(y, x, xout=None, yout=None):
     """ Gaussian Kernel Density Estimation
     Parameters
     ----------
-    events_x, events_y: 1D ndarray
-        The input points for kernel density estimation. Input
-        is flattened automatically.
-    xout, yout: ndarray
-        The coordinates at which the KDE should be computed.
-        If set to none, input coordinates are used.
+    x, y: 1D array
+        Input values for kernel density estimation.
+    xout, yout: 1D arrays
+        Coordinates at which the density is determined.
+        If set to none, input values are used.
     Returns
     -------
-    density: ndarray, same shape as `xout`
-        The KDE for the points in (xout, yout)
+    density: 1D array
+
     See Also
     --------
     `scipy.stats.gaussian_kde`
     """
-    valid_combi = ((xout is None and yout is None) or
-                   (xout is not None and yout is not None)
-                   )
-    if not valid_combi:
-        raise ValueError("Both `xout` and `yout` must be (un)set.")
+    valid_combination = ((xout==yout==None) or
+                   (xout is not None and yout is not None))
+    if not valid_combination:
+        raise ValueError("xout and yout must either be None, or provide values")
+    
+    if xout is not None and yout is not None:
+        valid_length = len(xout)==len(yout)
+        if not valid_length:
+            raise ValueError("xout and yout must have the same length")
 
-    if yout is None and yout is None:
-        xout = events_x
-        yout = events_y
+    else:#if xout==yout==None:
+        xout = x
+        yout = y
 
     try:
-        estimator = gaussian_kde([events_x.flatten(), events_y.flatten()])
+        estimator = gaussian_kde([x.flatten(), y.flatten()])
         density = estimator.evaluate([xout.flatten(), yout.flatten()])
     except np.linalg.LinAlgError:
-        # LinAlgError occurs when matrix to solve is singular (issue #117)
-        density = np.zeros(xout.shape)*np.nan
-    return density.reshape(xout.shape)
+        # Error occurs when just a single values is provided
+        density = np.empty(xout.shape)*np.nan
+    density = density.reshape(xout.shape)
+    density = density-np.min(density)
+    density = density/np.max(density)
+    return density
 
 
 
