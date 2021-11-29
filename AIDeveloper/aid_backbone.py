@@ -2418,7 +2418,8 @@ class MainWindow(QtWidgets.QMainWindow):
 
         #Sort keys_2d: "image" first; "mask" last 
         keys_2d.insert(0, keys_2d.pop(keys_2d.index("image")))
-        keys_2d.insert(len(keys_2d), keys_2d.pop(keys_2d.index("mask")))        
+        if "mask" in keys_2d:
+            keys_2d.insert(len(keys_2d), keys_2d.pop(keys_2d.index("mask")))        
         
         #Fill those feautues in the comboboxes at the scatterplot
         self.comboBox_featurex.addItems(keys_0d)
