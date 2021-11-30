@@ -1401,8 +1401,10 @@ class MainWindow(QtWidgets.QMainWindow):
         item_ui.popup_lossW = MyPopup()
         item_ui.popup_lossW_ui = aid_frontend.popup_lossweights()
         item_ui.popup_lossW_ui.setupUi(item_ui.popup_lossW) #open a popup to show the numbers of events in each class in a table
-
+        
+        SelectedFiles = [x for x in SelectedFiles if x["TrainOrValid"]=="Train"]
         indices = [SelectedFiles[i]["class"] for i in range(len(SelectedFiles))]
+
         #Initiate the table with 4 columns : this will be ["Index","Nr of cells","Clr","Name"]
         item_ui.popup_lossW_ui.tableWidget_lossW.setColumnCount(5)
         nr_ind = len(set(indices)) #each index could occur for train and valid
