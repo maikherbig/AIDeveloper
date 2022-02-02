@@ -120,7 +120,7 @@ import aid_frontend
 from partial_trainability import partial_trainability
 import aid_imports
 
-VERSION = "0.2.3" #Python 3.5.6 Version
+VERSION = "0.2.4" #Python 3.5.6 Version
 model_zoo_version = model_zoo.__version__()
 print("AIDeveloper Version: "+VERSION)
 print("model_zoo.py Version: "+model_zoo.__version__())
@@ -11362,7 +11362,7 @@ class MainWindow(QtWidgets.QMainWindow):
                     writer.save()
                     writer.close()
     
-                if export_option == "Add predictions to .rtdc file (userdef0)" or export_option==         "Add pred&scores to .rtdc file (userdef0 to 9)":           
+                if export_option == "Add predictions to .rtdc file (userdef0)" or export_option== "Add pred&scores to .rtdc file (userdef0 to 9)":           
                     #Get initial dataset
                     failed,rtdc_ds = aid_bin.load_rtdc(rtdc_path)
                     if failed:
@@ -11424,11 +11424,16 @@ class MainWindow(QtWidgets.QMainWindow):
                     shutil.copy(rtdc_path, savename) #copy original file
                     #append to hdf5 file
                     with h5py.File(savename, mode="a") as h5:
+                        if "userdef0" in h5["events"]:
+                            del h5["events/userdef0"]
                         h5["events/userdef0"] = prediction_fillnan
+
                         if export_option == "Add pred&scores to .rtdc file (userdef0 to 9)":
                             #add the scores to userdef1...9
                             userdef_ind = 1
                             for class_ in range(classes):
+                                if "userdef"+str(userdef_ind) in h5["events"]:
+                                    del h5["events/userdef"+str(userdef_ind)]
                                 scores_i = scores_fillnan[:,class_]
                                 h5["events/userdef"+str(userdef_ind)] = scores_i
                                 userdef_ind += 1
