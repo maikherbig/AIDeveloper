@@ -4,17 +4,16 @@ Created on Fri Dec 14 12:36:16 2018
 
 @author: maikh
 """
-from keras.models import Sequential,Model
-from keras.layers import Add,Concatenate,Input,Dense,Dropout,Flatten,Activation,Conv2D,MaxPooling2D,BatchNormalization,GlobalAveragePooling2D,GlobalMaxPooling2D,concatenate
-from keras.layers.merge import add
-from keras import regularizers
-from keras.engine.topology import get_source_inputs
+from tensorflow.keras.models import Sequential,Model
+from tensorflow.keras.layers import add,Add,Concatenate,Input,Dense,Dropout,Flatten,Activation,Conv2D,MaxPooling2D,BatchNormalization,GlobalAveragePooling2D,GlobalMaxPooling2D,concatenate
+from tensorflow.keras import regularizers
+from tensorflow.keras.utils import get_source_inputs
 import keras_applications
-import keras
+from tensorflow import keras
 import numpy as np
 
 
-version = "0.1.2_dev3" #1.) Use any string you like to specify/define your version of the model_zoo
+version = "0.1.4" #1.) Use any string you like to specify/define your version of the model_zoo
 def __version__():
     #print(version)
     return version
@@ -382,11 +381,11 @@ def LeNet5(in_dim,channels,out_dim):
     model = Sequential()
     
     #model.add(Conv2D(6,5,5,input_shape=(1,in_dim, in_dim))) #Theano
-    model.add(Conv2D(6,5,5,input_shape=(in_dim, in_dim,channels),name="inputTensor")) #TensorFlow    
+    model.add(Conv2D(6,kernel_size=(5,5),input_shape=(in_dim, in_dim,channels),name="inputTensor")) #TensorFlow    
     model.add(Activation('relu'))
     model.add(MaxPooling2D(pool_size=(2, 2)))
     
-    model.add(Conv2D(16, 5,5))
+    model.add(Conv2D(16, kernel_size=(5,5)))
     model.add(Activation('relu'))
     model.add(MaxPooling2D(pool_size=(2, 2)))
 
@@ -407,11 +406,11 @@ def LeNet5_do(in_dim,channels,out_dim):
     model = Sequential()
     
     #model.add(Conv2D(6,5,5,input_shape=(1,in_dim, in_dim))) #Theano
-    model.add(Conv2D(6,5,5,input_shape=(in_dim, in_dim,channels),name="inputTensor")) #TensorFlow    
+    model.add(Conv2D(6,kernel_size=(5,5),input_shape=(in_dim, in_dim,channels),name="inputTensor")) #TensorFlow    
     model.add(Activation('relu'))
     model.add(MaxPooling2D(pool_size=(2, 2)))
     
-    model.add(Conv2D(16, 5,5))
+    model.add(Conv2D(16, kernel_size=(5,5)))
     model.add(Activation('relu'))
     model.add(Dropout(0.2))
     model.add(MaxPooling2D(pool_size=(2, 2)))
@@ -435,12 +434,12 @@ def LeNet5_bn_do(in_dim,channels,out_dim):
     model = Sequential()
     
     #model.add(Conv2D(6,5,5,input_shape=(1,in_dim, in_dim))) #Theano
-    model.add(Conv2D(6,5,5,input_shape=(in_dim, in_dim,channels),name="inputTensor")) #TensorFlow    
+    model.add(Conv2D(6,kernel_size=(5,5),input_shape=(in_dim, in_dim,channels),name="inputTensor")) #TensorFlow    
     model.add(Activation('relu'))
     model.add(BatchNormalization()) #add axis=1 for thenao and -1(default) for Tensorflow
     model.add(MaxPooling2D(pool_size=(2, 2)))
     
-    model.add(Conv2D(16, 5,5))
+    model.add(Conv2D(16, kernel_size=(5,5)))
     model.add(Activation('relu'))
     model.add(BatchNormalization())
     model.add(Dropout(0.2))
@@ -640,22 +639,22 @@ def CNN_4Conv2Dense_Optim(in_dim,channels,out_dim):
     p = 0.4
 
     model = Sequential()
-    model.add(Conv2D(c1,3,3,input_shape=(in_dim, in_dim,channels),name="inputTensor")) #TensorFlow    
+    model.add(Conv2D(c1,kernel_size=(3,3),input_shape=(in_dim, in_dim,channels),name="inputTensor")) #TensorFlow    
     model.add(BatchNormalization())
     model.add(Activation('relu'))
     model.add(Dropout(p))
 
-    model.add(Conv2D(c1,3,3))
+    model.add(Conv2D(c1,kernel_size=(3,3)))
     model.add(BatchNormalization())
     model.add(Activation('relu'))
     model.add(Dropout(p))
     
-    model.add(Conv2D(c2,5,5))
+    model.add(Conv2D(c2,kernel_size=(5,5)))
     model.add(BatchNormalization())
     model.add(Activation('relu'))
     model.add(Dropout(p))
 
-    model.add(Conv2D(c2,7,7))
+    model.add(Conv2D(c2,kernel_size=(7,7)))
     model.add(BatchNormalization())
     model.add(Activation('relu'))
     model.add(MaxPooling2D())
@@ -746,11 +745,11 @@ def TinyCNN(in_dim,channels,out_dim):
     model = Sequential()
     
     #model.add(Conv2D(6,5,5,input_shape=(1,in_dim, in_dim))) #Theano
-    model.add(Conv2D(3,3,3,input_shape=(in_dim, in_dim,channels),name="inputTensor")) #TensorFlow    
+    model.add(Conv2D(3,kernel_size=(3,3),input_shape=(in_dim, in_dim,channels),name="inputTensor")) #TensorFlow    
     model.add(Activation('relu'))
     model.add(MaxPooling2D(pool_size=(2, 2)))
     
-    model.add(Conv2D(3,3,3))
+    model.add(Conv2D(3,kernel_size=(3,3)))
     model.add(Activation('relu'))
     model.add(MaxPooling2D(pool_size=(2, 2)))
 
@@ -770,20 +769,20 @@ def TinyCNN(in_dim,channels,out_dim):
 def VGG_small_1(in_dim,channels,out_dim):
     model = Sequential()
     
-    model.add(Conv2D(32,3,3,input_shape=(in_dim, in_dim,channels),name="inputTensor")) #TensorFlow    
+    model.add(Conv2D(32,kernel_size=(3,3),input_shape=(in_dim, in_dim,channels),name="inputTensor")) #TensorFlow    
     model.add(Activation('relu'))
     model.add(BatchNormalization())
 
-    model.add(Conv2D(32, 3,3))
+    model.add(Conv2D(32, kernel_size=(3,3)))
     model.add(Activation('relu'))
     model.add(MaxPooling2D(pool_size=(2, 2)))
     model.add(BatchNormalization())
 
-    model.add(Conv2D(64, 3,3))
+    model.add(Conv2D(64, kernel_size=(3,3)))
     model.add(Activation('relu'))
     model.add(BatchNormalization())
 
-    model.add(Conv2D(64, 3,3))
+    model.add(Conv2D(64, kernel_size=(3,3)))
     model.add(Activation('relu'))
     model.add(MaxPooling2D(pool_size=(2, 2)))
     
@@ -952,16 +951,16 @@ def nitta_et_al_6layer(in_dim1,in_dim2,channels,out_dim):
     """
     model = Sequential()
     
-    model.add(Conv2D(32,3,3,input_shape=(in_dim1, in_dim2,channels),name="inputTensor")) #TensorFlow    
+    model.add(Conv2D(32,kernel_size=(3,3),input_shape=(in_dim1, in_dim2,channels), padding='valid',name="inputTensor")) #TensorFlow    
     model.add(Activation('relu'))
-    model.add(Conv2D(32, 3,3))
+    model.add(Conv2D(32, kernel_size=(3,3)))
     model.add(Activation('relu'))
     model.add(MaxPooling2D(pool_size=(2, 2)))
     model.add(Dropout(0.25))
 
-    model.add(Conv2D(64, 3,3))
+    model.add(Conv2D(64, kernel_size=(3,3)))
     model.add(Activation('relu'))
-    model.add(Conv2D(64, 3,3))
+    model.add(Conv2D(64, kernel_size=(3,3)))
     model.add(Activation('relu'))
     model.add(MaxPooling2D(pool_size=(2, 2)))
     model.add(Dropout(0.25))
@@ -975,7 +974,6 @@ def nitta_et_al_6layer(in_dim1,in_dim2,channels,out_dim):
     model.add(Activation('softmax',name="outputTensor"))
     return model
 
-
 def nitta_et_al_8layer(in_dim1,in_dim2,channels,out_dim):
     """
     The settins of this model are not shown in the paper
@@ -985,23 +983,23 @@ def nitta_et_al_8layer(in_dim1,in_dim2,channels,out_dim):
     """
     model = Sequential()
     
-    model.add(Conv2D(32,3,3,input_shape=(in_dim1, in_dim2,channels),name="inputTensor")) #TensorFlow    
+    model.add(Conv2D(32,kernel_size=(3,3),input_shape=(in_dim1, in_dim2,channels),name="inputTensor")) #TensorFlow    
     model.add(Activation('relu'))
-    model.add(Conv2D(32, 3,3))
-    model.add(Activation('relu'))
-    model.add(MaxPooling2D(pool_size=(2, 2)))
-    model.add(Dropout(0.25))
-
-    model.add(Conv2D(64, 3,3))
-    model.add(Activation('relu'))
-    model.add(Conv2D(64, 3,3))
+    model.add(Conv2D(32, kernel_size=(3,3)))
     model.add(Activation('relu'))
     model.add(MaxPooling2D(pool_size=(2, 2)))
     model.add(Dropout(0.25))
 
-    model.add(Conv2D(64, 3,3))
+    model.add(Conv2D(64, kernel_size=(3,3)))
     model.add(Activation('relu'))
-    model.add(Conv2D(64, 3,3))
+    model.add(Conv2D(64, kernel_size=(3,3)))
+    model.add(Activation('relu'))
+    model.add(MaxPooling2D(pool_size=(2, 2)))
+    model.add(Dropout(0.25))
+
+    model.add(Conv2D(64, kernel_size=(3,3)))
+    model.add(Activation('relu'))
+    model.add(Conv2D(64, kernel_size=(3,3)))
     model.add(Activation('relu'))
     model.add(MaxPooling2D(pool_size=(2, 2)))
     model.add(Dropout(0.25))
@@ -1022,16 +1020,16 @@ def Nitta_et_al_6layer_linact(in_dim1,in_dim2,channels,out_dim):
     """
     model = Sequential()
     
-    model.add(Conv2D(32,3,3,input_shape=(in_dim1, in_dim2,channels),name="inputTensor")) #TensorFlow    
+    model.add(Conv2D(32,kernel_size=(3,3),input_shape=(in_dim1, in_dim2,channels),name="inputTensor")) #TensorFlow    
     model.add(Activation('relu'))
     model.add(Conv2D(32, 3,3))
     model.add(Activation('relu'))
     model.add(MaxPooling2D(pool_size=(2, 2)))
     model.add(Dropout(0.25))
 
-    model.add(Conv2D(64, 3,3))
+    model.add(Conv2D(64, kernel_size=(3,3)))
     model.add(Activation('relu'))
-    model.add(Conv2D(64, 3,3))
+    model.add(Conv2D(64, kernel_size=(3,3)))
     model.add(Activation('relu'))
     model.add(MaxPooling2D(pool_size=(2, 2)))
     model.add(Dropout(0.25))
@@ -1051,16 +1049,16 @@ def Nitta_et_al_6layer_reluact(in_dim1,in_dim2,channels,out_dim):
     """
     model = Sequential()
     
-    model.add(Conv2D(32,3,3,input_shape=(in_dim1, in_dim2,channels),name="inputTensor")) #TensorFlow    
+    model.add(Conv2D(32,kernel_size=(3,3),input_shape=(in_dim1, in_dim2,channels),name="inputTensor")) #TensorFlow    
     model.add(Activation('relu'))
-    model.add(Conv2D(32, 3,3))
+    model.add(Conv2D(32, kernel_size=(3,3)))
     model.add(Activation('relu'))
     model.add(MaxPooling2D(pool_size=(2, 2)))
     model.add(Dropout(0.25))
 
-    model.add(Conv2D(64, 3,3))
+    model.add(Conv2D(64, kernel_size=(3,3)))
     model.add(Activation('relu'))
-    model.add(Conv2D(64, 3,3))
+    model.add(Conv2D(64, kernel_size=(3,3)))
     model.add(Activation('relu'))
     model.add(MaxPooling2D(pool_size=(2, 2)))
     model.add(Dropout(0.25))
@@ -1225,10 +1223,10 @@ def pretrained_squeezenet(in_dim1,in_dim2,channels,out_dim):
     It is recommended to use the expert mode in AIDeveloper to only train the dense layers
     """
     
-    pretrained_model  = SqueezeNet(weights='imagenet',input_shape=(in_dim1,in_dim2,channels),include_top=False)
+    pretrained_model = SqueezeNet(weights='imagenet',input_shape=(in_dim1,in_dim2,channels),include_top=False)
         
     layers = pretrained_model.layers
-    layers[0].name = "inputTensor"
+    layers[0]._name = "inputTensor"
     #The output of the pretrained network are the inputs to our Dense layers
     x = Flatten()(pretrained_model.output)
     x = Dense(512, activation='relu')(x)
@@ -1239,7 +1237,7 @@ def pretrained_squeezenet(in_dim1,in_dim2,channels,out_dim):
     x = Dense(out_dim)(x)
     predictions = Activation('softmax',name="outputTensor")(x)
     #combine pretrained models and our dense layers
-    model = Model(input = pretrained_model.input, output = predictions) 
+    model = Model(inputs = pretrained_model.input, outputs = predictions) 
     return model
 
 
@@ -1251,12 +1249,12 @@ def pretrained_xception(in_dim1,in_dim2,channels,out_dim):
     It is recommended to use the expert model in AIDeveloper to only train the dense layers
     """
     try:
-        pretrained_model  = keras_applications.xception.Xception(weights='imagenet',input_shape=(in_dim1,in_dim2,channels),include_top=False,backend = keras.backend, layers = keras.layers, models = keras.models, utils = keras.utils)
+        pretrained_model = keras_applications.xception.Xception(weights='imagenet',input_shape=(in_dim1,in_dim2,channels),include_top=False,backend = keras.backend, layers = keras.layers, models = keras.models, utils = keras.utils)
     except:
-        pretrained_model  = keras.applications.xception.Xception(weights='imagenet',input_shape=(in_dim1,in_dim2,channels),include_top=False)
+        pretrained_model = keras.applications.xception.Xception(weights='imagenet',input_shape=(in_dim1,in_dim2,channels),include_top=False)
         
     layers = pretrained_model.layers
-    layers[0].name = "inputTensor"
+    layers[0]._name = "inputTensor"
     #The output of the pretrained network are the inputs to our Dense layers
     x = Flatten()(pretrained_model.output)
     x = Dense(2048, activation='relu')(x)
@@ -1267,7 +1265,7 @@ def pretrained_xception(in_dim1,in_dim2,channels,out_dim):
     x = Dense(out_dim)(x)
     predictions = Activation('softmax',name="outputTensor")(x)
     #combine pretrained models and our dense layers
-    model = Model(input = pretrained_model.input, output = predictions) 
+    model = Model(inputs = pretrained_model.input, outputs = predictions) 
     return model
 
 
@@ -1279,12 +1277,12 @@ def pretrained_vgg16(in_dim1,in_dim2,channels,out_dim):
     It is recommended to use the expert model in AIDeveloper to only train the dense layers
     """
     try:
-        pretrained_model  = keras_applications.vgg16.VGG16(weights='imagenet',input_shape=(in_dim1,in_dim2,channels),include_top=False,backend = keras.backend, layers = keras.layers, models = keras.models, utils = keras.utils)
+        pretrained_model = keras_applications.vgg16.VGG16(weights='imagenet',input_shape=(in_dim1,in_dim2,channels),include_top=False,backend = keras.backend, layers = keras.layers, models = keras.models, utils = keras.utils)
     except:
-        pretrained_model  = keras.applications.vgg16.VGG16(weights='imagenet',input_shape=(in_dim1,in_dim2,channels),include_top=False)
+        pretrained_model = keras.applications.vgg16.VGG16(weights='imagenet',input_shape=(in_dim1,in_dim2,channels),include_top=False)
         
     layers = pretrained_model.layers
-    layers[0].name = "inputTensor"
+    layers[0]._name = "inputTensor"
     #The output of the pretrained network are the inputs to our Dense layers
     x = Flatten()(pretrained_model.output)
     x = Dense(2048, activation='relu')(x)
@@ -1295,7 +1293,7 @@ def pretrained_vgg16(in_dim1,in_dim2,channels,out_dim):
     x = Dense(out_dim)(x)
     predictions = Activation('softmax',name="outputTensor")(x)
     #combine pretrained models and our dense layers
-    model = Model(input = pretrained_model.input, output = predictions) 
+    model = Model(inputs = pretrained_model.input, outputs = predictions) 
     return model
 
 
@@ -1307,12 +1305,12 @@ def pretrained_vgg19(in_dim1,in_dim2,channels,out_dim):
     It is recommended to use the expert model in AIDeveloper to only train the dense layers
     """
     try:
-        pretrained_model  = keras_applications.vgg19.VGG19(weights='imagenet',input_shape=(in_dim1,in_dim2,channels),include_top=False,backend = keras.backend, layers = keras.layers, models = keras.models, utils = keras.utils)
+        pretrained_model = keras_applications.vgg19.VGG19(weights='imagenet',input_shape=(in_dim1,in_dim2,channels),include_top=False,backend = keras.backend, layers = keras.layers, models = keras.models, utils = keras.utils)
     except:
-        pretrained_model  = keras.applications.vgg19.VGG19(weights='imagenet',input_shape=(in_dim1,in_dim2,channels),include_top=False)
+        pretrained_model = keras.applications.vgg19.VGG19(weights='imagenet',input_shape=(in_dim1,in_dim2,channels),include_top=False)
 
     layers = pretrained_model.layers
-    layers[0].name = "inputTensor"
+    layers[0]._name = "inputTensor"
     #The output of the pretrained network are the inputs to our Dense layers
     x = Flatten()(pretrained_model.output)
     x = Dense(2048, activation='relu')(x)
@@ -1323,7 +1321,7 @@ def pretrained_vgg19(in_dim1,in_dim2,channels,out_dim):
     x = Dense(out_dim)(x)
     predictions = Activation('softmax',name="outputTensor")(x)
     #combine pretrained models and our dense layers
-    model = Model(input = pretrained_model.input, output = predictions) 
+    model = Model(inputs = pretrained_model.input, outputs = predictions) 
     return model
 
 
@@ -1335,12 +1333,12 @@ def pretrained_inception_v3(in_dim1,in_dim2,channels,out_dim):
     It is recommended to use the expert model in AIDeveloper to only train the dense layers
     """
     try:
-        pretrained_model  = keras_applications.inception_v3.InceptionV3(weights='imagenet',input_shape=(in_dim1,in_dim2,channels),include_top=False,backend = keras.backend, layers = keras.layers, models = keras.models, utils = keras.utils)
+        pretrained_model = keras_applications.inception_v3.InceptionV3(weights='imagenet',input_shape=(in_dim1,in_dim2,channels),include_top=False,backend = keras.backend, layers = keras.layers, models = keras.models, utils = keras.utils)
     except:
-        pretrained_model  = keras.applications.inception_v3.InceptionV3(weights='imagenet',input_shape=(in_dim1,in_dim2,channels),include_top=False)
+        pretrained_model = keras.applications.inception_v3.InceptionV3(weights='imagenet',input_shape=(in_dim1,in_dim2,channels),include_top=False)
 
     layers = pretrained_model.layers
-    layers[0].name = "inputTensor"
+    layers[0]._name = "inputTensor"
     #The output of the pretrained network are the inputs to our Dense layers
     x = GlobalAveragePooling2D()(pretrained_model.output)
     x = Dense(2048, activation='relu')(x)
@@ -1351,7 +1349,7 @@ def pretrained_inception_v3(in_dim1,in_dim2,channels,out_dim):
     x = Dense(out_dim)(x)
     predictions = Activation('softmax',name="outputTensor")(x)
     #combine pretrained models and our dense layers
-    model = Model(input = pretrained_model.input, output = predictions) 
+    model = Model(inputs = pretrained_model.input, outputs = predictions) 
     return model
 
 
@@ -1363,12 +1361,12 @@ def pretrained_mobilenet(in_dim1,in_dim2,channels,out_dim):
     It is recommended to use the expert model in AIDeveloper to only train the dense layers
     """
     try:
-        pretrained_model  = keras_applications.mobilenet.MobileNet(weights='imagenet',input_shape=(in_dim1,in_dim2,channels),include_top=False,backend = keras.backend, layers = keras.layers, models = keras.models, utils = keras.utils)
+        pretrained_model = keras_applications.mobilenet.MobileNet(weights='imagenet',input_shape=(in_dim1,in_dim2,channels),include_top=False,backend = keras.backend, layers = keras.layers, models = keras.models, utils = keras.utils)
     except:
-        pretrained_model  = keras.applications.mobilenet.MobileNet(weights='imagenet',input_shape=(in_dim1,in_dim2,channels),include_top=False)
+        pretrained_model = keras.applications.mobilenet.MobileNet(weights='imagenet',input_shape=(in_dim1,in_dim2,channels),include_top=False)
 
     layers = pretrained_model.layers
-    layers[0].name = "inputTensor"
+    layers[0]._name = "inputTensor"
     #The output of the pretrained network are the inputs to our Dense layers
     x = Flatten()(pretrained_model.output)
     x = Dense(2048, activation='relu')(x)
@@ -1379,7 +1377,7 @@ def pretrained_mobilenet(in_dim1,in_dim2,channels,out_dim):
     x = Dense(out_dim)(x)
     predictions = Activation('softmax',name="outputTensor")(x)
     #combine pretrained models and our dense layers
-    model = Model(input = pretrained_model.input, output = predictions) 
+    model = Model(inputs = pretrained_model.input, outputs = predictions) 
     return model
 
 
@@ -1391,12 +1389,12 @@ def pretrained_densenet(in_dim1,in_dim2,channels,out_dim):
     It is recommended to use the expert model in AIDeveloper to only train the dense layers
     """
     try:
-        pretrained_model  = keras_applications.densenet.DenseNet121(weights='imagenet',input_shape=(in_dim1,in_dim2,channels),include_top=False,backend = keras.backend, layers = keras.layers, models = keras.models, utils = keras.utils)
+        pretrained_model = keras_applications.densenet.DenseNet121(weights='imagenet',input_shape=(in_dim1,in_dim2,channels),include_top=False,backend = keras.backend, layers = keras.layers, models = keras.models, utils = keras.utils)
     except:
-        pretrained_model  = keras.applications.densenet.DenseNet121(weights='imagenet',input_shape=(in_dim1,in_dim2,channels),include_top=False)
+        pretrained_model = keras.applications.densenet.DenseNet121(weights='imagenet',input_shape=(in_dim1,in_dim2,channels),include_top=False)
 
     layers = pretrained_model.layers
-    layers[0].name = "inputTensor"
+    layers[0]._name = "inputTensor"
     #The output of the pretrained network are the inputs to our Dense layers
     x = Flatten()(pretrained_model.output)
     x = Dense(2048, activation='relu')(x)
@@ -1407,7 +1405,7 @@ def pretrained_densenet(in_dim1,in_dim2,channels,out_dim):
     x = Dense(out_dim)(x)
     predictions = Activation('softmax',name="outputTensor")(x)
     #combine pretrained models and our dense layers
-    model = Model(input = pretrained_model.input, output = predictions) 
+    model = Model(inputs = pretrained_model.input, outputs = predictions) 
     return model
 
 def pretrained_nasnetlarge(in_dim1,in_dim2,channels,out_dim):
@@ -1418,12 +1416,12 @@ def pretrained_nasnetlarge(in_dim1,in_dim2,channels,out_dim):
     It is recommended to use the expert model in AIDeveloper to only train the dense layers
     """
     try:
-        pretrained_model  = keras_applications.nasnet.NASNetLarge(weights='imagenet',input_shape=(in_dim1,in_dim2,channels),include_top=False,backend = keras.backend, layers = keras.layers, models = keras.models, utils = keras.utils)
+        pretrained_model = keras_applications.nasnet.NASNetLarge(weights='imagenet',input_shape=(in_dim1,in_dim2,channels),include_top=False,backend = keras.backend, layers = keras.layers, models = keras.models, utils = keras.utils)
     except:
-        pretrained_model  = keras.applications.nasnet.NASNetLarge(weights='imagenet',input_shape=(in_dim1,in_dim2,channels),include_top=False)
+        pretrained_model = keras.applications.nasnet.NASNetLarge(weights='imagenet',input_shape=(in_dim1,in_dim2,channels),include_top=False)
         
     layers = pretrained_model.layers
-    layers[0].name = "inputTensor"
+    layers[0]._name = "inputTensor"
     #The output of the pretrained network are the inputs to our Dense layers
     x = Flatten()(pretrained_model.output)
     x = Dense(2048, activation='relu')(x)
@@ -1434,7 +1432,7 @@ def pretrained_nasnetlarge(in_dim1,in_dim2,channels,out_dim):
     x = Dense(out_dim)(x)
     predictions = Activation('softmax',name="outputTensor")(x)
     #combine pretrained models and our dense layers
-    model = Model(input = pretrained_model.input, output = predictions) 
+    model = Model(inputs = pretrained_model.input, outputs = predictions) 
     return model
 
 
@@ -1446,12 +1444,12 @@ def pretrained_nasnetmobile(in_dim1,in_dim2,channels,out_dim):
     It is recommended to use the expert model in AIDeveloper to only train the dense layers
     """
     try:
-        pretrained_model  = keras_applications.nasnet.NASNetMobile(weights='imagenet',input_shape=(in_dim1,in_dim2,channels),include_top=False,backend = keras.backend, layers = keras.layers, models = keras.models, utils = keras.utils)
+        pretrained_model = keras_applications.nasnet.NASNetMobile(weights='imagenet',input_shape=(in_dim1,in_dim2,channels),include_top=False,backend = keras.backend, layers = keras.layers, models = keras.models, utils = keras.utils)
     except:
-        pretrained_model  = keras.applications.nasnet.NASNetMobile(weights='imagenet',input_shape=(in_dim1,in_dim2,channels),include_top=False)
+        pretrained_model = keras.applications.nasnet.NASNetMobile(weights='imagenet',input_shape=(in_dim1,in_dim2,channels),include_top=False)
 
     layers = pretrained_model.layers
-    layers[0].name = "inputTensor"
+    layers[0]._name = "inputTensor"
     #The output of the pretrained network are the inputs to our Dense layers
     x = Flatten()(pretrained_model.output)
     x = Dense(2048, activation='relu')(x)
@@ -1462,7 +1460,7 @@ def pretrained_nasnetmobile(in_dim1,in_dim2,channels,out_dim):
     x = Dense(out_dim)(x)
     predictions = Activation('softmax',name="outputTensor")(x)
     #combine pretrained models and our dense layers
-    model = Model(input = pretrained_model.input, output = predictions) 
+    model = Model(inputs = pretrained_model.input, outputs = predictions) 
     return model
 
 
@@ -1474,12 +1472,12 @@ def pretrained_mobilenet_v2(in_dim1,in_dim2,channels,out_dim):
     It is recommended to use the expert model in AIDeveloper to only train the dense layers
     """
     try:
-        pretrained_model  = keras_applications.mobilenet_v2.MobileNetV2(weights='imagenet',input_shape=(in_dim1,in_dim2,channels),include_top=False,backend = keras.backend, layers = keras.layers, models = keras.models, utils = keras.utils)
+        pretrained_model = keras_applications.mobilenet_v2.MobileNetV2(weights='imagenet',input_shape=(in_dim1,in_dim2,channels),include_top=False,backend = keras.backend, layers = keras.layers, models = keras.models, utils = keras.utils)
     except:
-        pretrained_model  = keras.applications.mobilenet_v2.MobileNetV2(weights='imagenet',input_shape=(in_dim1,in_dim2,channels),include_top=False)
+        pretrained_model = keras.applications.mobilenet_v2.MobileNetV2(weights='imagenet',input_shape=(in_dim1,in_dim2,channels),include_top=False)
 
     layers = pretrained_model.layers
-    layers[0].name = "inputTensor"
+    layers[0]._name = "inputTensor"
     #The output of the pretrained network are the inputs to our Dense layers
     x = Flatten()(pretrained_model.output)
     x = Dense(2048, activation='relu')(x)
@@ -1490,7 +1488,7 @@ def pretrained_mobilenet_v2(in_dim1,in_dim2,channels,out_dim):
     x = Dense(out_dim)(x)
     predictions = Activation('softmax',name="outputTensor")(x)
     #combine pretrained models and our dense layers
-    model = Model(input = pretrained_model.input, output = predictions) 
+    model = Model(inputs = pretrained_model.input, outputs = predictions) 
     return model
 
 
@@ -1502,12 +1500,12 @@ def pretrained_resnet50(in_dim1,in_dim2,channels,out_dim):
     It is recommended to use the expert model in AIDeveloper to only train the dense layers
     """
     try:
-        pretrained_model  = keras_applications.resnet.ResNet50(weights='imagenet',input_shape=(in_dim1,in_dim2,channels),include_top=False,backend = keras.backend, layers = keras.layers, models = keras.models, utils = keras.utils)
+        pretrained_model = keras_applications.resnet.ResNet50(weights='imagenet',input_shape=(in_dim1,in_dim2,channels),include_top=False,backend = keras.backend, layers = keras.layers, models = keras.models, utils = keras.utils)
     except:
-        pretrained_model  = keras.applications.resnet.ResNet50(weights='imagenet',input_shape=(in_dim1,in_dim2,channels),include_top=False)
+        pretrained_model = keras.applications.resnet.ResNet50(weights='imagenet',input_shape=(in_dim1,in_dim2,channels),include_top=False)
 
     layers = pretrained_model.layers
-    layers[0].name = "inputTensor"
+    layers[0]._name = "inputTensor"
     #The output of the pretrained network are the inputs to our Dense layers
     x = Flatten()(pretrained_model.output)
     x = Dense(2048, activation='relu')(x)
@@ -1518,7 +1516,7 @@ def pretrained_resnet50(in_dim1,in_dim2,channels,out_dim):
     x = Dense(out_dim)(x)
     predictions = Activation('softmax',name="outputTensor")(x)
     #combine pretrained models and our dense layers
-    model = Model(input = pretrained_model.input, output = predictions) 
+    model = Model(inputs = pretrained_model.input, outputs = predictions) 
     return model
 
 
@@ -1530,12 +1528,12 @@ def pretrained_resnet101(in_dim1,in_dim2,channels,out_dim):
     It is recommended to use the expert model in AIDeveloper to only train the dense layers
     """
     try:
-        pretrained_model  = keras_applications.resnet.ResNet101(weights='imagenet',input_shape=(in_dim1,in_dim2,channels),include_top=False,backend = keras.backend, layers = keras.layers, models = keras.models, utils = keras.utils)
+        pretrained_model = keras_applications.resnet.ResNet101(weights='imagenet',input_shape=(in_dim1,in_dim2,channels),include_top=False,backend = keras.backend, layers = keras.layers, models = keras.models, utils = keras.utils)
     except:
-        pretrained_model  = keras.applications.resnet.ResNet101(weights='imagenet',input_shape=(in_dim1,in_dim2,channels),include_top=False)
+        pretrained_model = keras.applications.resnet.ResNet101(weights='imagenet',input_shape=(in_dim1,in_dim2,channels),include_top=False)
     
     layers = pretrained_model.layers
-    layers[0].name = "inputTensor"
+    layers[0]._name = "inputTensor"
     #The output of the pretrained network are the inputs to our Dense layers
     x = Flatten()(pretrained_model.output)
     x = Dense(2048, activation='relu')(x)
@@ -1546,7 +1544,7 @@ def pretrained_resnet101(in_dim1,in_dim2,channels,out_dim):
     x = Dense(out_dim)(x)
     predictions = Activation('softmax',name="outputTensor")(x)
     #combine pretrained models and our dense layers
-    model = Model(input = pretrained_model.input, output = predictions) 
+    model = Model(inputs = pretrained_model.input, outputs = predictions) 
     return model
 
 
@@ -1558,12 +1556,12 @@ def pretrained_resnet152(in_dim1,in_dim2,channels,out_dim):
     It is recommended to use the expert model in AIDeveloper to only train the dense layers
     """
     try:
-        pretrained_model  = keras_applications.resnet.ResNet152(weights='imagenet',input_shape=(in_dim1,in_dim2,channels),include_top=False,backend = keras.backend, layers = keras.layers, models = keras.models, utils = keras.utils)
+        pretrained_model = keras_applications.resnet.ResNet152(weights='imagenet',input_shape=(in_dim1,in_dim2,channels),include_top=False,backend = keras.backend, layers = keras.layers, models = keras.models, utils = keras.utils)
     except:
-        pretrained_model  = keras.applications.resnet.ResNet152(weights='imagenet',input_shape=(in_dim1,in_dim2,channels),include_top=False)
+        pretrained_model = keras.applications.resnet.ResNet152(weights='imagenet',input_shape=(in_dim1,in_dim2,channels),include_top=False)
     
     layers = pretrained_model.layers
-    layers[0].name = "inputTensor"
+    layers[0]._name = "inputTensor"
     #The output of the pretrained network are the inputs to our Dense layers
     x = Flatten()(pretrained_model.output)
     x = Dense(2048, activation='relu')(x)
@@ -1574,7 +1572,7 @@ def pretrained_resnet152(in_dim1,in_dim2,channels,out_dim):
     x = Dense(out_dim)(x)
     predictions = Activation('softmax',name="outputTensor")(x)
     #combine pretrained models and our dense layers
-    model = Model(input = pretrained_model.input, output = predictions) 
+    model = Model(inputs = pretrained_model.input, outputs = predictions) 
     return model
 
 
@@ -1586,12 +1584,12 @@ def pretrained_resnet50_v2(in_dim1,in_dim2,channels,out_dim):
     It is recommended to use the expert model in AIDeveloper to only train the dense layers
     """
     try:
-        pretrained_model  = keras_applications.resnet.ResNet50V2(weights='imagenet',input_shape=(in_dim1,in_dim2,channels),include_top=False,backend = keras.backend, layers = keras.layers, models = keras.models, utils = keras.utils)
+        pretrained_model = keras_applications.resnet.ResNet50V2(weights='imagenet',input_shape=(in_dim1,in_dim2,channels),include_top=False,backend = keras.backend, layers = keras.layers, models = keras.models, utils = keras.utils)
     except:
-        pretrained_model  = keras_applications.resnet_v2.ResNet50V2(weights='imagenet',input_shape=(in_dim1,in_dim2,channels),include_top=False,backend = keras.backend, layers = keras.layers, models = keras.models, utils = keras.utils)
+        pretrained_model = keras_applications.resnet_v2.ResNet50V2(weights='imagenet',input_shape=(in_dim1,in_dim2,channels),include_top=False,backend = keras.backend, layers = keras.layers, models = keras.models, utils = keras.utils)
 
     layers = pretrained_model.layers
-    layers[0].name = "inputTensor"
+    layers[0]._name = "inputTensor"
     #The output of the pretrained network are the inputs to our Dense layers
     x = Flatten()(pretrained_model.output)
     x = Dense(2048, activation='relu')(x)
@@ -1602,7 +1600,7 @@ def pretrained_resnet50_v2(in_dim1,in_dim2,channels,out_dim):
     x = Dense(out_dim)(x)
     predictions = Activation('softmax',name="outputTensor")(x)
     #combine pretrained models and our dense layers
-    model = Model(input = pretrained_model.input, output = predictions) 
+    model = Model(inputs = pretrained_model.input, outputs = predictions) 
     return model
 
 
@@ -1614,12 +1612,12 @@ def pretrained_resnet101_v2(in_dim1,in_dim2,channels,out_dim):
     It is recommended to use the expert model in AIDeveloper to only train the dense layers
     """
     try:
-        pretrained_model  = keras_applications.resnet.ResNet101V2(weights='imagenet',input_shape=(in_dim1,in_dim2,channels),include_top=False,backend = keras.backend, layers = keras.layers, models = keras.models, utils = keras.utils)
+        pretrained_model = keras_applications.resnet.ResNet101V2(weights='imagenet',input_shape=(in_dim1,in_dim2,channels),include_top=False,backend = keras.backend, layers = keras.layers, models = keras.models, utils = keras.utils)
     except:
-        pretrained_model  = keras_applications.resnet_v2.ResNet101V2(weights='imagenet',input_shape=(in_dim1,in_dim2,channels),include_top=False,backend = keras.backend, layers = keras.layers, models = keras.models, utils = keras.utils)
+        pretrained_model = keras_applications.resnet_v2.ResNet101V2(weights='imagenet',input_shape=(in_dim1,in_dim2,channels),include_top=False,backend = keras.backend, layers = keras.layers, models = keras.models, utils = keras.utils)
         
     layers = pretrained_model.layers
-    layers[0].name = "inputTensor"
+    layers[0]._name = "inputTensor"
     #The output of the pretrained network are the inputs to our Dense layers
     x = Flatten()(pretrained_model.output)
     x = Dense(2048, activation='relu')(x)
@@ -1630,7 +1628,7 @@ def pretrained_resnet101_v2(in_dim1,in_dim2,channels,out_dim):
     x = Dense(out_dim)(x)
     predictions = Activation('softmax',name="outputTensor")(x)
     #combine pretrained models and our dense layers
-    model = Model(input = pretrained_model.input, output = predictions) 
+    model = Model(inputs = pretrained_model.input, outputs = predictions) 
     return model
 
 
@@ -1642,12 +1640,12 @@ def pretrained_resnet152_v2(in_dim1,in_dim2,channels,out_dim):
     It is recommended to use the expert model in AIDeveloper to only train the dense layers
     """
     try:
-        pretrained_model  = keras_applications.resnet.ResNet152V2(weights='imagenet',input_shape=(in_dim1,in_dim2,channels),include_top=False,backend = keras.backend, layers = keras.layers, models = keras.models, utils = keras.utils)
+        pretrained_model = keras_applications.resnet.ResNet152V2(weights='imagenet',input_shape=(in_dim1,in_dim2,channels),include_top=False,backend = keras.backend, layers = keras.layers, models = keras.models, utils = keras.utils)
     except:
-        pretrained_model  = keras_applications.resnet_v2.ResNet152V2(weights='imagenet',input_shape=(in_dim1,in_dim2,channels),include_top=False,backend = keras.backend, layers = keras.layers, models = keras.models, utils = keras.utils)
+        pretrained_model = keras_applications.resnet_v2.ResNet152V2(weights='imagenet',input_shape=(in_dim1,in_dim2,channels),include_top=False,backend = keras.backend, layers = keras.layers, models = keras.models, utils = keras.utils)
         
     layers = pretrained_model.layers
-    layers[0].name = "inputTensor"
+    layers[0]._name = "inputTensor"
     #The output of the pretrained network are the inputs to our Dense layers
     x = Flatten()(pretrained_model.output)
     x = Dense(2048, activation='relu')(x)
@@ -1658,7 +1656,7 @@ def pretrained_resnet152_v2(in_dim1,in_dim2,channels,out_dim):
     x = Dense(out_dim)(x)
     predictions = Activation('softmax',name="outputTensor")(x)
     #combine pretrained models and our dense layers
-    model = Model(input = pretrained_model.input, output = predictions) 
+    model = Model(inputs = pretrained_model.input, outputs = predictions) 
     return model
 
 
@@ -1670,12 +1668,12 @@ def pretrained_resnext50(in_dim1,in_dim2,channels,out_dim):
     It is recommended to use the expert model in AIDeveloper to only train the dense layers
     """
     try:
-        pretrained_model  = keras_applications.resnext.ResNeXt50(weights='imagenet',input_shape=(in_dim1,in_dim2,channels),include_top=False,backend = keras.backend, layers = keras.layers, models = keras.models, utils = keras.utils)
+        pretrained_model = keras_applications.resnext.ResNeXt50(weights='imagenet',input_shape=(in_dim1,in_dim2,channels),include_top=False,backend = keras.backend, layers = keras.layers, models = keras.models, utils = keras.utils)
     except:
-        pretrained_model  = keras.applications.keras_applications.resnext.ResNeXt50(weights='imagenet',input_shape=(in_dim1,in_dim2,channels),include_top=False,backend = keras.backend, layers = keras.layers, models = keras.models, utils = keras.utils)
+        pretrained_model = keras.applications.keras_applications.resnext.ResNeXt50(weights='imagenet',input_shape=(in_dim1,in_dim2,channels),include_top=False,backend = keras.backend, layers = keras.layers, models = keras.models, utils = keras.utils)
         
     layers = pretrained_model.layers
-    layers[0].name = "inputTensor"
+    layers[0]._name = "inputTensor"
     #The output of the pretrained network are the inputs to our Dense layers
     x = Flatten()(pretrained_model.output)
     x = Dense(2048, activation='relu')(x)
@@ -1686,7 +1684,7 @@ def pretrained_resnext50(in_dim1,in_dim2,channels,out_dim):
     x = Dense(out_dim)(x)
     predictions = Activation('softmax',name="outputTensor")(x)
     #combine pretrained models and our dense layers
-    model = Model(input = pretrained_model.input, output = predictions) 
+    model = Model(inputs = pretrained_model.input, outputs = predictions) 
     return model
 
 def pretrained_resnext101(in_dim1,in_dim2,channels,out_dim):
@@ -1697,12 +1695,12 @@ def pretrained_resnext101(in_dim1,in_dim2,channels,out_dim):
     It is recommended to use the expert model in AIDeveloper to only train the dense layers
     """
     try:
-        pretrained_model  = keras_applications.resnext.ResNeXt101(weights='imagenet',input_shape=(in_dim1,in_dim2,channels),include_top=False,backend = keras.backend, layers = keras.layers, models = keras.models, utils = keras.utils)
+        pretrained_model = keras_applications.resnext.ResNeXt101(weights='imagenet',input_shape=(in_dim1,in_dim2,channels),include_top=False,backend = keras.backend, layers = keras.layers, models = keras.models, utils = keras.utils)
     except:
-        pretrained_model  = keras.applications.keras_applications.resnext.ResNeXt50(weights='imagenet',input_shape=(in_dim1,in_dim2,channels),include_top=False,backend = keras.backend, layers = keras.layers, models = keras.models, utils = keras.utils)
+        pretrained_model = keras.applications.keras_applications.resnext.ResNeXt50(weights='imagenet',input_shape=(in_dim1,in_dim2,channels),include_top=False,backend = keras.backend, layers = keras.layers, models = keras.models, utils = keras.utils)
         
     layers = pretrained_model.layers
-    layers[0].name = "inputTensor"
+    layers[0]._name = "inputTensor"
     #The output of the pretrained network are the inputs to our Dense layers
     x = Flatten()(pretrained_model.output)
     x = Dense(2048, activation='relu')(x)
@@ -1713,7 +1711,7 @@ def pretrained_resnext101(in_dim1,in_dim2,channels,out_dim):
     x = Dense(out_dim)(x)
     predictions = Activation('softmax',name="outputTensor")(x)
     #combine pretrained models and our dense layers
-    model = Model(input = pretrained_model.input, output = predictions) 
+    model = Model(inputs = pretrained_model.input, outputs = predictions) 
     return model
 
 
