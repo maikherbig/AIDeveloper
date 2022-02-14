@@ -5,7 +5,7 @@ AIDeveloper
 @author: maikherbig
 """
 import os,sys,gc
-os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'#suppress warnings/info from tensorflow
+os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'
 
 if not sys.platform.startswith("win"):
     from multiprocessing import freeze_support
@@ -50,10 +50,11 @@ aid_start.keras_json_check(keras_json_path)
 import traceback,shutil,re,ast,io,platform
 import h5py,json,time,copy,urllib,datetime
 from stat import S_IREAD,S_IRGRP,S_IROTH,S_IWRITE,S_IWGRP,S_IWOTH
-
 import tensorflow as tf
+tf.compat.v1.experimental.output_all_intermediates(True)
 from tensorboard import program
 from tensorboard import default
+from tensorboard import assets
 
 from tensorflow.python.client import device_lib
 devices = device_lib.list_local_devices()
@@ -62,9 +63,10 @@ device_types = [devices[i].device_type for i in range(len(devices))]
 #Get the number  of CPU cores and GPUs
 cpu_nr = os.cpu_count()
 gpu_nr = device_types.count("GPU")
+print("Nr. of CPUs detected: "+str(cpu_nr))
 print("Nr. of GPUs detected: "+str(gpu_nr))
 
-print("Found "+str(len(devices))+" device(s):")
+print("List of device(s):")
 print("------------------------")
 for i in range(len(devices)):
     print("Device "+str(i)+": "+devices[i].name)
@@ -85,7 +87,7 @@ for dev in devices:
 
 import numpy as np
 rand_state = np.random.RandomState(117) #to get the same random number on diff. PCs
-from scipy import ndimage,misc
+#from scipy import ndimage,misc
 from sklearn import metrics,preprocessing
 import PIL
 import dclab
@@ -94,25 +96,23 @@ import pandas as pd
 import openpyxl,xlrd 
 import psutil
 
-from keras.models import model_from_json,model_from_config,load_model,clone_model
-from keras import backend as K
-if 'GPU' in device_types:
-    keras_gpu_avail = K.tensorflow_backend._get_available_gpus()
-    if len(keras_gpu_avail)>0:
-        print("Following GPU is used:")
-        print(keras_gpu_avail)
-        print("------------------------")
-    else:
-        print("TensorFlow detected GPU, but Keras didn't")
-        print("------------------------")
+from tensorflow.keras.models import model_from_json,model_from_config,load_model,clone_model
+from tensorflow.keras import backend as K
+# if 'GPU' in device_types:
+#     keras_gpu_avail = tf.config.list_physical_devices()
+#     if len(keras_gpu_avail)>0:
+#         print("Following Devices are available:")
+#         print(keras_gpu_avail)
+#         print("------------------------")
+#     else:
+#         print("TensorFlow detected GPU, but Keras didn't")
+#         print("------------------------")
 
-from keras.preprocessing.image import load_img
-from keras.utils import np_utils,multi_gpu_model
-from keras.utils.conv_utils import convert_kernel
-import keras_metrics #side package for precision, recall etc during training
-global keras_metrics
+from tensorflow.keras.preprocessing.image import load_img
+from tensorflow.keras.utils import to_categorical
+
 import model_zoo 
-from keras2onnx import convert_keras
+import tf2onnx
 from onnx import save_model as save_onnx
 
 import aid_img, aid_dl, aid_bin
@@ -120,7 +120,7 @@ import aid_frontend
 from partial_trainability import partial_trainability
 import aid_imports
 
-VERSION = "0.2.3_dev1" #Python 3.5.6 Version
+VERSION = "0.3.0" #Python 3.9.9 Version
 model_zoo_version = model_zoo.__version__()
 print("AIDeveloper Version: "+VERSION)
 print("model_zoo.py Version: "+model_zoo.__version__())
@@ -215,7 +215,9 @@ class MainWindow(QtWidgets.QMainWindow):
     def __init__(self, *args, **kwargs):
         super(MainWindow, self).__init__(*args, **kwargs)
         self.setupUi()
-
+    def add_app(self,app):
+        self.app = app
+        
     def setupUi(self):
         aid_frontend.setup_main_ui(self,gpu_nr)
     
@@ -515,11 +517,12 @@ class MainWindow(QtWidgets.QMainWindow):
             self.table_dragdrop.insertRow(rowPosition)
             
             columnPosition = 0
-            line = QtWidgets.QLabel(self.table_dragdrop)
+            line = QtWidgets.QTableWidgetItem()
             line.setText(url)
-            line.setDisabled(True)
-            line.setAlignment(QtCore.Qt.AlignRight | QtCore.Qt.AlignVCenter)
-            self.table_dragdrop.setCellWidget(rowPosition, columnPosition, line)            
+            line.setFlags( QtCore.Qt.ItemIsSelectable |  QtCore.Qt.ItemIsEnabled )
+            #line.setDisabled(True)
+            #line.setAlignment(QtCore.Qt.AlignRight | QtCore.Qt.AlignVCenter)
+            self.table_dragdrop.setItem(rowPosition, columnPosition, line)            
             
 #            item = QtWidgets.QTableWidgetItem(url) 
 #            item.setFlags( QtCore.Qt.ItemIsEnabled | QtCore.Qt.ItemIsSelectable )
@@ -851,7 +854,7 @@ class MainWindow(QtWidgets.QMainWindow):
         buttonClicked = self.sender()
         index = self.table_dragdrop.indexAt(buttonClicked.pos())
         rowPosition = index.row()
-        rtdc_path = self.table_dragdrop.cellWidget(rowPosition, 0).text()
+        rtdc_path = self.table_dragdrop.item(rowPosition, 0).text()
         rtdc_path = str(rtdc_path)
 
         failed,rtdc_ds = aid_bin.load_rtdc(rtdc_path)
@@ -1656,7 +1659,7 @@ class MainWindow(QtWidgets.QMainWindow):
         item_ui.popup_optim.show()
 
 
-    def onLayoutChange(self,app):
+    def onLayoutChange(self):
         #Get the text of the triggered layout
         layout_trig = (self.sender().text()).split(" layout")[0]
         layout_current = Default_dict["Layout"]
@@ -1668,7 +1671,7 @@ class MainWindow(QtWidgets.QMainWindow):
         elif layout_trig == "Normal":
             #Change Layout in Defaultdict to "Normal", such that next start will use Normal layout
             Default_dict["Layout"] = "Normal"
-            app.setStyleSheet("")
+            self.app.setStyleSheet("")
             #Standard is with tooltip
             self.actionTooltipOnOff.setChecked(True)
 
@@ -1678,7 +1681,7 @@ class MainWindow(QtWidgets.QMainWindow):
             dir_layout = os.path.join(dir_root,"layout_dark.txt")#dir to settings
             f = open(dir_layout, "r") #I obtained the layout file from: https://github.com/ColinDuquesnoy/QDarkStyleSheet/blob/master/qdarkstyle/style.qss
             f = f.read()
-            app.setStyleSheet(f)
+            self.app.setStyleSheet(f)
             #Standard is with tooltip
             self.actionTooltipOnOff.setChecked(True)
         
@@ -1688,7 +1691,7 @@ class MainWindow(QtWidgets.QMainWindow):
             dir_layout = os.path.join(dir_root,"layout_darkorange.txt")#dir to settings
             f = open(dir_layout, "r") #I obtained the layout file from: https://github.com/nphase/qt-ping-grapher/blob/master/resources/darkorange.stylesheet
             f = f.read()
-            app.setStyleSheet(f)
+            self.app.setStyleSheet(f)
             #Standard is with tooltip
             self.actionTooltipOnOff.setChecked(True)
 
@@ -1696,13 +1699,13 @@ class MainWindow(QtWidgets.QMainWindow):
         with open(dir_settings, 'w') as f:
             json.dump(Default_dict,f)
         
-    def onTooltipOnOff(self,app):
+    def onTooltipOnOff(self):
         #what is the current layout?
         if bool(self.actionLayout_Normal.isChecked())==True: #use normal layout
             if bool(self.actionTooltipOnOff.isChecked())==True: #with tooltips
-                app.setStyleSheet("")
+                self.app.setStyleSheet("")
             elif bool(self.actionTooltipOnOff.isChecked())==False: #no tooltips
-                app.setStyleSheet("""QToolTip {
+                self.app.setStyleSheet("""QToolTip {
                                          opacity: 0
                                            }""")
 
@@ -1711,26 +1714,26 @@ class MainWindow(QtWidgets.QMainWindow):
                 dir_layout = os.path.join(dir_root,"layout_dark.txt")#dir to settings
                 f = open(dir_layout, "r") #I obtained the layout file from: https://github.com/ColinDuquesnoy/QDarkStyleSheet/blob/master/qdarkstyle/style.qss
                 f = f.read()
-                app.setStyleSheet(f)
+                self.app.setStyleSheet(f)
 
             elif bool(self.actionTooltipOnOff.isChecked())==False: #no tooltips
                 dir_layout = os.path.join(dir_root,"layout_dark_notooltip.txt")#dir to settings
                 f = open(dir_layout, "r")#I obtained the layout file from: https://github.com/ColinDuquesnoy/QDarkStyleSheet/blob/master/qdarkstyle/style.qss
                 f = f.read()
-                app.setStyleSheet(f)
+                self.app.setStyleSheet(f)
 
         elif bool(self.actionLayout_DarkOrange.isChecked())==True: #use darkorange layout
             if bool(self.actionTooltipOnOff.isChecked())==True: #with tooltips
                 dir_layout = os.path.join(dir_root,"layout_darkorange.txt")#dir to settings
                 f = open(dir_layout, "r") #I obtained the layout file from: https://github.com/nphase/qt-ping-grapher/blob/master/resources/darkorange.stylesheet
                 f = f.read()
-                app.setStyleSheet(f)
+                self.app.setStyleSheet(f)
 
             elif bool(self.actionTooltipOnOff.isChecked())==False: #no tooltips
                 dir_layout = os.path.join(dir_root,"layout_darkorange_notooltip.txt")#dir to settings
                 f = open(dir_layout, "r")
                 f = f.read()
-                app.setStyleSheet(f)
+                self.app.setStyleSheet(f)
 
     def onIconThemeChange(self):
         #Get the text of the triggered icon theme
@@ -1761,7 +1764,7 @@ class MainWindow(QtWidgets.QMainWindow):
         SelectedFiles = []
         for rowPosition in range(rowCount):  
             #get the filename/path
-            rtdc_path = str(self.table_dragdrop.cellWidget(rowPosition, 0).text())
+            rtdc_path = str(self.table_dragdrop.item(rowPosition, 0).text())
             #get the index (celltype) of it
             index = int(self.table_dragdrop.cellWidget(rowPosition, 1).value())
             #is it checked for train?
@@ -1821,7 +1824,7 @@ class MainWindow(QtWidgets.QMainWindow):
         SelectedFiles = []
         for rowPosition in range(rowCount):  
             #get the filename/path
-            rtdc_path = str(self.table_dragdrop.cellWidget(rowPosition, 0).text())
+            rtdc_path = str(self.table_dragdrop.item(rowPosition, 0).text())
             #get the index (celltype) of it
             index = int(self.table_dragdrop.cellWidget(rowPosition, 1).value())
             #How many Events contains dataset in total?
@@ -1847,7 +1850,7 @@ class MainWindow(QtWidgets.QMainWindow):
         SelectedFiles = []
         for rowPosition in range(rowCount):  
             #get the filename/path
-            rtdc_path = str(self.table_dragdrop.cellWidget(rowPosition, 0).text())
+            rtdc_path = str(self.table_dragdrop.item(rowPosition, 0).text())
             #get the index (celltype) of it
             index = int(self.table_dragdrop.cellWidget(rowPosition, 1).value())
             #How many Events contains dataset in total?
@@ -1897,7 +1900,7 @@ class MainWindow(QtWidgets.QMainWindow):
         #if Shuffle was clicked (col=8), check if this checkbox is not deactivated
         if colPosition==8:
             if bool(self.table_dragdrop.item(rowPosition, 8).checkState())==False:
-                rtdc_path = self.table_dragdrop.cellWidget(rowPosition, 0).text()
+                rtdc_path = self.table_dragdrop.item(rowPosition, 0).text()
                 rtdc_path = str(rtdc_path)
 
                 failed,rtdc_ds = aid_bin.load_rtdc(rtdc_path)
@@ -2228,7 +2231,7 @@ class MainWindow(QtWidgets.QMainWindow):
         if col==8:
             for rowPosition in rows:
                 if bool(self.table_dragdrop.item(rowPosition, 8).checkState())==False:
-                    rtdc_path = self.table_dragdrop.cellWidget(rowPosition, 0).text()
+                    rtdc_path = self.table_dragdrop.item(rowPosition, 0).text()
                     rtdc_path = str(rtdc_path)
     
                     failed,rtdc_ds = aid_bin.load_rtdc(rtdc_path)
@@ -2270,7 +2273,7 @@ class MainWindow(QtWidgets.QMainWindow):
         if item.column() == 0: 
             #rtdc_path = str(item.text())
             #rtdc_path = tableitem.text()
-            rtdc_path = self.table_dragdrop.cellWidget(item.row(), item.column()).text()
+            rtdc_path = self.table_dragdrop.item(item.row(), item.column()).text()
 
             failed,rtdc_ds = aid_bin.load_rtdc(rtdc_path)
             if failed:
@@ -2364,7 +2367,7 @@ class MainWindow(QtWidgets.QMainWindow):
         filename = filename[0]
         if len(str(filename))==0:
             return
-        norm = pd.read_excel(filename,sheet_name='Parameters')["Normalization"]
+        norm = pd.read_excel(filename,sheet_name='Parameters',engine="openpyxl")["Normalization"]
         norm = str(norm[0])
         index = self.comboBox_Normalization.findText(norm, QtCore.Qt.MatchFixedString)
         if index >= 0:
@@ -2410,6 +2413,8 @@ class MainWindow(QtWidgets.QMainWindow):
                 elif len(shape)==2: #one-dimensional info (multiple numbers per cell)
                     keys_1d.append(key)
                 elif len(shape)==3: #two-dimensional info (images)
+                    keys_2d.append(key)
+                elif len(shape)==4: #two-dimensional RBG info (images)
                     keys_2d.append(key)
 
         #add the traces to the 1d features
@@ -2467,7 +2472,7 @@ class MainWindow(QtWidgets.QMainWindow):
         self.popup_1dOptions_ui = aid_frontend.Ui_1dOptions()
         self.popup_1dOptions_ui.setupUi(self.popup_1dOptions,keys_1d) #open a popup
 
-    def show_contour_options():
+    def show_contour_options(self):
         self.contour_options_nr += 1
         print("Work in progress")
 
@@ -3214,7 +3219,7 @@ class MainWindow(QtWidgets.QMainWindow):
         filename = filename[0]
         if len(str(filename))==0:
             return
-        peak_model_df = pd.read_excel(filename,sheet_name='Model')
+        peak_model_df = pd.read_excel(filename,sheet_name='Model',engine="openpyxl")
         model = peak_model_df.iloc[0,1]
         if model=="Linear dependency and max in range":
             #set the combobox accordingly
@@ -3838,7 +3843,7 @@ class MainWindow(QtWidgets.QMainWindow):
             fname = fname +".model"
         filename = os.path.join(path,fname)
         
-        self.model_keras.save(filename)
+        self.model_keras.save(filename,save_format='h5')
         #Activate 'load and restart' and put this file
         #Avoid the automatic popup
         self.radioButton_NewModel.setChecked(False)
@@ -4037,7 +4042,7 @@ class MainWindow(QtWidgets.QMainWindow):
                     model_full_h5 = h5py.File(modelname, 'r')
                     model_config = model_full_h5.attrs['model_config']
                     model_full_h5.close() #close the hdf5
-                    model_config = json.loads(str(model_config)[2:-1])
+                    model_config = json.loads(model_config)
                     #model = model_from_config(model_config)
                     modelname = modelname.split(".model")[0]
                 else:
@@ -4057,7 +4062,7 @@ class MainWindow(QtWidgets.QMainWindow):
                 metaname = modelname.rsplit('_',1)[0]+"_meta.xlsx"
                 if os.path.isfile(metaname):
                     #open the metafile
-                    meta = pd.read_excel(metaname,sheet_name="Parameters")
+                    meta = pd.read_excel(metaname,sheet_name="Parameters",engine="openpyxl")
                     if "Chosen Model" in list(meta.keys()):
                         chosen_model = meta["Chosen Model"].iloc[-1]
                     else:
@@ -4092,7 +4097,7 @@ class MainWindow(QtWidgets.QMainWindow):
                     model_full_h5 = h5py.File(modelname, 'r')
                     model_config = model_full_h5.attrs['model_config']
                     model_full_h5.close() #close the hdf5
-                    model_config = json.loads(str(model_config)[2:-1])
+                    model_config = json.loads(model_config)
                     #model = model_from_config(model_config)
                     modelname = modelname.split(".model")[0]
 
@@ -4101,7 +4106,7 @@ class MainWindow(QtWidgets.QMainWindow):
                     metaname = modelname.rsplit('_',1)[0]+"_meta.xlsx"
                     if os.path.isfile(metaname):
                         #open the metafile
-                        meta = pd.read_excel(metaname,sheet_name="Parameters")
+                        meta = pd.read_excel(metaname,sheet_name="Parameters",engine="openpyxl")
                         if "Chosen Model" in list(meta.keys()):
                             chosen_model = meta["Chosen Model"].iloc[-1]
                         else:
@@ -4140,18 +4145,7 @@ class MainWindow(QtWidgets.QMainWindow):
             #In both cases (restart or continue) the input dimensions have to fit
             #The number of output classes should also fit but this is not essential  
             #but most users certainly want the same number of classes (output)->Give Info
-            
-            try: #Sequential Model
-                in_dim = model_config['config'][0]['config']['batch_input_shape']
-            except: #Functional Api
-                in_dim = model_config['config']["layers"][0]["config"]["batch_input_shape"]
-            try: #Sequential Model
-                out_dim = model_config['config'][-2]['config']['units']
-            except: #Functional Api
-                out_dim = model_config['config']["layers"][-2]["config"]["units"]
-#            
-#            in_dim = model_config['config'][0]['config']['batch_input_shape']
-#            out_dim = model_config['config'][-2]['config']['units']
+            in_dim, out_dim = aid_dl.model_in_out_dim(model_config,"config")
 
             #Retrieve the color_mode from the model (nr. of channels in last in_dim)
             channels = in_dim[-1] #TensorFlow: channels in last dimension
@@ -4207,11 +4201,11 @@ class MainWindow(QtWidgets.QMainWindow):
                 #this is important
                 self.popup_normalization()
 
-    def get_metrics(self,nr_classes):
+    def get_metrics(self):
         Metrics =  []
         f1 = bool(self.checkBox_expertF1.isChecked())
         if f1==True:
-            Metrics.append("f1_score")
+            Metrics.append("auc")
         precision = bool(self.checkBox_expertPrecision.isChecked())
         if precision==True:
             Metrics.append("precision")
@@ -4219,7 +4213,7 @@ class MainWindow(QtWidgets.QMainWindow):
         if recall==True:
             Metrics.append("recall")
         metrics =  ['accuracy'] + Metrics
-        metrics = aid_dl.get_metrics_tensors(metrics,nr_classes)
+        #metrics = aid_dl.get_metrics_tensors(metrics,nr_classes)
         return metrics
 
     def action_set_modelpath_and_name(self):
@@ -4279,7 +4273,8 @@ class MainWindow(QtWidgets.QMainWindow):
 #        except:
 #            print("Could not clear_session (7)")
 
-        with tf.Session(graph = tf.Graph(), config=config_gpu) as sess:                
+        with tf.compat.v1.Session(graph = tf.Graph(), config=config_gpu) as sess:            
+            sess.run(tf.compat.v1.global_variables_initializer())
             #Initialize the model
             #######################Load and restart model##########################
             if self.radioButton_LoadRestartModel.isChecked():
@@ -4301,7 +4296,7 @@ class MainWindow(QtWidgets.QMainWindow):
                     model_full_h5 = h5py.File(load_modelname, 'r')
                     model_config = model_full_h5.attrs['model_config']
                     model_full_h5.close() #close the hdf5                
-                    model_config = json.loads(str(model_config)[2:-1])
+                    model_config = json.loads(model_config)
                     model_keras = model_from_config(model_config)
                     text1 = "\nArchitecture: loaded from .model\nWeights: randomly initialized\n"
                 else:
@@ -4317,7 +4312,7 @@ class MainWindow(QtWidgets.QMainWindow):
                     metaname = load_modelname.rsplit('_',1)[0]+"_meta.xlsx"
                     if os.path.isfile(metaname):
                         #open the metafile
-                        meta = pd.read_excel(metaname,sheet_name="Parameters")
+                        meta = pd.read_excel(metaname,sheet_name="Parameters",engine="openpyxl")
                         if "Chosen Model" in list(meta.keys()):
                             chosen_model = meta["Chosen Model"].iloc[-1]
                 except:
@@ -4327,22 +4322,14 @@ class MainWindow(QtWidgets.QMainWindow):
                 #The number of output classes should also fit but this is not essential  
                 #but most users certainly want the same number of classes (output)->Give Info
     
-                try: #Sequential Model
-                    in_dim = model_config['config'][0]['config']['batch_input_shape']
-                except: #Functional Api
-                    in_dim = model_config['config']["layers"][0]["config"]["batch_input_shape"]
-                try: #Sequential Model
-                    out_dim = model_config['config'][-2]['config']['units']
-                except: #Functional Api
-                    out_dim = model_config['config']["layers"][-2]["config"]["units"]
-    
-    #            in_dim = model_config['config'][0]['config']['batch_input_shape']
-    #            out_dim = model_config['config'][-2]['config']['units']
+                in_dim, out_dim = aid_dl.model_in_out_dim(model_config,"config")  
+                
                 channels = in_dim[-1] #TensorFlow: channels in last dimension
     
                 #Compile model (consider user-specific metrics)
-                model_metrics = self.get_metrics(out_dim)    
-                model_keras.compile(loss='categorical_crossentropy',optimizer='adam',metrics=model_metrics)#dont specify loss and optimizer yet...expert stuff will follow and model will be recompiled
+                model_metrics = self.get_metrics()
+
+                model_keras.compile(loss='categorical_crossentropy',optimizer='adam',metrics=aid_dl.get_metrics_tensors(model_metrics,out_dim))#dont specify loss and optimizer yet...expert stuff will follow and model will be recompiled
 
                 if channels==1:
                     channel_text = "1 channel (Grayscale)"
@@ -4415,7 +4402,7 @@ class MainWindow(QtWidgets.QMainWindow):
                     metaname = load_modelname.rsplit('_',1)[0]+"_meta.xlsx"
                     if os.path.isfile(metaname):
                         #open the metafile
-                        meta = pd.read_excel(metaname,sheet_name="Parameters")
+                        meta = pd.read_excel(metaname,sheet_name="Parameters",engine="openpyxl")
                         if "Chosen Model" in list(meta.keys()):
                             chosen_model = meta["Chosen Model"].iloc[-1]
                     else:
@@ -4521,7 +4508,9 @@ class MainWindow(QtWidgets.QMainWindow):
                     msg.setStandardButtons(QtWidgets.QMessageBox.Ok)
                     msg.exec_()
                     return       
-                
+
+
+
                 try:                
                     model_keras = model_zoo.get_model(chosen_model,in_dim,channels,out_dim)
                 except Exception as e: 
@@ -4583,16 +4572,16 @@ class MainWindow(QtWidgets.QMainWindow):
             optimizer_expert = str(self.comboBox_optimizer.currentText()).lower()
             optimizer_settings = self.optimizer_settings.copy() #get the current optimizer settings
             paddingMode = str(self.comboBox_paddingMode.currentText())#.lower()
-
-            model_metrics = self.get_metrics(nr_classes)    
+            model_metrics = self.get_metrics()    
             if "collection" in chosen_model.lower():
                 for m in model_keras[1]: #in a collection, model_keras[0] are the names of the models and model_keras[1] is a list of all models
-                    aid_dl.model_compile(m,loss_expert,optimizer_settings,learning_rate_const,self.get_metrics(nr_classes),nr_classes)
+                    model_metrics_t = aid_dl.get_metrics_tensors(self.get_metrics(),nr_classes)
+                    aid_dl.model_compile(m,loss_expert,optimizer_settings,learning_rate_const,model_metrics_t,nr_classes)
 
             if not "collection" in chosen_model.lower():
-                aid_dl.model_compile(model_keras,loss_expert,optimizer_settings,learning_rate_const,model_metrics,nr_classes)
+                model_metrics_t = aid_dl.get_metrics_tensors(self.get_metrics(),nr_classes)
+                aid_dl.model_compile(model_keras,loss_expert,optimizer_settings,learning_rate_const,model_metrics_t,nr_classes)
                 
-
             try:
                 dropout_expert = str(self.lineEdit_dropout.text()) #due to the validator, there are no squ.brackets
                 dropout_expert = "["+dropout_expert+"]"
@@ -4604,28 +4593,31 @@ class MainWindow(QtWidgets.QMainWindow):
                 collection = True
             else:
                 collection = False
-            
+
             if collection==False: #if there is a single model:
                 #Original learning rate (before expert mode is switched on!)
                 try:
-                    self.learning_rate_original = K.eval(model_keras.optimizer.lr)
+                    self.learning_rate_original = model_keras.optimizer.get_config()["learning_rate"]
                 except:
                     print("Session busy. Try again in fresh session...")
                     #tf.reset_default_graph() #Make sure to start with a fresh session
                     K.clear_session()
-                    sess = tf.Session(graph = tf.Graph(), config=config_gpu)
+                    sess = tf.compat.v1.Session(graph = tf.Graph(), config=config_gpu)
                     #K.set_session(sess)
-                    self.learning_rate_original = K.eval(model_keras.optimizer.lr)
+                    self.learning_rate_original = model_keras.optimizer.get_config()["learning_rate"]
                     
                 #Get initial trainability states of model
                 self.trainable_original, self.layer_names = aid_dl.model_get_trainable_list(model_keras)
+
                 trainable_original, layer_names = self.trainable_original, self.layer_names
+
                 self.do_list_original = aid_dl.get_dropout(model_keras)#Get a list of dropout values of the current model
+
                 do_list_original = self.do_list_original
-    
+
             if collection==True: #if there is a collection of models:
                 #Original learning rate (before expert mode is switched on!)
-                self.learning_rate_original = [K.eval(model_keras[1][i].optimizer.lr) for i in range(len(model_keras[1]))]
+                self.learning_rate_original = [model_keras[1][i].optimizer.get_config()["learning_rate"] for i in range(len(model_keras[1]))]
                 #Get initial trainability states of model
                 trainable_layerName = [aid_dl.model_get_trainable_list(model_keras[1][i]) for i in range(len(model_keras[1]))]
                 self.trainable_original = [trainable_layerName[i][0] for i in range(len(trainable_layerName))]
@@ -4635,7 +4627,6 @@ class MainWindow(QtWidgets.QMainWindow):
                 do_list_original = self.do_list_original
     
             #TODO add expert mode ability for collection of models. Maybe define self.model_keras as a list in general. So, fitting a single model is just a special case
-    
     
             if expert_mode==True:
                 #Apply the changes to trainable states:
@@ -4653,7 +4644,7 @@ class MainWindow(QtWidgets.QMainWindow):
                     for index in layer_dense_ind:
                         trainable_new[index] = True
                     aid_dl.model_change_trainability(model_keras,trainable_new,model_metrics,out_dim,loss_expert,optimizer_settings,learning_rate_const)
-    
+                
                 if dropout_expert_on==True:
                     #The user apparently want to change the dropout rates
                     do_list = aid_dl.get_dropout(model_keras)#Get a list of dropout values of the current model
@@ -4682,7 +4673,7 @@ class MainWindow(QtWidgets.QMainWindow):
                         dropout_expert_list = []
                      
                     if len(dropout_expert_list)>0 and do_list!=dropout_expert_list:#if the dropout rates of the current model is not equal to the required do_list from user...
-                        do_changed = aid_dl.change_dropout(model_keras,dropout_expert_list,model_metrics,nr_classes,loss_expert,optimizer_settings,learning_rate_const)
+                        do_changed = aid_dl.change_dropout(model_keras,dropout_expert_list,model_metrics_t,nr_classes,loss_expert,optimizer_settings,learning_rate_const)
                         if do_changed==1:
                             text_do = "Dropout rate(s) in model was/were changed to: "+str(dropout_expert_list)
                         else:
@@ -4690,18 +4681,18 @@ class MainWindow(QtWidgets.QMainWindow):
                     else:
                         text_do = "Dropout rate(s) in model was/were not changed"
                     print(text_do)
-      
+
             text_updates = ""
             #Learning Rate: Compare current lr and the lr on expert tab:
             if collection == False:
-                lr_current = K.eval(model_keras.optimizer.lr)
+                lr_current = model_keras.optimizer.get_config()["learning_rate"]
             else:
-                lr_current = K.eval(model_keras[1][0].optimizer.lr)
+                lr_current = model_keras[1][0].optimizer.get_config()["learning_rate"]
             lr_diff = learning_rate_const-lr_current
             if  abs(lr_diff) > 1e-6: #If there is a difference, change lr accordingly
                 K.set_value(model_keras.optimizer.lr, learning_rate_const)
             text_updates += "Learning rate: "+str(lr_current)+"\n"
-    
+
             recompile = False
             #Compare current optimizer and the optimizer on expert tab:
             if collection==False:
@@ -4712,7 +4703,7 @@ class MainWindow(QtWidgets.QMainWindow):
             if optimizer_current!=optimizer_expert.lower():#if the current model has a different optimizer
                 recompile = True
             text_updates+="Optimizer: "+optimizer_expert+"\n"
-            
+
             #Loss function: Compare current loss function and the loss-function on expert tab:
             if collection==False:
                 if model_keras.loss!=loss_expert:
@@ -4721,15 +4712,17 @@ class MainWindow(QtWidgets.QMainWindow):
                 if model_keras[1][0].loss!=loss_expert:
                     recompile = True
             text_updates += "Loss function: "+loss_expert+"\n"
-    
+
             if recompile==True:
                 if collection==False:
                     print("Recompiling...")
-                    aid_dl.model_compile(model_keras,loss_expert,optimizer_settings,learning_rate_const,model_metrics,nr_classes)
+                    model_metrics_t = aid_dl.get_metrics_tensors(self.get_metrics(),nr_classes)
+                    aid_dl.model_compile(model_keras,loss_expert,optimizer_settings,learning_rate_const,model_metrics_t,nr_classes)
                 if collection==True:
                     for m in model_keras[1]:
                         print("Recompiling...")
-                        aid_dl.model_compile(m,loss_expert,optimizer_settings,learning_rate_const,model_metrics,nr_classes)
+                        model_metrics_t = aid_dl.get_metrics_tensors(self.get_metrics(),nr_classes)
+                        aid_dl.model_compile(m,loss_expert,optimizer_settings,learning_rate_const,model_metrics_t,nr_classes)
             self.model_keras = model_keras #overwrite the model in self
     
             if collection == False:
@@ -4760,7 +4753,7 @@ class MainWindow(QtWidgets.QMainWindow):
                 text4 = text4+"Found "+str(len(do_list_original)) +" dropout layers with rates: "+str(do_list_original)+"\n"
             else:
                 text4 = text4+"Found no dropout layers\n"
-            
+
             if expert_mode==True:
                 if dropout_expert_on:
                     text4 = text4+text_do+"\n"
@@ -4785,7 +4778,7 @@ class MainWindow(QtWidgets.QMainWindow):
             elif collection==True:
                 if self.groupBox_expertMode.isChecked()==True:
                     self.groupBox_expertMode.setChecked(False)
-                    print("Turned off expert mode. Not implemented yet for collections of models. This does not affect user-specified metrics (precision/recall/f1)")
+                    print("Turned off expert mode. Not implemented yet for collections of models. This does not affect user-specified metrics (precision/recall/auc)")
                 
                 self.model_keras_arch_path = [new_modelname[0]+os.sep+new_modelname[1].split(".model")[0]+"_"+model_keras[0][i]+".arch" for i in range(len(model_keras[0]))]                
                 for i in range(len(model_keras[1])):
@@ -4802,7 +4795,7 @@ class MainWindow(QtWidgets.QMainWindow):
     
             #Save the model to a variable on self
             self.model_keras = model_keras
-    
+
             #Get the user-defined cropping size
             crop = int(self.spinBox_imagecrop.value())          
             #Make the cropsize a bit larger since the images will later be rotated
@@ -4886,7 +4879,6 @@ class MainWindow(QtWidgets.QMainWindow):
 
                 #Finally, activate the 'Fit model' button again
                 #self.pushButton_FitModel.setEnabled(True)
-
                 if duties=="initialize_train":
                     self.action_fit_model()
                 if duties=="initialize_lrfind":
@@ -4895,7 +4887,6 @@ class MainWindow(QtWidgets.QMainWindow):
             del model_keras
 
     def action_fit_model_worker(self,progress_callback,history_callback):
-        
         if self.radioButton_cpu.isChecked():
             gpu_used = False
             deviceSelected = str(self.comboBox_cpu.currentText())
@@ -4911,8 +4902,10 @@ class MainWindow(QtWidgets.QMainWindow):
 
         #Create config (define which device to use)
         config_gpu = aid_dl.get_config(cpu_nr,gpu_nr,deviceSelected,gpu_memory)
-        
-        with tf.Session(graph = tf.Graph(), config=config_gpu) as sess:                   
+
+        with tf.compat.v1.Session(graph = tf.Graph(), config=config_gpu) as sess:                   
+            sess.run(tf.compat.v1.global_variables_initializer())
+
             #get an index of the fitting popup
             listindex = self.popupcounter-1
             #Get user-specified filename for the new model
@@ -4932,12 +4925,12 @@ class MainWindow(QtWidgets.QMainWindow):
                 collection = False
     
                 if deviceSelected=="Multi-GPU" and cpu_weight_merge==True:
-                    with tf.device("/cpu:0"):
+                    strategy = tf.distribute.MirroredStrategy()
+                    with strategy.scope():
                         model_keras = load_model(model_keras_path,custom_objects=aid_dl.get_custom_metrics()) 
                 else:
                     model_keras = load_model(model_keras_path,custom_objects=aid_dl.get_custom_metrics())
-                #self.model_keras = None
-                
+
             #Initialize a variable for the parallel model
             model_keras_p = None
     
@@ -4945,7 +4938,8 @@ class MainWindow(QtWidgets.QMainWindow):
             if deviceSelected=="Multi-GPU":
                 if collection==False:
                     print("Adjusting the model for Multi-GPU")
-                    model_keras_p = multi_gpu_model(model_keras, gpus=gpu_nr, cpu_merge=cpu_merge, cpu_relocation=cpu_relocation)#indicate the numbers of gpus that you have
+                    with tf.device("/cpu:0"):#I dont think this line is correct...CHECK!
+                        model_keras_p = model_keras#multi_gpu_model(model_keras, gpus=gpu_nr, cpu_merge=cpu_merge, cpu_relocation=cpu_relocation)#indicate the numbers of gpus that you have
                     if self.radioButton_LoadContinueModel.isChecked():#calling multi_gpu_model resets the weights. Hence, they need to be put in place again
                         model_keras_p.layers[-2].set_weights(model_keras.get_weights())
                 elif collection==True:
@@ -4972,23 +4966,25 @@ class MainWindow(QtWidgets.QMainWindow):
                 nr_classes = int(model_keras[0].output.shape.dims[1])
             
             #Metrics to be displayed during fitting (real-time)
-            model_metrics = self.get_metrics(nr_classes)
-    
+            model_metrics = self.get_metrics()
+            model_metrics_t = aid_dl.get_metrics_tensors(model_metrics,nr_classes)
+
             #Compile model
             if collection==False and deviceSelected=="Single-GPU":
-                model_keras.compile(loss='categorical_crossentropy',optimizer='adam',metrics=model_metrics)#dont specify loss and optimizer yet...expert stuff will follow and model will be recompiled
+                model_keras.compile(loss='categorical_crossentropy',optimizer='adam',metrics=aid_dl.get_metrics_tensors(model_metrics,nr_classes))#dont specify loss and optimizer yet...expert stuff will follow and model will be recompiled
             elif collection==False and deviceSelected=="Multi-GPU":
-                model_keras_p.compile(loss='categorical_crossentropy',optimizer='adam',metrics=model_metrics)#dont specify loss and optimizer yet...expert stuff will follow and model will be recompiled
+                model_keras_p.compile(loss='categorical_crossentropy',optimizer='adam',metrics=aid_dl.get_metrics_tensors(model_metrics,nr_classes))#dont specify loss and optimizer yet...expert stuff will follow and model will be recompiled
             elif collection==True and deviceSelected=="Single-GPU":
                 #Switch off the expert tab!
                 self.fittingpopups_ui[listindex].groupBox_expertMode_pop.setChecked(False)
                 self.fittingpopups_ui[listindex].groupBox_expertMode_pop.setEnabled(False)
                 for m in model_keras:
-                    m.compile(loss='categorical_crossentropy',optimizer='adam',metrics=self.get_metrics(nr_classes))#dont specify loss and optimizer yet...expert stuff will follow and model will be recompiled
+                    model_metrics_ = self.get_metrics()
+                    m.compile(loss='categorical_crossentropy',optimizer='adam',metrics=aid_dl.get_metrics_tensors(model_metrics_,nr_classes))#dont specify loss and optimizer yet...expert stuff will follow and model will be recompiled
             elif collection==True and deviceSelected=="Multi-GPU":
                 print("Collection & Multi-GPU is not supported yet")
                 return
-            
+
             #Original learning rate:
             #learning_rate_original = self.learning_rate_original#K.eval(model_keras.optimizer.lr)
             #Original trainable states of layers with parameters
@@ -5190,9 +5186,10 @@ class MainWindow(QtWidgets.QMainWindow):
                 if train_last_layers==True:#Train only the last n layers
                     print("Train only the last "+str(train_last_layers_n)+ " layer(s)")
                     trainable_new = (len(trainable_original)-train_last_layers_n)*[False]+train_last_layers_n*[True]
-                    summary = aid_dl.model_change_trainability(model_keras,trainable_new,model_metrics,nr_classes,loss_expert,optimizer_settings,learning_rate_const)
+                    summary = aid_dl.model_change_trainability(model_keras,trainable_new,model_metrics_t,nr_classes,loss_expert,optimizer_settings,learning_rate_const)
                     if model_keras_p!=None:#if this is NOT None, there exists a parallel model, which also needs to be re-compiled
-                        aid_dl.model_compile(model_keras_p,loss_expert,optimizer_settings,learning_rate_const,model_metrics,nr_classes)
+                        model_metrics_t = aid_dl.get_metrics_tensors(self.get_metrics(),nr_classes)
+                        aid_dl.model_compile(model_keras_p,loss_expert,optimizer_settings,learning_rate_const,model_metrics_t,nr_classes)
                         print("Recompiled parallel model for train_last_layers==True")
                     text1 = "Expert mode: Request for custom trainability states: train only the last "+str(train_last_layers_n)+ " layer(s)\n"
                     #text2 = "\n--------------------\n"
@@ -5205,9 +5202,10 @@ class MainWindow(QtWidgets.QMainWindow):
                     trainable_new = len(trainable_original)*[False]
                     for index in layer_dense_ind:
                         trainable_new[index] = True
-                    summary = aid_dl.model_change_trainability(model_keras,trainable_new,model_metrics,nr_classes,loss_expert,optimizer_settings,learning_rate_const)                  
+                    summary = aid_dl.model_change_trainability(model_keras,trainable_new,model_metrics_t,nr_classes,loss_expert,optimizer_settings,learning_rate_const)                  
                     if model_keras_p!=None:#if this is NOT None, there exists a parallel model, which also needs to be re-compiled
-                        aid_dl.model_compile(model_keras_p,loss_expert,optimizer_settings,learning_rate_const,model_metrics,nr_classes)
+                        model_metrics_t = aid_dl.get_metrics_tensors(self.get_metrics(),nr_classes)
+                        aid_dl.model_compile(model_keras_p,loss_expert,optimizer_settings,learning_rate_const,model_metrics_t,nr_classes)
                         print("Recompiled parallel model for train_dense_layers==True")
                     text1 = "Expert mode: Request for custom trainability states: train only dense layer(s)\n"
                     #text2 = "\n--------------------\n"
@@ -5229,9 +5227,10 @@ class MainWindow(QtWidgets.QMainWindow):
                         self.fittingpopups_ui[listindex].textBrowser_FittingInfo.append(text)
                         dropout_expert_list = []
                     if len(dropout_expert_list)>0 and do_list!=dropout_expert_list:#if the dropout rates of the current model is not equal to the required do_list from user...
-                        do_changed = aid_dl.change_dropout(model_keras,dropout_expert_list,model_metrics,nr_classes,loss_expert,optimizer_settings,learning_rate_const)
+                        do_changed = aid_dl.change_dropout(model_keras,dropout_expert_list,model_metrics_t,nr_classes,loss_expert,optimizer_settings,learning_rate_const)
                         if model_keras_p!=None:#if this is NOT None, there exists a parallel model, which also needs to be re-compiled
-                            aid_dl.model_compile(model_keras_p,loss_expert,optimizer_settings,learning_rate_const,model_metrics,nr_classes)
+                            model_metrics_t = aid_dl.get_metrics_tensors(self.get_metrics(),nr_classes)
+                            aid_dl.model_compile(model_keras_p,loss_expert,optimizer_settings,learning_rate_const,model_metrics_t,nr_classes)
                             print("Recompiled parallel model to change dropout. I'm not sure if this works already!")
                         if do_changed==1:
                             text_do = "Dropout rate(s) in model was/were changed to: "+str(dropout_expert_list)
@@ -5246,9 +5245,9 @@ class MainWindow(QtWidgets.QMainWindow):
             text_updates = ""
             #Compare current lr and the lr on expert tab:
             if collection == False:
-                lr_current = K.eval(model_keras.optimizer.lr)
+                lr_current = model_keras.optimizer.get_config()["learning_rate"]
             else:
-                lr_current = K.eval(model_keras[0].optimizer.lr)
+                lr_current = model_keras[0].optimizer.get_config()["learning_rate"]
     
             lr_diff = learning_rate_const-lr_current
             if  abs(lr_diff) > 1e-6:
@@ -5286,12 +5285,14 @@ class MainWindow(QtWidgets.QMainWindow):
             if recompile==True:
                 print("Recompiling...")
                 if collection==False:
-                    aid_dl.model_compile(model_keras,loss_expert,optimizer_settings,learning_rate_const,model_metrics,nr_classes)
+                    aid_dl.model_compile(model_keras,loss_expert,optimizer_settings,learning_rate_const,model_metrics_t,nr_classes)
                 if collection==True:
                     for m in model_keras:
-                        aid_dl.model_compile(m, loss_expert, optimizer_settings, learning_rate_const,model_metrics, nr_classes)
+                        model_metrics_t = aid_dl.get_metrics_tensors(self.get_metrics(),nr_classes)
+                        aid_dl.model_compile(m, loss_expert, optimizer_settings, learning_rate_const,model_metrics_t, nr_classes)
                 if model_keras_p!=None:#if this is NOT None, there exists a parallel model, which also needs to be re-compiled
-                    aid_dl.model_compile(model_keras_p,loss_expert,optimizer_settings,learning_rate_const,model_metrics,nr_classes)
+                    model_metrics_t = aid_dl.get_metrics_tensors(self.get_metrics(),nr_classes)
+                    aid_dl.model_compile(model_keras_p,loss_expert,optimizer_settings,learning_rate_const,model_metrics_t,nr_classes)
                     print("Recompiled parallel model to adjust learning rate, loss, optimizer")
     
             self.fittingpopups_ui[listindex].textBrowser_FittingInfo.append(text_updates)
@@ -5561,7 +5562,7 @@ class MainWindow(QtWidgets.QMainWindow):
                 
             X_valid = np.concatenate(X_valid)
             y_valid = np.concatenate(y_valid)
-            Y_valid = np_utils.to_categorical(y_valid, nr_classes)# * 2 - 1
+            Y_valid = to_categorical(y_valid, nr_classes)# * 2 - 1
             xtra_valid = np.concatenate(xtra_valid)
             if not bool(self.actionExport_Off.isChecked())==True:
                 #Save the labels
@@ -5762,26 +5763,15 @@ class MainWindow(QtWidgets.QMainWindow):
 
             #Save the initial values (Epoch 1)
             update_para_dict()
-
-            model_metrics_names = []
-            for met in model_metrics:
-                if type(met)==str:
-                    model_metrics_names.append(met) 
-                else:
-                    metname = met.name
-                    metlabel = met.label
-                    if metlabel>0:
-                        metname = metname+"_"+str(metlabel)
-                    model_metrics_names.append(metname) 
             
             #Dictionary for records in metrics
             model_metrics_records = {}
-            model_metrics_records["acc"] = 0 #accuracy  starts at zero and approaches 1 during training         
-            model_metrics_records["val_acc"] = 0 #accuracy  starts at zero and approaches 1 during training         
+            model_metrics_records["accuracy"] = 0 #accuracy  starts at zero and approaches 1 during training         
+            model_metrics_records["val_accuracy"] = 0 #accuracy  starts at zero and approaches 1 during training         
             model_metrics_records["loss"] = 9E20 ##loss starts very high and approaches 0 during training         
             model_metrics_records["val_loss"] = 9E20 ##loss starts very high and approaches 0 during training         
-            for key in model_metrics_names:
-                if 'precision' in key or 'recall' in key or 'f1_score' in key:
+            for key in model_keras.metrics_names:
+                if 'precision' in key or 'recall' in key or 'auc' in key:
                     model_metrics_records[key] = 0 #those metrics start at zero and approach 1         
                     model_metrics_records["val_"+key] = 0 #those metrics start at zero and approach 1         
     
@@ -5875,7 +5865,7 @@ class MainWindow(QtWidgets.QMainWindow):
                         X_batch = np.concatenate(self.X_batch)
                         y_batch = np.concatenate(self.y_batch)
        
-                    Y_batch = np_utils.to_categorical(y_batch, nr_classes)# * 2 - 1
+                    Y_batch = to_categorical(y_batch, nr_classes)# * 2 - 1
                     t4 = time.time()
                     if verbose == 1:
                         print("Time to perform affine augmentation ="+str(t4-t3))
@@ -6027,9 +6017,10 @@ class MainWindow(QtWidgets.QMainWindow):
                                                 print("Train only the last "+str(train_last_layers_n)+ " layer(s)")
                                             trainable_new = (len(trainable_original)-train_last_layers_n)*[False]+train_last_layers_n*[True]
                                             #Change the trainability states. Model compilation is done inside model_change_trainability
-                                            summary = aid_dl.model_change_trainability(model_keras,trainable_new,model_metrics,nr_classes,loss_expert,optimizer_settings,learning_rate_const)
+                                            summary = aid_dl.model_change_trainability(model_keras,trainable_new,model_metrics_t,nr_classes,loss_expert,optimizer_settings,learning_rate_const)
                                             if model_keras_p!=None:#if this is NOT None, there exists a parallel model, which also needs to be re-compiled
-                                                aid_dl.model_compile(model_keras_p,loss_expert,optimizer_settings,learning_rate_const,model_metrics,nr_classes)
+                                                model_metrics_t = aid_dl.get_metrics_tensors(self.get_metrics(),nr_classes)
+                                                aid_dl.model_compile(model_keras_p,loss_expert,optimizer_settings,learning_rate_const,model_metrics_t,nr_classes)
                                                 print("Recompiled parallel model due to train_last_layers==True")
                                             text1 = "Expert mode: Request for custom trainability states: train only the last "+str(train_last_layers_n)+ " layer(s)\n"
                                             #text2 = "\n--------------------\n"
@@ -6044,9 +6035,10 @@ class MainWindow(QtWidgets.QMainWindow):
                                             for index in layer_dense_ind:
                                                 trainable_new[index] = True
                                             #Change the trainability states. Model compilation is done inside model_change_trainability
-                                            summary = aid_dl.model_change_trainability(model_keras,trainable_new,model_metrics,nr_classes,loss_expert,optimizer_settings,learning_rate_const)                 
+                                            summary = aid_dl.model_change_trainability(model_keras,trainable_new,model_metrics_t,nr_classes,loss_expert,optimizer_settings,learning_rate_const)                 
                                             if model_keras_p!=None:#if this is NOT None, there exists a parallel model, which also needs to be re-compiled
-                                                aid_dl.model_compile(model_keras_p,loss_expert,optimizer_settings,learning_rate_const,model_metrics,nr_classes)
+                                                model_metrics_t = aid_dl.get_metrics_tensors(self.get_metrics(),nr_classes)
+                                                aid_dl.model_compile(model_keras_p,loss_expert,optimizer_settings,learning_rate_const,model_metrics_t,nr_classes)
                                                 print("Recompiled parallel model due to train_dense_layers==True")
                                             text1 = "Expert mode: Request for custom trainability states: train only dense layer(s)\n"
                                             #text2 = "\n--------------------\n"
@@ -6070,9 +6062,10 @@ class MainWindow(QtWidgets.QMainWindow):
     
                                             if len(dropout_expert_list)>0 and do_list!=dropout_expert_list:#if the dropout rates of the current model is not equal to the required do_list from user...
                                                 #Change dropout. Model .compile happens inside change_dropout function
-                                                do_changed = aid_dl.change_dropout(model_keras,dropout_expert_list,model_metrics,nr_classes,loss_expert,optimizer_settings,learning_rate_const)
+                                                do_changed = aid_dl.change_dropout(model_keras,dropout_expert_list,model_metrics_t,nr_classes,loss_expert,optimizer_settings,learning_rate_const)
                                                 if model_keras_p!=None:#if model_keras_p is NOT None, there exists a parallel model, which also needs to be re-compiled
-                                                    aid_dl.model_compile(model_keras_p,loss_expert,optimizer_settings,learning_rate_const,model_metrics,nr_classes)
+                                                    model_metrics_t = aid_dl.get_metrics_tensors(self.get_metrics(),nr_classes)
+                                                    aid_dl.model_compile(model_keras_p,loss_expert,optimizer_settings,learning_rate_const,model_metrics_t,nr_classes)
                                                     print("Recompiled parallel model due to changed dropout. I'm not sure if this works already!")
     
                                                 if do_changed==1:
@@ -6119,7 +6112,8 @@ class MainWindow(QtWidgets.QMainWindow):
                                         print("Change 'trainable' layers back to original state")
                                     summary = aid_dl.model_change_trainability(model_keras,trainable_original,model_metrics,nr_classes,loss_expert,optimizer_settings,learning_rate_const)                 
                                     if model_keras_p!=None:#if model_keras_p is NOT None, there exists a parallel model, which also needs to be re-compiled
-                                        aid_dl.model_compile(model_keras_p,loss_expert,optimizer_settings,learning_rate_const,model_metrics,nr_classes)
+                                        model_metrics_t = aid_dl.get_metrics_tensors(self.get_metrics(),nr_classes)
+                                        aid_dl.model_compile(model_keras_p,loss_expert,optimizer_settings,learning_rate_const,model_metrics_t,nr_classes)
                                         print("Recompiled parallel model to change 'trainable' layers back to original state")
     
                                     text1 = "Expert mode turns off: Request for orignal trainability states:\n"
@@ -6133,9 +6127,10 @@ class MainWindow(QtWidgets.QMainWindow):
                                         print("Set learning rate callback to None")
                                     
                                     if len(do_list_original)>0:
-                                        do_changed = aid_dl.change_dropout(model_keras,do_list_original,model_metrics,nr_classes,loss_expert,optimizer_settings,learning_rate_const)
+                                        do_changed = aid_dl.change_dropout(model_keras,do_list_original,model_metrics_t,nr_classes,loss_expert,optimizer_settings,learning_rate_const)
                                         if model_keras_p!=None:#if model_keras_p is NOT None, there exists a parallel model, which also needs to be re-compiled
-                                            aid_dl.model_compile(model_keras_p,loss_expert,optimizer_settings,learning_rate_const,model_metrics,nr_classes)
+                                            model_metrics_t = aid_dl.get_metrics_tensors(self.get_metrics(),nr_classes)
+                                            aid_dl.model_compile(model_keras_p,loss_expert,optimizer_settings,learning_rate_const,model_metrics_t,nr_classes)
                                             print("Recompiled parallel model to change dropout values back to original state. I'm not sure if this works!")
     
                                         if do_changed==1:
@@ -6148,9 +6143,9 @@ class MainWindow(QtWidgets.QMainWindow):
                                 text_updates = ""
                                 #Compare current lr and the lr on expert tab:
                                 if collection==False:
-                                    lr_current = K.eval(model_keras.optimizer.lr)
+                                    lr_current = model_keras.optimizer.get_config()["learning_rate"]
                                 else:
-                                    lr_current = K.eval(model_keras[0].optimizer.lr)
+                                    lr_current = model_keras[0].optimizer.get_config()["learning_rate"]
     
                                 lr_diff = learning_rate_const-lr_current
                                 if  abs(lr_diff) > 1e-6:
@@ -6185,9 +6180,11 @@ class MainWindow(QtWidgets.QMainWindow):
     
                                 if recompile==True and collection==False:
                                     print("Recompiling...")
-                                    aid_dl.model_compile(model_keras,loss_expert,optimizer_settings,learning_rate_const,model_metrics,nr_classes)
+                                    model_metrics_t = aid_dl.get_metrics_tensors(self.get_metrics(),nr_classes)
+                                    aid_dl.model_compile(model_keras,loss_expert,optimizer_settings,learning_rate_const,model_metrics_t,nr_classes)
                                     if model_keras_p!=None:#if model_keras_p is NOT None, there exists a parallel model, which also needs to be re-compiled
-                                        aid_dl.model_compile(model_keras_p,loss_expert,optimizer_settings,learning_rate_const,model_metrics,nr_classes)
+                                        model_metrics_t = aid_dl.get_metrics_tensors(self.get_metrics(),nr_classes)
+                                        aid_dl.model_compile(model_keras_p,loss_expert,optimizer_settings,learning_rate_const,model_metrics_t,nr_classes)
                                         print("Recompiled parallel model to change optimizer, loss and learninig rate.")
     
                                 elif recompile==True and collection==True:
@@ -6196,7 +6193,8 @@ class MainWindow(QtWidgets.QMainWindow):
                                         return
                                     print("Recompiling...")
                                     for m in model_keras:
-                                        aid_dl.model_compile(m,loss_expert,optimizer_settings,learning_rate_const,model_metrics,nr_classes)
+                                        model_metrics_t = aid_dl.get_metrics_tensors(self.get_metrics(),nr_classes)
+                                        aid_dl.model_compile(m,loss_expert,optimizer_settings,learning_rate_const,model_metrics_t,nr_classes)
     
                                 self.fittingpopups_ui[listindex].textBrowser_FittingInfo.append(text_updates)
     
@@ -6298,7 +6296,7 @@ class MainWindow(QtWidgets.QMainWindow):
                                 for key in history.history.keys():
                                     value = history.history[key][-1]
                                     record = model_metrics_records[key]
-                                    if 'val_acc' in key or 'val_precision' in key or 'val_recall' in key or 'val_f1_score' in key:
+                                    if 'val_accuracy' in key or 'val_precision' in key or 'val_recall' in key or 'val_auc' in key:
                                         #These metrics should go up (towards 1)
                                         if value>record:
                                             model_metrics_records[key] = value
@@ -6322,7 +6320,7 @@ class MainWindow(QtWidgets.QMainWindow):
                                     print(text)
 
                                     if os.path.exists(os.path.dirname(new_modelname)):
-                                        model_keras.save(new_modelname.split(".model")[0]+"_"+str(counter)+".model")
+                                        model_keras.save(new_modelname.split(".model")[0]+"_"+str(counter)+".model",save_format='h5')
                                         text = "Record was broken -> saved model"
                                         print(text)
                                         self.fittingpopups_ui[listindex].textBrowser_FittingInfo.append(text)
@@ -6361,7 +6359,7 @@ class MainWindow(QtWidgets.QMainWindow):
                                         self.fittingpopups_ui[listindex].textBrowser_FittingInfo.append(text)
 
                                         #Save the  model
-                                        model_keras.save(new_modelname.split(".model")[0]+"_"+str(counter)+".model")
+                                        model_keras.save(new_modelname.split(".model")[0]+"_"+str(counter)+".model",save_format='h5')
                                         text = "Model saved successfully to temp"
                                         print(text)
                                         self.fittingpopups_ui[listindex].textBrowser_FittingInfo.append(text)
@@ -6382,7 +6380,7 @@ class MainWindow(QtWidgets.QMainWindow):
                                     if deviceSelected=="Multi-GPU":#in case of Multi-GPU...
                                         #In case of multi-GPU, first copy the weights of the parallel model to the normal model
                                         model_keras.set_weights(model_keras_p.layers[-2].get_weights())
-                                    model_keras.save(new_modelname.split(".model")[0]+"_"+str(counter)+".model")
+                                    model_keras.save(new_modelname.split(".model")[0]+"_"+str(counter)+".model",save_format='h5')
                                     Saved.append(1)
                                     self.fittingpopups_ui[listindex].checkBox_saveEpoch_pop.setChecked(False)
                                 else:
@@ -6404,7 +6402,7 @@ class MainWindow(QtWidgets.QMainWindow):
                                     for key in history.history.keys():
                                         value = history.history[key][-1]
                                         record = model_metrics_records[key]
-                                        if 'val_acc' in key or 'val_precision' in key or 'val_recall' in key or 'val_f1_score' in key:
+                                        if 'val_accuracy' in key or 'val_precision' in key or 'val_recall' in key or 'val_auc' in key:
                                             #These metrics should go up (towards 1)
                                             if value>record:
                                                 model_metrics_records[key] = value
@@ -6733,7 +6731,7 @@ class MainWindow(QtWidgets.QMainWindow):
             #(sorry, this is necessary since TensorFlow does not support passing models between threads)
             self.model_keras_path = new_modelname.split(".model")[0]+"_0.model"
             #save a first version of the .model
-            model_keras.save(self.model_keras_path)
+            model_keras.save(self.model_keras_path,save_format='h5')
             #Delete the variable to save RAM
             model_keras = None #Since this uses TensorFlow, I have to reload the model action_fit_model_worker anyway
 
@@ -6747,7 +6745,6 @@ class MainWindow(QtWidgets.QMainWindow):
 
             #Delete the variable to save RAM
             model_keras = None #Since this uses TensorFlow, I have to reload the model action_fit_model_worker anyway
-        
         #Check that Data is on RAM
         DATA_len = len(self.ram) #this returns the len of a dictionary. The dictionary is supposed to contain the training/validation data; otherwise the data is read from .rtdc data directly (SLOW unless you have ultra-good SSD)
 
@@ -6816,8 +6813,8 @@ class MainWindow(QtWidgets.QMainWindow):
             self.fittingpopups_ui[listindex].Histories.append(dic) #append to a list. Will be used for plotting in the "Update plot" function
             OtherMetrics_keys = self.fittingpopups_ui[listindex].RealTime_OtherMetrics.keys()
             #Append to lists for real-time plotting
-            self.fittingpopups_ui[listindex].RealTime_Acc.append(dic["acc"][0])
-            self.fittingpopups_ui[listindex].RealTime_ValAcc.append(dic["val_acc"][0])
+            self.fittingpopups_ui[listindex].RealTime_Acc.append(dic["accuracy"][0])
+            self.fittingpopups_ui[listindex].RealTime_ValAcc.append(dic["val_accuracy"][0])
             self.fittingpopups_ui[listindex].RealTime_Loss.append(dic["loss"][0])
             self.fittingpopups_ui[listindex].RealTime_ValLoss.append(dic["val_loss"][0])
 
@@ -6827,7 +6824,7 @@ class MainWindow(QtWidgets.QMainWindow):
             ind_sort = np.argsort(keys_)
             keys = list(np.array(keys)[ind_sort])
             #First keys should always be acc,loss,val_acc,val_loss -in this order
-            keys_first = ["acc","loss","val_acc","val_loss"]
+            keys_first = ["accuracy","loss","val_accuracy","val_loss"]
             for i in range(len(keys_first)):
                 if keys_first[i] in keys:
                     ind = np.where(np.array(keys)==keys_first[i])[0][0]
@@ -6836,7 +6833,7 @@ class MainWindow(QtWidgets.QMainWindow):
                         keys.insert(i,keys_first[i])
     
             for key in keys:
-                if "precision" in key or "f1" in key or "recall" in key or "LearningRate" in key:
+                if "precision" in key or "auc" in key or "recall" in key or "LearningRate" in key:
                     if not key in OtherMetrics_keys: #if this key is missing in self.fittingpopups_ui[listindex].RealTime_OtherMetrics attach it!
                         self.fittingpopups_ui[listindex].RealTime_OtherMetrics[key] = []
                     self.fittingpopups_ui[listindex].RealTime_OtherMetrics[key].append(dic[key])
@@ -6886,15 +6883,15 @@ class MainWindow(QtWidgets.QMainWindow):
                     for i in range(len(self.fittingpopups_ui[listindex].historyscatters)): #iterate over all available plots
                         key = list(self.fittingpopups_ui[listindex].historyscatters.keys())[i]
                         if key in selected_items:
-                            if key=="acc":
+                            if key=="accuracy":
                                 y = np.array(self.fittingpopups_ui[listindex].RealTime_Acc).astype(float)
-                            elif key=="val_acc":
+                            elif key=="val_accuracy":
                                 y = np.array(self.fittingpopups_ui[listindex].RealTime_ValAcc).astype(float)
                             elif key=="loss":
                                 y = np.array(self.fittingpopups_ui[listindex].RealTime_Loss).astype(float)
                             elif key=="val_loss":
                                 y = np.array(self.fittingpopups_ui[listindex].RealTime_ValLoss).astype(float)
-                            elif "precision" in key or "f1" in key or "recall" in key or "LearningRate" in key:
+                            elif "precision" in key or "auc" in key or "recall" in key or "LearningRate" in key:
                                y = np.array(self.fittingpopups_ui[listindex].RealTime_OtherMetrics[key]).astype(float).reshape(-1,)
                             else:
                                 return
@@ -6989,7 +6986,7 @@ class MainWindow(QtWidgets.QMainWindow):
         #(sorry, this is necessary since TensorFlow does not support passing models between threads)
         self.model_keras_path = new_modelname.split(".model")[0]+"_0.model"
         #save a first version of the .model
-        model_keras.save(self.model_keras_path)
+        model_keras.save(self.model_keras_path,save_format='h5')
         #Delete the variable to save RAM
         model_keras = None #Since this uses TensorFlow, I have to reload the model action_fit_model_worker anyway
 
@@ -7038,7 +7035,7 @@ class MainWindow(QtWidgets.QMainWindow):
         #Create config (define which device to use)
         config_gpu = aid_dl.get_config(cpu_nr,gpu_nr,deviceSelected,gpu_memory)
         
-        with tf.Session(graph = tf.Graph(), config=config_gpu) as sess:                   
+        with tf.compat.v1.Session(graph = tf.Graph(), config=config_gpu) as sess:                   
             #get an index of the fitting popup
             #listindex = self.popupcounter-1
             #Get user-specified filename for the new model
@@ -7056,10 +7053,12 @@ class MainWindow(QtWidgets.QMainWindow):
     
             else:
                 collection = False
-    
+                #Baustelle
                 if deviceSelected=="Multi-GPU" and cpu_weight_merge==True:
                     with tf.device("/cpu:0"):
-                        model_keras = load_model(model_keras_path,custom_objects=aid_dl.get_custom_metrics()) 
+                        strategy = tf.distribute.MirroredStrategy()
+                        with strategy.scope(): 
+                            model_keras = load_model(model_keras_path,custom_objects=aid_dl.get_custom_metrics()) 
                 else:
                     model_keras = load_model(model_keras_path,custom_objects=aid_dl.get_custom_metrics())
                 
@@ -7070,7 +7069,7 @@ class MainWindow(QtWidgets.QMainWindow):
             if deviceSelected=="Multi-GPU":
                 if collection==False:
                     print("Adjusting the model for Multi-GPU")
-                    model_keras_p = multi_gpu_model(model_keras, gpus=gpu_nr, cpu_merge=cpu_merge, cpu_relocation=cpu_relocation)#indicate the numbers of gpus that you have
+                    model_keras_p = model_keras#multi_gpu_model(model_keras, gpus=gpu_nr, cpu_merge=cpu_merge, cpu_relocation=cpu_relocation)#indicate the numbers of gpus that you have
                     if self.radioButton_LoadContinueModel.isChecked():#calling multi_gpu_model resets the weights. Hence, they need to be put in place again
                         model_keras_p.layers[-2].set_weights(model_keras.get_weights())
                 elif collection==True:
@@ -7093,13 +7092,13 @@ class MainWindow(QtWidgets.QMainWindow):
                 nr_classes = int(model_keras[0].output.shape.dims[1])
             
             #Metrics to be displayed during fitting (real-time)
-            model_metrics = self.get_metrics(nr_classes)
+            model_metrics = self.get_metrics()
     
             #Compile model
             if  deviceSelected=="Single-GPU":
-                model_keras.compile(loss='categorical_crossentropy',optimizer='adam',metrics=model_metrics)#dont specify loss and optimizer yet...expert stuff will follow and model will be recompiled
+                model_keras.compile(loss='categorical_crossentropy',optimizer='adam',metrics=aid_dl.get_metrics_tensors(model_metrics,nr_classes))#dont specify loss and optimizer yet...expert stuff will follow and model will be recompiled
             elif deviceSelected=="Multi-GPU":
-                model_keras_p.compile(loss='categorical_crossentropy',optimizer='adam',metrics=model_metrics)#dont specify loss and optimizer yet...expert stuff will follow and model will be recompiled
+                model_keras_p.compile(loss='categorical_crossentropy',optimizer='adam',metrics=aid_dl.get_metrics_tensors(model_metrics,nr_classes))#dont specify loss and optimizer yet...expert stuff will follow and model will be recompiled
 
             #Collect all information about the fitting routine that was user
             #defined
@@ -7210,7 +7209,8 @@ class MainWindow(QtWidgets.QMainWindow):
                     trainable_new = (len(trainable_original)-train_last_layers_n)*[False]+train_last_layers_n*[True]
                     summary = aid_dl.model_change_trainability(model_keras,trainable_new,model_metrics,nr_classes,loss_expert,optimizer_settings,learning_rate_const)
                     if model_keras_p!=None:#if this is NOT None, there exists a parallel model, which also needs to be re-compiled
-                        aid_dl.model_compile(model_keras_p,loss_expert,optimizer_settings,learning_rate_const,model_metrics,nr_classes)
+                        model_metrics_t = aid_dl.get_metrics_tensors(self.get_metrics(),nr_classes)
+                        aid_dl.model_compile(model_keras_p,loss_expert,optimizer_settings,learning_rate_const,model_metrics_t,nr_classes)
                         print("Recompiled parallel model for train_last_layers==True")
                     text1 = "Expert mode: Request for custom trainability states: train only the last "+str(train_last_layers_n)+ " layer(s)\n"
                     #text2 = "\n--------------------\n"
@@ -7225,7 +7225,8 @@ class MainWindow(QtWidgets.QMainWindow):
                         trainable_new[index] = True
                     summary = aid_dl.model_change_trainability(model_keras,trainable_new,model_metrics,nr_classes,loss_expert,optimizer_settings,learning_rate_const)                  
                     if model_keras_p!=None:#if this is NOT None, there exists a parallel model, which also needs to be re-compiled
-                        aid_dl.model_compile(model_keras_p,loss_expert,optimizer_settings,learning_rate_const,model_metrics,nr_classes)
+                        model_metrics_t = aid_dl.get_metrics_tensors(self.get_metrics(),nr_classes)
+                        aid_dl.model_compile(model_keras_p,loss_expert,optimizer_settings,learning_rate_const,model_metrics_t,nr_classes)
                         print("Recompiled parallel model for train_dense_layers==True")
                     text1 = "Expert mode: Request for custom trainability states: train only dense layer(s)\n"
                     #text2 = "\n--------------------\n"
@@ -7247,9 +7248,10 @@ class MainWindow(QtWidgets.QMainWindow):
                         print(text)
                         dropout_expert_list = []
                     if len(dropout_expert_list)>0 and do_list!=dropout_expert_list:#if the dropout rates of the current model is not equal to the required do_list from user...
-                        do_changed = aid_dl.change_dropout(model_keras,dropout_expert_list,model_metrics,nr_classes,loss_expert,optimizer_settings,learning_rate_const)
+                        do_changed = aid_dl.change_dropout(model_keras,dropout_expert_list,model_metrics_t,nr_classes,loss_expert,optimizer_settings,learning_rate_const)
                         if model_keras_p!=None:#if this is NOT None, there exists a parallel model, which also needs to be re-compiled
-                            aid_dl.model_compile(model_keras_p,loss_expert,optimizer_settings,learning_rate_const,model_metrics,nr_classes)
+                            model_metrics_t = aid_dl.get_metrics_tensors(self.get_metrics(),nr_classes)
+                            aid_dl.model_compile(model_keras_p,loss_expert,optimizer_settings,learning_rate_const,model_metrics_t,nr_classes)
                             print("Recompiled parallel model to change dropout. I'm not sure if this works already!")
                         if do_changed==1:
                             text_do = "Dropout rate(s) in model was/were changed to: "+str(dropout_expert_list)
@@ -7262,9 +7264,9 @@ class MainWindow(QtWidgets.QMainWindow):
             text_updates = ""
             #Compare current lr and the lr on expert tab:
             if collection == False:
-                lr_current = K.eval(model_keras.optimizer.lr)
+                lr_current = model_keras.optimizer.get_config()["learning_rate"]
             else:
-                lr_current = K.eval(model_keras[0].optimizer.lr)
+                lr_current = model_keras[0].optimizer.get_config()["learning_rate"]
     
             lr_diff = learning_rate_const-lr_current
             if  abs(lr_diff) > 1e-6:
@@ -7299,12 +7301,15 @@ class MainWindow(QtWidgets.QMainWindow):
             if recompile==True:
                 print("Recompiling...")
                 if collection==False:
-                    aid_dl.model_compile(model_keras,loss_expert,optimizer_settings,learning_rate_const,model_metrics,nr_classes)
+                    model_metrics_t = aid_dl.get_metrics_tensors(self.get_metrics(),nr_classes)
+                    aid_dl.model_compile(model_keras,loss_expert,optimizer_settings,learning_rate_const,model_metrics_t,nr_classes)
                 if collection==True:
                     for m in model_keras[1]:
-                        aid_dl.model_compile(m, loss_expert, optimizer_settings, learning_rate_const,model_metrics, nr_classes)
+                        model_metrics_t = aid_dl.get_metrics_tensors(self.get_metrics(),nr_classes)
+                        aid_dl.model_compile(m, loss_expert, optimizer_settings, learning_rate_const,model_metrics_t, nr_classes)
                 if model_keras_p!=None:#if this is NOT None, there exists a parallel model, which also needs to be re-compiled
-                    aid_dl.model_compile(model_keras_p,loss_expert,optimizer_settings,learning_rate_const,model_metrics,nr_classes)
+                    model_metrics_t = aid_dl.get_metrics_tensors(self.get_metrics(),nr_classes)
+                    aid_dl.model_compile(model_keras_p,loss_expert,optimizer_settings,learning_rate_const,model_metrics_t,nr_classes)
                     print("Recompiled parallel model to adjust learning rate, loss, optimizer")
     
             print(text_updates)
@@ -7403,7 +7408,7 @@ class MainWindow(QtWidgets.QMainWindow):
                 
             X_valid = np.concatenate(X_valid)
             y_valid = np.concatenate(y_valid)
-            Y_valid = np_utils.to_categorical(y_valid, nr_classes)# * 2 - 1
+            Y_valid = to_categorical(y_valid, nr_classes)# * 2 - 1
             xtra_valid = np.concatenate(xtra_valid)
     
             if len(X_valid.shape)==4:
@@ -7493,7 +7498,7 @@ class MainWindow(QtWidgets.QMainWindow):
             X_train = aid_img.affine_augm(X_train,v_flip,h_flip,rotation,width_shift,height_shift,zoom,shear) #Affine image augmentation
             y_train = np.copy(y_train)
    
-            Y_train = np_utils.to_categorical(y_train, nr_classes)# * 2 - 1
+            Y_train = to_categorical(y_train, nr_classes)# * 2 - 1
             t4 = time.time()
             if verbose == 1:
                 print("Time to perform affine augmentation ="+str(t4-t3))
@@ -8612,9 +8617,9 @@ class MainWindow(QtWidgets.QMainWindow):
                     temporaryfile = "".join(temporaryfile)+".xlsx"
                     temporaryfile = os.path.join(temp_path,temporaryfile)
                     shutil.copyfile(filename,temporaryfile) #copy the original excel file there
-                    dic = pd.read_excel(temporaryfile,sheet_name='History',index_col=0) #open it there
+                    dic = pd.read_excel(temporaryfile,sheet_name='History',index_col=0,engine="openpyxl") #open it there
                     self.loaded_history = dic
-                    para = pd.read_excel(temporaryfile,sheet_name='Parameters')
+                    para = pd.read_excel(temporaryfile,sheet_name='Parameters',engine="openpyxl")
                     print(temporaryfile)
                     #delete the tempfile
                     os.remove(temporaryfile)
@@ -8654,7 +8659,7 @@ class MainWindow(QtWidgets.QMainWindow):
         keys = list(np.array(keys)[ind_sort])
 
         #First keys should always be acc,loss,val_acc,val_loss -in this order
-        keys_first = ["acc","loss","val_acc","val_loss"]
+        keys_first = ["accuracy","loss","val_accuracy","val_loss"]
         for i in range(len(keys_first)):
             if keys_first[i] in keys:
                 ind = np.where(np.array(keys)==keys_first[i])[0][0]
@@ -8789,20 +8794,20 @@ class MainWindow(QtWidgets.QMainWindow):
             path_new = os.path.splitext(path)[0] + "_optimized.pb"
             aid_dl.convert_kerastf_2_optimized_pb(path,path_new)
             text = "Conversion Keras TensorFlow -> Optimized .pb is done"
-            conversion_successful_msg(text)
+            #conversion_successful_msg(text)
 
         ####################Frozen -> Optimized .pb############################
         elif target_format=="Optimized TensorFlow .pb" and source_format=="Frozen TensorFlow .pb":
             path_new = os.path.splitext(path)[0] + "_optimized.pb"
             aid_dl.convert_frozen_2_optimized_pb(path,path_new)
             text = "Conversion Frozen -> Optimized .pb is done"
-            conversion_successful_msg(text)
+            #conversion_successful_msg(text)
 
         ##################Keras TensorFlow -> ONNX####################
-        elif target_format=="ONNX (via keras2onnx)" and source_format=="Keras TensorFlow":
+        elif target_format=="ONNX (via tf2onnx)" and source_format=="Keras TensorFlow":
             path_new = os.path.splitext(path)[0] + ".onnx"
             aid_dl.convert_kerastf_2_onnx(path,path_new)
-            text = "Conversion Keras TensorFlow -> ONNX (via keras2onnx) is done"
+            text = "Conversion Keras TensorFlow -> ONNX (via tf2onnx) is done"
             conversion_successful_msg(text)
 
         ##################Keras TensorFlow -> ONNX via MMdnn####################
@@ -8875,9 +8880,8 @@ class MainWindow(QtWidgets.QMainWindow):
         
     def history_tab_convertModel_nnet_worker(self,ConvertToNnet,progress_callback,history_callback):
         #Define a new session -> Necessary for threading in TensorFlow
-        #with tf.Session(graph = tf.Graph(), config=config_gpu) as sess:
-        with tf.Session() as sess:
-        
+        with tf.compat.v1.Session() as sess:
+            sess.run(tf.compat.v1.global_variables_initializer()) 
             path = self.model_2_convert
             try:
                 model_keras = load_model(path,custom_objects=aid_dl.get_custom_metrics())
@@ -8896,14 +8900,20 @@ class MainWindow(QtWidgets.QMainWindow):
                     model_config = model_config["layers"]#for keras version>2.2.3, there is a change in the output of get_config()
                 #Convert model to theano weights format (Only necesary for CNNs)
                 for layer in model_keras.layers:
-                   if layer.__class__.__name__ in ['Convolution1D', 'Convolution2D']:
+                   if "conv" in layer.__class__.__name__.lower():# in ['Convolution1D', 'Convolution2D']:
                       original_w = K.get_value(layer.W)
-                      converted_w = convert_kernel(original_w)
+                      converted_w = aid_dl.convert_kernel(original_w)
                       K.set_value(layer.W, converted_w)
                 
                 nnet_path, nnet_filename = os.path.split(self.model_2_convert)
                 nnet_filename = nnet_filename.split(".model")[0]+".nnet" 
                 out_path = os.path.join(nnet_path,nnet_filename)
+                
+                #the Input layer seems to be missing for newer versions of keras
+                layers = [layer.__class__.__name__ for layer in model_keras.layers]
+                if "input" not in layers[0].lower():
+                    model_config = model_config[1:]
+
                 aid_dl.dump_to_simple_cpp(model_keras=model_keras,model_config=model_config,output=out_path,verbose=False)
                             
 #            sess.close()
@@ -9003,8 +9013,8 @@ class MainWindow(QtWidgets.QMainWindow):
         filename = filename[0]
         if len(filename)==0:
             return
-        xlsx = pd.ExcelFile(filename)
-        UsedData = pd.read_excel(xlsx,sheet_name="UsedData")
+        xlsx = pd.ExcelFile(filename, engine='openpyxl')
+        UsedData = pd.read_excel(xlsx,sheet_name="UsedData",engine="openpyxl")
         Files = list(UsedData["rtdc_path"])
 
         file_exists = [os.path.exists(url) for url in Files]
@@ -9179,7 +9189,7 @@ class MainWindow(QtWidgets.QMainWindow):
             pass
         #Load the parameters
         elif msg.clickedButton()==allparams: #show image and heatmap overlay
-            Parameters = pd.read_excel(xlsx,sheet_name="Parameters")
+            Parameters = pd.read_excel(xlsx,sheet_name="Parameters",engine="openpyxl")
             aid_frontend.load_hyper_params(self,Parameters)
 #        if msg.clickedButton()==cancel: #show image and heatmap overlay
 #            return
@@ -9447,16 +9457,9 @@ class MainWindow(QtWidgets.QMainWindow):
             model_full_h5 = h5py.File(self.load_model_path, 'r')
             model_config = model_full_h5.attrs['model_config']
             model_full_h5.close() #close the hdf5                
-            model_config = json.loads(str(model_config)[2:-1])
+            model_config = json.loads(model_config)
             
-            try: #Sequential Model
-                in_dim = model_config['config'][0]['config']['batch_input_shape']
-            except: #Functional Api
-                in_dim = model_config['config']["layers"][0]["config"]["batch_input_shape"]
-            try: #Sequential Model
-                out_dim = model_config['config'][-2]['config']['units']
-            except: #Functional Api
-                out_dim = model_config['config']["layers"][-2]["config"]["units"]
+            in_dim, out_dim = aid_dl.model_in_out_dim(model_config,"config")  
             
             self.spinBox_Crop_2.setValue(int(in_dim[-2]))
             self.spinBox_OutClasses_2.setValue(int(out_dim))
@@ -9564,20 +9567,25 @@ class MainWindow(QtWidgets.QMainWindow):
 
 
         #Initiate a fresh session
-        with tf.Session(graph = tf.Graph(), config=config_gpu) as sess:
+        with tf.compat.v1.Session(graph = tf.Graph(), config=config_gpu) as sess:
+            sess.run(tf.compat.v1.global_variables_initializer())
+            #Baustelle
             if deviceSelected=="Multi-GPU" and cpu_weight_merge==True:
+                strategy = tf.distribute.MirroredStrategy()
                 with tf.device("/cpu:0"):
-                    model_keras = load_model(self.load_model_path,custom_objects=aid_dl.get_custom_metrics()) 
+                    with strategy.scope():
+                        model_keras = load_model(self.load_model_path,custom_objects=aid_dl.get_custom_metrics()) 
             else:
                 model_keras = load_model(self.load_model_path,custom_objects=aid_dl.get_custom_metrics())
         
             #Multi-GPU
             if deviceSelected=="Multi-GPU":
                 print("Adjusting the model for Multi-GPU")
-                model_keras = multi_gpu_model(model_keras, gpus=gpu_nr, cpu_merge=cpu_merge, cpu_relocation=cpu_relocation)#indicate the numbers of gpus that you have
+                model_keras = model_keras#multi_gpu_model(model_keras, gpus=gpu_nr, cpu_merge=cpu_merge, cpu_relocation=cpu_relocation)#indicate the numbers of gpus that you have
             
             #Get the model input dimensions
-            in_dim = np.array(model_keras.get_input_shape_at(0))
+            in_dim, _ = aid_dl.model_in_out_dim(model_keras,"model")
+            in_dim = np.array(in_dim)
             ind = np.where(in_dim==None)
             in_dim[ind] = 1
             nr_imgs = self.spinBox_inftime_nr_images.value()
@@ -9830,7 +9838,7 @@ class MainWindow(QtWidgets.QMainWindow):
             path,fname = os.path.split(self.load_model_path)    
             fname = fname.split(str(modelindex)+".model")[0]+"meta.xlsx"
             metafile_path = os.path.join(path,fname)
-            parameters = pd.read_excel(metafile_path,sheet_name='Parameters')
+            parameters = pd.read_excel(metafile_path,sheet_name='Parameters',engine="openpyxl")
             mean_trainingdata = parameters["Mean of training data used for scaling"]
             std_trainingdata = parameters["Std of training data used for scaling"]
         else:
@@ -10441,19 +10449,20 @@ class MainWindow(QtWidgets.QMainWindow):
 
     def tensorboad_worker(self,progress_callback,history_callback):
         #send the model to tensorboard (webbased application)
-        with tf.Session() as sess:
+        with tf.compat.v1.Session() as sess:
             model_keras = load_model(self.load_model_path,custom_objects=aid_dl.get_custom_metrics())  
-
-            graph = K.get_session().graph # Get the sessions graph
+            graph = tf.compat.v1.keras.backend.get_session()
+            #graph = K.get_session().graph # Get the sessions graph
             #get a folder for that model in temp
             temp_path = aid_bin.create_temp_folder()
             modelname = os.path.split(self.load_model_path)[-1]
             modelname = modelname.split(".model")[0]
             log_dir = os.path.join(temp_path,modelname)
-            writer = tf.summary.FileWriter(logdir=log_dir, graph=graph)#write a log
+            tf.summary.create_file_writer(log_dir)
+            #writer = tf.summary.FileWriter(logdir=log_dir, graph=graph)#write a log
     
             #tb = program.TensorBoard()            
-            tb = program.TensorBoard(default.get_plugins(), default.get_assets_zip_provider())
+            tb = program.TensorBoard(default.get_plugins(), assets.get_default_assets_zip_provider())
             #tb.configure(argv=[None, '--logdir', log_dir,"--host","127.0.0.1"])
             tb.configure(argv=[None, '--logdir', log_dir,"--host","localhost"])
 
@@ -10537,10 +10546,10 @@ class MainWindow(QtWidgets.QMainWindow):
         y_valid = self.ValidationSet["y_valid"] #load the validation labels to a new variable
         #X_valid = self.X_valid #<--dont do this since it is used only once (.predict) and it would require additional RAM; instad use self.X_valid for .predict
         #Load the model and predict
-        with tf.Session() as sess:
+        with tf.compat.v1.Session() as sess:
             model_keras = load_model(self.load_model_path,custom_objects=aid_dl.get_custom_metrics())  
             self.model_keras = model_keras #useful to get the list of layers for Grad-CAM; also used to show the summary
-            in_dim = model_keras.get_input_shape_at(node_index=0)
+            in_dim, _ = aid_dl.model_in_out_dim(model_keras,"model")
             if type(in_dim)==list:
                 multi_input = True
                 in_dim = in_dim[0]#discard the second (xtra input)
@@ -11005,7 +11014,7 @@ class MainWindow(QtWidgets.QMainWindow):
             
             inds_uni = list(range(scores.shape[1])) #these indices are explained by model
             #ROC-curve is only available for binary problems:
-            Y_valid = np_utils.to_categorical(y_valid,num_classes=len(inds_uni))
+            Y_valid = to_categorical(y_valid,num_classes=len(inds_uni))
             
             # Compute ROC curve and ROC area for each class
             fpr,tpr,roc_auc = dict(),dict(),dict()
@@ -11055,7 +11064,7 @@ class MainWindow(QtWidgets.QMainWindow):
             
             inds_uni = list(range(scores.shape[1])) #these indices are explained by model
             #ROC-curve is only available for binary problems:
-            Y_valid = np_utils.to_categorical(y_valid,num_classes=len(inds_uni))
+            Y_valid = to_categorical(y_valid,num_classes=len(inds_uni))
             
             # Compute Precision Recall curve and P-R area for each class
             precision,recall,precision_recall_auc = dict(),dict(),dict()
@@ -11223,7 +11232,7 @@ class MainWindow(QtWidgets.QMainWindow):
             path,fname = os.path.split(self.load_model_path)    
             fname = fname.split(str(modelindex)+".model")[0]+"meta.xlsx"
             metafile_path = os.path.join(path,fname)
-            parameters = pd.read_excel(metafile_path,sheet_name='Parameters')
+            parameters = pd.read_excel(metafile_path,sheet_name='Parameters',engine="openpyxl")
             mean_trainingdata = parameters["Mean of training data used for scaling"]
             std_trainingdata = parameters["Std of training data used for scaling"]
         else:
@@ -11238,9 +11247,9 @@ class MainWindow(QtWidgets.QMainWindow):
         gpu_memory = float(self.doubleSpinBox_memory.value())
         config_gpu = aid_dl.get_config(cpu_nr,gpu_nr,deviceSelected,gpu_memory)
                     
-        with tf.Session(graph = tf.Graph(), config=config_gpu) as sess:     
+        with tf.compat.v1.Session(graph = tf.Graph(), config=config_gpu) as sess:     
             model_keras = load_model(self.load_model_path,custom_objects=aid_dl.get_custom_metrics())
-            in_dim = model_keras.get_input_shape_at(node_index=0)
+            in_dim, _ = aid_dl.model_in_out_dim(model_keras,"model")
             #Get the color mode of the model
             channels_model = in_dim[-1]
             if channels_model==1:
@@ -11362,7 +11371,7 @@ class MainWindow(QtWidgets.QMainWindow):
                     writer.save()
                     writer.close()
     
-                if export_option == "Add predictions to .rtdc file (userdef0)" or export_option== "Add pred&scores to .rtdc file (userdef0 to 9)":           
+                if export_option == "Add predictions to .rtdc file (userdef0)" or export_option==         "Add pred&scores to .rtdc file (userdef0 to 9)":           
                     #Get initial dataset
                     failed,rtdc_ds = aid_bin.load_rtdc(rtdc_path)
                     if failed:
