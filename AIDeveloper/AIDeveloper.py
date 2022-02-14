@@ -42,7 +42,7 @@ except:
 import aid_backbone
 
 def main():
-    global app
+    #global app
     app = QtWidgets.QApplication(sys.argv)
     app.setWindowIcon(QtGui.QIcon(os.path.join(dir_root,"art",Default_dict["Icon theme"],"main_icon_simple_04_256"+icon_suff)))
 
@@ -60,6 +60,7 @@ def main():
         app.setStyleSheet("")
     
     ui = aid_backbone.MainWindow()
+    ui.add_app(app)
     ui.show()
     try:
         splash.finish(ui)
