@@ -13,24 +13,25 @@ import pandas as pd
 rand_state = np.random.RandomState(117) #to get the same random number on diff. PCs
 import tensorflow as tf
 from tensorflow.python.tools import optimize_for_inference_lib
-import keras
-from keras.models import load_model,Model
-from keras.layers import Dense,Activation
-from keras import backend as K
+import tensorflow.keras
+from tensorflow.keras.models import load_model,Model
+from tensorflow.keras.layers import Dense,Activation
+from tensorflow.keras import backend as K
 
 import keras_metrics #side package for precision, recall etc during training
 global keras_metrics
 
-from keras2onnx import convert_keras
+import tf2onnx
 from onnx import save_model as save_onnx
-from mmdnn.conversion._script import convertToIR,IRToCode,convert
-import coremltools
+#from mmdnn.conversion._script import convertToIR,IRToCode,convert
+#import coremltools
 import cv2
 import aid_bin
 
 #Define some custom metrics which will allow to use precision, recall, etc during training
 def get_custom_metrics():
     custom_metrics = []
+    #Keep keras_metrics to maintain compatibiliy with AID_0.2.x versions
     custom_metrics.append(keras_metrics.categorical_f1_score())
     custom_metrics.append(keras_metrics.categorical_precision())
     custom_metrics.append(keras_metrics.categorical_recall())
@@ -46,24 +47,40 @@ def get_metrics_tensors(metrics,nr_classes):
     This is necessary, after re-compiling the model because the placeholder has
     to be updated    
     """
-    f1 = any(["f1_score" in str(a) for a in metrics])
+    f1 = any(["auc" in str(a) for a in metrics])
     precision = any(["precision" in str(a) for a in metrics])
     recall = any(["recall" in str(a) for a in metrics])
     
     Metrics =  []
     if f1==True:
         for class_ in range(nr_classes):
-            Metrics.append(keras_metrics.categorical_f1_score(label=class_))
+            Metrics.append(tf.keras.metrics.AUC())
     if precision==True:
         for class_ in range(nr_classes):
-            Metrics.append(keras_metrics.categorical_precision(label=class_))
+            Metrics.append(tf.keras.metrics.Precision())
     if recall==True:
         for class_ in range(nr_classes):
-            Metrics.append(keras_metrics.categorical_recall(label=class_))
+            Metrics.append(tf.keras.metrics.Recall())
     metrics =  ['accuracy'] + Metrics
     return metrics
 
-def model_change_trainability(model_keras,trainable_new,model_metrics,out_dim,loss_,optimizer_,learning_rate_):    
+def get_metrics_strings(model_metrics,nr_classes):
+    #list of standard metrics:
+    model_metrics_names = ["accuracy","val_accuracy","loss","val_loss"]
+    for met in model_metrics:
+        if 'precision' in met or 'recall' in met or 'auc' in met:
+            #these are cases where expert metrics were occured
+            for i in range(nr_classes):
+                # if i==0:
+                #    model_metrics_names.append(met) 
+                #    model_metrics_names.append("val_"+met)
+                # if i>0:
+                   model_metrics_names.append(met+"_"+str(i+1)) 
+                   model_metrics_names.append("val_"+met+"_"+str(i+1))
+    return model_metrics_names
+
+def model_change_trainability(model_keras,trainable_new,model_metrics,out_dim,loss_,optimizer_,learning_rate_):
+    print("Line 83")
     #Function takes a keras model and list of trainable states.
     #The last n layers, which have parameters (not activation etc.) are set to 'not trainable'
     params = [model_keras.layers[i].count_params() for i in range(len(model_keras.layers))]
@@ -100,8 +117,10 @@ def model_get_trainable_list(model_keras):
     return trainable_list,layer_names_list
 
 def get_optimizer_name(model_keras):
-    optimizer = str(model_keras.optimizer)
-    optimizer = optimizer.split("<keras.optimizers.")[1].split(" object at")[0]
+    optimizer = model_keras.optimizer.get_config()["name"]
+    # optimizer = str(model_keras.optimizer)
+    # optimizer = optimizer.split("<keras.optimizer_v2.")[1].split(" object at")[0]
+    # optimizer = optimizer.split(".")[1]
     if optimizer in ['SGD','RMSprop','Adagrad',"Adamax",'Adadelta','Adam','Nadam']:
         return optimizer
     else:
@@ -134,7 +153,7 @@ def change_dropout(model_keras,do,model_metrics,out_dim,loss_,optimizer_,learnin
                 model_keras.layers[ind[i]].rate = do[i]
                 
     #Only way that it actually has an effect is to clone the model, compile and reload weights
-    model_keras = keras.models.clone_model(model_keras) # If I do not clone, the new rate is never used. Weights are re-init now.
+    model_keras = tf.keras.models.clone_model(model_keras) # If I do not clone, the new rate is never used. Weights are re-init now.
     model_compile(model_keras,loss_,optimizer_,learning_rate_,model_metrics,out_dim)
     
     model_keras._make_train_function()
@@ -181,47 +200,50 @@ def model_add_classes(model_keras,nr_classes):
     
 
 def model_compile(model_keras,loss_,optimizer_,learning_rate_,model_metrics,out_dim):
+    print("Compiling")
     optimizer_name = optimizer_["comboBox_optimizer"].lower()
     if optimizer_name=='sgd':
-        optimizer = keras.optimizers.SGD(lr=optimizer_["doubleSpinBox_lr_sgd"], momentum=optimizer_["doubleSpinBox_sgd_momentum"], nesterov=optimizer_["checkBox_sgd_nesterov"])
+        optimizer = tf.keras.optimizers.SGD(learning_rate=optimizer_["doubleSpinBox_lr_sgd"], momentum=optimizer_["doubleSpinBox_sgd_momentum"], nesterov=optimizer_["checkBox_sgd_nesterov"])
     elif optimizer_name=='rmsprop':
-        optimizer = keras.optimizers.RMSprop(lr=optimizer_["doubleSpinBox_lr_rmsprop"], rho=optimizer_["doubleSpinBox_rms_rho"])
+        optimizer = tf.keras.optimizers.RMSprop(learning_rate=optimizer_["doubleSpinBox_lr_rmsprop"], rho=optimizer_["doubleSpinBox_rms_rho"])
     elif optimizer_name=='adagrad':
-        optimizer = keras.optimizers.Adagrad(lr=optimizer_["doubleSpinBox_lr_adagrad"])
+        optimizer = tf.keras.optimizers.Adagrad(learning_rate=optimizer_["doubleSpinBox_lr_adagrad"])
     elif optimizer_name=='adadelta':
-        optimizer = keras.optimizers.Adadelta(lr=optimizer_["doubleSpinBox_lr_adadelta"], rho=optimizer_["doubleSpinBox_adadelta_rho"])
+        optimizer = tf.keras.optimizers.Adadelta(learning_rate=optimizer_["doubleSpinBox_lr_adadelta"], rho=optimizer_["doubleSpinBox_adadelta_rho"])
     elif optimizer_name=='adam':
-        optimizer = keras.optimizers.Adam(lr=optimizer_["doubleSpinBox_lr_adam"], beta_1=optimizer_["doubleSpinBox_adam_beta1"], beta_2=optimizer_["doubleSpinBox_adam_beta2"], amsgrad=optimizer_["checkBox_adam_amsgrad"])
+        optimizer = tf.keras.optimizers.Adam(learning_rate=optimizer_["doubleSpinBox_lr_adam"], beta_1=optimizer_["doubleSpinBox_adam_beta1"], beta_2=optimizer_["doubleSpinBox_adam_beta2"], amsgrad=optimizer_["checkBox_adam_amsgrad"])
     elif optimizer_name=='adamax':
-        optimizer = keras.optimizers.Adamax(lr=optimizer_["doubleSpinBox_lr_adamax"], beta_1=optimizer_["doubleSpinBox_adamax_beta1"], beta_2=optimizer_["doubleSpinBox_adamax_beta2"])
+        optimizer = tf.keras.optimizers.Adamax(learning_rate=optimizer_["doubleSpinBox_lr_adamax"], beta_1=optimizer_["doubleSpinBox_adamax_beta1"], beta_2=optimizer_["doubleSpinBox_adamax_beta2"])
     elif optimizer_name=='nadam':
-        optimizer = keras.optimizers.Nadam(lr=optimizer_["doubleSpinBox_lr_nadam"], beta_1=optimizer_["doubleSpinBox_nadam_beta1"], beta_2=optimizer_["doubleSpinBox_nadam_beta2"])
+        optimizer = tf.keras.optimizers.Nadam(learning_rate=optimizer_["doubleSpinBox_lr_nadam"], beta_1=optimizer_["doubleSpinBox_nadam_beta1"], beta_2=optimizer_["doubleSpinBox_nadam_beta2"])
     else:
         print("Unknown optimizer!")
     model_keras.compile(loss=loss_,optimizer=optimizer,
                         metrics=get_metrics_tensors(model_metrics,out_dim))
+    print("Compiling DONE")
+
     return 1
 
 def model_compile_deprecated(model_keras,loss_,optimizer_,learning_rate_,model_metrics,out_dim):
     optimizer_ = optimizer_.lower()
     if optimizer_=='sgd':
-        optimizer_ = keras.optimizers.SGD(lr=learning_rate_, momentum=0.0, nesterov=False)
+        optimizer_ = tf.keras.optimizers.SGD(learning_rate=learning_rate_, momentum=0.0, nesterov=False)
     elif optimizer_=='rmsprop':
-        optimizer_ = keras.optimizers.RMSprop(lr=learning_rate_, rho=0.9)
+        optimizer_ = tf.keras.optimizers.RMSprop(learning_rate=learning_rate_, rho=0.9)
     elif optimizer_=='adagrad':
-        optimizer_ = keras.optimizers.Adagrad(lr=learning_rate_)
+        optimizer_ = tf.keras.optimizers.Adagrad(learning_rate=learning_rate_)
     elif optimizer_=='adadelta':
-        optimizer_ = keras.optimizers.Adadelta(lr=learning_rate_, rho=0.95)
+        optimizer_ = tf.keras.optimizers.Adadelta(learning_rate=learning_rate_, rho=0.95)
     elif optimizer_=='adam':
-        optimizer_ = keras.optimizers.Adam(lr=learning_rate_, beta_1=0.9, beta_2=0.999, amsgrad=False)
+        optimizer_ = tf.keras.optimizers.Adam(learning_rate=learning_rate_, beta_1=0.9, beta_2=0.999, amsgrad=False)
     elif optimizer_=='adamax':
-        optimizer_ = keras.optimizers.Adamax(lr=learning_rate_, beta_1=0.9, beta_2=0.999)
+        optimizer_ = tf.keras.optimizers.Adamax(learning_rate=learning_rate_, beta_1=0.9, beta_2=0.999)
     elif optimizer_=='nadam':
-        optimizer_ = keras.optimizers.Nadam(lr=learning_rate_, beta_1=0.9, beta_2=0.999)
+        optimizer_ = tf.keras.optimizers.Nadam(learning_rate=learning_rate_, beta_1=0.9, beta_2=0.999)
     else:
         print("Unknown optimizer!")
     model_keras.compile(loss=loss_,optimizer=optimizer_,
-                        metrics=get_metrics_tensors(model_metrics,out_dim))
+                        metrics=model_metrics)
     return 1
 
 
@@ -328,15 +350,11 @@ def convert_kerastf_2_frozen_pb(model_path=None,outpath=None):
     if model_path==None:
         return 0
     elif os.path.isfile(model_path): #if is is a file (hopefully a keras file)
-        tf.reset_default_graph() #Make sure to start with a fresh session
-        sess = tf.InteractiveSession()
+        #tf.reset_default_graph() #Make sure to start with a fresh session
+        #sess = tf.InteractiveSession()
         model_keras = load_model(model_path,custom_objects=get_custom_metrics())#Load the model that should be converted          
-        #Freeze the graph  
-        frozen_graph,input_names,output_names = freeze_session(K.get_session(),input_names=[out.op.name for out in model_keras.inputs],output_names=[out.op.name for out in model_keras.outputs])
-        #Get the names of the input and output node (required for optimization)
-        out_path, out_fname = os.path.split(outpath)
-        tf.train.write_graph(frozen_graph, out_path, out_fname, as_text=False)
-        sess.close()
+        #Save as .pb 
+        model_keras.save(outpath,save_traces=False)
         return 1
         
 def convert_kerastf_2_optimized_pb(model_path=None,outpath=None):
@@ -344,107 +362,24 @@ def convert_kerastf_2_optimized_pb(model_path=None,outpath=None):
     model_path = string; full path to the keras model (.model or .hdf)
     outfilename = string; full path and filename for the file to be created
     """
-    if model_path==None or outpath==None:
-        return 0
-    elif not os.path.isfile(model_path): #if is is NOT a file (hopefully a keras file)
-        return 0
-    else: #Continue to the actual function
-        tf.reset_default_graph() #Make sure to start with a fresh session
-        sess = tf.InteractiveSession()
-        model_keras = load_model(model_path,custom_objects=get_custom_metrics())#Load the model that should be converted          
-        #Freeze the graph  
-        frozen_graph,input_names,output_names = freeze_session(K.get_session(),input_names=[out.op.name for out in model_keras.inputs],output_names=[out.op.name for out in model_keras.outputs])
-        #Get the names of the input and output node (required for optimization)
-        input_names = [input_names[0]] #for now, only support single input models (one image)
-        output_names = [output_names[0]] #for now, only support single output models (one prediction)
-        
-#        ##############More sophisticated finding of input/output nodes##########
-#        #Find the nodes which are called 'inputTensor' 
-#        ind = ["inputTensor" in s for s in input_names]
-#        ind = np.where(np.array(ind)==True)[0]
-#        if len(ind)==0:
-#            print("there are no nodes with 'inputTensor'. Likely name='inputTensor' was not specified in model definition (in modelzoo.py)")
-#            sess.close()
-#            return 0 
-#        elif len(ind)>1:
-#            print("There are several nodes in models whose name contains 'inputTensor'. Please check if optimized model still works as expected")
-#            input_names = list(np.array(input_names)[ind])
-#        else:
-#            input_names = list(np.array(input_names)[ind])
-#
-#        #Find the nodes which are called 'outputTensor' 
-#        ind = ["outputTensor" in s for s in output_names]
-#        ind = np.where(np.array(ind)==True)[0]
-#        if len(ind)==0:
-#            print("there are no nodes with 'outputTensor'. Likely name='outputTensor' was not specified in model definition (in modelzoo.py)")
-#            sess.close()
-#            return 0 
-#        elif len(ind)>1:
-#            print("There are several nodes in models whose name contains 'outputTensor'. Please check if optimized model still works as expected")
-#            output_names = list(np.array(output_names)[ind])
-#        else:
-#            output_names = list(np.array(output_names)[ind])
-
-        outputGraph = optimize_for_inference_lib.optimize_for_inference(frozen_graph,
-                      input_names, # an array of the input node(s)
-                      output_names, # an array of output nodes
-        tf.int32.as_datatype_enum)
-        # Save the optimized graph
-        with tf.gfile.FastGFile(outpath, "w") as f:
-            f.write(outputGraph.SerializeToString()) 
-        sess.close()
-        return 1
+    print("Not implemented yet")
+    return 0
 
 def convert_frozen_2_optimized_pb(model_path=None,outpath=None):
     """
     model_path = string; full path to the frozen model (.pb)
     outfilename = string; full path and filename for the file to be created
     """
-    if model_path==None or outpath==None:
-        return 0
-    elif not os.path.isfile(model_path): #if is is NOT a file (hopefully a keras file)
-        return 0
-    else: #Continue to the actual function
-        tf.reset_default_graph() #Make sure to start with a fresh session
-        sess = tf.InteractiveSession()  
-        #Load frozen .pb
-        frozen_graph = tf.GraphDef()
-        with tf.gfile.Open(model_path, "rb") as f:
-          data2read = f.read()
-          frozen_graph.ParseFromString(data2read)
-        #Get the input_names and output_names
-        frozen_nodes = list(frozen_graph.node)
-        frozen_nodes_str = [node.name for node in frozen_nodes]
-        ind = ["outputTensor" in s for s in frozen_nodes_str]
-        ind = np.where(np.array(ind)==True)[0]
-        if len(ind)==0:
-            print("there are no nodes with the specific output name. Likely name='outputTensor' was not specified in model definition (in modelzoo.py)")
-            sess.close()
-            return 0 
-        elif len(ind)>1:
-            print("There are several nodes in models whose name contains 'outputTensor'. Please check if optimized model still works as expected")
-            output_names = list(np.array(frozen_nodes_str)[ind])
-        else:
-            output_names = list(np.array(frozen_nodes_str)[ind])
-        input_names = [frozen_nodes[0].name]
-#        output_names = [frozen_nodes[-1].name]
-        outputGraph = optimize_for_inference_lib.optimize_for_inference(frozen_graph,
-                      input_names, # an array of the input node(s)
-                      output_names, # an array of output nodes
-        tf.int32.as_datatype_enum)
-        # Save the optimized graph
-        with tf.gfile.FastGFile(outpath, "w") as f:
-            f.write(outputGraph.SerializeToString())
-        sess.close()
-        return 1
+    print("Not implemented yet")
+    return 0
 
 def convert_kerastf_2_onnx(model_path=None,outpath=None):
-    tf.reset_default_graph() #Make sure to start with a fresh session
-    sess = tf.InteractiveSession()
+    #tf.reset_default_graph() #Make sure to start with a fresh session
+    #sess = tf.InteractiveSession()
     model_keras = load_model(model_path,custom_objects=get_custom_metrics())#Load the model that should be converted          
-    onnx_model = convert_keras(model_keras,model_keras.name)
-    save_onnx(onnx_model, outpath)
-    sess.close()
+    onnx_model = tf2onnx.convert.from_keras(model_keras,output_path=outpath)
+    #save_onnx(onnx_model, outpath)
+    #sess.close()
 
 def convert_kerastf_2_script(model_path=None,out_format=None):
     """
@@ -456,8 +391,8 @@ def convert_kerastf_2_script(model_path=None,out_format=None):
     outpath
     out_format: string, indicating the target format. This can be "tensorflow","pytorch", "caffe","cntk","mxnet","onnx"
     """
-    tf.reset_default_graph() #Make sure to start with a fresh session
-    sess = tf.InteractiveSession()
+    #tf.reset_default_graph() #Make sure to start with a fresh session
+    #sess = tf.InteractiveSession()
 
     temp_path = aid_bin.create_temp_folder()#create a temp folder if it does not already exist
     #Create a  random filename for a temp. file
@@ -499,11 +434,11 @@ def convert_kerastf_2_script(model_path=None,out_format=None):
             print("temp. file deleted: "+file)
         except:
             print("temp. file not found/ not deleted: "+file)
-    sess.close()
+    #sess.close()
 
 def convert_kerastf_2_onnx_mmdnn(model_path):
-    tf.reset_default_graph() #Make sure to start with a fresh session
-    sess = tf.InteractiveSession()
+    #tf.reset_default_graph() #Make sure to start with a fresh session
+    #sess = tf.InteractiveSession()
 
     temp_path = aid_bin.create_temp_folder()#create a temp folder if it does not already exist
     #Create a  random filename for a temp. file
@@ -531,36 +466,56 @@ def convert_kerastf_2_onnx_mmdnn(model_path):
         except:
             print("temp. file not found/ not deleted: "+file)
             
-    sess.close()
+    #sess.close()
+
+def model_in_out_dim(model_object,object_type):
+    if object_type=="config":
+    #user provided model_config:
+        try: #Sequential Model
+            in_dim = model_object['config'][0]['config']['batch_input_shape']
+        except: #Functional Api
+            in_dim = model_object['config']["layers"][0]["config"]["batch_input_shape"]
+        try: #Sequential Model
+            out_dim = model_object['config'][-2]['config']['units']
+        except: #Functional Api
+            out_dim = model_object['config']["layers"][-2]["config"]["units"]
+
+    if object_type=="model":
+        in_dim = model_object.layers[0].get_input_shape_at(0)
+        out_dim = model_object.layers[-1].get_output_shape_at(0)[1]
+
+    return in_dim,out_dim
+
+
 
 def convert_kerastf_2_coreml(model_path):
-    tf.reset_default_graph() #Make sure to start with a fresh session
-    sess = tf.InteractiveSession()
+    #tf.reset_default_graph() #Make sure to start with a fresh session
+    #sess = tf.InteractiveSession()
     path_out = os.path.splitext(model_path)[0] + ".mlmodel"
     model = coremltools.converters.keras.convert(model_path, input_names=['inputTensor'],output_names=['outputTensor'],model_precision='float32',use_float_arraytype=True,predicted_probabilities_output="outputTensor")
     model.save(path_out)
-    sess.close()
+    #sess.close()
 
 
 def get_config(cpu_nr,gpu_nr,deviceSelected,gpu_memory):
     #No GPU available, CPU selected:
     if gpu_nr==0: #and deviceSelected=="Default CPU":
         print("Adjusted options for CPU usage")
-        config_gpu = tf.ConfigProto()
+        config_gpu = tf.compat.v1.ConfigProto()
     #GPU available but user wants to use CPU
     elif gpu_nr>0 and deviceSelected=="Default CPU":
-        config_gpu = tf.ConfigProto(intra_op_parallelism_threads=cpu_nr,\
+        config_gpu = tf.compat.v1.ConfigProto(intra_op_parallelism_threads=cpu_nr,\
                 inter_op_parallelism_threads=cpu_nr, allow_soft_placement=True,\
                 device_count = {'CPU' : 1, 'GPU' : 0})
         print("Adjusted options for CPU usage")
     
     #GPU selected
     elif deviceSelected=="Single-GPU" or deviceSelected=="Multi-GPU":
-        gpu_options = tf.GPUOptions(per_process_gpu_memory_fraction=gpu_memory,\
+        gpu_options = tf.compat.v1.GPUOptions(per_process_gpu_memory_fraction=gpu_memory,\
                                     allow_growth = True)
-        config_gpu = tf.ConfigProto(allow_soft_placement=True,\
+        config_gpu = tf.compat.v1.ConfigProto(allow_soft_placement=True,\
                                     gpu_options = gpu_options,\
-                                    log_device_placement=True)
+                                    log_device_placement=False)
         if deviceSelected=="Single-GPU":
             print("Adjusted GPU options for Single-GPU usage. Set memeory fraction to "+str(gpu_memory))
         if deviceSelected=="Multi-GPU":
@@ -575,10 +530,10 @@ def get_config(cpu_nr,gpu_nr,deviceSelected,gpu_memory):
 
 def reset_keras(model=None,create_new_config=False):
     "Source: https://forums.fast.ai/t/how-could-i-release-gpu-memory-of-keras/2023/18"
-    sess = K.get_session()
+    sess = tf.compat.v1.keras.backend.get_session()
     K.clear_session()
     sess.close()
-    sess = K.get_session()
+    sess = tf.compat.v1.keras.backend.get_session()
 
     try:
         del model # this is from global space - change this as you need
@@ -625,8 +580,9 @@ def grad_cam(load_model_path, images, class_, layer_name):
     Returns:
        List: List of numpy arrays (Grad-CAM heatmaps), each of the same size as the input images
     """
-    tf.reset_default_graph() #Make sure to start with a fresh session
-    sess = tf.InteractiveSession()
+    tf.compat.v1.disable_eager_execution()
+    tf.compat.v1.reset_default_graph() #Make sure to start with a fresh session
+    sess = tf.compat.v1.InteractiveSession()
     
     model_keras = load_model(load_model_path,custom_objects=get_custom_metrics())  
     
@@ -723,12 +679,12 @@ class LearningRateFinder:
         self.losses_sm.append(smooth)
         self.losses_or.append(logs["loss"])
 
-        self.avgAcc = (self.beta * self.avgAcc) + ((1 - self.beta) * logs["acc"])
+        self.avgAcc = (self.beta * self.avgAcc) + ((1 - self.beta) * logs["accuracy"])
         smooth = self.avgAcc / (1 - (self.beta ** self.batchNum))
         self.accs_sm.append(smooth)
-        self.accs_or.append(logs["acc"])
+        self.accs_or.append(logs["accuracy"])
 
-        #print(logs["acc"],smooth,self.beta,self.batchNum)
+        #print(logs["accuracy"],smooth,self.beta,self.batchNum)
 
 
         #Get validation accuracy
@@ -807,7 +763,7 @@ class LearningRateFinder:
         # construct a callback that will be called at the end of each
         # batch, enabling us to increase our learning rate as training
         # progresses
-        callback = keras.callbacks.LambdaCallback(on_batch_end=lambda batch, logs: self.on_batch_end(batch, logs))
+        callback = tf.keras.callbacks.LambdaCallback(on_batch_end=lambda batch, logs: self.on_batch_end(batch, logs))
         # check to see if we are using a data iterator
         if useGen:
             self.model.fit(
@@ -830,7 +786,7 @@ class LearningRateFinder:
         K.set_value(self.model.optimizer.lr, origLR)            
         
 
-class cyclicLR(keras.callbacks.Callback):
+class cyclicLR(tf.keras.callbacks.Callback):
     """
     Reference: https://github.com/bckenstler/CLR/blob/master/clr_callback.py
     Author: Brad Kenstler
@@ -964,7 +920,7 @@ class cyclicLR(keras.callbacks.Callback):
         
         K.set_value(self.model.optimizer.lr, self.clr())
 
-class exponentialDecay(keras.callbacks.Callback):
+class exponentialDecay(tf.keras.callbacks.Callback):
     """    
     Decrease learning rate using exponential decay
     lr = initial_lr * decay_rate ** (batch_iteration / decay_steps)    
@@ -1097,16 +1053,27 @@ def get_lr_callback(learning_rate_const_on,learning_rate_const,
     elif learning_rate_expo_on==True:
         return exponentialDecay(initial_lr=expDecInitLr, decay_steps=expDecSteps, decay_rate=expDecRate)  
 
+
+def convert_kernel(kernel):
+    #copied from: https://github.com/tensorflow/tensorflow/blob/b36436b087bd8e8701ef51718179037cccdfc26e/tensorflow/python/keras/utils/conv_utils.py#L211
+    """
+    This is a deprecated function from tensorflow. Still, I need it for converting
+    models in .nnet format.
+    Converts a Numpy kernel matrix from Theano format to TensorFlow format.
+    Also works reciprocally, since the transformation is its own inverse.
+    This is used for converting legacy Theano-saved model files.
+    Arguments:
+    kernel: Numpy array (3D, 4D or 5D).
+    Returns:
+    The converted kernel.
+    Raises:
+    ValueError: in case of invalid kernel shape or invalid data_format.
+    """
+    kernel = np.asarray(kernel)
+    if not 3 <= kernel.ndim <= 5:
+        raise ValueError('Invalid kernel shape:', kernel.shape)
+    slices = [slice(None, None, -1) for _ in range(kernel.ndim)]
+    no_flip = (slice(None, None), slice(None, None))
+    slices[-2:] = no_flip
+    return np.copy(kernel[slices])
        
-
-        
-        
-        
-        
-        
-        
-        
-
-        
-
-    
