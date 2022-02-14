@@ -1,2 +1,0 @@
-Just downloaded from here:
-https://github.com/netrack/keras-metrics
