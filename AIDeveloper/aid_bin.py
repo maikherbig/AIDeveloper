@@ -345,31 +345,29 @@ def store_scalar(h5group, name, data, compression):
         dset[oldsize:] = data
 
 
-def store_trace(h5group,name, data, compression):
-    firstkey = sorted(list(data.keys()))[0]
-    if len(data[firstkey].shape) == 1:
-        # single event
-        for dd in data:
-            data[dd] = data[dd].reshape(1, -1)
+def store_trace(h5_group, data, indices):
+    keys_trace = list(data.keys())
     # create trace group
-    grp = h5group.require_group(name)
+    #grp = h5obj.require_group("trace")
 
-    for flt in data:
+    for flt in keys_trace:
         # create traces datasets
-        if flt not in grp:
-            maxshape = (None, data[flt].shape[1])
-            chunks = (CHUNK_SIZE, data[flt].shape[1])
-            grp.create_dataset(flt,
-                               data=data[flt],
-                               maxshape=maxshape,
-                               chunks=chunks,
-                               fletcher32=True,
-                               compression=compression)
+        if flt not in h5_group:
+            values = np.array(data[flt][:])
+            values = values[indices]
+            if len(values) == 1:# single event
+                values = values.reshape(1, -1)
+            maxshape = (None, values.shape[1])
+            chunks = (CHUNK_SIZE, values.shape[1])
+            h5_group.create_dataset(flt,data=values,maxshape=maxshape,
+                               chunks=chunks,fletcher32=True,compression="gzip")
         else:
-            dset = grp[flt]
+            dset = h5_group[flt]
             oldsize = dset.shape[0]
-            dset.resize(oldsize + data[flt].shape[0], axis=0)
-            dset[oldsize:] = data[flt]
+            values = np.array(data[flt][:])
+            values = values[indices]
+            dset.resize(oldsize + values.shape[0], axis=0)
+            dset[oldsize:] = values
 
 
 def write_rtdc(fname,rtdc_datasets,X_valid,Indices,cropped=True,color_mode='Grayscale',xtra_in=[]):
@@ -470,7 +468,7 @@ def write_rtdc(fname,rtdc_datasets,X_valid,Indices,cropped=True,color_mode='Gray
     
             #The lengths of the fluorescence traces have to be equal, otherwise those traces also have to be dropped
             if "trace" in features:
-                trace_lengths = [(rtdc_ds["events"]["trace"][tr][0]).size for tr in rtdc_ds["trace"].keys()]
+                trace_lengths = [(rtdc_ds["events"]["trace"][tr][0]).size for tr in rtdc_ds["events"]["trace"].keys()]
                 Trace_lengths.append(trace_lengths)
             #Mask Image dimensions have to be equal, otherwise those mask have to be dropped
             if "mask" in features:
@@ -558,7 +556,16 @@ def write_rtdc(fname,rtdc_datasets,X_valid,Indices,cropped=True,color_mode='Gray
                             img_dim_y = Images[0].shape[0]
                             mask = aid_img.image_crop_pad_cv2(list(mask),pos_x,pos_y,pix,img_dim_x,img_dim_y,padding_mode="cv2.BORDER_CONSTANT")
                         
-                        store_mask(h5group=events,name=feat, data=mask, compression="gzip")
+                        mask = np.asarray(mask, dtype=np.uint8)
+                        if mask.max() != 255 and mask.max() != 0 and mask.min() == 0:
+                            mask = mask / mask.max() * 255
+                        maxshape = (None, mask.shape[1], mask.shape[2])
+                        store_image(h5group=events,name=feat, data=mask, compression="gzip")
+                        # dset = h5obj.create_dataset("events/"+feat, data=mask, dtype=np.uint8,maxshape=maxshape,fletcher32=True,chunks=True)
+                        # dset.attrs.create('CLASS', np.string_('IMAGE'))
+                        # dset.attrs.create('IMAGE_VERSION', np.string_('1.2'))
+                        # dset.attrs.create('IMAGE_SUBCLASS', np.string_('IMAGE_GRAYSCALE'))
+                        #store_mask(h5group=events,name=feat, data=mask, compression="gzip")
 
                     elif "image" in feat:
                         if cropped and feat=="image":
@@ -578,23 +585,23 @@ def write_rtdc(fname,rtdc_datasets,X_valid,Indices,cropped=True,color_mode='Gray
 
                     elif feat == "trace":
                         # create events group
-                        trace = np.array(rtdc_ds["events"]["trace"])[indices]
-                        dclab.rtdc_dataset.write_hdf5.store_trace(h5group=events,name=feat,data=trace,compression="gzip")
+                        data = rtdc_ds["events"]["trace"]
+                        h5_group = h5obj["events"].require_group("trace")
+                        store_trace(h5_group=h5_group,data=data,indices=indices)
+                        #dclab.rtdc_dataset.write_hdf5.store_trace(h5group=events,name=feat,data=trace,compression="gzip")
 
                     elif feat == "pos_x" and cropped==True:
                         values = np.zeros(shape=len(indices))+np.round(img_dim_x/2.0)*rtdc_ds.attrs["imaging:pixel size"]
-                        dclab.rtdc_dataset.write_hdf5.store_scalar(h5group=events, 
-                            name=feat, data=values, compression="gzip")
+                        store_scalar(h5group=events, name=feat, data=values, compression="gzip")
+                        #dclab.rtdc_dataset.write_hdf5.store_scalar(h5group=events, name=feat, data=values, compression="gzip")
 
                     elif feat == "pos_y" and cropped==True:
                         values = np.zeros(shape=len(indices))+np.round(img_dim_y/2.0)*rtdc_ds.attrs["imaging:pixel size"]
-                        dclab.rtdc_dataset.write_hdf5.store_scalar(h5group=events,
-                            name=feat, data=values, compression="gzip")
+                        store_scalar(h5group=events, name=feat, data=values, compression="gzip")
                         
                     else:
                         values = np.array(rtdc_ds["events"][feat])[indices]
-                        dclab.rtdc_dataset.write_hdf5.store_scalar(h5group=events, 
-                            name=feat, data=values, compression="gzip")
+                        store_scalar(h5group=events, name=feat, data=values, compression="gzip")
 
                 #Adjust metadata:
                 #"experiment:event count" = Nr. of images
