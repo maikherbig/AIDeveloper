@@ -12,13 +12,13 @@ import pandas as pd
 rand_state = np.random.RandomState(117) #to get the same random number on diff. PCs
 import aid_bin
 from pyqtgraph.Qt import QtWidgets
-from scipy import ndimage
+#from scipy import ndimage
 import cv2
 import tensorflow as tf
 from tensorflow.python.client import device_lib
 device_types = device_lib.list_local_devices()
 device_types = [device_types[i].device_type for i in range(len(device_types))]
-config_gpu = tf.ConfigProto()
+config_gpu = tf.compat.v1.ConfigProto()
 if device_types[0]=='GPU':
     config_gpu.gpu_options.allow_growth = True
     config_gpu.gpu_options.per_process_gpu_memory_fraction = 0.7
@@ -315,13 +315,13 @@ def load_model_meta(meta_path):
         zoom_interpol_method: OpenCV interpolation flag
         padding_mode: OpenCV borderType flag
     """
-    xlsx = pd.ExcelFile(meta_path)
+    xlsx = pd.ExcelFile(meta_path,engine="openpyxl")
     
     #The zooming factor is saved in the UsedData sheet
-    meta = pd.read_excel(xlsx,sheet_name="UsedData")
+    meta = pd.read_excel(xlsx,sheet_name="UsedData",engine="openpyxl")
     zoom_factor = meta["zoom_factor"].iloc[0]#should images be zoomed before forwarding through neural net?
 
-    meta = pd.read_excel(xlsx,sheet_name="Parameters")
+    meta = pd.read_excel(xlsx,sheet_name="Parameters",engine="openpyxl")
 
     try:
         model_type = meta["Chosen Model"].iloc[0]#input dimensions of the model
