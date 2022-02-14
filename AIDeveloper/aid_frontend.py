@@ -2444,7 +2444,10 @@ def setup_main_ui(self,gpu_nr):
     ###########################History Tab################################
     self.tableWidget_HistoryItems.doubleClicked.connect(self.tableWidget_HistoryItems_dclick)
     conversion_methods_source = ["Keras TensorFlow", "Frozen TensorFlow .pb"]
-    conversion_methods_target = [".nnet","Frozen TensorFlow .pb", "Optimized TensorFlow .pb", "ONNX (via keras2onnx)", "ONNX (via MMdnn)","CoreML", "PyTorch Script","Caffe Script","CNTK Script","MXNet Script","ONNX Script","TensorFlow Script","Keras Script"]
+    #conversion_methods_target = [".nnet","Frozen TensorFlow .pb", "Optimized TensorFlow .pb", "ONNX (via tf2onnx)", "ONNX (via MMdnn)","CoreML", "PyTorch Script","Caffe Script","CNTK Script","MXNet Script","ONNX Script","TensorFlow Script","Keras Script"]
+    conversion_methods_target = [".nnet","Frozen TensorFlow .pb", "ONNX (via tf2onnx)", "ONNX (via MMdnn)","CoreML", "PyTorch Script","Caffe Script","CNTK Script","MXNet Script","ONNX Script","TensorFlow Script","Keras Script"]
+    conversion_methods_target = [".nnet","Frozen TensorFlow .pb", "ONNX (via tf2onnx)"]#drop many conversion method for now. Wait until mmdnn and coremltools get updated 
+
     self.comboBox_convertTo.addItems(conversion_methods_target)
     self.comboBox_convertTo.setMinimumSize(QtCore.QSize(200,22))
     self.comboBox_convertTo.setMaximumSize(QtCore.QSize(200, 22))
@@ -3391,7 +3394,7 @@ def retranslate_main_ui(self,gpu_nr,VERSION):
     self.checkBox_expertAccuracy.setText(_translate("MainWindow", "Accuracy", None))
     self.checkBox_expertAccuracy.setToolTip(_translate("MainWindow",tooltips["checkBox_expertAccuracy"] , None))
     
-    self.checkBox_expertF1.setText(_translate("MainWindow", "F1 score", None))
+    self.checkBox_expertF1.setText(_translate("MainWindow", "AUC", None))
     self.checkBox_expertF1.setToolTip(_translate("MainWindow",tooltips["checkBox_expertF1"],  None))
     
     self.checkBox_expertPrecision.setText(_translate("MainWindow", "Precision", None))
@@ -7185,7 +7188,7 @@ def load_hyper_params(ui_item,para):
         prop = str(para["metrics"].iloc[-1])
         if "accuracy" in prop.lower():
             ui_item.checkBox_expertAccuracy.setChecked(True)
-        if "f1" in prop.lower():
+        if "auc" in prop.lower():
             ui_item.checkBox_expertF1.setChecked(True)
         if "precision" in prop.lower():
             ui_item.checkBox_expertPrecision.setChecked(True)
