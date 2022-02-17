@@ -73,30 +73,27 @@ The script based version was tested using Python 3.5 on Windows, Mac and Linux. 
 * Run AIDeveloper using `python AIDeveloper.py`  
 ### Option 2: Manually install all dependencies:
 ```
-conda create -n aid_env_cpu python=3.5
-activate aid_env_cpu
+conda create -n aid3_spyder python==3.9.10 spyder==5.2.1 typing-extensions==3.7.4.3
+conda activate aid3_spyder
 pip install --upgrade setuptools
-pip install keras==2.2.4
-pip install tensorflow==1.12.3
-pip install scikit-learn==0.20.0
-pip install dclab==0.22.1
-pip install Pillow==5.4.1
-pip install pandas==0.24.0 
-pip install psutil==5.4.7
-pip install mkl==2019.0
-pip install pyqt5==5.9.2
-pip install pyqtgraph==0.11.0
-pip install imageio==2.4.1
-pip install opencv-contrib-python-headless==4.4.0.42
-pip install openpyxl==2.5.6
-pip install xlrd==1.1.0
-pip install onnx==1.7.0
-pip install keras2onnx==1.4.0
+pip install tensorflow-gpu==2.7.1
+pip install scikit-learn==1.0.2
+pip install dclab==0.39.9
+pip install Pillow==9.0.0
+pip install pandas==1.1.5
+pip install psutil==5.9.0
+pip install mkl==2022.0.2
+#pip install pyqt5==5.12.3
+pip install pyqtgraph==0.12.3
+pip install imageio==2.13.5
+pip install opencv-contrib-python-headless==4.5.5.62
+pip install openpyxl==3.0.9
+pip install xlrd==2.0.1
+pip install keras2onnx==1.7.0
 pip install libopencv==0.0.1
 pip install ffmpeg==1.4
-pip install tf2onnx==1.4.1
-pip install numpy==1.16.4
-pip install h5py==2.10.0
+pip install tf2onnx==1.9.3
+pip install Keras-Applications==1.0.8
 ```
 # AIDeveloper in scientific literature  
 [1]	[M. Kräter et al., “AIDeveloper: Deep Learning Image Classification in Life Science and Beyond,” Advanced Science, Mar. 2021.](https://onlinelibrary.wiley.com/doi/10.1002/advs.202003743)  
