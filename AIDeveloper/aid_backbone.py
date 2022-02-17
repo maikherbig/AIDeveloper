@@ -52,9 +52,9 @@ import h5py,json,time,copy,urllib,datetime
 from stat import S_IREAD,S_IRGRP,S_IROTH,S_IWRITE,S_IWGRP,S_IWOTH
 import tensorflow as tf
 tf.compat.v1.experimental.output_all_intermediates(True)
-from tensorboard import program
-from tensorboard import default
-from tensorboard import assets
+# from tensorboard import program
+# from tensorboard import default
+# from tensorboard import assets
 
 from tensorflow.python.client import device_lib
 devices = device_lib.list_local_devices()
