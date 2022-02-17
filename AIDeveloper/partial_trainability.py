@@ -7,9 +7,9 @@ the same input. The output of both layers is then concatenated. The resulting
 neural net performs identically to the original neural net
 """
 import numpy as np
-from keras.models import Model
-from keras.utils import np_utils
-from keras.layers import Input
+from tensorflow.keras.models import Model
+from tensorflow.keras.utils import to_categorical
+from tensorflow.keras.layers import Input
 import copy
 import model_zoo
 
@@ -215,7 +215,7 @@ def test_partial_trainability():
     train_x = np.random.randint(low=0,high=255,size=shape)
     train_x = train_x.astype(float)/255.0
     train_y = np.r_[np.repeat(0,125),np.repeat(1,125)]
-    train_y_ = np_utils.to_categorical(train_y, 2)# * 2 - 1
+    train_y_ = to_categorical(train_y, 2)# * 2 - 1
     model_keras_new.fit(train_x,train_y_,epochs=1)
 
 
