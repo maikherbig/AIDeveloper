@@ -18,8 +18,8 @@ from tensorflow.keras.models import load_model,Model
 from tensorflow.keras.layers import Dense,Activation
 from tensorflow.keras import backend as K
 
-import keras_metrics #side package for precision, recall etc during training
-global keras_metrics
+# import keras_metrics #side package for precision, recall etc during training
+# global keras_metrics
 
 import tf2onnx
 from onnx import save_model as save_onnx
@@ -32,10 +32,16 @@ import aid_bin
 def get_custom_metrics():
     custom_metrics = []
     #Keep keras_metrics to maintain compatibiliy with AID_0.2.x versions
-    custom_metrics.append(keras_metrics.categorical_f1_score())
-    custom_metrics.append(keras_metrics.categorical_precision())
-    custom_metrics.append(keras_metrics.categorical_recall())
-    custom_metrics = {m.__name__: m for m in custom_metrics}
+    # custom_metrics.append(keras_metrics.categorical_f1_score())
+    # custom_metrics.append(keras_metrics.categorical_precision())
+    # custom_metrics.append(keras_metrics.categorical_recall())
+    custom_metrics.append("auc_f1")
+    custom_metrics.append("precision")
+    custom_metrics.append("recall")
+
+    # custom_metrics = {m.__name__: m for m in custom_metrics}
+    custom_metrics = {str(m): m for m in custom_metrics}
+
     custom_metrics["sin"] = K.sin
     custom_metrics["abs"] = K.abs
     return custom_metrics
@@ -47,10 +53,10 @@ def get_metrics_tensors(metrics,nr_classes):
     This is necessary, after re-compiling the model because the placeholder has
     to be updated    
     """
-    f1 = any(["auc" in str(a) for a in metrics])
-    precision = any(["precision" in str(a) for a in metrics])
-    recall = any(["recall" in str(a) for a in metrics])
-    
+    f1 = any(["auc" in str(a).lower() for a in metrics])
+    precision = any(["precision" in str(a).lower() for a in metrics])
+    recall = any(["recall" in str(a).lower() for a in metrics])
+    nr_classes =  1
     Metrics =  []
     if f1==True:
         for class_ in range(nr_classes):
@@ -80,7 +86,6 @@ def get_metrics_strings(model_metrics,nr_classes):
     return model_metrics_names
 
 def model_change_trainability(model_keras,trainable_new,model_metrics,out_dim,loss_,optimizer_,learning_rate_):
-    print("Line 83")
     #Function takes a keras model and list of trainable states.
     #The last n layers, which have parameters (not activation etc.) are set to 'not trainable'
     params = [model_keras.layers[i].count_params() for i in range(len(model_keras.layers))]
@@ -200,7 +205,6 @@ def model_add_classes(model_keras,nr_classes):
     
 
 def model_compile(model_keras,loss_,optimizer_,learning_rate_,model_metrics,out_dim):
-    print("Compiling")
     optimizer_name = optimizer_["comboBox_optimizer"].lower()
     if optimizer_name=='sgd':
         optimizer = tf.keras.optimizers.SGD(learning_rate=optimizer_["doubleSpinBox_lr_sgd"], momentum=optimizer_["doubleSpinBox_sgd_momentum"], nesterov=optimizer_["checkBox_sgd_nesterov"])
@@ -220,7 +224,6 @@ def model_compile(model_keras,loss_,optimizer_,learning_rate_,model_metrics,out_
         print("Unknown optimizer!")
     model_keras.compile(loss=loss_,optimizer=optimizer,
                         metrics=get_metrics_tensors(model_metrics,out_dim))
-    print("Compiling DONE")
 
     return 1
 
@@ -1076,4 +1079,14 @@ def convert_kernel(kernel):
     no_flip = (slice(None, None), slice(None, None))
     slices[-2:] = no_flip
     return np.copy(kernel[slices])
-       
+        
+        
+        
+        
+        
+        
+        
+
+        
+
+    
