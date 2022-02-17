@@ -16,7 +16,7 @@ In this video, I show you how to get AIDeveloper running on your PC.
 Go through the following 5 steps and you are good to go:    
 * Go to https://github.com/maikherbig/AIDeveloper/releases
 * Download a zip-file (this file contains the **_standalone executable_**)   
-* Unzip it  
+* Unzip it (you may need [7zip](https://www.7-zip.org/download.html))
 * Go into the unzipped folder and scroll down until you find an executable (full name is for example "AIDeveloper_0.0.6.exe")  
 * DoubleClick this .exe to run it (no installation is required) 
 
@@ -53,7 +53,7 @@ Furthermore, there is a video showing the analysis procedure from beginning to e
 [Deploy a model using OpenCV](https://github.com/maikherbig/AIDeveloper/tree/master/Tutorial%20Deploy%20to%20OpenCV%20dnn)  
 
 # Prerequisites  
-Since version 0.0.6, standalone [executables](https://github.com/maikherbig/AIDeveloper/releases) of AIDeveloper are available. For Windows, a GPU-version is available that can detect and use NVIDIA GPUs (installation of CUDA is not required).
+Since version 0.0.6, standalone [executables](https://github.com/maikherbig/AIDeveloper/releases) of AIDeveloper are available. For Windows, a GPU-version is available that can detect and use NVIDIA GPUs (installation of CUDA is NOT required).
 
 The script based version was tested using Python 3.9.10 on Windows and Mac. See below to find installation instructions.
 
@@ -69,7 +69,7 @@ The script based version was tested using Python 3.9.10 on Windows and Mac. See 
 * navigate to the folder where you put AIDeveloper `cd C:\Users\MyPC\Downloads\AIDeveloper_0.3.0`
 * Generate an environment using the provided .yml file (AID_env_gpu_Win10.yml): `conda env create -f AID_env_gpu_Win10.yml`
 * This will create a new environment called "aid3_spyder"
-* Activate it: `conda activate aid_env_cpu`
+* Activate it: `conda activate aid3_spyder`
 * Run AIDeveloper using `python AIDeveloper.py`  
 ### Option 2: Manually install all dependencies:
 ```
