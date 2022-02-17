@@ -53,22 +53,22 @@ Furthermore, there is a video showing the analysis procedure from beginning to e
 [Deploy a model using OpenCV](https://github.com/maikherbig/AIDeveloper/tree/master/Tutorial%20Deploy%20to%20OpenCV%20dnn)  
 
 # Prerequisites  
-Since version 0.0.6, the standalone [executables](https://github.com/maikherbig/AIDeveloper/releases) of AIDeveloper are compatible to Windows, Mac and Linux.
+Since version 0.0.6, standalone [executables](https://github.com/maikherbig/AIDeveloper/releases) of AIDeveloper are available. For Windows, a GPU-version is available that can detect and use NVIDIA GPUs (installation of CUDA is not required).
 
-The script based version was tested using Python 3.5 on Windows, Mac and Linux. See below to find installation instructions.
+The script based version was tested using Python 3.9.10 on Windows and Mac. See below to find installation instructions.
 
 # Installation instructions to run AIDeveloper from script
 **_you only need to do this if you are a developer/programmer_**
-* Install [Visual studio build tools](https://visualstudio.microsoft.com/visual-cpp-build-tools/). During installation, make sure to check C++ Buildtools:
+* On Windows, install [Visual studio build tools](https://visualstudio.microsoft.com/visual-cpp-build-tools/). During installation, make sure to check C++ Buildtools:
 ![alt text](https://github.com/maikherbig/AIDeveloper/blob/master/art/VS_Build_Tools.png "Installation of VS Build tools")
-* Get a Python distribution. AIDeveloper was developed using Anaconda3 5.3.1 64bit. You can find this particular version in the installer archive of Anconda: https://repo.continuum.io/archive/
+* Get a Python distribution. AIDeveloper was developed using Miniconda3 ("Miniconda3-py39_4.9.2-Windows-x86_64"). You can find this particular version in the installer archive of Miniconda: https://repo.anaconda.com/miniconda/
 * Download the entire GitHub repository of AIDeveloper: find the green button on the top right ("Clone or download"), click it and then click "Download ZIP"
-* Unzip the folder for example to C:\Users\MyPC\Downloads\AIDeveloper_0.0.6
+* Unzip the folder for example to C:\Users\MyPC\Downloads\AIDeveloper_0.3.0
 * open Anaconda Prompt
 ### Option 1: Install dependencies using .yml file
-* navigate to the folder where you put AIDeveloper `cd C:\Users\MyPC\Downloads\AIDeveloper_0.0.6`
-* Generate an environment using the provided .yml file (AID_myenv_Win7.yml): `conda env create -f aid_env_cpu.yml`
-* This will create a new environment called "aid_env_cpu"
+* navigate to the folder where you put AIDeveloper `cd C:\Users\MyPC\Downloads\AIDeveloper_0.3.0`
+* Generate an environment using the provided .yml file (AID_env_gpu_Win10.yml): `conda env create -f AID_env_gpu_Win10.yml`
+* This will create a new environment called "aid3_spyder"
 * Activate it: `conda activate aid_env_cpu`
 * Run AIDeveloper using `python AIDeveloper.py`  
 ### Option 2: Manually install all dependencies:
