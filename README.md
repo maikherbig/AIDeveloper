@@ -96,11 +96,7 @@ pip install tf2onnx==1.9.3
 pip install Keras-Applications==1.0.8
 ```
 # AIDeveloper in scientific literature  
-[1]	[M. Kräter et al., “AIDeveloper: Deep Learning Image Classification in Life Science and Beyond,” Advanced Science, Mar. 2021.](https://onlinelibrary.wiley.com/doi/10.1002/advs.202003743)  
-[2]	[A. A. Nawaz et al., “Intelligent image-based deformation-assisted cell sorting with molecular specificity,” Nat. Methods, May 2020.](https://rdcu.be/b4ow4)    
-[3]	[T. Krüger et al., “Reliable isolation of human mesenchymal stromal cells from bone marrow biopsy specimens in patients after allogeneic hematopoietic cell transplantation,” Cytotherapy, vol. 22, no. 1, pp. 21–26, Jan. 2020.](https://www.ncbi.nlm.nih.gov/pubmed/31883948)  
-[4]	[P. Oura et al., “Deep learning in forensic gunshot wound interpretation—a proof-of-concept study,” International Journal of Legal Medicine, vol. 135, pp. 2101–2106, Apr. 2021.](https://doi.org/10.1007/s00414-021-02566-3)  
-[5]	[A. Walther et al., “Depressive disorders are associated with increased peripheral blood cell deformability: A cross-sectional case-control study (Mood-Morph),” medRxiv, Jul. 2021.](https://doi.org/10.1101/2021.07.01.21259846)  
+Papers that cited AIDeveloper: [Google Scholar link](https://scholar.google.com/scholar?cites=14629994715068103456&as_sdt=2005&sciodt=0,5&hl=en) 
 # Citing AIDeveloper  
 If you use AIDeveloper in a scientific publication, citation of the following paper is appreciated:  
 [M. Kräter et al., “AIDeveloper: Deep Learning Image Classification in Life Science and Beyond,” Advanced Science, Mar. 2021.](https://onlinelibrary.wiley.com/doi/10.1002/advs.202003743)  
