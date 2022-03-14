@@ -4417,8 +4417,8 @@ class MainWindow(QtWidgets.QMainWindow):
                 #but most users certainly want the same number of classes (output)->Give Info
     #            in_dim = model_config['config'][0]['config']['batch_input_shape']
     #            out_dim = model_config['config'][-2]['config']['units']
-                in_dim = model_keras.get_input_shape_at(0)
-                out_dim = model_keras.get_output_shape_at(0)[1]
+                in_dim = np.array(model_keras.input.shape[1:])
+                out_dim = model_keras.output.shape[1]
                 channels = in_dim[-1] #TensorFlow: channels in last dimension
     
                 if channels==1:
