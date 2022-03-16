@@ -485,7 +485,11 @@ def model_in_out_dim(model_object,object_type):
         try: #Sequential Model
             out_dim = model_object['config'][-2]['config']['units']
         except: #Functional Api
-            out_dim = model_object['config']["layers"][-2]["config"]["units"]
+            if len(model_object['config']["layers"])==2:
+                lay = model_object['config']["layers"][1]
+                out_dim = lay["config"]["layers"][-1]["config"]["units"]
+            else:
+                out_dim = model_object['config']["layers"][-2]["config"]["units"]
 
     if object_type=="model":
         in_dim = model_object.layers[0].get_input_shape_at(0)
