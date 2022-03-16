@@ -4,6 +4,8 @@ AIDeveloper
 ---------
 @author: maikherbig
 """
+VERSION = "0.3.0_dev1" #Python 3.9.9 Version
+
 import os,sys,gc
 os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'
 
@@ -120,7 +122,6 @@ import aid_frontend
 from partial_trainability import partial_trainability
 import aid_imports
 
-VERSION = "0.3.0" #Python 3.9.9 Version
 model_zoo_version = model_zoo.__version__()
 print("AIDeveloper Version: "+VERSION)
 print("model_zoo.py Version: "+model_zoo.__version__())
