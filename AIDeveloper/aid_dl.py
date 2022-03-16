@@ -35,7 +35,7 @@ def get_custom_metrics():
     # custom_metrics.append(keras_metrics.categorical_f1_score())
     # custom_metrics.append(keras_metrics.categorical_precision())
     # custom_metrics.append(keras_metrics.categorical_recall())
-    custom_metrics.append("auc_f1")
+    custom_metrics.append("auc")
     custom_metrics.append("precision")
     custom_metrics.append("recall")
 
@@ -56,17 +56,17 @@ def get_metrics_tensors(metrics,nr_classes):
     f1 = any(["auc" in str(a).lower() for a in metrics])
     precision = any(["precision" in str(a).lower() for a in metrics])
     recall = any(["recall" in str(a).lower() for a in metrics])
-    nr_classes =  1
+    #nr_classes =  1
     Metrics =  []
     if f1==True:
-        for class_ in range(nr_classes):
-            Metrics.append(tf.keras.metrics.AUC())
+        # for class_ in range(nr_classes):
+        Metrics.append(tf.keras.metrics.AUC(name="auc"))
     if precision==True:
         for class_ in range(nr_classes):
-            Metrics.append(tf.keras.metrics.Precision())
+            Metrics.append(tf.keras.metrics.Precision(class_id=class_,name="precision_"+str(class_)))
     if recall==True:
         for class_ in range(nr_classes):
-            Metrics.append(tf.keras.metrics.Recall())
+            Metrics.append(tf.keras.metrics.Recall(class_id=class_,name="recall_"+str(class_)))
     metrics =  ['accuracy'] + Metrics
     return metrics
 
@@ -74,15 +74,19 @@ def get_metrics_strings(model_metrics,nr_classes):
     #list of standard metrics:
     model_metrics_names = ["accuracy","val_accuracy","loss","val_loss"]
     for met in model_metrics:
-        if 'precision' in met or 'recall' in met or 'auc' in met:
+        if 'precision' in met or 'recall' in met:
             #these are cases where expert metrics were occured
             for i in range(nr_classes):
                 # if i==0:
                 #    model_metrics_names.append(met) 
                 #    model_metrics_names.append("val_"+met)
                 # if i>0:
-                   model_metrics_names.append(met+"_"+str(i+1)) 
-                   model_metrics_names.append("val_"+met+"_"+str(i+1))
+                   model_metrics_names.append(met+"_"+str(i)) 
+                   model_metrics_names.append("val_"+met+"_"+str(i))
+        elif 'auc' in met:
+                   model_metrics_names.append(met) 
+                   model_metrics_names.append("val_"+met)
+            
     return model_metrics_names
 
 def model_change_trainability(model_keras,trainable_new,model_metrics,out_dim,loss_,optimizer_,learning_rate_):
