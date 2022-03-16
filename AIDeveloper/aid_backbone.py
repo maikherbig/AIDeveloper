@@ -1051,7 +1051,7 @@ class MainWindow(QtWidgets.QMainWindow):
 
     #class_weight = self.get_class_weight(self.fittingpopups_ui[listindex].SelectedFiles,lossW_expert) #
     def get_class_weight(self,SelectedFiles,lossW_expert,custom_check_classes=False):
-        t1 = time.time()
+        t1 = time.perf_counter()
         print("Getting dictionary for class_weight")
         if lossW_expert=="None":
             return None
@@ -1094,7 +1094,7 @@ class MainWindow(QtWidgets.QMainWindow):
                     return ["Balanced",class_weights]
             else:
                 return class_weights
-        t2 = time.time()
+        t2 = time.perf_counter()
         dt = np.round(t2-t1,2)
         print("Comp. time = "+str(dt))
 
@@ -5776,9 +5776,9 @@ class MainWindow(QtWidgets.QMainWindow):
                     model_metrics_records["val_"+key] = 0 #those metrics start at zero and approach 1         
     
             gen_train_refresh = False
-            time_start = time.time()
-            t1 = time.time() #Initialize a timer; this is used to save the meta file every few seconds
-            t2 =  time.time() #Initialize a timer; this is used update the fitting parameters
+            time_start = time.perf_counter()
+            t1 = time.perf_counter() #Initialize a timer; this is used to save the meta file every few seconds
+            t2 =  time.perf_counter() #Initialize a timer; this is used update the fitting parameters
             while counter < nr_epochs:#nr_epochs: #resample nr_epochs times
                 #Only keep fitting if the respective window is open:
                 isVisible = self.fittingpopups[listindex].isVisible()
@@ -5786,7 +5786,7 @@ class MainWindow(QtWidgets.QMainWindow):
                     ############Keras image augmentation#####################
                     #Start the first iteration:                
                     X_train,y_train,xtra_train = [],[],[]
-                    t3 = time.time()
+                    t3 = time.perf_counter()
                     for i in range(len(SelectedFiles_train)):
                         if len(DATA)==0 or gen_train_refresh:
                             #Replace true means that individual cells could occur several times
@@ -5810,7 +5810,7 @@ class MainWindow(QtWidgets.QMainWindow):
                         print("Retrieve Xtra Data...")
                         xtra_train = np.concatenate(xtra_train)
                     
-                    t4 = time.time()
+                    t4 = time.perf_counter()
                     if verbose == 1:
                         print("Time to load data (from .rtdc or RAM) and crop="+str(t4-t3))
                     
@@ -5824,7 +5824,7 @@ class MainWindow(QtWidgets.QMainWindow):
                         #Add the "channels" dimension
                         X_train = np.expand_dims(X_train,3)
     
-                    t3 = time.time()
+                    t3 = time.perf_counter()
                     #Some parallellization: use nr_threads (number of CPUs)
                     nr_threads = 1 #Somehow for MNIST and CIFAR, processing always took longer for nr_threads>1 . I tried nr_threads=2,4,8,16,24
                     if nr_threads == 1:
@@ -5846,7 +5846,7 @@ class MainWindow(QtWidgets.QMainWindow):
                             self.y_batch[i] = aug_paras["y_train"]
                             self.counter_aug+=1
     
-                        t3_a = time.time()
+                        t3_a = time.perf_counter()
                         for i in range(nr_threads):
                             aug_paras_ = copy.deepcopy(aug_paras)
                             aug_paras_["i"] = i
@@ -5858,7 +5858,7 @@ class MainWindow(QtWidgets.QMainWindow):
                             
                         while self.counter_aug < nr_threads:
                             time.sleep(0.01)#Wait 0.1s, then check the len again
-                        t3_b = time.time()
+                        t3_b = time.perf_counter()
                         if verbose == 1:
                             print("Time to perform affine augmentation_internal ="+str(t3_b-t3_a))
     
@@ -5866,17 +5866,17 @@ class MainWindow(QtWidgets.QMainWindow):
                         y_batch = np.concatenate(self.y_batch)
        
                     Y_batch = to_categorical(y_batch, nr_classes)# * 2 - 1
-                    t4 = time.time()
+                    t4 = time.perf_counter()
                     if verbose == 1:
                         print("Time to perform affine augmentation ="+str(t4-t3))
                             
-                    t3 = time.time()            
+                    t3 = time.perf_counter()            
                     #Now do the final cropping to the actual size that was set by user
                     dim = X_batch.shape
                     if dim[2]!=crop:
                         remove = int(dim[2]/2.0 - crop/2.0)
                         X_batch = X_batch[:,remove:remove+crop,remove:remove+crop,:] #crop to crop x crop pixels #TensorFlow
-                    t4 = time.time()
+                    t4 = time.perf_counter()
     #                    if verbose == 1:
     #                        print("Time to crop to final size="+str(t4-t3))
     
@@ -6206,16 +6206,16 @@ class MainWindow(QtWidgets.QMainWindow):
                             #is there any of contrast/saturation/hue augmentation to do?
                             X_batch = X_batch.astype(np.uint8)
                             if contrast_on:
-                                t_con_aug_1 = time.time()
+                                t_con_aug_1 = time.perf_counter()
                                 X_batch = aid_img.contrast_augm_cv2(X_batch,contrast_lower,contrast_higher) #this function is almost 15 times faster than random_contrast from tf!
-                                t_con_aug_2 = time.time()
+                                t_con_aug_2 = time.perf_counter()
                                 if verbose == 1:
                                     print("Time to augment contrast="+str(t_con_aug_2-t_con_aug_1))
     
                             if saturation_on or hue_on:
-                                t_sat_aug_1 = time.time()
+                                t_sat_aug_1 = time.perf_counter()
                                 X_batch = aid_img.satur_hue_augm_cv2(X_batch.astype(np.uint8),saturation_on,saturation_lower,saturation_higher,hue_on,hue_delta) #Gray and RGB; both values >0!
-                                t_sat_aug_2 = time.time()
+                                t_sat_aug_2 = time.perf_counter()
                                 if verbose == 1:
                                     print("Time to augment saturation/hue="+str(t_sat_aug_2-t_sat_aug_1))
     
@@ -6223,39 +6223,39 @@ class MainWindow(QtWidgets.QMainWindow):
                             #is there any of blurring to do?
                             
                             if avgBlur_on:
-                                t_avgBlur_1 = time.time()
+                                t_avgBlur_1 = time.perf_counter()
                                 X_batch = aid_img.avg_blur_cv2(X_batch,avgBlur_min,avgBlur_max)
-                                t_avgBlur_2 = time.time()
+                                t_avgBlur_2 = time.perf_counter()
                                 if verbose == 1:
                                     print("Time to perform average blurring="+str(t_avgBlur_2-t_avgBlur_1))
     
                             if gaussBlur_on:
-                                t_gaussBlur_1 = time.time()
+                                t_gaussBlur_1 = time.perf_counter()
                                 X_batch = aid_img.gauss_blur_cv(X_batch,gaussBlur_min,gaussBlur_max)
-                                t_gaussBlur_2 = time.time()
+                                t_gaussBlur_2 = time.perf_counter()
                                 if verbose == 1:
                                     print("Time to perform gaussian blurring="+str(t_gaussBlur_2-t_gaussBlur_1))
     
                             if motionBlur_on:
-                                t_motionBlur_1 = time.time()
+                                t_motionBlur_1 = time.perf_counter()
                                 X_batch = aid_img.motion_blur_cv(X_batch,motionBlur_kernel,motionBlur_angle)
-                                t_motionBlur_2 = time.time()
+                                t_motionBlur_2 = time.perf_counter()
                                 if verbose == 1:
                                     print("Time to perform motion blurring="+str(t_motionBlur_2-t_motionBlur_1))
     
                             ##########Brightness noise#########
-                            t3 = time.time()
+                            t3 = time.perf_counter()
                             X_batch = aid_img.brightn_noise_augm_cv2(X_batch,brightness_add_lower,brightness_add_upper,brightness_mult_lower,brightness_mult_upper,gaussnoise_mean,gaussnoise_scale)
-                            t4 = time.time()
+                            t4 = time.perf_counter()
                             if verbose == 1:
                                 print("Time to augment brightness="+str(t4-t3))
     
-                            t3 = time.time()
+                            t3 = time.perf_counter()
                             if norm == "StdScaling using mean and std of all training data":
                                 X_batch = aid_img.image_normalization(X_batch,norm,mean_trainingdata,std_trainingdata)
                             else:
                                 X_batch = aid_img.image_normalization(X_batch,norm)
-                            t4 = time.time()
+                            t4 = time.perf_counter()
                             if verbose == 1:
                                 print("Time to apply normalization="+str(t4-t3))
                             
@@ -6287,7 +6287,7 @@ class MainWindow(QtWidgets.QMainWindow):
                                     history = model_keras_p.fit(X_batch, Y_batch, batch_size=batchSize_expert, epochs=epochs_expert,verbose=verbose, validation_data=(X_valid, Y_valid),class_weight=class_weight,callbacks=callbacks)
                                 
                                 Histories.append(history.history)
-                                Stopwatch.append(time.time()-time_start)
+                                Stopwatch.append(time.perf_counter()-time_start)
                                 learningrate = K.get_value(history.model.optimizer.lr)
                                 LearningRate.append(learningrate)
 
@@ -6441,7 +6441,7 @@ class MainWindow(QtWidgets.QMainWindow):
                             history_callback.emit(history_emit)
                             Index.append(counter)
                             
-                            t2 =  time.time()
+                            t2 =  time.perf_counter()
                             
                             if collection==False:
                                 if counter==0:
@@ -6495,7 +6495,7 @@ class MainWindow(QtWidgets.QMainWindow):
                                         self.fittingpopups_ui[listindex].textBrowser_FittingInfo.append(text)
                                         
                                         Index,Histories,Saved,Stopwatch,LearningRate = [],[],[],[],[]#reset the lists
-                                        t1 = time.time()
+                                        t1 = time.perf_counter()
                                     else:#If folder not available, create a folder in temp
                                         text = "Failed to save meta.xlsx. -> Create folder in temp\n"
                                         saving_failed = True
@@ -6582,7 +6582,7 @@ class MainWindow(QtWidgets.QMainWindow):
                                         Writers[i].save()
                                         os.chmod(model_keras_path[i].split(".model")[0]+'_meta.xlsx', S_IREAD|S_IRGRP|S_IROTH)  #make read only
                                         print("meta.xlsx was saved")
-                                        t1 = time.time()
+                                        t1 = time.perf_counter()
                                     Index = []#reset the Index list
     
                             counter+=1
@@ -7455,7 +7455,7 @@ class MainWindow(QtWidgets.QMainWindow):
             percDataT = percDataT/100.0
 
             X_train,y_train,xtra_train = [],[],[]
-            t3 = time.time()
+            t3 = time.perf_counter()
             for i in range(len(SelectedFiles_train)):
                 if len(self.ram)==0:
                     #Replace true means that individual cells could occur several times
@@ -7478,7 +7478,7 @@ class MainWindow(QtWidgets.QMainWindow):
                 print("Retrieve Xtra Data...")
                 xtra_train = np.concatenate(xtra_train)
             
-            t4 = time.time()
+            t4 = time.perf_counter()
             if verbose == 1:
                 print("Time to load data (from .rtdc or RAM) and crop="+str(t4-t3))
             
@@ -7492,24 +7492,24 @@ class MainWindow(QtWidgets.QMainWindow):
                 #Add the "channels" dimension
                 X_train = np.expand_dims(X_train,3)
 
-            t3 = time.time()
+            t3 = time.perf_counter()
             
             #Affine augmentation
             X_train = aid_img.affine_augm(X_train,v_flip,h_flip,rotation,width_shift,height_shift,zoom,shear) #Affine image augmentation
             y_train = np.copy(y_train)
    
             Y_train = to_categorical(y_train, nr_classes)# * 2 - 1
-            t4 = time.time()
+            t4 = time.perf_counter()
             if verbose == 1:
                 print("Time to perform affine augmentation ="+str(t4-t3))
                     
-            t3 = time.time()            
+            t3 = time.perf_counter()            
             #Now do the final cropping to the actual size that was set by user
             dim = X_train.shape
             if dim[2]!=crop:
                 remove = int(dim[2]/2.0 - crop/2.0)
                 X_train = X_train[:,remove:remove+crop,remove:remove+crop,:] #crop to crop x crop pixels #TensorFlow
-            t4 = time.time()
+            t4 = time.perf_counter()
 
             #X_train = np.copy(X_train) #save into new array and do some iterations with varying noise/brightness
             #reuse this X_batch_orig a few times since this augmentation was costly
@@ -7528,55 +7528,55 @@ class MainWindow(QtWidgets.QMainWindow):
             X_train = X_train.astype(np.uint8)
 
             if contrast_on:
-                t_con_aug_1 = time.time()
+                t_con_aug_1 = time.perf_counter()
                 X_train = aid_img.contrast_augm_cv2(X_train,contrast_lower,contrast_higher) #this function is almost 15 times faster than random_contrast from tf!
-                t_con_aug_2 = time.time()
+                t_con_aug_2 = time.perf_counter()
                 if verbose == 1:
                     print("Time to augment contrast="+str(t_con_aug_2-t_con_aug_1))
 
             if saturation_on or hue_on:
-                t_sat_aug_1 = time.time()
+                t_sat_aug_1 = time.perf_counter()
                 X_train = aid_img.satur_hue_augm_cv2(X_train.astype(np.uint8),saturation_on,saturation_lower,saturation_higher,hue_on,hue_delta) #Gray and RGB; both values >0!
-                t_sat_aug_2 = time.time()
+                t_sat_aug_2 = time.perf_counter()
                 if verbose == 1:
                     print("Time to augment saturation/hue="+str(t_sat_aug_2-t_sat_aug_1))
 
             ##########Average/Gauss/Motion blurring#########
             #is there any of blurring to do?
             if avgBlur_on:
-                t_avgBlur_1 = time.time()
+                t_avgBlur_1 = time.perf_counter()
                 X_train = aid_img.avg_blur_cv2(X_train,avgBlur_min,avgBlur_max)
-                t_avgBlur_2 = time.time()
+                t_avgBlur_2 = time.perf_counter()
                 if verbose == 1:
                     print("Time to perform average blurring="+str(t_avgBlur_2-t_avgBlur_1))
 
             if gaussBlur_on:
-                t_gaussBlur_1 = time.time()
+                t_gaussBlur_1 = time.perf_counter()
                 X_train = aid_img.gauss_blur_cv(X_train,gaussBlur_min,gaussBlur_max)
-                t_gaussBlur_2 = time.time()
+                t_gaussBlur_2 = time.perf_counter()
                 if verbose == 1:
                     print("Time to perform gaussian blurring="+str(t_gaussBlur_2-t_gaussBlur_1))
 
             if motionBlur_on:
-                t_motionBlur_1 = time.time()
+                t_motionBlur_1 = time.perf_counter()
                 X_train = aid_img.motion_blur_cv(X_train,motionBlur_kernel,motionBlur_angle)
-                t_motionBlur_2 = time.time()
+                t_motionBlur_2 = time.perf_counter()
                 if verbose == 1:
                     print("Time to perform motion blurring="+str(t_motionBlur_2-t_motionBlur_1))
 
             ##########Brightness noise#########
-            t3 = time.time()
+            t3 = time.perf_counter()
             X_train = aid_img.brightn_noise_augm_cv2(X_train,brightness_add_lower,brightness_add_upper,brightness_mult_lower,brightness_mult_upper,gaussnoise_mean,gaussnoise_scale)
-            t4 = time.time()
+            t4 = time.perf_counter()
             if verbose == 1:
                 print("Time to augment brightness="+str(t4-t3))
 
-            t3 = time.time()
+            t3 = time.perf_counter()
             if norm == "StdScaling using mean and std of all training data":
                 X_train = aid_img.image_normalization(X_train,norm,mean_trainingdata,std_trainingdata)
             else:
                 X_train = aid_img.image_normalization(X_train,norm)
-            t4 = time.time()
+            t4 = time.perf_counter()
             if verbose == 1:
                 print("Time to apply normalization="+str(t4-t3))
             
@@ -9598,10 +9598,10 @@ class MainWindow(QtWidgets.QMainWindow):
             Times = []
             for k in range(10):
                 image = (np.random.randint(0,255,size=in_dim)).astype(np.float32)/255.0
-                t1 = time.time()
+                t1 = time.perf_counter()
                 for i in range(nr_imgs):#predict 50 times 20 images
                     model_keras.predict(image)
-                t2 = time.time()
+                t2 = time.perf_counter()
                 dt = (t2-t1)/(nr_imgs) #divide by nr_imgs to get time [s] per image
                 dt = dt*1000.0 #multiply by 1000 to change to ms range
                 dic = {"outp":str(round(dt,3))+"ms"}
