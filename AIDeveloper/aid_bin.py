@@ -840,7 +840,9 @@ def check_for_updates(this_version):
         tags_update_online = [a for a in tags if "update" in a]
         tags_update_online = [a.split("-update")[0]+"-update" for a in tags_update_online]+["Bleeding edge"]
         tags = [a for a in tags if not "update" in a]
-
+        tags = [a.split(' data-view-component')[0] for a in tags]
+        tags = [a.replace('"',"") for a in tags]
+        
         latest_release = tags[0]
         highest_dev = [latest_release+"_dev" in tag for tag in tags]
         ind = np.where(np.array(highest_dev)==True)[0]
