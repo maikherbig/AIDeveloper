@@ -7366,7 +7366,7 @@ def get_hyper_params(Para_dict,ui_item):
     except Exception as e:
         message(e)
     try:
-        Para_dict["metrics"]=ui_item.get_metrics(1),       
+        Para_dict["metrics"]=ui_item.get_metrics(),       
         if norm == "StdScaling using mean and std of all training data":                                
             #This needs to be saved into Para_dict since it will be required for inference
             Para_dict["Mean of training data used for scaling"]=np.nan,
