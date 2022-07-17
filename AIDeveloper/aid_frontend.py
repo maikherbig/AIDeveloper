@@ -74,26 +74,10 @@ class MyTable(QtWidgets.QTableWidget):
         self.drag_row = self.row(self.drag_item)
 
 
-def MyExceptionHook(etype, value, trace):
-    """
-    Copied from: https://github.com/ZELLMECHANIK-DRESDEN/ShapeOut/blob/07d741db3bb5685790d9f9f6df394cd9577e8236/shapeout/gui/frontend.py
-    Handler for all unhandled exceptions.
- 
-    :param `etype`: the exception type (`SyntaxError`, `ZeroDivisionError`, etc...);
-    :type `etype`: `Exception`
-    :param string `value`: the exception error message;
-    :param string `trace`: the traceback header, if any (otherwise, it prints the
-     standard Python header: ``Traceback (most recent call last)``.
-    """
-    tmp = traceback.format_exception(etype, value, trace)
-    exception = "".join(tmp)
-    msg = QtWidgets.QMessageBox()
-    msg.setIcon(QtWidgets.QMessageBox.Information)       
-    msg.setText(exception)
-    msg.setWindowTitle("Error")
-    msg.setStandardButtons(QtWidgets.QMessageBox.Ok)
-    msg.exec_()
-    return
+def myexcepthook(etype, value, trace):
+    error = traceback.format_exception(etype, value, trace)
+    error = "".join(error)
+    message(error,msg_type="Error")
 
 class WorkerSignals(QtCore.QObject):
     '''
@@ -168,7 +152,7 @@ def setup_main_ui(self,gpu_nr):
     self.setObjectName(_fromUtf8("MainWindow"))
     self.resize(900, 600)
 
-    sys.excepthook = MyExceptionHook
+    sys.excepthook = myexcepthook
     self.centralwidget = QtWidgets.QWidget(self)
     self.centralwidget.setObjectName(_fromUtf8("centralwidget"))
     self.gridLayout_2 = QtWidgets.QGridLayout(self.centralwidget)
@@ -3536,7 +3520,7 @@ def retranslate_main_ui(self,gpu_nr,VERSION):
     self.radioButton_exportSelected.setText(_translate("MainWindow", "only selected", None))
     self.radioButton_exportAll.setText(_translate("MainWindow", "all", None))
     self.pushButton_export.setText(_translate("MainWindow", "Export to...", None))
-    self.tabWidget_filter_peakdet.setTabText(self.tabWidget_filter_peakdet.indexOf(self.tab_peakdet), _translate("MainWindow", "Peakdetection", None))
+    self.tabWidget_filter_peakdet.setTabText(self.tabWidget_filter_peakdet.indexOf(self.tab_peakdet), _translate("MainWindow", "Show event", None))
     self.tabWidget_filter_peakdet.setTabText(self.tabWidget_filter_peakdet.indexOf(self.tab_defineModel), _translate("MainWindow", "Placeholder", None))
     self.tabWidget_Modelbuilder.setTabText(self.tabWidget_Modelbuilder.indexOf(self.tab_Plotting), _translate("MainWindow", "Plotting", None))
 
