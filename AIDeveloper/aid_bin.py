@@ -11,6 +11,7 @@ import os,shutil,json,re,urllib
 import numpy as np
 import dclab
 import h5py,time,datetime
+import hdf5plugin
 import six,tarfile, zipfile
 import hashlib
 import warnings
@@ -369,7 +370,39 @@ def store_trace(h5_group, data, indices):
             dset.resize(oldsize + values.shape[0], axis=0)
             dset[oldsize:] = values
 
-
+def new_hdf(path_rtdc):
+    hdf = h5py.File(path_rtdc,'w')
+    #many attributes are required (so it can run in ShapeOut2 - but only for Grayscale images anyway...)
+    hdf.attrs["experiment:date"] = time.strftime("%Y-%m-%d")
+    hdf.attrs["experiment:event count"] = 100
+    hdf.attrs["experiment:run index"] = 1
+    hdf.attrs["experiment:sample"] = "Default"
+    hdf.attrs["experiment:time"] = time.strftime("%H:%M:%S")
+    hdf.attrs["imaging:flash device"] = "LED"
+    hdf.attrs["imaging:flash duration"] = 2.0
+    hdf.attrs["imaging:frame rate"] = 2000
+    hdf.attrs["imaging:pixel size"] = 0.32
+    hdf.attrs["imaging:roi poition x"] = 629.0
+    hdf.attrs["imaging:roi poition x"] = 512.0
+    hdf.attrs["imaging:roi size x"] = 64
+    hdf.attrs["imaging:roi size y"] = 64
+    hdf.attrs["online_contour:bin area min"] = 10
+    hdf.attrs["online_contour:bin kernel"] = 5
+    hdf.attrs["online_contour:bin threshold"] = -6
+    hdf.attrs["online_contour:image blur"] = 0
+    hdf.attrs["online_contour:no absdiff"] = 1
+    hdf.attrs["setup:channel width"] = 20
+    hdf.attrs["setup:chip region"] = "channel"
+    hdf.attrs["setup:flow rate"] = 0.06
+    hdf.attrs["setup:flow rate sample"] = 0.02
+    hdf.attrs["setup:flow rate sheath"] = 0.04
+    hdf.attrs["setup:identifier"] = "Default"
+    hdf.attrs["setup:medium"] = "CellCarrierB"
+    hdf.attrs["setup:module composition"] = "AcCellerator"
+    hdf.attrs["setup:software version"] = "dclab 0.9.0.post1 | dclab 0.9.1"
+    return hdf
+    
+    
 def write_rtdc(fname,rtdc_datasets,X_valid,Indices,cropped=True,color_mode='Grayscale',xtra_in=[]):
     """
     fname - path+filename of file to be created
@@ -435,12 +468,8 @@ def write_rtdc(fname,rtdc_datasets,X_valid,Indices,cropped=True,color_mode='Gray
         pos_x = np.concatenate(pos_x)
         pos_y = np.concatenate(pos_y)
         
-        #copy the empty Empty.rtdc
-        shutil.copy(os.path.join(dir_root,"Empty.rtdc"),fname)
-        
+        hdf = new_hdf(fname) #generate new hdf file (with metadata, required for ShapeOut to work)
         maxshape = (None, images.shape[1], images.shape[2], images.shape[3])
-        #Create rtdc_dataset
-        hdf = h5py.File(fname,'a')
         hdf.create_dataset("events/image", data=images, dtype=np.uint8,maxshape=maxshape,fletcher32=True,chunks=True)
         hdf.create_dataset("events/pos_x", data=pos_x, dtype=np.int32)
         hdf.create_dataset("events/pos_y", data=pos_y, dtype=np.int32)
@@ -892,7 +921,6 @@ def aideveloper_filelist():
     "aid_imports.py",
     "aid_start.py",
     "aid_settings.json",
-    "Empty.rtdc",
     "layout_dark_notooltip.txt",
     "layout_dark.txt",
     "layout_darkorange_notooltip.txt",
