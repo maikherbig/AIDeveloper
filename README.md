@@ -79,6 +79,7 @@ pip install --upgrade setuptools
 pip install tensorflow-gpu==2.7.1
 pip install scikit-learn==1.0.2
 pip install dclab==0.39.9
+pip install hdf5plugin==3.3.1
 pip install Pillow==9.0.0
 pip install pandas==1.1.5
 pip install psutil==5.9.0
