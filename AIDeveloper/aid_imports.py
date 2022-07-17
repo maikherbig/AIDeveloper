@@ -10,7 +10,6 @@ import os,shutil,json,re,urllib
 import sys,traceback,ast
 
 import numpy as np
-import dclab
 import h5py,time
 import hdf5plugin
 import gc,tempfile
