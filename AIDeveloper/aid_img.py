@@ -8,6 +8,7 @@ some functions for image processing that are essential for AIDeveloper
 
 import numpy as np
 import os, shutil,h5py
+import hdf5plugin
 import pandas as pd
 rand_state = np.random.RandomState(117) #to get the same random number on diff. PCs
 import aid_bin
