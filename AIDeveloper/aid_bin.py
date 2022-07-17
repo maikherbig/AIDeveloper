@@ -9,7 +9,6 @@ keep the backbone script shorter
 
 import os,shutil,json,re,urllib
 import numpy as np
-import dclab
 import h5py,time,datetime
 import hdf5plugin
 import six,tarfile, zipfile
@@ -617,12 +616,10 @@ def write_rtdc(fname,rtdc_datasets,X_valid,Indices,cropped=True,color_mode='Gray
                         data = rtdc_ds["events"]["trace"]
                         h5_group = h5obj["events"].require_group("trace")
                         store_trace(h5_group=h5_group,data=data,indices=indices)
-                        #dclab.rtdc_dataset.write_hdf5.store_trace(h5group=events,name=feat,data=trace,compression="gzip")
 
                     elif feat == "pos_x" and cropped==True:
                         values = np.zeros(shape=len(indices))+np.round(img_dim_x/2.0)*rtdc_ds.attrs["imaging:pixel size"]
                         store_scalar(h5group=events, name=feat, data=values, compression="gzip")
-                        #dclab.rtdc_dataset.write_hdf5.store_scalar(h5group=events, name=feat, data=values, compression="gzip")
 
                     elif feat == "pos_y" and cropped==True:
                         values = np.zeros(shape=len(indices))+np.round(img_dim_y/2.0)*rtdc_ds.attrs["imaging:pixel size"]
