@@ -12,6 +12,7 @@ import sys,traceback,ast
 import numpy as np
 import dclab
 import h5py,time
+import hdf5plugin
 import gc,tempfile
 import pandas as pd
 import tensorflow as tf
