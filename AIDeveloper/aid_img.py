@@ -13,7 +13,6 @@ import pandas as pd
 rand_state = np.random.RandomState(117) #to get the same random number on diff. PCs
 import aid_bin
 from pyqtgraph.Qt import QtWidgets
-#from scipy import ndimage
 import cv2
 import tensorflow as tf
 from tensorflow.python.client import device_lib
@@ -929,8 +928,9 @@ def image_normalization(images,normalization_method,mean_trainingdata=None,std_t
 
 
 def imgs_2_rtdc(fname,images,pos_x,pos_y):
-    #There needs to be an empty .rtdc file which will be copied
-    shutil.copy(os.path.join(dir_root,"Empty.rtdc"),fname)
+    # Initialize new hdf file with meta parameters
+    hdf = aid_bin.new_hdf(fname)
+
     if len(images.shape)==4:    
         maxshape = (None, images.shape[1], images.shape[2], images.shape[3])
     elif len(images.shape)==3:    
