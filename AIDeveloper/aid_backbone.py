@@ -2414,17 +2414,17 @@ class MainWindow(QtWidgets.QMainWindow):
                     keys_1d.append(key)
                 elif len(shape)==3: #two-dimensional info (images)
                     keys_2d.append(key)
-                elif len(shape)==4: #two-dimensional RBG info (images)
-                    keys_2d.append(key)
+                # elif len(shape)==4: #two-dimensional RBG info (images)
+                #     keys_2d.append(key)
 
         #add the traces to the 1d features
         if "trace" in keys:
             for key_trace in list(rtdc_ds["events"]["trace"].keys()):
                 keys_1d.append(key_trace+" (RTFDC)")
 
-
         #Sort keys_2d: "image" first; "mask" last 
-        keys_2d.insert(0, keys_2d.pop(keys_2d.index("image")))
+        if "image" in keys_2d:
+            keys_2d.insert(0, keys_2d.pop(keys_2d.index("image")))
         if "mask" in keys_2d:
             keys_2d.insert(len(keys_2d), keys_2d.pop(keys_2d.index("mask")))        
         
@@ -2618,33 +2618,37 @@ class MainWindow(QtWidgets.QMainWindow):
             index = int(self.spinBox_cellInd.value())
         else:
             index = ind
-            
+        
+        if not hasattr(self, 'rtdc_ds'): #self.rtdc is missing. Try to load it. 
+            url = str(self.comboBox_chooseRtdcFile.currentText())
+            if len(url)>0:
+                failed,rtdc_ds = aid_bin.load_rtdc(url)
+                self.rtdc_ds = rtdc_ds
+            else: # if loading is not possible, show error message
+                aid_frontend.message(msg_text="Please first load a dataset using the button 'Update'",msg_type="Error")
+            return
+        
         rtdc_ds = self.rtdc_ds
         
-        #which channel shouldbe displayed                
+        #which channel should be displayed                
         channels = len(self.popup_2dOptions_ui.spinBox_minChX)
-        keys_2d = [self.popup_2dOptions_ui.label_layername_chX[i].text() for i in range(channels)]
-
-        #Define variable on self that carries all image information
-        if channels==1: 
-            img = np.expand_dims(rtdc_ds["events"]["image"][index],-1)
-        elif channels>1:
-            img = np.stack( [rtdc_ds["events"][key][index] for key in keys_2d] ,axis=-1)            
-
-        if len(img.shape)==2:
-            channels = 1
-        elif len(img.shape)==3:
-            height, width, channels = img.shape
-        else:
-            print("Invalid image format: "+str(img.shape))
-            return
-
         color_mode = str(self.comboBox_GrayOrRGB_2.currentText())
         
-        if color_mode=="Grayscale": #Slider allows to show individual layers: each is shown as grayscale
-            img = img
-            
-        elif color_mode == "RGB":#User can define, which layers are shown in R,G,and B
+        #Define variable on self that carries all image information
+        if color_mode=="Grayscale" or color_mode=="RGB":
+            img = rtdc_ds["events"]["image"][index]
+            if len(img.shape)==3: #this is an RGB image!
+                img = img
+            else:
+                img = np.expand_dims(img,-1)
+        
+        if color_mode=="Select Ch":
+            keys_2d = [self.popup_2dOptions_ui.label_layername_chX[i].text() for i in range(channels)]
+            #make sure each image channel is a grayscale image (single channel)
+            shape_len = [len(rtdc_ds["events"][key].shape) for key in keys_2d]
+            assert set(shape_len)=={3}, "All channels should be grayscale. However, the shapes indicate wrong dimensions"
+            img = np.stack( [rtdc_ds["events"][key][index] for key in keys_2d] ,axis=-1)            
+
             #Retrieve the setting from self.popup_layercontrols_ui
             ui_item = self.popup_2dOptions_ui
             layer_names = [obj.text() for obj in ui_item.label_layername_chX]
@@ -2704,7 +2708,14 @@ class MainWindow(QtWidgets.QMainWindow):
             #Assemble image by stacking all layers
             img = np.stack([img_r,img_g,img_b],axis=-1)        
 
-        
+        if len(img.shape)==2:
+            channels = 1
+        elif len(img.shape)==3:
+            height, width, channels = img.shape
+        else:
+            print("Invalid image format: "+str(img.shape))
+            return
+
         #Get the levels of the previous frame
         levels_init = self.widget_showCell.getLevels()
         if levels_init==(0,1.0):
@@ -2713,11 +2724,10 @@ class MainWindow(QtWidgets.QMainWindow):
         #Get the layer index of the previous frame
         index_ = self.widget_showCell.currentIndex
             
-        if color_mode=="Grayscale":
+        if color_mode=="Grayscale" and channels==1:
             self.widget_showCell.setImage(img.T,autoRange=False,levels=levels_init,levelMode="mono")
-            
             self.widget_showCell.setCurrentIndex(index_)
-        elif color_mode=="RGB":
+        elif color_mode=="RGB" and channels==3:
             self.widget_showCell.setImage(np.swapaxes(img,0,1))
 
         pix = rtdc_ds.attrs["imaging:pixel size"]
