@@ -78,6 +78,7 @@ def myexcepthook(etype, value, trace):
     error = traceback.format_exception(etype, value, trace)
     error = "".join(error)
     message(error,msg_type="Error")
+    return
 
 class WorkerSignals(QtCore.QObject):
     '''
@@ -2585,6 +2586,8 @@ def setup_main_ui(self,gpu_nr):
         if text == "Grayscale":
             self.pushButton_2dOptions.setEnabled(False)
         if text == "RGB":
+            self.pushButton_2dOptions.setEnabled(False)
+        if text == "Select Ch":
             self.pushButton_2dOptions.setEnabled(True)
             
     self.comboBox_GrayOrRGB_2.currentTextChanged.connect(rgb_options_switch)
@@ -3493,7 +3496,7 @@ def retranslate_main_ui(self,gpu_nr,VERSION):
     self.groupBox_plottingOptions.setTitle(_translate("MainWindow", "Plotting options", None))
     self.label_kde.setText(_translate("MainWindow", "KDE", None))
     self.comboBox_kde.addItems(["None","2d Histogram","Gauss"])
-    self.comboBox_GrayOrRGB_2.addItems(["Grayscale","RGB"])
+    self.comboBox_GrayOrRGB_2.addItems(["Grayscale","RGB","Select Ch"])
 
     self.checkBox_centroid.setText(_translate("MainWindow", "Centroid", None))
     self.checkBox_contour.setText(_translate("MainWindow", "Contour", None))
@@ -6911,8 +6914,7 @@ def message(msg_text,msg_type="Error"):
     msg.setWindowTitle(msg_type)
     msg.setStandardButtons(QtWidgets.QMessageBox.Ok)
     msg.exec_()
-    pass
-
+    return
 
 def load_hyper_params(ui_item,para):
     if para["new_model"].iloc[-1]==True:
