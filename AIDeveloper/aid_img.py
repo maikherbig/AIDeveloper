@@ -60,7 +60,7 @@ def image_adjust_channels(images,target_channels=1):
     is not supported: " +str(images.shape) 
 
     if len(images.shape)==4:#Provided images are RGB
-        #Mare sure there are 3 channels (RGB)
+        #Make sure there are 3 channels (RGB)
         assert images.shape[-1]==3, "Images have "+str(images.shape[-1])+" channels. This is (currently) not supported!"
 
         if target_channels==1:#User wants Grayscale -> use the luminosity formula
