@@ -4,7 +4,7 @@ AIDeveloper
 ---------
 @author: maikherbig
 """
-VERSION = "0.4.0" #Python 3.9.9 Version
+VERSION = "0.4.1" #Python 3.9.9 Version
 
 import os,sys,gc
 os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'
@@ -3282,8 +3282,6 @@ class MainWindow(QtWidgets.QMainWindow):
 
     def applyPeakModel_and_export(self):
         print("Deprecated. Please use earlier version if AIDeveloper (<0.4.0)")
-
-
 
     def partialtrainability_activated(self,on_or_off):
         if on_or_off==False:#0 means switched OFF 
@@ -10185,6 +10183,7 @@ class MainWindow(QtWidgets.QMainWindow):
 
     def copy_cm_to_clipboard(self,cm1_or_cm2):
         if cm1_or_cm2==1:
+            a=oinvweo9
             table = self.tableWidget_CM1
             cols = table.columnCount()
             header = [table.horizontalHeaderItem(col).text() for col in range(cols)]
@@ -10951,7 +10950,7 @@ class MainWindow(QtWidgets.QMainWindow):
         gpu_memory = float(self.doubleSpinBox_memory.value())
         config_gpu = aid_dl.get_config(cpu_nr,gpu_nr,deviceSelected,gpu_memory)
                     
-        with tf.compat.v1.Session(graph = tf.Graph(), config=config_gpu) as sess:     
+        with tf.compat.v1.Session(graph = tf.Graph(), config=config_gpu) as sess:
             model_keras = load_model(self.load_model_path,custom_objects=aid_dl.get_custom_metrics())
             in_dim, _ = aid_dl.model_in_out_dim(model_keras,"model")
             #Get the color mode of the model
