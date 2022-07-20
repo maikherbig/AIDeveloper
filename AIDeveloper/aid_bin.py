@@ -385,6 +385,7 @@ def new_hdf(path_rtdc):
     hdf.attrs["imaging:roi poition x"] = 512.0
     hdf.attrs["imaging:roi size x"] = 64
     hdf.attrs["imaging:roi size y"] = 64
+    hdf.attrs["fluorescence:sample rate"] = 312500
     hdf.attrs["online_contour:bin area min"] = 10
     hdf.attrs["online_contour:bin kernel"] = 5
     hdf.attrs["online_contour:bin threshold"] = -6
@@ -909,7 +910,6 @@ def aideveloper_filelist():
     "AIDeveloper.py",
     "aid_backbone.py",
     "aid_bin.py",
-    "aid_dependencies_linux.txt",
     "aid_dependencies_mac.txt",
     "aid_dependencies_win.txt",
     "aid_dl.py",
