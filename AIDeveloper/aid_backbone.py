@@ -2628,7 +2628,7 @@ class MainWindow(QtWidgets.QMainWindow):
         #which channel should be displayed                
         channels = len(self.popup_2dOptions_ui.spinBox_minChX)
         color_mode = str(self.comboBox_GrayOrRGB_2.currentText())
-        
+
         #Define variable on self that carries all image information
         if color_mode=="Grayscale" or color_mode=="RGB":
             img = rtdc_ds["events"]["image"][index]
@@ -2724,6 +2724,10 @@ class MainWindow(QtWidgets.QMainWindow):
             self.widget_showCell.setCurrentIndex(index_)
         elif color_mode=="RGB" and channels==3:
             self.widget_showCell.setImage(np.swapaxes(img,0,1))
+            self.widget_showCell.setLevels(0,255)
+        elif color_mode=="Select Ch" and channels==3:
+            self.widget_showCell.setImage(np.swapaxes(img,0,1))
+            self.widget_showCell.setLevels(0,255)
 
         pix = rtdc_ds.attrs["imaging:pixel size"]
         pos_x = rtdc_ds["events"]["pos_x"][index]/pix
