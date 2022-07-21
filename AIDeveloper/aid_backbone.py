@@ -2325,18 +2325,13 @@ class MainWindow(QtWidgets.QMainWindow):
             #get the location of the cell
             rowPosition = item.row()
             pix = float(self.table_dragdrop.item(rowPosition, 7).text())
-            #pix = rtdc_ds.config["imaging"]["pixel size"]
-            PIX = pix
             
-            pos_x,pos_y = rtdc_ds["events"]["pos_x"][ind]/PIX,rtdc_ds["events"]["pos_y"][ind]/PIX
-            cropsize = self.spinBox_imagecrop.value()
-            y1 = int(round(pos_y))-cropsize/2                
-            x1 = int(round(pos_x))-cropsize/2 
-            y2 = y1+cropsize                
-            x2 = x1+cropsize
+            pos_x,pos_y = rtdc_ds["events"]["pos_x"][ind]/pix, rtdc_ds["events"]["pos_y"][ind]/pix
+            cropsize = self.spinBox_imagecrop.value()            
             
             #Crop the image
-            img_crop = img[int(y1):int(y2),int(x1):int(x2)]
+            img_crop = aid_img.image_crop_pad_cv2([img],[pos_x],[pos_y],pix,cropsize,cropsize,padding_mode="cv2.BORDER_CONSTANT")
+            img_crop = img_crop[0]
             #zoom image such that the height gets the same as for non-cropped img
             zoom_factor = float(img_zoomed.shape[0])/img_crop.shape[0]
             
