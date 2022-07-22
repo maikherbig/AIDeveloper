@@ -516,9 +516,9 @@ def gen_crop_img(cropsize,rtdc_path,nr_events=100,replace=True,random_images=Tru
 def gen_crop_img_ram(dic,rtdc_path,nr_events=100,replace=True,random_images=True,xtra_in=False):        
     Rtdc_path = dic["rtdc_path"]
     ind = np.where(np.array(Rtdc_path)==rtdc_path)[0]
-    images = np.array(dic["Cropped_Images"])[ind][0]   
-    indices = np.array(dic["Indices"])[ind][0]   
-    xtra_data = np.array(dic["Xtra_In"])[ind][0]   
+    images = np.array(dic["Cropped_Images"],dtype=object)[ind][0]   
+    indices = np.array(dic["Indices"],dtype=object)[ind][0]   
+    xtra_data = np.array(dic["Xtra_In"],dtype=object)[ind][0]   
 
     ind = range(len(images))
     if random_images==True:
