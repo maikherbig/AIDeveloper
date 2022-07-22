@@ -8509,11 +8509,16 @@ class MainWindow(QtWidgets.QMainWindow):
             worker = Worker(self.history_tab_convertModel_nnet_worker,ConvertToNnet)
             def get_model_keras_from_worker(dic):
                 self.model_keras = dic["model_keras"]
+                if dic["Error"]!=None:
+                    text = "Error during conversion (Keras TensorFlow -> .nnet): "
+                    text += str(dic["Error"])
+                    aid_frontend.message(text,"Error")
             worker.signals.history.connect(get_model_keras_from_worker)
-            def conversion_successful(i):#Enable the Convert to .nnet button
-                text = "Conversion Keras TensorFlow -> .nnet successful"
-                aid_frontend.message(text,"Information")
-            worker.signals.history.connect(conversion_successful)
+            def conversion_successful(success):#Enable the Convert to .nnet button
+                if success==1:
+                    text = "Conversion Keras TensorFlow -> .nnet successful"
+                    aid_frontend.message(text,"Information")
+            worker.signals.progress.connect(conversion_successful)
             self.threadpool.start(worker)
 
         ##################Keras TensorFlow -> Frozen .pb#######################
@@ -8616,35 +8621,45 @@ class MainWindow(QtWidgets.QMainWindow):
                 model_keras = load_model(path,custom_objects=aid_dl.get_custom_metrics())
             except:
                 model_keras = load_model(path)
-                
-            dic = {"model_keras":model_keras}
-            history_callback.emit(dic)
-            progress_callback.emit(1)
-    
+            
+            if ConvertToNnet!=1:
+                dic = {"model_keras":model_keras,"Error":None}
+                history_callback.emit(dic)
+            
             if ConvertToNnet==1:
-                #Since this happened in a thread, TensorFlow cant access it anywhere else
-                #Therefore perform Conversion to nnet right away:
-                model_config = model_keras.get_config()#["layers"]
-                if type(model_config)==dict:
-                    model_config = model_config["layers"]#for keras version>2.2.3, there is a change in the output of get_config()
-                #Convert model to theano weights format (Only necesary for CNNs)
-                for layer in model_keras.layers:
-                   if "conv" in layer.__class__.__name__.lower():# in ['Convolution1D', 'Convolution2D']:
-                      original_w = K.get_value(layer.W)
-                      converted_w = aid_dl.convert_kernel(original_w)
-                      K.set_value(layer.W, converted_w)
-                
-                nnet_path, nnet_filename = os.path.split(self.model_2_convert)
-                nnet_filename = nnet_filename.split(".model")[0]+".nnet" 
-                out_path = os.path.join(nnet_path,nnet_filename)
-                
-                #the Input layer seems to be missing for newer versions of keras
-                layers = [layer.__class__.__name__ for layer in model_keras.layers]
-                if "input" not in layers[0].lower():
-                    model_config = model_config[1:]
+                try:
+                    #Since this happened in a thread, TensorFlow cant access it anywhere else
+                    #Therefore perform Conversion to nnet right away:
+                    model_config = model_keras.get_config()#["layers"]
+                    if type(model_config)==dict:
+                        model_config = model_config["layers"]#for keras version>2.2.3, there is a change in the output of get_config()
+                    #Convert model to theano weights format (Only necesary for CNNs)
+                    for layer in model_keras.layers:
+                       if "conv" in layer.__class__.__name__.lower():# in ['Convolution1D', 'Convolution2D']:
+                          original_w = K.get_value(layer.W)
+                          converted_w = aid_dl.convert_kernel(original_w)
+                          K.set_value(layer.W, converted_w)
+                    
+                    nnet_path, nnet_filename = os.path.split(self.model_2_convert)
+                    nnet_filename = nnet_filename.split(".model")[0]+".nnet" 
+                    out_path = os.path.join(nnet_path,nnet_filename)
+                    
+                    #the Input layer seems to be missing for newer versions of keras
+                    layers = [layer.__class__.__name__ for layer in model_keras.layers]
+                    if "input" not in layers[0].lower():
+                        model_config = model_config[1:]
+    
+                    aid_dl.dump_to_simple_cpp(model_keras=model_keras,model_config=model_config,output=out_path,verbose=False)
+                    progress_callback.emit(1)
+                    dic = {"model_keras":model_keras,"Error":None}
+                    history_callback.emit(dic)
 
-                aid_dl.dump_to_simple_cpp(model_keras=model_keras,model_config=model_config,output=out_path,verbose=False)
-                            
+                except Exception as e:
+                    print(e)
+                    dic = {"model_keras":model_keras,"Error":e}
+                    history_callback.emit(dic)
+                    progress_callback.emit(0)
+
 #            sess.close()
 #        try:
 #            aid_dl.reset_keras()
