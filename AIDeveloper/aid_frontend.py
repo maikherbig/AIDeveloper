@@ -414,6 +414,21 @@ def setup_main_ui(self,gpu_nr):
     self.label_colorMode.setObjectName("label_colorMode")
     self.horizontalLayout_colorMode.addWidget(self.label_colorMode)
     self.gridLayout_49.addLayout(self.horizontalLayout_colorMode, 1, 3, 1, 1)
+
+    # self.horizontalLayout_channelSelect = QtWidgets.QHBoxLayout()
+    # self.horizontalLayout_channelSelect.setObjectName("horizontalLayout_channelSelect")
+    # self.label_channelSelectIcon = QtWidgets.QLabel(self.groupBox_imgProc)
+    # self.label_channelSelectIcon.setText("")
+    # self.label_channelSelectIcon.setAlignment(QtCore.Qt.AlignRight|QtCore.Qt.AlignTrailing|QtCore.Qt.AlignVCenter)
+    # self.label_channelSelectIcon.setObjectName("label_channelSelectIcon")
+    # self.horizontalLayout_channelSelect.addWidget(self.label_channelSelectIcon)
+    # self.label_channelSelect = QtWidgets.QLabel(self.groupBox_imgProc)
+    # self.label_channelSelect.setAlignment(QtCore.Qt.AlignRight|QtCore.Qt.AlignTrailing|QtCore.Qt.AlignVCenter)
+    # self.label_channelSelect.setObjectName("label_channelSelect")
+    # self.horizontalLayout_channelSelect.addWidget(self.label_channelSelect)
+    # self.gridLayout_49.addLayout(self.horizontalLayout_channelSelect, 1, 4, 1, 1)
+
+
     self.horizontalLayout_normalization = QtWidgets.QHBoxLayout()
     self.horizontalLayout_normalization.setObjectName("horizontalLayout_normalization")
     self.label_NormalizationIcon = QtWidgets.QLabel(self.groupBox_imgProc)
@@ -2118,7 +2133,7 @@ def setup_main_ui(self,gpu_nr):
     self.widget_showCell.setMinimumSize(QtCore.QSize(0, 91))
     #self.widget_showCell.setMaximumSize(QtCore.QSize(16777215, 91))
     self.widget_showCell.setObjectName("widget_showCell")
-    # self.widget_showCell.ui.histogram.hide()
+    self.widget_showCell.ui.histogram.hide()
     self.widget_showCell.ui.roiBtn.hide()
     self.widget_showCell.ui.menuBtn.hide()
 
@@ -6914,7 +6929,6 @@ def message(msg_text,msg_type="Error"):
     msg.setWindowTitle(msg_type)
     msg.setStandardButtons(QtWidgets.QMessageBox.Ok)
     msg.exec_()
-    return
 
 def load_hyper_params(ui_item,para):
     if para["new_model"].iloc[-1]==True:
