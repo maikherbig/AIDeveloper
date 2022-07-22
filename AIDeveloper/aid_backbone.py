@@ -1705,9 +1705,7 @@ class MainWindow(QtWidgets.QMainWindow):
             if bool(self.actionTooltipOnOff.isChecked())==True: #with tooltips
                 self.app.setStyleSheet("")
             elif bool(self.actionTooltipOnOff.isChecked())==False: #no tooltips
-                self.app.setStyleSheet("""QToolTip {
-                                         opacity: 0
-                                           }""")
+                self.app.setStyleSheet("""QToolTip {opacity: 0}""")
 
         elif bool(self.actionLayout_Dark.isChecked())==True: #use dark layout
             if bool(self.actionTooltipOnOff.isChecked())==True: #with tooltips
@@ -1794,7 +1792,11 @@ class MainWindow(QtWidgets.QMainWindow):
                 hash_ = aid_bin.hashfunction(rtdc_path)#rtdc_ds.hash
                 features = list(rtdc_ds["events"].keys())
                 nr_images = rtdc_ds["events"]["image"].len()
-                SelectedFiles.append({"rtdc_ds":rtdc_ds,"rtdc_path":rtdc_path,"features":features,"nr_images":nr_images,"class":index,"TrainOrValid":"Train","nr_events":nr_events,"nr_events_epoch":nr_events_epoch,"shuffle":shuffle,"zoom_factor":zoom_factor,"hash":hash_,"xtra_in":xtra_in})
+                SelectedFiles.append({"rtdc_ds":rtdc_ds,"rtdc_path":rtdc_path,
+                "features":features,"nr_images":nr_images,"class":index,
+                "TrainOrValid":"Train","nr_events":nr_events,
+                "nr_events_epoch":nr_events_epoch,"shuffle":shuffle,
+                "zoom_factor":zoom_factor,"hash":hash_,"xtra_in":xtra_in})
             
             cb_v = self.table_dragdrop.item(rowPosition, 3)
             if cb_v.checkState() == QtCore.Qt.Checked and nr_events_epoch>0:
@@ -1810,7 +1812,10 @@ class MainWindow(QtWidgets.QMainWindow):
                 hash_ = aid_bin.hashfunction(rtdc_path)
                 features = list(rtdc_ds["events"].keys())
                 nr_images = rtdc_ds["events"]["image"].len()
-                SelectedFiles.append({"rtdc_ds":rtdc_ds,"rtdc_path":rtdc_path,"features":features,"nr_images":nr_images,"class":index,"TrainOrValid":"Valid","nr_events":nr_events,"nr_events_epoch":nr_events_epoch,"shuffle":shuffle,"zoom_factor":zoom_factor,"hash":hash_,"xtra_in":xtra_in})
+                SelectedFiles.append({"rtdc_ds":rtdc_ds,"rtdc_path":rtdc_path,
+                "features":features,"nr_images":nr_images,"class":index,
+                "TrainOrValid":"Valid","nr_events":nr_events,"nr_events_epoch":nr_events_epoch,
+                "shuffle":shuffle,"zoom_factor":zoom_factor,"hash":hash_,"xtra_in":xtra_in})
         return SelectedFiles
 
 
@@ -1838,7 +1843,9 @@ class MainWindow(QtWidgets.QMainWindow):
             #should xtra_data be used for training?
             xtra_in = bool(self.table_dragdrop.item(rowPosition, 10).checkState())           
 
-            SelectedFiles.append({"rtdc_path":rtdc_path,"class":index,"TrainOrValid":"NotSpecified","nr_events":nr_events,"nr_events_epoch":nr_events_epoch,"shuffle":shuffle,"zoom_factor":zoom_factor,"xtra_in":xtra_in})
+            SelectedFiles.append({"rtdc_path":rtdc_path,"class":index,"TrainOrValid":"NotSpecified",
+                                  "nr_events":nr_events,"nr_events_epoch":nr_events_epoch,
+                                  "shuffle":shuffle,"zoom_factor":zoom_factor,"xtra_in":xtra_in})
             
         return SelectedFiles
 
@@ -1867,13 +1874,15 @@ class MainWindow(QtWidgets.QMainWindow):
             #is it checked for train?
             cb_t = self.table_dragdrop.item(rowPosition, 2)
             if cb_t.checkState() == QtCore.Qt.Checked and nr_events_epoch>0: #add to training files if the user wants more than 0 images per epoch
-                #SelectedFiles.append({"nr_images":nr_events,"class":index,"TrainOrValid":"Train","nr_events":nr_events,"nr_events_epoch":nr_events_epoch})
-                SelectedFiles.append({"rtdc_path":rtdc_path,"class":index,"TrainOrValid":"Train","nr_events":nr_events,"nr_events_epoch":nr_events_epoch,"shuffle":shuffle,"zoom_factor":zoom_factor,"xtra_in":xtra_in})
+                SelectedFiles.append({"rtdc_path":rtdc_path,"class":index,
+                "TrainOrValid":"Train","nr_events":nr_events,"nr_events_epoch":nr_events_epoch,
+                "shuffle":shuffle,"zoom_factor":zoom_factor,"xtra_in":xtra_in})
 
             cb_v = self.table_dragdrop.item(rowPosition, 3)
             if cb_v.checkState() == QtCore.Qt.Checked and nr_events_epoch>0:
-                #SelectedFiles.append({"nr_images":nr_events,"class":index,"TrainOrValid":"Valid","nr_events":nr_events,"nr_events_epoch":nr_events_epoch})
-                SelectedFiles.append({"rtdc_path":rtdc_path,"class":index,"TrainOrValid":"Valid","nr_events":nr_events,"nr_events_epoch":nr_events_epoch,"shuffle":shuffle,"zoom_factor":zoom_factor,"xtra_in":xtra_in})
+                SelectedFiles.append({"rtdc_path":rtdc_path,"class":index,
+                "TrainOrValid":"Valid","nr_events":nr_events,"nr_events_epoch":nr_events_epoch,
+                "shuffle":shuffle,"zoom_factor":zoom_factor,"xtra_in":xtra_in})
 
         return SelectedFiles
 
@@ -2781,21 +2790,10 @@ class MainWindow(QtWidgets.QMainWindow):
                 trace_flx = rtdc_ds["events"]["trace"][key_1d][index]
                 pencolor = pg.mkPen(color, width=2)
                 self.plot_fl_trace_ = self.plot_fl_trace.plot(range(len(trace_flx)),trace_flx,width=6,pen=pencolor,clear=False)
-                # if "fl1_max" in feature_keys and "fl1_pos" in feature_keys: #if also the maxima and position of the max are available: use it to put the region accordingly
-                #     fl1_max,fl1_pos = rtdc_ds["events"]["fl1_max"][index],rtdc_ds["events"]["fl1_pos"][index]
             else:
                 values = rtdc_ds["events"][key_1d][index]
                 pencolor = pg.mkPen(color, width=2)
                 self.plot_fl_trace_ = self.plot_fl_trace.plot(range(len(trace_flx)),trace_flx,width=6,pen=pencolor,clear=False)
-
-                #get the maximum of [fl1_max,fl2_max,fl3_max] and put the region to the corresponding fl-position
-                # ind = np.argmax(np.array([fl1_max,fl2_max,fl3_max]))
-                # region_pos = np.array([fl1_pos,fl2_pos,fl3_pos])[ind] #this region is already given in us. translate this back to range
-                # peak_height = np.array([fl1_max,fl2_max,fl3_max])[ind]
-                # sample_rate = rtdc_ds.attrs["fluorescence:sample rate"]
-                # fl_pos_ind = float((sample_rate*region_pos))/1E6 #
-                # #Indicate the used flx_max and flx_pos by a scatter dot
-                # self.peak_dot = self.plot_fl_trace.plot([float(fl_pos_ind)], [float(peak_height)],pen=None,symbol='o',symbolPen='w',clear=False)
 
     def onScatterClick(self,event, points):
         pointermethod = 'point'
@@ -3316,7 +3314,10 @@ class MainWindow(QtWidgets.QMainWindow):
                 #Tell the user to initiate a model first!
                 msg = QtWidgets.QMessageBox()
                 msg.setIcon(QtWidgets.QMessageBox.Information)       
-                msg.setText("<html><head/><body><p>To use this option please first select and load a model. To do that choose/load a model in 'Define Model'-Tab and hit the button 'Initialize/Fit Model'. Choose to only initialize the model.</p></body></html>")
+                msg.setText("<html><head/><body><p>To use this option please"+\
+                    "first select and load a model. To do that choose/load a model "+\
+                    "in 'Define Model'-Tab and hit the button 'Initialize/Fit Model'."+\
+                    "Choose to only initialize the model.</p></body></html>")
                 msg.setWindowTitle("Please load a model first")
                 msg.setStandardButtons(QtWidgets.QMessageBox.Ok)
                 msg.exec_()
@@ -3372,7 +3373,10 @@ class MainWindow(QtWidgets.QMainWindow):
         if self.model_keras == None: #if there is still no model...            
             msg = QtWidgets.QMessageBox()
             msg.setIcon(QtWidgets.QMessageBox.Information)       
-            msg.setText("<html><head/><body><p>To use this option please first select and load a model. To do that choose/load a model in 'Define Model'-Tab and hit the button 'Initialize/Fit Model'. Choose to only initialize the model.</p></body></html>")
+            msg.setText("<html><head/><body><p>To use this option please"+\
+                "first select and load a model. To do that choose/load a model "+\
+                "in 'Define Model'-Tab and hit the button 'Initialize/Fit Model'."+\
+                "Choose to only initialize the model.</p></body></html>")
             msg.setWindowTitle("Please load a model first")
             msg.setStandardButtons(QtWidgets.QMessageBox.Ok)
             msg.exec_()
@@ -3542,7 +3546,8 @@ class MainWindow(QtWidgets.QMainWindow):
             return       
         
     def pop_pTr_ok(self):
-        self.pop_pTr_update_1()#Change the model on self.model_keras according to the table; If 'Update' was used before, there will not be done work again, but the model is used as it is
+        self.pop_pTr_update_1()#Change the model on self.model_keras according to the table; 
+        #If 'Update' was used before, there will not be done work again, but the model is used as it is
         #To make the model accessible, it has to be saved to a new .model file
         filename = QtWidgets.QFileDialog.getSaveFileName(self, 'Save model', Default_dict["Path of last model"],"AIDeveloper model file (*.model)")
         filename = filename[0]
@@ -3722,12 +3727,14 @@ class MainWindow(QtWidgets.QMainWindow):
         if enabled: 
             #if the "Load and restart" radiobutton was clicked:
             if self.radioButton_LoadRestartModel.isChecked():
-                modelname = QtWidgets.QFileDialog.getOpenFileName(self, 'Open model architecture', Default_dict["Path of last model"],"Architecture or model (*.arch *.model)")
+                modelname = QtWidgets.QFileDialog.getOpenFileName(self, 'Open model architecture', 
+                    Default_dict["Path of last model"],"Architecture or model (*.arch *.model)")
                 modelname = modelname[0]
                 #modelname_for_dict = modelname
             #if the "Load and continue" radiobutton was clicked:
             elif self.radioButton_LoadContinueModel.isChecked():
-                modelname = QtWidgets.QFileDialog.getOpenFileName(self, 'Open model with all parameters', Default_dict["Path of last model"],"Keras model (*.model)")
+                modelname = QtWidgets.QFileDialog.getOpenFileName(self, 'Open model with all parameters', 
+                    Default_dict["Path of last model"],"Keras model (*.model)")
                 modelname = modelname[0]
                 #modelname_for_dict = modelname
             self.lineEdit_LoadModelPath.setText(modelname) #Put the filename to the line edit
@@ -4039,8 +4046,9 @@ class MainWindow(QtWidgets.QMainWindow):
     
                 #Compile model (consider user-specific metrics)
                 model_metrics = self.get_metrics()
-
-                model_keras.compile(loss='categorical_crossentropy',optimizer='adam',metrics=aid_dl.get_metrics_tensors(model_metrics,out_dim))#dont specify loss and optimizer yet...expert stuff will follow and model will be recompiled
+                
+                #dont specify loss and optimizer yet...expert stuff will follow and model will be recompiled
+                model_keras.compile(loss='categorical_crossentropy',optimizer='adam',metrics=aid_dl.get_metrics_tensors(model_metrics,out_dim))
 
                 if channels==1:
                     channel_text = "1 channel (Grayscale)"
@@ -4192,10 +4200,12 @@ class MainWindow(QtWidgets.QMainWindow):
                 SelectedFiles = self.items_clicked()
                 #rtdc_ds = SelectedFiles[0]["rtdc_ds"]
     
-                if str(self.comboBox_GrayOrRGB.currentText())=="Grayscale":
-                    channels=1
-                elif str(self.comboBox_GrayOrRGB.currentText())=="RGB":
-                    channels=3
+                if self.get_color_mode()=="Grayscale":
+                    channels = 1
+                    channel_text = "1 channel (Grayscale)"
+                elif self.get_color_mode()=="RGB":
+                    channels = 3
+                    channel_text = "3 channels (RGB)"
                     
                 indices = [s["class"] for s in SelectedFiles]
                 indices_unique = np.unique(np.array(indices))
@@ -4235,14 +4245,7 @@ class MainWindow(QtWidgets.QMainWindow):
                     return       
                 
                 text1 = "Architecture: created "+chosen_model+" design\nWeights: Initialized random weights\n"
-                
-                if self.get_color_mode()=="Grayscale":
-                    channels = 1
-                    channel_text = "1 channel (Grayscale)"
-                elif self.get_color_mode()=="RGB":
-                    channels = 3
-                    channel_text = "3 channels (RGB)"
-                        
+                                        
                 text2 = "Model Input: "+str(in_dim)+" x "+str(in_dim) + " pixel images and "+channel_text+"\n"
     
                 if int(nr_classes)==int(out_dim):
@@ -4509,7 +4512,7 @@ class MainWindow(QtWidgets.QMainWindow):
 
             #Get the user-defined cropping size
             crop = int(self.spinBox_imagecrop.value())          
-            #Make the cropsize a bit larger since the images will later be rotated
+            #Make the cropsize a bit larger since the images will later be rotated (use Pythagorean theorem)
             cropsize2 = np.sqrt(crop**2+crop**2)
             cropsize2 = np.ceil(cropsize2 / 2.) * 2 #round to the next even number
     
@@ -4551,8 +4554,6 @@ class MainWindow(QtWidgets.QMainWindow):
                 if self.actionDataToRam.isChecked():
                     color_mode = self.get_color_mode()
                     zoom_factors = [selectedfile["zoom_factor"] for selectedfile in SelectedFiles]
-                    #zoom_order = [self.actionOrder0.isChecked(),self.actionOrder1.isChecked(),self.actionOrder2.isChecked(),self.actionOrder3.isChecked(),self.actionOrder4.isChecked(),self.actionOrder5.isChecked()]
-                    #zoom_order = int(np.where(np.array(zoom_order)==True)[0])
                     zoom_order = int(self.comboBox_zoomOrder.currentIndex()) #the combobox-index is already the zoom order
                     
                     #Check if there is data already available in RAM
@@ -4650,7 +4651,7 @@ class MainWindow(QtWidgets.QMainWindow):
                 if collection==False:
                     print("Adjusting the model for Multi-GPU")
                     with tf.device("/cpu:0"):#I dont think this line is correct...CHECK!
-                        model_keras_p = model_keras#multi_gpu_model(model_keras, gpus=gpu_nr, cpu_merge=cpu_merge, cpu_relocation=cpu_relocation)#indicate the numbers of gpus that you have
+                        model_keras_p = model_keras#multi_gpu_model(model_keras, gpus=gpu_nr, cpu_merge=cpu_merge, cpu_relocation=cpu_relocation)
                     if self.radioButton_LoadContinueModel.isChecked():#calling multi_gpu_model resets the weights. Hence, they need to be put in place again
                         model_keras_p.layers[-2].set_weights(model_keras.get_weights())
                 elif collection==True:
@@ -4682,16 +4683,19 @@ class MainWindow(QtWidgets.QMainWindow):
 
             #Compile model
             if collection==False and deviceSelected=="Single-GPU":
-                model_keras.compile(loss='categorical_crossentropy',optimizer='adam',metrics=aid_dl.get_metrics_tensors(model_metrics,nr_classes))#dont specify loss and optimizer yet...expert stuff will follow and model will be recompiled
+                #dont specify loss and optimizer yet...expert stuff will follow and model will be recompiled
+                model_keras.compile(loss='categorical_crossentropy',optimizer='adam',metrics=aid_dl.get_metrics_tensors(model_metrics,nr_classes))
             elif collection==False and deviceSelected=="Multi-GPU":
-                model_keras_p.compile(loss='categorical_crossentropy',optimizer='adam',metrics=aid_dl.get_metrics_tensors(model_metrics,nr_classes))#dont specify loss and optimizer yet...expert stuff will follow and model will be recompiled
+                #dont specify loss and optimizer yet...expert stuff will follow and model will be recompiled
+                model_keras_p.compile(loss='categorical_crossentropy',optimizer='adam',metrics=aid_dl.get_metrics_tensors(model_metrics,nr_classes))
             elif collection==True and deviceSelected=="Single-GPU":
                 #Switch off the expert tab!
                 self.fittingpopups_ui[listindex].groupBox_expertMode_pop.setChecked(False)
                 self.fittingpopups_ui[listindex].groupBox_expertMode_pop.setEnabled(False)
                 for m in model_keras:
                     model_metrics_ = self.get_metrics()
-                    m.compile(loss='categorical_crossentropy',optimizer='adam',metrics=aid_dl.get_metrics_tensors(model_metrics_,nr_classes))#dont specify loss and optimizer yet...expert stuff will follow and model will be recompiled
+                    #dont specify loss and optimizer yet...expert stuff will follow and model will be recompiled
+                    m.compile(loss='categorical_crossentropy',optimizer='adam',metrics=aid_dl.get_metrics_tensors(model_metrics_,nr_classes))
             elif collection==True and deviceSelected=="Multi-GPU":
                 print("Collection & Multi-GPU is not supported yet")
                 return
@@ -4787,9 +4791,11 @@ class MainWindow(QtWidgets.QMainWindow):
             SelectedFiles = self.items_clicked()#to compute cycLrStepSize, the number of training images is needed
             cycLrStepSize = aid_dl.get_cyclStepSize(SelectedFiles,self.clr_settings["step_size"],batchSize_expert)
             #put clr_settings onto fittingpopup,
-            self.fittingpopups_ui[listindex].clr_settings = self.clr_settings.copy()#assign a copy. Otherwise values in both dicts are changed when manipulating one dict            
+            #assign a copy. Otherwise values in both dicts are changed when manipulating one dict 
+            self.fittingpopups_ui[listindex].clr_settings = self.clr_settings.copy()           
             #put optimizer_settings onto fittingpopup,
-            self.fittingpopups_ui[listindex].optimizer_settings = self.optimizer_settings.copy()#assign a copy. Otherwise values in both dicts are changed when manipulating one dict            
+            #assign a copy. Otherwise values in both dicts are changed when manipulating one dict  
+            self.fittingpopups_ui[listindex].optimizer_settings = self.optimizer_settings.copy()          
             
             learning_rate_expo_on = bool(self.radioButton_LrExpo.isChecked()) 
             expDecInitLr = float(self.doubleSpinBox_expDecInitLr.value())
@@ -4800,7 +4806,8 @@ class MainWindow(QtWidgets.QMainWindow):
             loss_expert = str(self.comboBox_expt_loss.currentText()).lower()
             optimizer_expert_on = bool(self.checkBox_optimizer.isChecked())
             optimizer_expert = str(self.comboBox_optimizer.currentText()).lower()
-            optimizer_settings = self.fittingpopups_ui[listindex].optimizer_settings.copy()#make a copy to make sure that changes in the UI are not immediately used
+            #make a copy to make sure that changes in the UI are not immediately used
+            optimizer_settings = self.fittingpopups_ui[listindex].optimizer_settings.copy()
 
             paddingMode = str(self.comboBox_paddingMode.currentText())#.lower()
     
@@ -5019,8 +5026,6 @@ class MainWindow(QtWidgets.QMainWindow):
             nr_events_epoch_train = [selectedfile["nr_events_epoch"] for selectedfile in SelectedFiles_train]
             rtdc_path_train = [selectedfile["rtdc_path"] for selectedfile in SelectedFiles_train]
             zoom_factors_train = [selectedfile["zoom_factor"] for selectedfile in SelectedFiles_train]
-            #zoom_order = [self.actionOrder0.isChecked(),self.actionOrder1.isChecked(),self.actionOrder2.isChecked(),self.actionOrder3.isChecked(),self.actionOrder4.isChecked(),self.actionOrder5.isChecked()]
-            #zoom_order = int(np.where(np.array(zoom_order)==True)[0])
             zoom_order = int(self.comboBox_zoomOrder.currentIndex()) #the combobox-index is already the zoom order
 
             shuffle_train = [selectedfile["shuffle"] for selectedfile in SelectedFiles_train]
@@ -5046,12 +5051,16 @@ class MainWindow(QtWidgets.QMainWindow):
                     #if not self.actionDataToRam.isChecked():
                     if len(DATA)==0: #Here, the entire training set needs to be used! Not only random images!
                         #Replace=true: means individual cells could occur several times
-                        gen_train = aid_img.gen_crop_img(crop,rtdc_path_train[i],random_images=False,zoom_factor=zoom_factors_train[i],zoom_order=zoom_order,color_mode=self.get_color_mode(),padding_mode=paddingMode) 
+                        gen_train = aid_img.gen_crop_img(crop,rtdc_path_train[i],random_images=False,
+                            zoom_factor=zoom_factors_train[i],zoom_order=zoom_order,
+                            color_mode=self.get_color_mode(),padding_mode=paddingMode) 
     #                    else: #get a similar generator, using the ram-data
     #                        if len(DATA)==0:
-    #                            gen_train = aid_img.gen_crop_img(crop,rtdc_path_train[i],random_images=False) #Replace true means that individual cells could occur several times
+                                # Replace true means that individual cells could occur several times
+    #                            gen_train = aid_img.gen_crop_img(crop,rtdc_path_train[i],random_images=False) 
                     else:
-                        gen_train = aid_img.gen_crop_img_ram(DATA,rtdc_path_train[i],random_images=False) #Replace true means that individual cells could occur several times
+                        #Replace true means that individual cells could occur several times
+                        gen_train = aid_img.gen_crop_img_ram(DATA,rtdc_path_train[i],random_images=False) 
                         if self.actionVerbose.isChecked():
                             print("Loaded data from RAM")
                         
@@ -5066,7 +5075,9 @@ class MainWindow(QtWidgets.QMainWindow):
     
                     msg = QtWidgets.QMessageBox()
                     msg.setIcon(QtWidgets.QMessageBox.Information)       
-                    text = "<html><head/><body><p>The standard deviation of your training data is zero! This would lead to division by zero. To avoid this, I will divide by 0.0001 instead.</p></body></html>"
+                    text = """<html><head/><body><p>The standard deviation of 
+                    your training data is zero! This would lead to division by zero. 
+                    To avoid this, I will divide by 0.0001 instead.</p></body></html>"""
                     msg.setText(text) 
                     msg.setWindowTitle("Std. is zero")
                     msg.setStandardButtons(QtWidgets.QMessageBox.Ok)
@@ -5182,7 +5193,8 @@ class MainWindow(QtWidgets.QMainWindow):
                     if counter == 0:
                         Para_dict.to_excel(self.fittingpopups_ui[listindex].writer,sheet_name='Parameters')
                     else:
-                        Para_dict.to_excel(self.fittingpopups_ui[listindex].writer,sheet_name='Parameters',startrow=self.fittingpopups_ui[listindex].writer.sheets['Parameters'].max_row,header= False)
+                        Para_dict.to_excel(self.fittingpopups_ui[listindex].writer,sheet_name='Parameters',
+                                           startrow=self.fittingpopups_ui[listindex].writer.sheets['Parameters'].max_row,header= False)
 
                     if os.path.isfile(new_modelname.split(".model")[0]+'_meta.xlsx'):
                         os.chmod(new_modelname.split(".model")[0]+'_meta.xlsx', S_IREAD|S_IRGRP|S_IROTH|S_IWRITE|S_IWGRP|S_IWOTH)#change to read/write
@@ -5219,8 +5231,6 @@ class MainWindow(QtWidgets.QMainWindow):
             nr_events_epoch_valid = [selectedfile["nr_events_epoch"] for selectedfile in SelectedFiles_valid]
             rtdc_path_valid = [selectedfile["rtdc_path"] for selectedfile in SelectedFiles_valid]
             zoom_factors_valid = [selectedfile["zoom_factor"] for selectedfile in SelectedFiles_valid]
-            #zoom_order = [self.actionOrder0.isChecked(),self.actionOrder1.isChecked(),self.actionOrder2.isChecked(),self.actionOrder3.isChecked(),self.actionOrder4.isChecked(),self.actionOrder5.isChecked()]
-            #zoom_order = int(np.where(np.array(zoom_order)==True)[0])
             zoom_order = int(self.comboBox_zoomOrder.currentIndex()) #the combobox-index is already the zoom order
             shuffle_valid = [selectedfile["shuffle"] for selectedfile in SelectedFiles_valid]
             xtra_in = set([selectedfile["xtra_in"] for selectedfile in SelectedFiles_valid])   
@@ -5234,13 +5244,20 @@ class MainWindow(QtWidgets.QMainWindow):
             for i in range(len(SelectedFiles_valid)):
                 if not self.actionDataToRam.isChecked():
                     #Replace=true means individual cells could occur several times
-                    gen_valid = aid_img.gen_crop_img(crop,rtdc_path_valid[i],nr_events_epoch_valid[i],random_images=shuffle_valid[i],replace=True,zoom_factor=zoom_factors_valid[i],zoom_order=zoom_order,color_mode=self.get_color_mode(),padding_mode=paddingMode,xtra_in=xtra_in)
+                    gen_valid = aid_img.gen_crop_img(crop,rtdc_path_valid[i],nr_events_epoch_valid[i],
+                        random_images=shuffle_valid[i],replace=True,zoom_factor=zoom_factors_valid[i],
+                        zoom_order=zoom_order,color_mode=self.get_color_mode(),
+                        padding_mode=paddingMode,xtra_in=xtra_in)
                 else: #get a similar generator, using the ram-data
                     if len(DATA)==0:
                         #Replace=true means individual cells could occur several times
-                        gen_valid = aid_img.gen_crop_img(crop,rtdc_path_valid[i],nr_events_epoch_valid[i],random_images=shuffle_valid[i],replace=True,zoom_factor=zoom_factors_valid[i],zoom_order=zoom_order,color_mode=self.get_color_mode(),padding_mode=paddingMode,xtra_in=xtra_in)
+                        gen_valid = aid_img.gen_crop_img(crop,rtdc_path_valid[i],nr_events_epoch_valid[i],
+                            random_images=shuffle_valid[i],replace=True,zoom_factor=zoom_factors_valid[i],
+                            zoom_order=zoom_order,color_mode=self.get_color_mode(),
+                            padding_mode=paddingMode,xtra_in=xtra_in)
                     else:
-                        gen_valid = aid_img.gen_crop_img_ram(DATA,rtdc_path_valid[i],nr_events_epoch_valid[i],random_images=shuffle_valid[i],replace=True,xtra_in=xtra_in) #Replace true means that individual cells could occur several times
+                        gen_valid = aid_img.gen_crop_img_ram(DATA,rtdc_path_valid[i],nr_events_epoch_valid[i],
+                            random_images=shuffle_valid[i],replace=True,xtra_in=xtra_in)
                         if self.actionVerbose.isChecked():
                             print("Loaded data from RAM")
                 generator_cropped_out = next(gen_valid)
@@ -5255,12 +5272,14 @@ class MainWindow(QtWidgets.QMainWindow):
             if bool(self.actionExport_Original.isChecked())==True:
                 print("Export original images")
                 save_cropped = False
-                aid_bin.write_rtdc(new_modelname.split(".model")[0]+'_Valid_Data.rtdc',rtdc_path_valid,X_valid,Indices,cropped=save_cropped,color_mode=self.get_color_mode(),xtra_in=xtra_valid)
+                aid_bin.write_rtdc(new_modelname.split(".model")[0]+'_Valid_Data.rtdc',
+                    rtdc_path_valid,X_valid,Indices,cropped=save_cropped,color_mode=self.get_color_mode(),xtra_in=xtra_valid)
     
             elif bool(self.actionExport_Cropped.isChecked())==True:
                 print("Export cropped images")
                 save_cropped = True
-                aid_bin.write_rtdc(new_modelname.split(".model")[0]+'_Valid_Data.rtdc',rtdc_path_valid,X_valid,Indices,cropped=save_cropped,color_mode=self.get_color_mode(),xtra_in=xtra_valid)
+                aid_bin.write_rtdc(new_modelname.split(".model")[0]+'_Valid_Data.rtdc',
+                    rtdc_path_valid,X_valid,Indices,cropped=save_cropped,color_mode=self.get_color_mode(),xtra_in=xtra_valid)
     
             elif bool(self.actionExport_Off.isChecked())==True:
                 print("Exporting is turned off")
@@ -5501,10 +5520,13 @@ class MainWindow(QtWidgets.QMainWindow):
                     for i in range(len(SelectedFiles_train)):
                         if len(DATA)==0 or gen_train_refresh:
                             #Replace true means that individual cells could occur several times
-                            gen_train = aid_img.gen_crop_img(cropsize2,rtdc_path_train[i],nr_events_epoch_train[i],random_images=shuffle_train[i],replace=True,zoom_factor=zoom_factors_train[i],zoom_order=zoom_order,color_mode=self.get_color_mode(),padding_mode=paddingMode,xtra_in=xtra_in) 
+                            gen_train = aid_img.gen_crop_img(cropsize2,rtdc_path_train[i],nr_events_epoch_train[i],
+                                random_images=shuffle_train[i],replace=True,zoom_factor=zoom_factors_train[i],
+                                zoom_order=zoom_order,color_mode=self.get_color_mode(),padding_mode=paddingMode,xtra_in=xtra_in) 
                             gen_train_refresh = False
                         else:
-                            gen_train = aid_img.gen_crop_img_ram(DATA,rtdc_path_train[i],nr_events_epoch_train[i],random_images=shuffle_train[i],replace=True,xtra_in=xtra_in) #Replace true means that individual cells could occur several times
+                            gen_train = aid_img.gen_crop_img_ram(DATA,rtdc_path_train[i],nr_events_epoch_train[i],
+                                random_images=shuffle_train[i],replace=True,xtra_in=xtra_in) 
                             if self.actionVerbose.isChecked():
                                 print("Loaded data from RAM")
                         data_ = next(gen_train)
@@ -5559,9 +5581,10 @@ class MainWindow(QtWidgets.QMainWindow):
     
                         t3_a = time.perf_counter()
                         for i in range(nr_threads):
+                            #augparas contains rotation and so on. X_train and y_train are overwritten in each iteration (for each worker new X_train)
                             aug_paras_ = copy.deepcopy(aug_paras)
                             aug_paras_["i"] = i
-                            aug_paras_["X_train"]=X_train[i]#augparas contains rotation and so on. X_train and y_train are overwritten in each iteration (for each worker new X_train)
+                            aug_paras_["X_train"]=X_train[i]
                             aug_paras_["y_train"]=y_train[i]
                             
                             self.Workers_augm.append(Worker(imgaug_worker,aug_paras_))                            
@@ -5679,7 +5702,8 @@ class MainWindow(QtWidgets.QMainWindow):
                                     cycLrMin = []
                                     cycLrMax = []
                                 cycLrMethod = str(self.fittingpopups_ui[listindex].comboBox_cycLrMethod.currentText())
-                                clr_settings = self.fittingpopups_ui[listindex].clr_settings.copy() #Get a copy of the current optimizer_settings. .copy prevents that changes in the UI have immediate effect
+                                #Get a copy of the current optimizer_settings. .copy prevents that changes in the UI have immediate effect
+                                clr_settings = self.fittingpopups_ui[listindex].clr_settings.copy() 
                                 cycLrStepSize = aid_dl.get_cyclStepSize(SelectedFiles,clr_settings["step_size"],batchSize_expert)
                                 cycLrGamma = clr_settings["gamma"]
 
@@ -5692,7 +5716,8 @@ class MainWindow(QtWidgets.QMainWindow):
                                 loss_expert = str(self.fittingpopups_ui[listindex].comboBox_expt_loss_pop.currentText())
                                 optimizer_expert_on = bool(self.fittingpopups_ui[listindex].checkBox_optimizer_pop.isChecked())
                                 optimizer_expert = str(self.fittingpopups_ui[listindex].comboBox_optimizer.currentText())
-                                optimizer_settings = self.fittingpopups_ui[listindex].optimizer_settings.copy() #Get a copy of the current optimizer_settings. .copy prevents that changes in the UI have immediate effect
+                                #Get a copy of the current optimizer_settings. .copy prevents that changes in the UI have immediate effect
+                                optimizer_settings = self.fittingpopups_ui[listindex].optimizer_settings.copy() 
                                 paddingMode_ = str(self.fittingpopups_ui[listindex].comboBox_paddingMode_pop.currentText())
                                 print("paddingMode_:"+str(paddingMode_))
                                 if paddingMode_ != paddingMode:
@@ -5728,10 +5753,14 @@ class MainWindow(QtWidgets.QMainWindow):
                                                 print("Train only the last "+str(train_last_layers_n)+ " layer(s)")
                                             trainable_new = (len(trainable_original)-train_last_layers_n)*[False]+train_last_layers_n*[True]
                                             #Change the trainability states. Model compilation is done inside model_change_trainability
-                                            summary = aid_dl.model_change_trainability(model_keras,trainable_new,model_metrics_t,nr_classes,loss_expert,optimizer_settings,learning_rate_const)
+                                            summary = aid_dl.model_change_trainability(model_keras,
+                                                trainable_new,model_metrics_t,nr_classes,loss_expert,
+                                                optimizer_settings,learning_rate_const)
                                             if model_keras_p!=None:#if this is NOT None, there exists a parallel model, which also needs to be re-compiled
                                                 model_metrics_t = aid_dl.get_metrics_tensors(self.get_metrics(),nr_classes)
-                                                aid_dl.model_compile(model_keras_p,loss_expert,optimizer_settings,learning_rate_const,model_metrics_t,nr_classes)
+                                                aid_dl.model_compile(model_keras_p,loss_expert,
+                                                    optimizer_settings,learning_rate_const,
+                                                    model_metrics_t,nr_classes)
                                                 print("Recompiled parallel model due to train_last_layers==True")
                                             text1 = "Expert mode: Request for custom trainability states: train only the last "+str(train_last_layers_n)+ " layer(s)\n"
                                             #text2 = "\n--------------------\n"
@@ -5746,7 +5775,9 @@ class MainWindow(QtWidgets.QMainWindow):
                                             for index in layer_dense_ind:
                                                 trainable_new[index] = True
                                             #Change the trainability states. Model compilation is done inside model_change_trainability
-                                            summary = aid_dl.model_change_trainability(model_keras,trainable_new,model_metrics_t,nr_classes,loss_expert,optimizer_settings,learning_rate_const)                 
+                                            summary = aid_dl.model_change_trainability(model_keras,
+                                                trainable_new,model_metrics_t,nr_classes,loss_expert,
+                                                optimizer_settings,learning_rate_const)                 
                                             if model_keras_p!=None:#if this is NOT None, there exists a parallel model, which also needs to be re-compiled
                                                 model_metrics_t = aid_dl.get_metrics_tensors(self.get_metrics(),nr_classes)
                                                 aid_dl.model_compile(model_keras_p,loss_expert,optimizer_settings,learning_rate_const,model_metrics_t,nr_classes)
@@ -5764,19 +5795,26 @@ class MainWindow(QtWidgets.QMainWindow):
                                             elif len(dropout_expert)>1:
                                                 dropout_expert_list = dropout_expert
                                                 if not len(dropout_expert_list)==len(do_list):
-                                                    text = "Issue with dropout: you defined "+str(len(dropout_expert_list))+" dropout rates, but model has "+str(len(do_list))+" dropout layers"
+                                                    text = "Issue with dropout: you defined "\
+                                                        +str(len(dropout_expert_list))\
+                                                        +" dropout rates, but model has "\
+                                                        +str(len(do_list))+" dropout layers"
                                                     self.fittingpopups_ui[listindex].textBrowser_FittingInfo.append(text)
                                             else:
                                                 text = "Could not understand user input at Expert->Dropout"
                                                 self.fittingpopups_ui[listindex].textBrowser_FittingInfo.append(text)
                                                 dropout_expert_list = []
-    
-                                            if len(dropout_expert_list)>0 and do_list!=dropout_expert_list:#if the dropout rates of the current model is not equal to the required do_list from user...
+                                            #if the dropout rates of the current model is not equal to the required do_list from user...
+                                            if len(dropout_expert_list)>0 and do_list!=dropout_expert_list:
                                                 #Change dropout. Model .compile happens inside change_dropout function
-                                                do_changed = aid_dl.change_dropout(model_keras,dropout_expert_list,model_metrics_t,nr_classes,loss_expert,optimizer_settings,learning_rate_const)
+                                                do_changed = aid_dl.change_dropout(model_keras,
+                                                    dropout_expert_list,model_metrics_t,nr_classes,
+                                                    loss_expert,optimizer_settings,learning_rate_const)
                                                 if model_keras_p!=None:#if model_keras_p is NOT None, there exists a parallel model, which also needs to be re-compiled
                                                     model_metrics_t = aid_dl.get_metrics_tensors(self.get_metrics(),nr_classes)
-                                                    aid_dl.model_compile(model_keras_p,loss_expert,optimizer_settings,learning_rate_const,model_metrics_t,nr_classes)
+                                                    aid_dl.model_compile(model_keras_p,
+                                                        loss_expert,optimizer_settings,
+                                                        learning_rate_const,model_metrics_t,nr_classes)
                                                     print("Recompiled parallel model due to changed dropout. I'm not sure if this works already!")
     
                                                 if do_changed==1:
@@ -5821,10 +5859,14 @@ class MainWindow(QtWidgets.QMainWindow):
                                     #Re-set trainable states back to original state                                    
                                     if verbose:
                                         print("Change 'trainable' layers back to original state")
-                                    summary = aid_dl.model_change_trainability(model_keras,trainable_original,model_metrics,nr_classes,loss_expert,optimizer_settings,learning_rate_const)                 
-                                    if model_keras_p!=None:#if model_keras_p is NOT None, there exists a parallel model, which also needs to be re-compiled
+                                    summary = aid_dl.model_change_trainability(model_keras,
+                                        trainable_original,model_metrics,nr_classes,
+                                        loss_expert,optimizer_settings,learning_rate_const)                 
+                                    if model_keras_p!=None:#if model_keras_p is NOT None, 
+                                        #there exists a parallel model, which also needs to be re-compiled
                                         model_metrics_t = aid_dl.get_metrics_tensors(self.get_metrics(),nr_classes)
-                                        aid_dl.model_compile(model_keras_p,loss_expert,optimizer_settings,learning_rate_const,model_metrics_t,nr_classes)
+                                        aid_dl.model_compile(model_keras_p,loss_expert,
+                                            optimizer_settings,learning_rate_const,model_metrics_t,nr_classes)
                                         print("Recompiled parallel model to change 'trainable' layers back to original state")
     
                                     text1 = "Expert mode turns off: Request for orignal trainability states:\n"
@@ -5838,7 +5880,9 @@ class MainWindow(QtWidgets.QMainWindow):
                                         print("Set learning rate callback to None")
                                     
                                     if len(do_list_original)>0:
-                                        do_changed = aid_dl.change_dropout(model_keras,do_list_original,model_metrics_t,nr_classes,loss_expert,optimizer_settings,learning_rate_const)
+                                        do_changed = aid_dl.change_dropout(model_keras,
+                                            do_list_original,model_metrics_t,nr_classes,
+                                            loss_expert,optimizer_settings,learning_rate_const)
                                         if model_keras_p!=None:#if model_keras_p is NOT None, there exists a parallel model, which also needs to be re-compiled
                                             model_metrics_t = aid_dl.get_metrics_tensors(self.get_metrics(),nr_classes)
                                             aid_dl.model_compile(model_keras_p,loss_expert,optimizer_settings,learning_rate_const,model_metrics_t,nr_classes)
@@ -5956,7 +6000,9 @@ class MainWindow(QtWidgets.QMainWindow):
     
                             ##########Brightness noise#########
                             t3 = time.perf_counter()
-                            X_batch = aid_img.brightn_noise_augm_cv2(X_batch,brightness_add_lower,brightness_add_upper,brightness_mult_lower,brightness_mult_upper,gaussnoise_mean,gaussnoise_scale)
+                            X_batch = aid_img.brightn_noise_augm_cv2(X_batch,brightness_add_lower,
+                                brightness_add_upper,brightness_mult_lower,brightness_mult_upper,
+                                gaussnoise_mean,gaussnoise_scale)
                             t4 = time.perf_counter()
                             if verbose == 1:
                                 print("Time to augment brightness="+str(t4-t3))
@@ -5993,9 +6039,15 @@ class MainWindow(QtWidgets.QMainWindow):
     
                             if collection==False:
                                 if model_keras_p == None:
-                                    history = model_keras.fit(X_batch, Y_batch, batch_size=batchSize_expert, epochs=epochs_expert,verbose=verbose, validation_data=(X_valid, Y_valid),class_weight=class_weight,callbacks=callbacks)
+                                    history = model_keras.fit(X_batch, Y_batch, 
+                                        batch_size=batchSize_expert, epochs=epochs_expert,
+                                        verbose=verbose, validation_data=(X_valid, Y_valid),
+                                        class_weight=class_weight,callbacks=callbacks)
                                 elif model_keras_p != None:
-                                    history = model_keras_p.fit(X_batch, Y_batch, batch_size=batchSize_expert, epochs=epochs_expert,verbose=verbose, validation_data=(X_valid, Y_valid),class_weight=class_weight,callbacks=callbacks)
+                                    history = model_keras_p.fit(X_batch, Y_batch, 
+                                        batch_size=batchSize_expert, epochs=epochs_expert,
+                                        verbose=verbose, validation_data=(X_valid, Y_valid),
+                                        class_weight=class_weight,callbacks=callbacks)
                                 
                                 Histories.append(history.history)
                                 Stopwatch.append(time.perf_counter()-time_start)
@@ -6100,7 +6152,10 @@ class MainWindow(QtWidgets.QMainWindow):
                             elif collection==True:
                                 for i in range(len(model_keras)):
                                     #Expert-settings return automatically to default values when Expert-mode is unchecked
-                                    history = model_keras[i].fit(X_batch, Y_batch, batch_size=batchSize_expert, epochs=epochs_expert,verbose=verbose, validation_data=(X_valid, Y_valid),class_weight=class_weight,callbacks=callbacks)
+                                    history = model_keras[i].fit(X_batch, Y_batch, 
+                                        batch_size=batchSize_expert, epochs=epochs_expert,
+                                        verbose=verbose, validation_data=(X_valid, Y_valid),
+                                        class_weight=class_weight,callbacks=callbacks)
                                     HISTORIES[i].append(history.history)
                                     learningrate = K.get_value(history.model.optimizer.lr)
 
@@ -6156,8 +6211,9 @@ class MainWindow(QtWidgets.QMainWindow):
                             
                             if collection==False:
                                 if counter==0:
-                                    #If this runs the first time, create the file with header                                    
-                                    DF1 = [[ h[h_i][-1] for h_i in h] for h in Histories] #if nb_epoch in .fit() is >1, only save the last history item, beacuse this would a model that could be saved
+                                    #If this runs the first time, create the file with header
+                                    #if nb_epoch in .fit() is >1, only save the last history item, beacuse this would a model that could be saved                                    
+                                    DF1 = [[ h[h_i][-1] for h_i in h] for h in Histories] 
                                     DF1 = np.r_[DF1]
                                     DF1 = pd.DataFrame( DF1,columns=Histories[0].keys() )
                                     
@@ -6184,7 +6240,8 @@ class MainWindow(QtWidgets.QMainWindow):
                                 #Get a sensible frequency for saving the dataframe (every 20s)
                                 elif t2-t1>int(self.fittingpopups_ui[listindex].spinBox_saveMetaEvery.value()):                                   
                                 #elif counter%50==0:  #otherwise save the history to excel after each n epochs
-                                    DF1 = [[ h[h_i][-1] for h_i in h] for h in Histories] #if nb_epoch in .fit() is >1, only save the last history item, beacuse this would a model that could be saved
+                                    #if nb_epoch in .fit() is >1, only save the last history item, beacuse this would a model that could be saved
+                                    DF1 = [[ h[h_i][-1] for h_i in h] for h in Histories] 
                                     DF1 = np.r_[DF1]
                                     DF1 = pd.DataFrame( DF1,columns=Histories[0].keys() )
                                     DF1["Saved"] = Saved
@@ -6257,7 +6314,8 @@ class MainWindow(QtWidgets.QMainWindow):
                                         Histories = HISTORIES[i]
                                         Saved = SAVED[i]
                                         #If this runs the first time, create the file with header
-                                        DF1 = [[ h[h_i][-1] for h_i in h] for h in Histories] #if nb_epoch in .fit() is >1, only save the last history item, beacuse this would a model that could be saved
+                                        #if nb_epoch in .fit() is >1, only save the last history item, beacuse this would a model that could be saved
+                                        DF1 = [[ h[h_i][-1] for h_i in h] for h in Histories] 
                                         DF1 = np.r_[DF1]
                                         DF1 = pd.DataFrame( DF1,columns=Histories[0].keys() )
                                         DF1["Saved"] = Saved
@@ -6278,7 +6336,8 @@ class MainWindow(QtWidgets.QMainWindow):
                                     for i in range(len(HISTORIES)):
                                         Histories = HISTORIES[i]
                                         Saved = SAVED[i]
-                                        DF1 = [[ h[h_i][-1] for h_i in h] for h in Histories] #if nb_epoch in .fit() is >1, only save the last history item, beacuse this would a model that could be saved
+                                        #if nb_epoch in .fit() is >1, only save the last history item, beacuse this would a model that could be saved
+                                        DF1 = [[ h[h_i][-1] for h_i in h] for h in Histories] 
                                         DF1 = np.r_[DF1]
                                         DF1 = pd.DataFrame( DF1,columns=Histories[0].keys() )
                                         DF1["Saved"] = Saved
@@ -6319,7 +6378,8 @@ class MainWindow(QtWidgets.QMainWindow):
                 
             if collection==False:
                 if len(Histories)>0: #if the list for History files is not empty, process it!
-                    DF1 = [[ h[h_i][-1] for h_i in h] for h in Histories] #if nb_epoch in .fit() is >1, only save the last history item, beacuse this would a model that could be saved
+                    #if nb_epoch in .fit() is >1, only save the last history item, beacuse this would a model that could be saved
+                    DF1 = [[ h[h_i][-1] for h_i in h] for h in Histories] 
                     DF1 = np.r_[DF1]
                     DF1 = pd.DataFrame( DF1,columns=Histories[0].keys() )
                     DF1["Saved"] = Saved
@@ -6344,7 +6404,8 @@ class MainWindow(QtWidgets.QMainWindow):
                     Histories = HISTORIES[i]
                     Saved = SAVED[i]
                     if len(Histories)>0: #if the list for History files is not empty, process it!
-                        DF1 = [[ h[h_i][-1] for h_i in h] for h in Histories] #if nb_epoch in .fit() is >1, only save the last history item, beacuse this would a model that could be saved
+                        #if nb_epoch in .fit() is >1, only save the last history item, beacuse this would a model that could be saved
+                        DF1 = [[ h[h_i][-1] for h_i in h] for h in Histories] 
                         DF1 = np.r_[DF1]
                         DF1 = pd.DataFrame( DF1,columns=Histories[0].keys() )
                         DF1["Saved"] = Saved
@@ -6456,8 +6517,11 @@ class MainWindow(QtWidgets.QMainWindow):
 
             #Delete the variable to save RAM
             model_keras = None #Since this uses TensorFlow, I have to reload the model action_fit_model_worker anyway
-        #Check that Data is on RAM
-        DATA_len = len(self.ram) #this returns the len of a dictionary. The dictionary is supposed to contain the training/validation data; otherwise the data is read from .rtdc data directly (SLOW unless you have ultra-good SSD)
+        # Check that Data is on RAM
+        # this returns the len of a dictionary. The dictionary is supposed to 
+        # contain the training/validation data; otherwise the data is read from 
+        # .rtdc data directly (SLOW unless you have ultra-good SSD)
+        DATA_len = len(self.ram) 
 
         def popup_data_to_ram(button):
             yes_or_no = button.text()
@@ -6470,7 +6534,9 @@ class MainWindow(QtWidgets.QMainWindow):
         if DATA_len==0:
            msg = QtWidgets.QMessageBox()
            msg.setIcon(QtWidgets.QMessageBox.Information)       
-           msg.setText("Would you like transfer the Data to RAM now?\n(Currently the data is not in RAM and would be read from .rtdc, which slows down fitting dramatically unless you have a super-fast SSD.)")
+           msg.setText("Would you like transfer the Data to RAM now?\n"+\
+                       "(Currently the data is not in RAM and would be read from "+\
+                        ".rtdc, which slows down fitting dramatically unless you have a super-fast SSD.)")
            msg.setWindowTitle("Data to RAM now?")
            msg.setStandardButtons(QtWidgets.QMessageBox.Yes | QtWidgets.QMessageBox.No)
            msg.buttonClicked.connect(popup_data_to_ram)
@@ -6504,11 +6570,16 @@ class MainWindow(QtWidgets.QMainWindow):
         self.fittingpopups_ui[listindex].tableWidget_HistoryInfo_pop.doubleClicked.connect(lambda item: self.tableWidget_HistoryInfo_pop_dclick(item,listindex))
         #Cyclical learning rate extra settings
         self.fittingpopups_ui[listindex].pushButton_cycLrPopup.clicked.connect(lambda: self.popup_clr_settings(listindex))
-        self.fittingpopups_ui[listindex].comboBox_optimizer.currentTextChanged.connect(lambda: self.expert_optimizer_changed(optimizer_text=self.fittingpopups_ui[listindex].comboBox_optimizer.currentText(),listindex=listindex))
+        self.fittingpopups_ui[listindex].comboBox_optimizer.currentTextChanged.connect(lambda: self.expert_optimizer_changed(
+            optimizer_text=self.fittingpopups_ui[listindex].comboBox_optimizer.currentText(),listindex=listindex))
         self.fittingpopups_ui[listindex].pushButton_LR_plot.clicked.connect(lambda: self.popup_lr_plot(listindex))
 
-        self.fittingpopups_ui[listindex].doubleSpinBox_learningRate.valueChanged.connect(lambda: self.expert_lr_changed(value=self.fittingpopups_ui[listindex].doubleSpinBox_learningRate.value(),optimizer_text=self.fittingpopups_ui[listindex].comboBox_optimizer.currentText(),listindex=listindex))
-        self.fittingpopups_ui[listindex].doubleSpinBox_expDecInitLr.valueChanged.connect(lambda: self.expert_lr_changed(value=self.fittingpopups_ui[listindex].doubleSpinBox_learningRate.value(),optimizer_text=self.fittingpopups_ui[listindex].comboBox_optimizer.currentText(),listindex=listindex))
+        self.fittingpopups_ui[listindex].doubleSpinBox_learningRate.valueChanged.connect(
+            lambda: self.expert_lr_changed(value=self.fittingpopups_ui[listindex].doubleSpinBox_learningRate.value(),
+            optimizer_text=self.fittingpopups_ui[listindex].comboBox_optimizer.currentText(),listindex=listindex))
+        self.fittingpopups_ui[listindex].doubleSpinBox_expDecInitLr.valueChanged.connect(
+            lambda: self.expert_lr_changed(value=self.fittingpopups_ui[listindex].doubleSpinBox_learningRate.value(),
+            optimizer_text=self.fittingpopups_ui[listindex].comboBox_optimizer.currentText(),listindex=listindex))
 
         self.fittingpopups_ui[listindex].pushButton_optimizer_pop.clicked.connect(lambda: self.optimizer_change_settings_popup(listindex))
 
@@ -6701,8 +6772,11 @@ class MainWindow(QtWidgets.QMainWindow):
         #Delete the variable to save RAM
         model_keras = None #Since this uses TensorFlow, I have to reload the model action_fit_model_worker anyway
 
-        #Check that Data is on RAM
-        DATA_len = len(self.ram) #this returns the len of a dictionary. The dictionary is supposed to contain the training/validation data; otherwise the data is read from .rtdc data directly (SLOW unless you have ultra-good SSD)
+        # Check that Data is on RAM
+        # this returns the len of a dictionary. The dictionary is supposed to contain 
+        # the training/validation data; otherwise the data is read from .rtdc 
+        # data directly (SLOW unless you have ultra-good SSD)
+        DATA_len = len(self.ram) 
 
         def popup_data_to_ram(button):
             yes_or_no = button.text()
@@ -6715,7 +6789,9 @@ class MainWindow(QtWidgets.QMainWindow):
         if DATA_len==0:
            msg = QtWidgets.QMessageBox()
            msg.setIcon(QtWidgets.QMessageBox.Information)       
-           msg.setText("Would you like transfer the Data to RAM now?\n(Currently the data is not in RAM and would be read from .rtdc, which slows down fitting dramatically unless you have a super-fast SSD.)")
+           msg.setText("Would you like transfer the Data to RAM now?"+\
+                       "\n(Currently the data is not in RAM and would be read from "+\
+                        ".rtdc, which slows down fitting dramatically unless you have a super-fast SSD.)")
            msg.setWindowTitle("Data to RAM now?")
            msg.setStandardButtons(QtWidgets.QMessageBox.Yes | QtWidgets.QMessageBox.No)
            msg.buttonClicked.connect(popup_data_to_ram)
@@ -6780,7 +6856,8 @@ class MainWindow(QtWidgets.QMainWindow):
             if deviceSelected=="Multi-GPU":
                 if collection==False:
                     print("Adjusting the model for Multi-GPU")
-                    model_keras_p = model_keras#multi_gpu_model(model_keras, gpus=gpu_nr, cpu_merge=cpu_merge, cpu_relocation=cpu_relocation)#indicate the numbers of gpus that you have
+                    #multi_gpu_model(model_keras, gpus=gpu_nr, cpu_merge=cpu_merge, cpu_relocation=cpu_relocation)#indicate the numbers of gpus that you have
+                    model_keras_p = model_keras
                     if self.radioButton_LoadContinueModel.isChecked():#calling multi_gpu_model resets the weights. Hence, they need to be put in place again
                         model_keras_p.layers[-2].set_weights(model_keras.get_weights())
                 elif collection==True:
@@ -6807,9 +6884,11 @@ class MainWindow(QtWidgets.QMainWindow):
     
             #Compile model
             if  deviceSelected=="Single-GPU":
-                model_keras.compile(loss='categorical_crossentropy',optimizer='adam',metrics=aid_dl.get_metrics_tensors(model_metrics,nr_classes))#dont specify loss and optimizer yet...expert stuff will follow and model will be recompiled
+                #dont specify loss and optimizer yet...expert stuff will follow and model will be recompiled
+                model_keras.compile(loss='categorical_crossentropy',optimizer='adam',metrics=aid_dl.get_metrics_tensors(model_metrics,nr_classes))
             elif deviceSelected=="Multi-GPU":
-                model_keras_p.compile(loss='categorical_crossentropy',optimizer='adam',metrics=aid_dl.get_metrics_tensors(model_metrics,nr_classes))#dont specify loss and optimizer yet...expert stuff will follow and model will be recompiled
+                #dont specify loss and optimizer yet...expert stuff will follow and model will be recompiled
+                model_keras_p.compile(loss='categorical_crossentropy',optimizer='adam',metrics=aid_dl.get_metrics_tensors(model_metrics,nr_classes))
 
             #Collect all information about the fitting routine that was user
             #defined
@@ -7034,8 +7113,6 @@ class MainWindow(QtWidgets.QMainWindow):
             nr_events_epoch_train = [selectedfile["nr_events_epoch"] for selectedfile in SelectedFiles_train]
             rtdc_path_train = [selectedfile["rtdc_path"] for selectedfile in SelectedFiles_train]
             zoom_factors_train = [selectedfile["zoom_factor"] for selectedfile in SelectedFiles_train]
-            #zoom_order = [self.actionOrder0.isChecked(),self.actionOrder1.isChecked(),self.actionOrder2.isChecked(),self.actionOrder3.isChecked(),self.actionOrder4.isChecked(),self.actionOrder5.isChecked()]
-            #zoom_order = int(np.where(np.array(zoom_order)==True)[0])
             zoom_order = int(self.comboBox_zoomOrder.currentIndex()) #the combobox-index is already the zoom order
             shuffle_train = [selectedfile["shuffle"] for selectedfile in SelectedFiles_train]
             xtra_in = set([selectedfile["xtra_in"] for selectedfile in SelectedFiles_train])   
@@ -7053,9 +7130,11 @@ class MainWindow(QtWidgets.QMainWindow):
                 for i in range(len(SelectedFiles_train)):
                     if len(self.ram)==0: #Here, the entire training set needs to be used! Not only random images!
                         #Replace=true: means individual cells could occur several times
-                        gen_train = aid_img.gen_crop_img(crop,rtdc_path_train[i],random_images=False,zoom_factor=zoom_factors_train[i],zoom_order=zoom_order,color_mode=self.get_color_mode(),padding_mode=paddingMode) 
+                        gen_train = aid_img.gen_crop_img(crop,rtdc_path_train[i],random_images=False,
+                            zoom_factor=zoom_factors_train[i],zoom_order=zoom_order,
+                            color_mode=self.get_color_mode(),padding_mode=paddingMode) 
                     else:
-                        gen_train = aid_img.gen_crop_img_ram(self.ram,rtdc_path_train[i],random_images=False) #Replace true means that individual cells could occur several times
+                        gen_train = aid_img.gen_crop_img_ram(self.ram,rtdc_path_train[i],random_images=False) 
                         if self.actionVerbose.isChecked():
                             print("Loaded data from RAM")
                         
@@ -7067,16 +7146,10 @@ class MainWindow(QtWidgets.QMainWindow):
                 
                 if np.allclose(std_trainingdata,0):
                     std_trainingdata = 0.0001
-    
-                    msg = QtWidgets.QMessageBox()
-                    msg.setIcon(QtWidgets.QMessageBox.Information)       
-                    text = "<html><head/><body><p>The standard deviation of your training data is zero! This would lead to division by zero. To avoid this, I will divide by 0.0001 instead.</p></body></html>"
-                    msg.setText(text) 
-                    msg.setWindowTitle("Std. is zero")
-                    msg.setStandardButtons(QtWidgets.QMessageBox.Ok)
-                    msg.exec_()
-    
-    
+                    text = "<html><head/><body><p>The standard deviation of your training data is zero! "+\
+                        "This would lead to division by zero. To avoid this, I will divide by 0.0001 instead.</p></body></html>"
+                    aid_frontend.message(text,msg_type="Information")
+                    
             ######################Load the Validation Data################################
             ind = [selectedfile["TrainOrValid"] == "Valid" for selectedfile in SelectedFiles]
             ind = np.where(np.array(ind)==True)[0]
@@ -7086,8 +7159,6 @@ class MainWindow(QtWidgets.QMainWindow):
             nr_events_epoch_valid = [selectedfile["nr_events_epoch"] for selectedfile in SelectedFiles_valid]
             rtdc_path_valid = [selectedfile["rtdc_path"] for selectedfile in SelectedFiles_valid]
             zoom_factors_valid = [selectedfile["zoom_factor"] for selectedfile in SelectedFiles_valid]
-            #zoom_order = [self.actionOrder0.isChecked(),self.actionOrder1.isChecked(),self.actionOrder2.isChecked(),self.actionOrder3.isChecked(),self.actionOrder4.isChecked(),self.actionOrder5.isChecked()]
-            #zoom_order = int(np.where(np.array(zoom_order)==True)[0])
             zoom_order = int(self.comboBox_zoomOrder.currentIndex()) #the combobox-index is already the zoom order            
             shuffle_valid = [selectedfile["shuffle"] for selectedfile in SelectedFiles_valid]
             xtra_in = set([selectedfile["xtra_in"] for selectedfile in SelectedFiles_valid])   
@@ -7104,9 +7175,14 @@ class MainWindow(QtWidgets.QMainWindow):
             for i in range(len(SelectedFiles_valid)):
                 if len(self.ram)==0:#if there is no data available on ram
                     #replace=true means individual cells could occur several times
-                    gen_valid = aid_img.gen_crop_img(crop,rtdc_path_valid[i],int(np.rint(percDataV*nr_events_epoch_valid[i])),random_images=shuffle_valid[i],replace=True,zoom_factor=zoom_factors_valid[i],zoom_order=zoom_order,color_mode=self.get_color_mode(),padding_mode=paddingMode,xtra_in=xtra_in)
+                    gen_valid = aid_img.gen_crop_img(crop,rtdc_path_valid[i],
+                        int(np.rint(percDataV*nr_events_epoch_valid[i])),random_images=shuffle_valid[i],
+                        replace=True,zoom_factor=zoom_factors_valid[i],zoom_order=zoom_order,
+                        color_mode=self.get_color_mode(),padding_mode=paddingMode,xtra_in=xtra_in)
                 else:#get a similar generator, using the ram-data
-                    gen_valid = aid_img.gen_crop_img_ram(self.ram,rtdc_path_valid[i],int(np.rint(percDataV*nr_events_epoch_valid[i])),random_images=shuffle_valid[i],replace=True,xtra_in=xtra_in) #Replace true means that individual cells could occur several times
+                    gen_valid = aid_img.gen_crop_img_ram(self.ram,rtdc_path_valid[i],
+                        int(np.rint(percDataV*nr_events_epoch_valid[i])),random_images=shuffle_valid[i],
+                        replace=True,xtra_in=xtra_in) #Replace true means that individual cells could occur several times
                     if self.actionVerbose.isChecked():
                         print("Loaded data from RAM")
                 generator_cropped_out = next(gen_valid)
@@ -7170,9 +7246,14 @@ class MainWindow(QtWidgets.QMainWindow):
             for i in range(len(SelectedFiles_train)):
                 if len(self.ram)==0:
                     #Replace true means that individual cells could occur several times
-                    gen_train = aid_img.gen_crop_img(cropsize2,rtdc_path_train[i],int(np.rint(percDataT*nr_events_epoch_train[i])),random_images=shuffle_train[i],replace=True,zoom_factor=zoom_factors_train[i],zoom_order=zoom_order,color_mode=self.get_color_mode(),padding_mode=paddingMode,xtra_in=xtra_in) 
+                    gen_train = aid_img.gen_crop_img(cropsize2,rtdc_path_train[i],
+                        int(np.rint(percDataT*nr_events_epoch_train[i])),random_images=shuffle_train[i],
+                        replace=True,zoom_factor=zoom_factors_train[i],zoom_order=zoom_order,
+                        color_mode=self.get_color_mode(),padding_mode=paddingMode,xtra_in=xtra_in) 
                 else:
-                    gen_train = aid_img.gen_crop_img_ram(self.ram,rtdc_path_train[i],int(np.rint(percDataT*nr_events_epoch_train[i])),random_images=shuffle_train[i],replace=True,xtra_in=xtra_in) #Replace true means that individual cells could occur several times
+                    gen_train = aid_img.gen_crop_img_ram(self.ram,rtdc_path_train[i],
+                        int(np.rint(percDataT*nr_events_epoch_train[i])),random_images=shuffle_train[i],
+                        replace=True,xtra_in=xtra_in) #Replace true means that individual cells could occur several times
                     if self.actionVerbose.isChecked():
                         print("Loaded data from RAM")
                 data_ = next(gen_train)
@@ -7539,12 +7620,8 @@ class MainWindow(QtWidgets.QMainWindow):
         indices = [selectedfile["class"] for selectedfile in SelectedFiles]
         ind = np.where(np.array(indices)==req_index)[0]
         if len(ind)<1:
-            msg = QtWidgets.QMessageBox()
-            msg.setIcon(QtWidgets.QMessageBox.Information)       
-            msg.setText("There is no data for this class available")
-            msg.setWindowTitle("Class not available")
-            msg.setStandardButtons(QtWidgets.QMessageBox.Ok)
-            msg.exec_()
+            text = "There is no data for this class available"
+            aid_frontend.message(text,"Information")
             return
             
         indices = list(np.array(indices)[ind])
@@ -7552,8 +7629,6 @@ class MainWindow(QtWidgets.QMainWindow):
         nr_events_epoch = len(indices)*[10] #[selectedfile["nr_events_epoch"] for selectedfile in SelectedFiles]
         rtdc_path = [selectedfile["rtdc_path"] for selectedfile in SelectedFiles]
         zoom_factors = [selectedfile["zoom_factor"] for selectedfile in SelectedFiles]
-        #zoom_order = [self.actionOrder0.isChecked(),self.actionOrder1.isChecked(),self.actionOrder2.isChecked(),self.actionOrder3.isChecked(),self.actionOrder4.isChecked(),self.actionOrder5.isChecked()]
-        #zoom_order = int(np.where(np.array(zoom_order)==True)[0])
         zoom_order = int(self.comboBox_zoomOrder.currentIndex()) #the combobox-index is already the zoom order
         shuffle = [selectedfile["shuffle"] for selectedfile in SelectedFiles]
         #If the scaling method is "divide by mean and std of the whole training set":
@@ -7562,11 +7637,13 @@ class MainWindow(QtWidgets.QMainWindow):
             for i in range(len(SelectedFiles)):
                 if not self.actionDataToRam.isChecked():
                     #Replace true means that individual cells could occur several times
-                    gen = aid_img.gen_crop_img(crop,rtdc_path[i],random_images=False,zoom_factor=zoom_factors[i],zoom_order=zoom_order,color_mode=self.get_color_mode(),padding_mode=paddingMode) 
+                    gen = aid_img.gen_crop_img(crop,rtdc_path[i],random_images=False,
+                        zoom_factor=zoom_factors[i],zoom_order=zoom_order,color_mode=self.get_color_mode(),padding_mode=paddingMode) 
                 else:
                     if len(self.ram)==0:
                         #Replace true means that individual cells could occur several times
-                        gen = aid_img.gen_crop_img(crop,rtdc_path[i],random_images=False,zoom_factor=zoom_factors[i],zoom_order=zoom_order,color_mode=self.get_color_mode(),padding_mode=paddingMode)
+                        gen = aid_img.gen_crop_img(crop,rtdc_path[i],random_images=False,
+                            zoom_factor=zoom_factors[i],zoom_order=zoom_order,color_mode=self.get_color_mode(),padding_mode=paddingMode)
                     else:    
                         gen = aid_img.gen_crop_img_ram(self.ram,rtdc_path[i],random_images=False) #Replace true means that individual cells could occur several times
                         if self.actionVerbose.isChecked():
@@ -7596,11 +7673,13 @@ class MainWindow(QtWidgets.QMainWindow):
             for i in range(len(SelectedFiles)):
                 if not self.actionDataToRam.isChecked():
                     #Replace true means that individual cells could occur several times
-                    gen = aid_img.gen_crop_img(cropsize2,rtdc_path[i],10,random_images=True,replace=True,zoom_factor=zoom_factors[i],zoom_order=zoom_order,color_mode=self.get_color_mode(),padding_mode=paddingMode) 
+                    gen = aid_img.gen_crop_img(cropsize2,rtdc_path[i],10,random_images=True,
+                        replace=True,zoom_factor=zoom_factors[i],zoom_order=zoom_order,color_mode=self.get_color_mode(),padding_mode=paddingMode) 
                 else:
                     if len(self.ram)==0:
                         #Replace true means that individual cells could occur several times
-                        gen = aid_img.gen_crop_img(cropsize2,rtdc_path[i],10,random_images=True,replace=True,zoom_factor=zoom_factors[i],zoom_order=zoom_order,color_mode=self.get_color_mode(),padding_mode=paddingMode) 
+                        gen = aid_img.gen_crop_img(cropsize2,rtdc_path[i],10,random_images=True,
+                            replace=True,zoom_factor=zoom_factors[i],zoom_order=zoom_order,color_mode=self.get_color_mode(),padding_mode=paddingMode) 
                     else:   
                         gen = aid_img.gen_crop_img_ram(self.ram,rtdc_path[i],10,random_images=True,replace=True) #Replace true means that individual cells could occur several times
                         if self.actionVerbose.isChecked():
@@ -7666,13 +7745,15 @@ class MainWindow(QtWidgets.QMainWindow):
             for i in range(len(SelectedFiles)):
                 if not self.actionDataToRam.isChecked():
                     #Replace true means that individual cells could occur several times
-                    gen = aid_img.gen_crop_img(crop,rtdc_path[i],10,random_images=True,replace=True,zoom_factor=zoom_factors[i],zoom_order=zoom_order,color_mode=self.get_color_mode(),padding_mode=paddingMode) 
+                    gen = aid_img.gen_crop_img(crop,rtdc_path[i],10,random_images=True,
+                        replace=True,zoom_factor=zoom_factors[i],zoom_order=zoom_order,color_mode=self.get_color_mode(),padding_mode=paddingMode) 
                 else:
                     if len(self.ram)==0:
                         #Replace true means that individual cells could occur several times
-                        gen = aid_img.gen_crop_img(crop,rtdc_path[i],10,random_images=True,replace=True,zoom_factor=zoom_factors[i],zoom_order=zoom_order,color_mode=self.get_color_mode(),padding_mode=paddingMode) 
+                        gen = aid_img.gen_crop_img(crop,rtdc_path[i],10,random_images=True,
+                            replace=True,zoom_factor=zoom_factors[i],zoom_order=zoom_order,color_mode=self.get_color_mode(),padding_mode=paddingMode) 
                     else:                        
-                        gen = aid_img.gen_crop_img_ram(self.ram,rtdc_path[i],10,random_images=True,replace=True) #Replace true means that individual cells could occur several times
+                        gen = aid_img.gen_crop_img_ram(self.ram,rtdc_path[i],10,random_images=True,replace=True) 
                         if self.actionVerbose.isChecked():
                             print("Loaded data from RAM")
                 try:
@@ -7825,12 +7906,8 @@ class MainWindow(QtWidgets.QMainWindow):
         indices = [selectedfile["class"] for selectedfile in SelectedFiles]
         ind = np.where(np.array(indices)==req_index)[0]
         if len(ind)<1:
-            msg = QtWidgets.QMessageBox()
-            msg.setIcon(QtWidgets.QMessageBox.Information)       
-            msg.setText("There is no data for this class available")
-            msg.setWindowTitle("Class not available")
-            msg.setStandardButtons(QtWidgets.QMessageBox.Ok)
-            msg.exec_()
+            text = "There is no data for this class available"
+            aid_frontend.message(text,"Information")
             return
             
         indices = list(np.array(indices)[ind])
@@ -7838,8 +7915,6 @@ class MainWindow(QtWidgets.QMainWindow):
         nr_events_epoch = len(indices)*[10] #[selectedfile["nr_events_epoch"] for selectedfile in SelectedFiles]
         rtdc_path = [selectedfile["rtdc_path"] for selectedfile in SelectedFiles]
         zoom_factors = [selectedfile["zoom_factor"] for selectedfile in SelectedFiles]
-        #zoom_order = [self.actionOrder0.isChecked(),self.actionOrder1.isChecked(),self.actionOrder2.isChecked(),self.actionOrder3.isChecked(),self.actionOrder4.isChecked(),self.actionOrder5.isChecked()]
-        #zoom_order = int(np.where(np.array(zoom_order)==True)[0])
         zoom_order = int(self.comboBox_zoomOrder.currentIndex()) #the combobox-index is already the zoom order
         
         shuffle = [selectedfile["shuffle"] for selectedfile in SelectedFiles]
@@ -7854,10 +7929,14 @@ class MainWindow(QtWidgets.QMainWindow):
             mean_trainingdata,std_trainingdata = [],[]
             for i in range(len(SelectedFiles)):
                 if not self.actionDataToRam.isChecked():
-                    gen = aid_img.gen_crop_img(crop,rtdc_path[i],random_images=False,zoom_factor=zoom_factors[i],zoom_order=zoom_order,color_mode=self.get_color_mode(),padding_mode=paddingMode,xtra_in=xtra_in) #Replace true means that individual cells could occur several times
+                    gen = aid_img.gen_crop_img(crop,rtdc_path[i],random_images=False,
+                        zoom_factor=zoom_factors[i],zoom_order=zoom_order,color_mode=self.get_color_mode(),
+                        padding_mode=paddingMode,xtra_in=xtra_in) #Replace true means that individual cells could occur several times
                 else:
                     if len(self.ram)==0:
-                        gen = aid_img.gen_crop_img(crop,rtdc_path[i],random_images=False,zoom_factor=zoom_factors[i],zoom_order=zoom_order,color_mode=self.get_color_mode(),padding_mode=paddingMode,xtra_in=xtra_in) #Replace true means that individual cells could occur several times
+                        gen = aid_img.gen_crop_img(crop,rtdc_path[i],random_images=False,
+                            zoom_factor=zoom_factors[i],zoom_order=zoom_order,color_mode=self.get_color_mode(),
+                            padding_mode=paddingMode,xtra_in=xtra_in) #Replace true means that individual cells could occur several times
                     else:    
                         gen = aid_img.gen_crop_img_ram(self.ram,rtdc_path[i],random_images=False,xtra_in=xtra_in) #Replace true means that individual cells could occur several times
                         if self.actionVerbose.isChecked():
@@ -7887,11 +7966,13 @@ class MainWindow(QtWidgets.QMainWindow):
             for i in range(len(SelectedFiles)):
                 if not self.actionDataToRam.isChecked():
                     #Replace true means that individual cells could occur several times
-                    gen = aid_img.gen_crop_img(cropsize2,rtdc_path[i],10,random_images=shuffle[i],replace=True,zoom_factor=zoom_factors[i],zoom_order=zoom_order,color_mode=self.get_color_mode(),padding_mode=paddingMode)
+                    gen = aid_img.gen_crop_img(cropsize2,rtdc_path[i],10,random_images=shuffle[i],
+                        replace=True,zoom_factor=zoom_factors[i],zoom_order=zoom_order,color_mode=self.get_color_mode(),padding_mode=paddingMode)
                 else:
                     if len(self.ram)==0:
                         #Replace true means that individual cells could occur several times
-                        gen = aid_img.gen_crop_img(cropsize2,rtdc_path[i],10,random_images=shuffle[i],replace=True,zoom_factor=zoom_factors[i],zoom_order=zoom_order,color_mode=self.get_color_mode(),padding_mode=paddingMode)
+                        gen = aid_img.gen_crop_img(cropsize2,rtdc_path[i],10,random_images=shuffle[i],
+                            replace=True,zoom_factor=zoom_factors[i],zoom_order=zoom_order,color_mode=self.get_color_mode(),padding_mode=paddingMode)
                     else:   
                         gen = aid_img.gen_crop_img_ram(self.ram,rtdc_path[i],10,random_images=shuffle[i],replace=True) #Replace true means that individual cells could occur several times
                         if self.actionVerbose.isChecked():
@@ -7954,11 +8035,13 @@ class MainWindow(QtWidgets.QMainWindow):
             for i in range(len(SelectedFiles)):
                 if not self.actionDataToRam.isChecked():
                     #Replace true means that individual cells could occur several times
-                    gen = aid_img.gen_crop_img(crop,rtdc_path[i],10,random_images=shuffle[i],replace=True,zoom_factor=zoom_factors[i],zoom_order=zoom_order,color_mode=self.get_color_mode(),padding_mode=paddingMode) 
+                    gen = aid_img.gen_crop_img(crop,rtdc_path[i],10,random_images=shuffle[i],
+                        replace=True,zoom_factor=zoom_factors[i],zoom_order=zoom_order,color_mode=self.get_color_mode(),padding_mode=paddingMode) 
                 else:
                     if len(self.ram)==0:
                         #Replace true means that individual cells could occur several times
-                        gen = aid_img.gen_crop_img(crop,rtdc_path[i],10,random_images=shuffle[i],replace=True,zoom_factor=zoom_factors[i],zoom_order=zoom_order,color_mode=self.get_color_mode(),padding_mode=paddingMode) 
+                        gen = aid_img.gen_crop_img(crop,rtdc_path[i],10,random_images=shuffle[i],
+                            replace=True,zoom_factor=zoom_factors[i],zoom_order=zoom_order,color_mode=self.get_color_mode(),padding_mode=paddingMode) 
                     else:                        
                         gen = aid_img.gen_crop_img_ram(self.ram,rtdc_path[i],10,random_images=shuffle[i],replace=True) #Replace true means that individual cells could occur several times
                         if self.actionVerbose.isChecked():
@@ -8108,30 +8191,19 @@ class MainWindow(QtWidgets.QMainWindow):
                         self.plot_rollmedis.append(rm)
                     except Exception as e:
                         #There is an issue for the rolling median plotting!
-                        msg = QtWidgets.QMessageBox()
-                        msg.setIcon(QtWidgets.QMessageBox.Warning)       
-                        msg.setText(str(e)+"\n->There are likely too few points to have a rolling median with such a window size ("+str(round(win))+")")
-                        msg.setWindowTitle("Error occured when plotting rolling median:")
-                        msg.setStandardButtons(QtWidgets.QMessageBox.Ok)
-                        msg.exec_()                        
+                        text = str(e)+"\n->There are likely too few points to have "+\
+                            "a rolling median with such a window size ("+str(round(win))+")"
+                        aid_frontend.message(text,"Warning")
                         
         if len(str(self.lineEdit_LoadHistory.text()))==0:
         #if DF1==None:
-            msg = QtWidgets.QMessageBox()
-            msg.setIcon(QtWidgets.QMessageBox.Information)       
-            msg.setText("Please load History file first (.meta)")
-            msg.setWindowTitle("No History file loaded")
-            msg.setStandardButtons(QtWidgets.QMessageBox.Ok)
-            msg.exec_()
+            text = "Please load History file first (.meta)"
+            aid_frontend.message(text,"Information")
             return
             
         if len(scatter_x)==0:
-            msg = QtWidgets.QMessageBox()
-            msg.setIcon(QtWidgets.QMessageBox.Information)       
-            msg.setText("Please select at least one of " +"\n".join(list(DF1.keys())))
-            msg.setWindowTitle("No quantity selected")
-            msg.setStandardButtons(QtWidgets.QMessageBox.Ok)
-            msg.exec_()
+            text = "Please select at least one of " +"\n".join(list(DF1.keys()))
+            aid_frontend.message(text,"Information")
             return
 
         #Keep the information as lists available for this function
@@ -8264,34 +8336,22 @@ class MainWindow(QtWidgets.QMainWindow):
         if not filename.endswith("meta.xlsx"):
             return
         if not os.path.isfile(filename):
-            msg = QtWidgets.QMessageBox()
-            msg.setIcon(QtWidgets.QMessageBox.Information)       
-            msg.setText("File not found")
-            msg.setWindowTitle("File not found")
-            msg.setStandardButtons(QtWidgets.QMessageBox.Ok)
-            msg.exec_()
+            text = "File not found"
+            aid_frontend.message(text,"Warning")
             return
         self.lineEdit_LoadHistory.setText(filename)
         self.action_plot_history(filename)
 
     def action_load_history_current(self):
         if self.model_keras_path==None:
-            msg = QtWidgets.QMessageBox()
-            msg.setIcon(QtWidgets.QMessageBox.Information)       
-            msg.setText("There is no fitting going on")
-            msg.setWindowTitle("No current fitting process!")
-            msg.setStandardButtons(QtWidgets.QMessageBox.Ok)
-            msg.exec_()
+            text = "There is no fitting going on"
+            aid_frontend.message(text,"Warning")
             return
             
         history_path = self.model_keras_path
         if type(history_path)==list:#collection=True
-            msg = QtWidgets.QMessageBox()
-            msg.setIcon(QtWidgets.QMessageBox.Information)       
-            msg.setText("Not implemented for collections. Please use 'Load History' button to specify a single .meta file")
-            msg.setWindowTitle("Not implemented for collecitons")
-            msg.setStandardButtons(QtWidgets.QMessageBox.Ok)
-            msg.exec_()
+            text = "Not implemented for collections. Please use 'Load History' button to specify a single .meta file"
+            aid_frontend.message(text,"Error")
             return
 
         filename = history_path.split("_0.model")[0]+"_meta.xlsx"
@@ -8299,12 +8359,7 @@ class MainWindow(QtWidgets.QMainWindow):
         if not filename.endswith("meta.xlsx"):
             return
         if not os.path.isfile(filename):
-            msg = QtWidgets.QMessageBox()
-            msg.setIcon(QtWidgets.QMessageBox.Information)       
-            msg.setText("File not found")
-            msg.setWindowTitle("File not found")
-            msg.setStandardButtons(QtWidgets.QMessageBox.Ok)
-            msg.exec_()
+            aid_frontend.message("File not found","Warning")
             return
         self.lineEdit_LoadHistory.setText(filename)
         self.action_plot_history(filename)
@@ -8341,24 +8396,14 @@ class MainWindow(QtWidgets.QMainWindow):
                     tries+=1
 
         except Exception as e:
-            msg = QtWidgets.QMessageBox()
-            msg.setIcon(QtWidgets.QMessageBox.Critical)       
-            msg.setText(str(e))
-            msg.setWindowTitle("Error")
-            msg.setStandardButtons(QtWidgets.QMessageBox.Ok)
-            msg.exec_()
+            aid_frontend.message(e,"Error")
             return
             
         #Check if dic exists now
         try:
             keys = list(dic.keys())
         except Exception as e:
-            msg = QtWidgets.QMessageBox()
-            msg.setIcon(QtWidgets.QMessageBox.Critical)       
-            msg.setText(str(e))
-            msg.setWindowTitle("Error")
-            msg.setStandardButtons(QtWidgets.QMessageBox.Ok)
-            msg.exec_()
+            aid_frontend.message(e,"Error")
             return
         #Remember the path for next time
         Default_dict["Path of last model"] = os.path.split(filename)[0]
@@ -8441,23 +8486,12 @@ class MainWindow(QtWidgets.QMainWindow):
         try:
             os.path.isfile(path)
         except:
-            msg = QtWidgets.QMessageBox()
-            msg.setIcon(QtWidgets.QMessageBox.Information)       
-            msg.setText("No file defined!")
-            msg.setWindowTitle("No file defined!")
-            msg.setStandardButtons(QtWidgets.QMessageBox.Ok)
-            msg.exec_()
+            aid_frontend.message("No file defined!","Error")
             return
 
         if not os.path.isfile(path):
-            #text_path = "\nFile not found!:"+path+"\nProbably the .model was deleted or not saved"
-            #self.pushButton_convertModel.setEnabled(False)
-            msg = QtWidgets.QMessageBox()
-            msg.setIcon(QtWidgets.QMessageBox.Information)       
-            msg.setText("\nFile not found!:"+path+"\nProbably the .model was deleted or not saved")
-            msg.setWindowTitle("File not found")
-            msg.setStandardButtons(QtWidgets.QMessageBox.Ok)
-            msg.exec_()
+            text = "\nFile not found!:"+path+"\nProbably the .model was deleted or not saved"
+            aid_frontend.message(text,"Error")
             return
 
         #If the source format is Keras tensforflow:
@@ -8466,13 +8500,8 @@ class MainWindow(QtWidgets.QMainWindow):
 
         ##TODO: All conversion methods to multiprocessing functions!
         def conversion_successful_msg(text):#Enable the Convert to .nnet button
-            msg = QtWidgets.QMessageBox()
-            msg.setIcon(QtWidgets.QMessageBox.Information)       
-            msg.setText(text)
-            msg.setWindowTitle("Successfully converted model!")
-            msg.setStandardButtons(QtWidgets.QMessageBox.Ok)
-            msg.exec_()
-
+            text = "Successfully converted model!"
+            aid_frontend.message(text,"Information")
 
         ##################Keras TensorFlow -> .nnet############################
         if target_format==".nnet" and source_format=="Keras TensorFlow": 
@@ -8482,14 +8511,8 @@ class MainWindow(QtWidgets.QMainWindow):
                 self.model_keras = dic["model_keras"]
             worker.signals.history.connect(get_model_keras_from_worker)
             def conversion_successful(i):#Enable the Convert to .nnet button
-                msg = QtWidgets.QMessageBox()
-                msg.setIcon(QtWidgets.QMessageBox.Information)
-                text = "Conversion Keras TensorFlow -> .nnet done"
-                msg.setText(text)
-                msg.setWindowTitle("Successfully converted model!")
-                msg.setStandardButtons(QtWidgets.QMessageBox.Ok)
-                msg.exec_()
-                #self.pushButton_convertModel.setEnabled(True) 
+                text = "Conversion Keras TensorFlow -> .nnet successful"
+                aid_frontend.message(text,"Information")
             worker.signals.history.connect(conversion_successful)
             self.threadpool.start(worker)
 
@@ -8576,13 +8599,8 @@ class MainWindow(QtWidgets.QMainWindow):
             conversion_successful_msg(text)
 
         else:
-            msg = QtWidgets.QMessageBox()
-            msg.setIcon(QtWidgets.QMessageBox.Information)       
-            msg.setText("Not implemeted (yet)")
-            msg.setWindowTitle("Not implemeted (yet)")
-            msg.setStandardButtons(QtWidgets.QMessageBox.Ok)
-            msg.exec_()
-                
+            aid_frontend.message("Not implemeted (yet)",msg_type="Error")
+            return                
         #If that worked without error, save the filepath for next time
         Default_dict["Path of last model"] = os.path.split(path)[0]
         aid_bin.save_aid_settings(Default_dict)
@@ -8698,7 +8716,9 @@ class MainWindow(QtWidgets.QMainWindow):
         icon = QtGui.QPixmap(icon).scaledToHeight(32, QtCore.Qt.SmoothTransformation)
         msg = QtWidgets.QMessageBox()
         msg.setIconPixmap(icon)
-        text = "<html><head/><body><p>AIDeveloper "+str(VERSION)+"<br>"+sys.version+"<br>Click 'Show Details' to retrieve a list of all Python packages used."+"<br>AID_GPU uses CUDA (NVIDIA) to facilitate GPU processing</p></body></html>"
+        text = "<html><head/><body><p>AIDeveloper "+str(VERSION)+"<br>"+sys.version+\
+            "<br>Click 'Show Details' to retrieve a list of all Python packages used."+\
+                "<br>AID_GPU uses CUDA (NVIDIA) to facilitate GPU processing</p></body></html>"
         msg.setText(text)
         msg.setDetailedText(text_modules)
         msg.setWindowTitle("Software")
@@ -8710,7 +8730,10 @@ class MainWindow(QtWidgets.QMainWindow):
         icon = QtGui.QPixmap(icon).scaledToHeight(32, QtCore.Qt.SmoothTransformation)
         msg = QtWidgets.QMessageBox()
         msg.setIconPixmap(icon)
-        text = "AIDeveloper is written and maintained by Maik Herbig. Use maik.herbig@tu-dresden.de to contact the main developer if you find bugs or if you wish a particular feature. Icon theme 2 was mainly designed and created by Konrad Wauer."
+        text = "AIDeveloper is written and maintained by Maik Herbig. "+\
+            "Use maik.herbig@tu-dresden.de to contact the main developer if you "+\
+            "find bugs or if you wish a particular feature. "+\
+            "Icon theme 2 was mainly designed and created by Konrad Wauer."
         text = "<html><head/><body><p>"+text+"</p></body></html>"
         msg.setText(text)
         msg.setWindowTitle("About")
@@ -8720,7 +8743,8 @@ class MainWindow(QtWidgets.QMainWindow):
     def actionLoadSession_function(self):
         #This function should allow to select and load a metafile and
         #Put the GUI the the corresponing state (place the stuff in the table, click Train/Valid)
-        filename = QtWidgets.QFileDialog.getOpenFileName(self, 'Open meta-data', Default_dict["Path of last model"],"AIDeveloper Meta or session file (*meta.xlsx *session.xlsx)")
+        filename = QtWidgets.QFileDialog.getOpenFileName(self, 'Open meta-data', 
+                                                         Default_dict["Path of last model"],"AIDeveloper Meta or session file (*meta.xlsx *session.xlsx)")
         filename = filename[0]
         if len(filename)==0:
             return
@@ -9046,8 +9070,6 @@ class MainWindow(QtWidgets.QMainWindow):
             #Collect information for image processing
             cropsize = self.spinBox_imagecrop.value()
             color_mode = str(self.comboBox_loadedRGBorGray.currentText())
-            #zoom_methods = [self.actionOrder0.isChecked(),self.actionOrder1.isChecked(),self.actionOrder2.isChecked(),self.actionOrder3.isChecked(),self.actionOrder4.isChecked(),self.actionOrder5.isChecked()]
-            #zoom_order = np.where(np.array(zoom_methods)==True)[0]
             zoom_order = int(self.comboBox_zoomOrder.currentIndex()) #the combobox-index is already the zoom order
 
             index = 0
@@ -9056,7 +9078,8 @@ class MainWindow(QtWidgets.QMainWindow):
                 rtdc_path = str(self.table_dragdrop.cellWidget(row, 0).text())
                 nr_events = None #no number needed as we take all images (replace=False in gen_crop_img)
                 zoom_factor = float(self.table_dragdrop.item(row, 9).text())            
-                gen = aid_img.gen_crop_img(cropsize,rtdc_path,nr_events=nr_events,replace=False,random_images=False,zoom_factor=zoom_factor,zoom_order=zoom_order,color_mode=color_mode,padding_mode='constant')
+                gen = aid_img.gen_crop_img(cropsize,rtdc_path,nr_events=nr_events,replace=False,
+                    random_images=False,zoom_factor=zoom_factor,zoom_order=zoom_order,color_mode=color_mode,padding_mode='constant')
                 images = next(gen)[0]
                 #Save the images data to .png/.jpeg...
                 for img in images:
@@ -9114,8 +9137,6 @@ class MainWindow(QtWidgets.QMainWindow):
         SelectedFiles = self.items_clicked()
         color_mode = self.get_color_mode()
         zoom_factors = [selectedfile["zoom_factor"] for selectedfile in SelectedFiles]
-        #zoom_order = [self.actionOrder0.isChecked(),self.actionOrder1.isChecked(),self.actionOrder2.isChecked(),self.actionOrder3.isChecked(),self.actionOrder4.isChecked(),self.actionOrder5.isChecked()]
-        #zoom_order = int(np.where(np.array(zoom_order)==True)[0])
         zoom_order = int(self.comboBox_zoomOrder.currentIndex()) #the combobox-index is already the zoom order
 
         #Get the user-defined cropping size
@@ -9389,13 +9410,17 @@ class MainWindow(QtWidgets.QMainWindow):
                     latest_release = dic["latest_release"]
                     
                     if latest_release=="You are up to date":
-                        text = "Your major version of AIDeveloper is up-to-date. Check below if there are updates available for that major version. <br>Example: Your major version of AIDeveloper is 0.2.0, then all updates which start with 0.2.x will be compatible."
+                        text = "Your major version of AIDeveloper is up-to-date. "+\
+                            "Check below if there are updates available for that "+\
+                            "major version. <br>Example: Your major version of "+\
+                            "AIDeveloper is 0.2.0, then all updates which start with 0.2.x will be compatible."
                         text = "<html><head/><body><p>"+text+"</p></body></html>"
                     else:
                         text = "There is a new major update available. To download, follow this link:"
                         text = text+"<br>"+"<a href ="+dic["latest_release_url"]+">"+dic["latest_release_url"]+"</a>"
                         text = text+"<br>"+dic["changelog"]
-                        text = text+"<br>Major updates need to be downloaded and installed manually. After that, you can install minor updates (which correspond to that major version) using the menu below."
+                        text = text+"<br>Major updates need to be downloaded and installed manually. "+\
+                            "After that, you can install minor updates (which correspond to that major version) using the menu below."
                         text = "<html><head/><body><p>"+text+"</p></body></html>"
 
                 #Fill info text (on top of Update Popup window)
@@ -9529,8 +9554,6 @@ class MainWindow(QtWidgets.QMainWindow):
         nr_events_epoch_valid = [selectedfile["nr_events_epoch"] for selectedfile in SelectedFiles_valid]
         rtdc_path_valid = [selectedfile["rtdc_path"] for selectedfile in SelectedFiles_valid]
         zoom_factors_valid = [selectedfile["zoom_factor"] for selectedfile in SelectedFiles_valid]
-        #zoom_order = [self.actionOrder0.isChecked(),self.actionOrder1.isChecked(),self.actionOrder2.isChecked(),self.actionOrder3.isChecked(),self.actionOrder4.isChecked(),self.actionOrder5.isChecked()]
-        #zoom_order = int(np.where(np.array(zoom_order)==True)[0])
         zoom_order = int(self.comboBox_zoomOrder.currentIndex()) #the combobox-index is already the zoom order
 
         shuffle_valid = [selectedfile["shuffle"] for selectedfile in SelectedFiles_valid]
@@ -9568,15 +9591,20 @@ class MainWindow(QtWidgets.QMainWindow):
         for i in range(len(SelectedFiles_valid)):
             if not self.actionDataToRam.isChecked():
                 #Replace=True means that individual cells could occur several times
-                gen_valid = aid_img.gen_crop_img(crop,rtdc_path_valid[i],nr_events_epoch_valid[i],random_images=shuffle_valid[i],replace=True,zoom_factor=zoom_factors_valid[i],zoom_order=zoom_order,color_mode=self.get_color_mode(),padding_mode=paddingMode,xtra_in=xtra_in) 
+                gen_valid = aid_img.gen_crop_img(crop,rtdc_path_valid[i],nr_events_epoch_valid[i],
+                    random_images=shuffle_valid[i],replace=True,zoom_factor=zoom_factors_valid[i],
+                    zoom_order=zoom_order,color_mode=self.get_color_mode(),padding_mode=paddingMode,xtra_in=xtra_in) 
             else: #get a similar generator, using the ram-data
                 if len(DATA)==0:
                     #Replace=True means that individual cells could occur several times
-                    gen_valid = aid_img.gen_crop_img(crop,rtdc_path_valid[i],nr_events_epoch_valid[i],random_images=shuffle_valid[i],replace=True,zoom_factor=zoom_factors_valid[i],zoom_order=zoom_order,color_mode=self.get_color_mode(),padding_mode=paddingMode,xtra_in=xtra_in) 
+                    gen_valid = aid_img.gen_crop_img(crop,rtdc_path_valid[i],nr_events_epoch_valid[i],
+                        random_images=shuffle_valid[i],replace=True,zoom_factor=zoom_factors_valid[i],
+                        zoom_order=zoom_order,color_mode=self.get_color_mode(),padding_mode=paddingMode,xtra_in=xtra_in) 
                 else:
                     if self.actionVerbose.isChecked():
                         print("Loaded data from RAM")
-                    gen_valid = aid_img.gen_crop_img_ram(DATA,rtdc_path_valid[i],nr_events_epoch_valid[i],random_images=shuffle_valid[i],replace=True,xtra_in=xtra_in) #Replace=True means that individual cells could occur several times
+                    gen_valid = aid_img.gen_crop_img_ram(DATA,rtdc_path_valid[i],nr_events_epoch_valid[i],
+                        random_images=shuffle_valid[i],replace=True,xtra_in=xtra_in) #Replace=True means that individual cells could occur several times
             
             gen = next(gen_valid)
             X_valid.append(gen[0])
@@ -9614,7 +9642,9 @@ class MainWindow(QtWidgets.QMainWindow):
                 X_valid = aid_img.image_normalization(X_valid,norm)
         else:
             X_valid = None
-        dic = {"SelectedFiles_valid":SelectedFiles_valid,"nr_events_epoch_valid":nr_events_epoch_valid,"rtdc_path_valid":rtdc_path_valid,"X_valid_orig":X_valid_orig,"X_valid":X_valid,"y_valid":y_valid,"Indices":Indices,"Xtra_in":Xtra_in}
+        dic = {"SelectedFiles_valid":SelectedFiles_valid,"nr_events_epoch_valid":nr_events_epoch_valid,
+               "rtdc_path_valid":rtdc_path_valid,"X_valid_orig":X_valid_orig,"X_valid":X_valid,
+               "y_valid":y_valid,"Indices":Indices,"Xtra_in":Xtra_in}
         self.ValidationSet = dic
         return 1
         
@@ -9759,7 +9789,9 @@ class MainWindow(QtWidgets.QMainWindow):
         mean_trainingdata = self.img_processing_settings["mean_trainingdata"].values[0]
         std_trainingdata = self.img_processing_settings["std_trainingdata"].values[0]
 
-        gen_valid = aid_img.gen_crop_img(cropsize=model_in,rtdc_path=rtdc_path,random_images=False,zoom_factor=zoom_factor,zoom_order=zoom_interpol_method,color_mode=color_mode,padding_mode=padding_mode,xtra_in=False)
+        gen_valid = aid_img.gen_crop_img(cropsize=model_in,rtdc_path=rtdc_path,random_images=False,
+            zoom_factor=zoom_factor,zoom_order=zoom_interpol_method,color_mode=color_mode,
+            padding_mode=padding_mode,xtra_in=False)
         x_valid,index,xtra_valid = next(gen_valid)
         #When object is too far at side of image, the frame is dropped.
         #Consider this for y_valid
@@ -9793,7 +9825,9 @@ class MainWindow(QtWidgets.QMainWindow):
         rtdc_h5.close() #close the hdf5 
                        
 
-        dic = {"SelectedFiles_valid":SelectedFiles_valid,"nr_events_epoch_valid":nr_events_epoch_valid,"rtdc_path_valid":[rtdc_path],"X_valid_orig":[X_valid_orig],"X_valid":X_valid,"y_valid":y_valid,"Indices":[Indices],"Xtra_in":Xtra_in}
+        dic = {"SelectedFiles_valid":SelectedFiles_valid,"nr_events_epoch_valid":nr_events_epoch_valid,
+               "rtdc_path_valid":[rtdc_path],"X_valid_orig":[X_valid_orig],
+               "X_valid":X_valid,"y_valid":y_valid,"Indices":[Indices],"Xtra_in":Xtra_in}
         self.ValidationSet = dic
 
         self.statusbar.showMessage("Validation data loaded to RAM",5000)
@@ -9863,7 +9897,8 @@ class MainWindow(QtWidgets.QMainWindow):
 
         #If there is X_valid and y_valid on RAM, use it!
         if not type(self.ValidationSet) is type(None): #If X_valid is not none, there has been X_valid loaded already
-            self.statusbar.showMessage("Re-used validation data (from RAM) loaded earlier. If that is not good, please check and uncheck a file on 'Build' tab. This will delete the validation data from RAM",2000)
+            self.statusbar.showMessage("Re-used validation data (from RAM) loaded earlier. "+\
+                "If that is not good, please check and uncheck a file on 'Build' tab. This will delete the validation data from RAM",2000)
         else: #Otherwise get the validation data from the stuff that is clicked on 'Build'-Tab
             self.get_validation_data_from_clicked() #after that, self.ValidationSet will exist
             self.statusbar.showMessage("Loaded data corresponding to the clicked files on 'Build'-tab",2000)
@@ -10192,7 +10227,6 @@ class MainWindow(QtWidgets.QMainWindow):
 
     def copy_cm_to_clipboard(self,cm1_or_cm2):
         if cm1_or_cm2==1:
-            a=oinvweo9
             table = self.tableWidget_CM1
             cols = table.columnCount()
             header = [table.horizontalHeaderItem(col).text() for col in range(cols)]
@@ -10233,7 +10267,8 @@ class MainWindow(QtWidgets.QMainWindow):
 
        #If there is a ValidationSet on RAM-> use it!
         if not type(self.ValidationSet) is type(None): #If ValidationSet is not none, there has been ValidationSet loaded already
-            self.statusbar.showMessage("Use validation data (from RAM) loaded earlier. If that is not good, please check and uncheck a file on 'Build' tab. This will delete the validation data from RAM",5000)
+            self.statusbar.showMessage("Use validation data (from RAM) loaded earlier. "+\
+                "If that is not good, please check and uncheck a file on 'Build' tab. This will delete the validation data from RAM",5000)
         else: #Otherwise get the validation data from the stuff that is clicked on 'Build'-Tab
             self.get_validation_data_from_clicked() #after that, self.ValidationSet will exist
 
@@ -10331,7 +10366,8 @@ class MainWindow(QtWidgets.QMainWindow):
             msg.exec_()
             return
 
-        dic = aid_bin.metrics_using_threshold(scores,y_valid,threshold,target_index,thresh_on) #returns dic = {"scores":scores,"pred":pred,"conc_target_cell":conc_target_cell,"enrichment":enrichment,"yield_":yield_}
+        #returns dic = {"scores":scores,"pred":pred,"conc_target_cell":conc_target_cell,"enrichment":enrichment,"yield_":yield_}
+        dic = aid_bin.metrics_using_threshold(scores,y_valid,threshold,target_index,thresh_on) 
         self.Metrics = dic #write to a variable #     
         
         pred = dic["pred"]
@@ -10340,7 +10376,7 @@ class MainWindow(QtWidgets.QMainWindow):
         cm_normalized = 100*cm.astype('float') / cm.sum(axis=1)[:, np.newaxis]
         
         #Show the metrics on tableWidget_CM1 and tableWidget_CM2
-        #inds_uni = set(list(set(y_valid))+list(set(pred))) #It could be that a cell-index is not present in the validation data, but, the dimension of the scores tells me, how many indices are supposed to appear
+        #It could be that a cell-index is not present in the validation data, but, the dimension of the scores tells me, how many indices are supposed to appear
         inds_uni = range(scores.shape[1]) #these indices are explained by model
         
         #look in into tableWidget_Info_2 if there are user defined index names
@@ -10508,9 +10544,7 @@ class MainWindow(QtWidgets.QMainWindow):
         rowPosition = self.tableWidget_AccPrecSpec.rowCount()
         self.tableWidget_AccPrecSpec.insertRow(rowPosition) #Insert another row!
         self.tableWidget_AccPrecSpec.setItem(rowPosition , 0, QtGui.QTableWidgetItem("File"))
-        
-        #dic = {"SelectedFiles_valid":SelectedFiles_valid,"nr_events_epoch_valid":nr_events_epoch_valid,"rtdc_path_valid":[rtdc_path],"X_valid_orig":[X_valid_orig],"X_valid":X_valid,"y_valid":y_valid,"Indices":[Indices]}
-        
+                
         rtdc_path_valid = self.ValidationSet["rtdc_path_valid"]
         #nr_events_epoch_valid = self.ValidationSet["nr_events_epoch_valid"]
         y_valid = self.ValidationSet["y_valid"] #y_valid is a long array containing the label of all cell (of all clicked files)
@@ -10828,7 +10862,8 @@ class MainWindow(QtWidgets.QMainWindow):
             #(it might makes sense to evaluate this for each possible target_index. Now only perform the measurement for the user defined target index)
             Dics,Threshs = [],[]
             for thresh in np.linspace(0,1,25):
-                dic_ = aid_bin.metrics_using_threshold(scores,y_valid,thresh,target_index) #returns dic = {"scores":scores,"pred":pred,"conc_target_cell":conc_target_cell,"enrichment":enrichment,"yield_":yield_}                    
+                #returns dic = {"scores":scores,"pred":pred,"conc_target_cell":conc_target_cell,"enrichment":enrichment,"yield_":yield_}   
+                dic_ = aid_bin.metrics_using_threshold(scores,y_valid,thresh,target_index)                  
                 Dics.append(dic_)
                 Threshs.append(thresh)
             #Collect information in arrays
@@ -10928,8 +10963,6 @@ class MainWindow(QtWidgets.QMainWindow):
         color_mode = self.get_color_mode()
 
         zoom_factors = [selectedfile["zoom_factor"] for selectedfile in AvailableFiles]
-        #zoom_order = [self.actionOrder0.isChecked(),self.actionOrder1.isChecked(),self.actionOrder2.isChecked(),self.actionOrder3.isChecked(),self.actionOrder4.isChecked(),self.actionOrder5.isChecked()]
-        #zoom_order = int(np.where(np.array(zoom_order)==True)[0])
         zoom_order = int(self.comboBox_zoomOrder.currentIndex()) #the combobox-index is already the zoom order
 
         xtra_in = set([selectedfile["xtra_in"] for selectedfile in AvailableFiles])   
@@ -11015,7 +11048,8 @@ class MainWindow(QtWidgets.QMainWindow):
                 zoom_factor = zoom_factors[f_index]
                 
                 #get all images, cropped correcetly
-                gen_train = aid_img.gen_crop_img(crop,rtdc_path,replace=True,random_images=False,zoom_factor=zoom_factor,zoom_order=zoom_order,color_mode=color_mode,padding_mode=paddingMode,xtra_in=xtra_in)
+                gen_train = aid_img.gen_crop_img(crop,rtdc_path,replace=True,random_images=False,
+                    zoom_factor=zoom_factor,zoom_order=zoom_order,color_mode=color_mode,padding_mode=paddingMode,xtra_in=xtra_in)
                 x_train,index,xtra_train = next(gen_train) #x_train-images of all cells, index-original index of all cells           
                 
                 if norm == "StdScaling using mean and std of all training data":
