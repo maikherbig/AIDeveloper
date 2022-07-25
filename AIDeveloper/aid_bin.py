@@ -1029,7 +1029,8 @@ def download_aid_repo():
         #delete the temporary files
         shutil.rmtree(path_temp)
         return {"success":True,"path_save":path_save+".zip"}
-    except:
+    except Exception as e:
+        print(e)
         return {"success":False,"path_save":""}
 
 def update_from_zip(item_path,VERSION):
