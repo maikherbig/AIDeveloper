@@ -6961,6 +6961,11 @@ def load_hyper_params(ui_item,para):
     except Exception as e:
         message(e)
     try:
+        prop = para["Selected channels"].iloc[-1]
+        ui_item.channels_selected = prop
+    except Exception as e:
+        message(e)
+    try:
         prop = int(para["Zoom order"].iloc[-1])
         ui_item.comboBox_zoomOrder.setCurrentIndex(prop)
     except Exception as e:
