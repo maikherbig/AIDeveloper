@@ -15,7 +15,7 @@ https://download.oracle.com/java/18/latest/jdk-18_windows-x64_bin.exe
  
 Next, generate a Python environment (e.g. using conda) using following commands
 
-conda create -n imagestream1 python==3.9 spyder==5 typing-extensions==3.7.4.3
+conda create -n imagestream1 python==3.9 spyder==5
 conda activate imagestream1
 pip install javabridge==1.0.19
 pip install python-bioformats==4.0.5
