@@ -401,12 +401,9 @@ def check_squared(images):
 def get_images(rtdc_ds,channel_list=["image"]):
     assert type(channel_list)==list, "Please provide a channel_list, such as ['image']; (type(channel_list) is not list)"
     assert len(channel_list)>0, "No channels for the image were selected! Please choose at least one image layer (channel)"
-    print(channel_list)
     if len(channel_list)==1:#single grayscale layer was selecte. No big deal. Just get the corresponding data from rtdc_ds
         return rtdc_ds["events"][channel_list[0]] #get the images
-    else:
-        # MultiChannel!
-        print("MultiChannel")
+    else: # Multiple channels
         #shape of the images
         shapes = [rtdc_ds["events"][key].shape for key in channel_list]
         # the shapes of all channels should be equal (set has lenght 1)
@@ -425,7 +422,7 @@ def get_images(rtdc_ds,channel_list=["image"]):
 def gen_crop_img(cropsize,rtdc_path,nr_events=100,replace=True,random_images=True,
                  zoom_factor=1,zoom_order="cv2.INTER_LINEAR",color_mode='Grayscale',
                  padding_mode='constant',xtra_in=False,channel_list=["image"]):
-
+    print("channel_list: "+str(channel_list))
     failed,rtdc_ds = aid_bin.load_rtdc(rtdc_path)
     if failed:
         msg = QtWidgets.QMessageBox()
@@ -857,7 +854,7 @@ def motion_blur_cv(images,kernel_size,angle):
     return buffer
 
 
-def crop_imgs_to_ram(SelectedFiles,crop,zoom_factors=None,zoom_order=0,color_mode='Grayscale'):
+def crop_imgs_to_ram(SelectedFiles,crop,zoom_factors=None,zoom_order=0,color_mode='Grayscale',channel_list=['image']):
     #This function transfers the entire data to ram which allows to access it from there 
     #quickly. This makes lots of sense for most data sets, because the cropped images with uint8 take very little space.
     #Compute estimate of required disk space using the function print_ram_example if you like
@@ -873,9 +870,12 @@ def crop_imgs_to_ram(SelectedFiles,crop,zoom_factors=None,zoom_order=0,color_mod
     X_train,Indices,Xtra_in_data = [],[],[]
     for i in range(len(Rtdc_paths_uni)): #Move all images to RAM (Not only some random images!)->random_images=False
         if zoom_factors!=None:
-            gen_train = gen_crop_img(crop,Rtdc_paths_uni[i],random_images=False,zoom_factor=zoom_factors[i],zoom_order=zoom_order,color_mode=color_mode,xtra_in=xtra_in) #Replace=true means that individual cells could occur several times    
+            gen_train = gen_crop_img(crop,Rtdc_paths_uni[i],random_images=False,
+                                     zoom_factor=zoom_factors[i],zoom_order=zoom_order,
+                                     color_mode=color_mode,xtra_in=xtra_in,channel_list=channel_list) #Replace=true means that individual cells could occur several times    
         else:
-            gen_train = gen_crop_img(crop,Rtdc_paths_uni[i],random_images=False,color_mode=color_mode,xtra_in=xtra_in) #Replace=true means that individual cells could occur several times    
+            gen_train = gen_crop_img(crop,Rtdc_paths_uni[i],random_images=False,
+                                     color_mode=color_mode,xtra_in=xtra_in,channel_list=channel_list) #Replace=true means that individual cells could occur several times    
         
         x_train,index,xtra_in_data = next(gen_train)        
         X_train.append(x_train)
