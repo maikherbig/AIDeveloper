@@ -229,7 +229,8 @@ def setup_main_ui(self,gpu_nr):
     self.clr_settings["step_size"] = 8 #Number of epochs to fulfill half a cycle
     self.clr_settings["gamma"] = 0.99995 #gamma factor for Exponential decrease method (exp_range)
     self.optimizer_settings = aid_dl.get_optimizer_settings() #the full set of optimizer settings is saved in this variable and might be changed usiung pushButton_optimizer
-    
+    self.channels_selected = ["image"] # used defined features that are 2D (image) ['image','image_ch1,...]
+
     #self.clip = QtGui.QApplication.clipboard() #This is how one defines a clipboard variable; one can put text on it via:#self.clip.setText("SomeText") 
     self.new_peaks = [] #list to store used defined peaks
     #######################################################################
@@ -415,20 +416,6 @@ def setup_main_ui(self,gpu_nr):
     self.horizontalLayout_colorMode.addWidget(self.label_colorMode)
     self.gridLayout_49.addLayout(self.horizontalLayout_colorMode, 1, 3, 1, 1)
 
-    # self.horizontalLayout_channelSelect = QtWidgets.QHBoxLayout()
-    # self.horizontalLayout_channelSelect.setObjectName("horizontalLayout_channelSelect")
-    # self.label_channelSelectIcon = QtWidgets.QLabel(self.groupBox_imgProc)
-    # self.label_channelSelectIcon.setText("")
-    # self.label_channelSelectIcon.setAlignment(QtCore.Qt.AlignRight|QtCore.Qt.AlignTrailing|QtCore.Qt.AlignVCenter)
-    # self.label_channelSelectIcon.setObjectName("label_channelSelectIcon")
-    # self.horizontalLayout_channelSelect.addWidget(self.label_channelSelectIcon)
-    # self.label_channelSelect = QtWidgets.QLabel(self.groupBox_imgProc)
-    # self.label_channelSelect.setAlignment(QtCore.Qt.AlignRight|QtCore.Qt.AlignTrailing|QtCore.Qt.AlignVCenter)
-    # self.label_channelSelect.setObjectName("label_channelSelect")
-    # self.horizontalLayout_channelSelect.addWidget(self.label_channelSelect)
-    # self.gridLayout_49.addLayout(self.horizontalLayout_channelSelect, 1, 4, 1, 1)
-
-
     self.horizontalLayout_normalization = QtWidgets.QHBoxLayout()
     self.horizontalLayout_normalization.setObjectName("horizontalLayout_normalization")
     self.label_NormalizationIcon = QtWidgets.QLabel(self.groupBox_imgProc)
@@ -464,8 +451,18 @@ def setup_main_ui(self,gpu_nr):
     self.comboBox_zoomOrder.addItem("")
     self.comboBox_zoomOrder.addItem("")
     self.comboBox_zoomOrder.setMaximumSize(QtCore.QSize(100, 16777215))
-    
     self.gridLayout_49.addWidget(self.comboBox_zoomOrder, 2, 1, 1, 1)
+    
+    self.pushButton_selectChannels = QtWidgets.QPushButton(self.groupBox_imgProc)
+    self.pushButton_selectChannels.setObjectName("pushButton_selectChannels")
+    self.pushButton_selectChannels.clicked.connect(self.channelSelection_popup)
+    self.gridLayout_49.addWidget(self.pushButton_selectChannels, 2, 4, 1, 1)
+
+    
+    
+    
+    
+    
     self.gridLayout_44.addWidget(self.groupBox_imgProc, 1, 0, 1, 1)
 
 
@@ -870,6 +867,12 @@ def setup_main_ui(self,gpu_nr):
     self.radioButton_gpu.setIcon(icon)
 
     self.label_colorModeIcon.setPixmap(QtGui.QPixmap(os.path.join(dir_root,"art",Default_dict["Icon theme"],"color_mode.png")))
+    
+    icon = QtGui.QIcon()
+    icon.addPixmap(QtGui.QPixmap(os.path.join(dir_root,"art",Default_dict["Icon theme"],"layers.png")), QtGui.QIcon.Normal, QtGui.QIcon.Off)
+    self.pushButton_selectChannels.setIcon(icon)
+    self.pushButton_selectChannels.setIconSize(QtCore.QSize(18, 18))
+    
     self.label_NormalizationIcon.setPixmap(QtGui.QPixmap(os.path.join(dir_root,"art",Default_dict["Icon theme"],"normalization.png")))
     self.label_padIcon.setPixmap(QtGui.QPixmap(os.path.join(dir_root,"art",Default_dict["Icon theme"],"padding.png")))
     self.label_zoomIcon.setPixmap(QtGui.QPixmap(os.path.join(dir_root,"art",Default_dict["Icon theme"],"zoom_order.png")))
@@ -2401,7 +2404,7 @@ def setup_main_ui(self,gpu_nr):
     #self.label_Crop.stateChanged.connect(self.activate_deactivate_spinbox)
     
     self.spinBox_imagecrop.valueChanged.connect(self.delete_ram)
-    self.colorModes = ["Grayscale","RGB"]
+    self.colorModes = ["Grayscale","RGB"]#,"MultiChannel"]
     self.comboBox_GrayOrRGB.addItems(self.colorModes)
     self.comboBox_GrayOrRGB.setCurrentIndex(0)             
     self.comboBox_GrayOrRGB.currentIndexChanged.connect(self.gray_or_rgb_augmentation)            
@@ -2466,7 +2469,7 @@ def setup_main_ui(self,gpu_nr):
 
 
     ###########################Assess Model################################
-    self.comboBox_loadedRGBorGray.addItems(["Grayscale","RGB"])
+    self.comboBox_loadedRGBorGray.addItems(["Grayscale","RGB"])#,"MultiChannel"])
     self.groupBox_loadModel.setMaximumSize(QtCore.QSize(16777215, 120))
     self.label_ModelIndex_2.setMinimumSize(QtCore.QSize(68, 25))
     self.label_ModelIndex_2.setMaximumSize(QtCore.QSize(68, 25))
@@ -2602,7 +2605,7 @@ def setup_main_ui(self,gpu_nr):
             self.pushButton_2dOptions.setEnabled(False)
         if text == "RGB":
             self.pushButton_2dOptions.setEnabled(False)
-        if text == "Select Ch":
+        if text == "MultiChannel":
             self.pushButton_2dOptions.setEnabled(True)
             
     self.comboBox_GrayOrRGB_2.currentTextChanged.connect(rgb_options_switch)
@@ -3084,6 +3087,8 @@ def retranslate_main_ui(self,gpu_nr,VERSION):
     self.label_zoomIcon.setToolTip(_translate("MainWindow", tooltips["label_zoomIcon"], None))
     self.label_zoomOrder.setText(_translate("MainWindow", "Zoom order", None))
     self.label_zoomOrder.setToolTip(_translate("MainWindow", tooltips["label_zoomIcon"], None))
+    self.pushButton_selectChannels.setText(_translate("MainWindow", "Select Channels...", None))
+    self.pushButton_selectChannels.setToolTip(_translate("MainWindow", tooltips["pushButton_selectChannels"], None))
 
 
     self.comboBox_paddingMode.setItemText(0, _translate("MainWindow", "constant", None))
@@ -3511,7 +3516,7 @@ def retranslate_main_ui(self,gpu_nr,VERSION):
     self.groupBox_plottingOptions.setTitle(_translate("MainWindow", "Plotting options", None))
     self.label_kde.setText(_translate("MainWindow", "KDE", None))
     self.comboBox_kde.addItems(["None","2d Histogram","Gauss"])
-    self.comboBox_GrayOrRGB_2.addItems(["Grayscale","RGB","Select Ch"])
+    self.comboBox_GrayOrRGB_2.addItems(["Grayscale","RGB","MultiChannel"])
 
     self.checkBox_centroid.setText(_translate("MainWindow", "Centroid", None))
     self.checkBox_contour.setText(_translate("MainWindow", "Contour", None))
@@ -4740,13 +4745,8 @@ class Fitting_Ui(QtWidgets.QWidget):
         self.Histories = [] #List container for the fitting histories, that are produced by the keras.fit function that is controlled by this popup
         self.RealTime_Acc,self.RealTime_ValAcc,self.RealTime_Loss,self.RealTime_ValLoss = [],[],[],[]
         self.RealTime_OtherMetrics = {} #provide dictionary where AID can save all other metrics in case there are some (like precision...)
-        self.X_batch_aug = []#list for storing augmented image, created by some parallel processes
-        self.threadpool_quad = QtCore.QThreadPool()#Threadpool for image augmentation
-        self.threadpool_quad.setMaxThreadCount(4)#Maximum 4 threads
-        self.threadpool_quad_count = 0 #count nr. of threads in queue; 
         self.clr_settings = {} #variable to store step_size and gamma, will be filled with information when starting to fit
         self.optimizer_settings = {} #dict to store advanced optimizer settings
-        
         self.epoch_counter = 0 #Counts the nr. of epochs
         self.tableWidget_HistoryInfo_pop.setMinimumSize(QtCore.QSize(0, 100))
         self.tableWidget_HistoryInfo_pop.setMaximumSize(QtCore.QSize(16777215, 140))
@@ -7769,7 +7769,7 @@ class QRangeSlider(QtWidgets.QWidget, Ui_Form):
         _unlockWidth(self._handle)
 
 class Ui_2dOptions(object):
-    def setupUi(self, Form,keys_image):
+    def setupUi(self, Form,keys_2d_image):
         Form.setObjectName("Form")
         Form.resize(481, 208)
         self.gridLayout = QtWidgets.QGridLayout(Form)
@@ -7826,8 +7826,8 @@ class Ui_2dOptions(object):
         self.spinBox_maxChX = []
 
 
-        for ith in range(len(keys_image)):
-            key_image = keys_image[ith]
+        for ith in range(len(keys_2d_image)):
+            key_image = keys_2d_image[ith]
             self.label_layername_chX.append( QtWidgets.QLabel(self.groupBox_layerControl) )
             self.label_layername_chX[ith].setText(key_image)
             self.label_layername_chX[ith].setObjectName("label_layername_ch"+str(ith))
@@ -7939,6 +7939,69 @@ class Ui_2dOptions(object):
         self.spinBox_minChX[ith].setValue(start)
         self.spinBox_maxChX[ith].setValue(stop)
 
+class Ui_channelSelection(object):
+    def setupUi(self, UI_channelSelection,channels_available,channels_selected):
+        UI_channelSelection.setObjectName("UI_channelSelection")
+        UI_channelSelection.resize(200, 210)
+        self.gridLayout = QtWidgets.QGridLayout(UI_channelSelection)
+        self.gridLayout.setObjectName("gridLayout")
+        self.scrollArea_layerControls = QtWidgets.QScrollArea(UI_channelSelection)
+        self.scrollArea_layerControls.setWidgetResizable(True)
+        self.scrollArea_layerControls.setObjectName("scrollArea_layerControls")
+        self.scrollAreaWidgetContents = QtWidgets.QWidget()
+        self.scrollAreaWidgetContents.setGeometry(QtCore.QRect(0, 0, 200, 157))
+        self.scrollAreaWidgetContents.setObjectName("scrollAreaWidgetContents")
+        self.gridLayout_2 = QtWidgets.QGridLayout(self.scrollAreaWidgetContents)
+        self.gridLayout_2.setObjectName("gridLayout_2")
+        self.groupBox_layerControl = QtWidgets.QGroupBox(self.scrollAreaWidgetContents)
+        self.groupBox_layerControl.setObjectName("groupBox_layerControl")
+        self.gridLayout_3 = QtWidgets.QGridLayout(self.groupBox_layerControl)
+        self.gridLayout_3.setObjectName("gridLayout_3")
+        
+        #get the keys of avaiable 2d features from self
+        self.checkBox_show_chX = []
+        for ith in range(len(channels_available)):
+            channel_name = channels_available[ith]
+            self.checkBox_show_chX.append( QtWidgets.QCheckBox(self.groupBox_layerControl) )
+            self.checkBox_show_chX[ith].setLayoutDirection(QtCore.Qt.LeftToRight)
+            self.checkBox_show_chX[ith].setText(channel_name)
+
+            if channel_name in channels_selected:
+                self.checkBox_show_chX[ith].setChecked(True)
+            self.checkBox_show_chX[ith].setObjectName("checkBox_show_ch"+str(ith))
+            self.gridLayout_3.addWidget(self.checkBox_show_chX[ith], ith+1, 0, 1, 1)
+
+        self.gridLayout_2.addWidget(self.groupBox_layerControl, 0, 0, 1, 2)
+        
+        self.scrollArea_layerControls.setWidget(self.scrollAreaWidgetContents)
+        self.gridLayout.addWidget(self.scrollArea_layerControls, 0, 0, 1, 1)
+        self.horizontalLayout = QtWidgets.QHBoxLayout()
+        self.horizontalLayout.setObjectName("horizontalLayout")
+        self.pushButton_reset = QtWidgets.QPushButton(UI_channelSelection)
+        icon = QtGui.QIcon()
+        icon.addPixmap(QtGui.QPixmap(os.path.join(dir_root,"art",Default_dict["Icon theme"],"reset.png")), QtGui.QIcon.Normal, QtGui.QIcon.Off)
+        self.pushButton_reset.setIcon(icon)
+        self.pushButton_reset.setIconSize(QtCore.QSize(18, 18))
+        self.pushButton_reset.setObjectName("pushButton_reset")
+        self.horizontalLayout.addWidget(self.pushButton_reset)
+        # self.pushButton_accept = QtWidgets.QPushButton(UI_channelSelection)
+        # icon = QtGui.QIcon()
+        # icon.addPixmap(QtGui.QPixmap(os.path.join(dir_root,"art",Default_dict["Icon theme"],"check.png")), QtGui.QIcon.Normal, QtGui.QIcon.Off)
+        # self.pushButton_accept.setIcon(icon)
+        # self.pushButton_accept.setIconSize(QtCore.QSize(18, 18))
+        # self.pushButton_accept.setObjectName("pushButton_accept")
+        # self.horizontalLayout.addWidget(self.pushButton_accept)
+        self.gridLayout.addLayout(self.horizontalLayout, 1, 0, 1, 1)
+
+        self.retranslateUi(UI_channelSelection)
+        QtCore.QMetaObject.connectSlotsByName(UI_channelSelection)
+        
+    def retranslateUi(self, UI_channelSelection):
+        _translate = QtCore.QCoreApplication.translate
+        UI_channelSelection.setWindowTitle(_translate("UI_channelSelection", " "))
+        self.groupBox_layerControl.setTitle(_translate("UI_channelSelection", "Channel Selection"))
+        self.pushButton_reset.setText(_translate("UI_channelSelection", "Reset"))
+        # self.pushButton_accept.setText(_translate("UI_channelSelection", "Accept"))
 
 
 class Ui_1dOptions(object):
