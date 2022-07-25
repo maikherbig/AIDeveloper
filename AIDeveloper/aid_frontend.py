@@ -926,7 +926,7 @@ def setup_main_ui(self,gpu_nr):
 
     #There will be text on the label_colorMode (Color Mode), find out how "long" the text is and 
     #resize the label to that
-    width=self.label_colorMode.fontMetrics().boundingRect(max(["Color Mode"], key=len)).width()
+    width=self.label_colorMode.fontMetrics().boundingRect(max(["Color mode"], key=len)).width()
     height = self.label_colorMode.geometry().height()
     self.label_colorMode.setMaximumSize(QtCore.QSize(width, height))
 
@@ -3115,7 +3115,7 @@ def retranslate_main_ui(self,gpu_nr,VERSION):
     self.comboBox_Normalization.setToolTip(_translate("MainWindow", tooltips["label_Normalization"], None))
 
     self.label_colorModeIcon.setToolTip(_translate("MainWindow", tooltips["label_colorMode"], None))
-    self.label_colorMode.setText(_translate("MainWindow", "Color Mode", None))
+    self.label_colorMode.setText(_translate("MainWindow", "Color mode", None))
     self.label_colorMode.setToolTip(_translate("MainWindow", tooltips["label_colorMode"],None))    
     self.comboBox_GrayOrRGB.setToolTip(_translate("MainWindow", tooltips["label_colorMode"],None))
 
@@ -4908,7 +4908,7 @@ class Fitting_Ui(QtWidgets.QWidget):
         self.comboBox_ModelSelection_pop.setToolTip(_translate("Form", tooltips["comboBox_ModelSelection"], None))
 
         self.label_colorMode_pop.setToolTip(_translate("Form", "Color mode used for this model", None))
-        self.label_colorMode_pop.setText(_translate("Form", "Color Mode", None))
+        self.label_colorMode_pop.setText(_translate("Form", "Color mode", None))
         self.label_colorModeIcon_pop.setToolTip(_translate("Form", "Color mode used for this model", None))
 
         self.comboBox_colorMode_pop.setToolTip(_translate("Form", "Color mode used for this model", None))
@@ -5590,7 +5590,7 @@ class popup_trainability(QtWidgets.QWidget):
 #        self.label_pop_pTr_norm.setText(_translate("Form", "Normalization", None))
         self.label_pop_pTr_inpSize.setText(_translate("Form", "Input size", None))
         self.label_pop_pTr_outpSize.setText(_translate("Form", "Output classes", None))
-        self.label_pop_pTr_colorMode.setText(_translate("Form", "Color Mode", None))
+        self.label_pop_pTr_colorMode.setText(_translate("Form", "Color mode", None))
         self.groupBox_pop_pTr_layersTable.setTitle(_translate("Form", "Layers", None))
         self.groupBox_pop_pTr_modelSummary.setTitle(_translate("Form", "Model summary", None))
 
@@ -6349,7 +6349,7 @@ class popup_lrfinder(QtWidgets.QWidget):
         _translate = QtCore.QCoreApplication.translate
         Form_LrFinder.setWindowTitle(_translate("Form_LrFinder", "LR Screening", None))
         self.groupBox_model.setTitle(_translate("Form_LrFinder", "Model", None))
-        self.label_colorMode.setText(_translate("Form_LrFinder", "Color Mode"))              
+        self.label_colorMode.setText(_translate("Form_LrFinder", "Color mode"))              
         self.label_inpImgSize.setText(_translate("Form_LrFinder", "Input img. crop", None))
         self.lineEdit_loadModel.setToolTip(_translate("Form_LrFinder", tooltips["lineEdit_LoadModel_3"], None))
         self.comboBox_optimizer.setItemText(0, _translate("Form_LrFinder", "Adam", None))
@@ -6931,9 +6931,9 @@ def message(msg_text,msg_type="Error"):
     msg.exec_()
 
 def load_hyper_params(ui_item,para):
-    if para["new_model"].iloc[-1]==True:
+    if para["New model"].iloc[-1]==True:
         ui_item.radioButton_NewModel.setChecked(True)
-        prop = str(para["Chosen Model"].iloc[-1])
+        prop = str(para["Chosen model"].iloc[-1])
         index = ui_item.comboBox_ModelSelection.findText(prop, QtCore.Qt.MatchFixedString)
         if index >= 0:
             ui_item.comboBox_ModelSelection.setCurrentIndex(index)
@@ -6954,7 +6954,7 @@ def load_hyper_params(ui_item,para):
         print("Cound not find parameter for 'Input image size' in the meta file")
     ui_item.spinBox_imagecrop.setValue(prop)
     try:
-        prop = para["Color Mode"].iloc[-1]
+        prop = para["Color mode"].iloc[-1]
         index = ui_item.comboBox_GrayOrRGB.findText(prop, QtCore.Qt.MatchFixedString)
         if index >= 0:
             ui_item.comboBox_GrayOrRGB.setCurrentIndex(index)
@@ -7200,8 +7200,8 @@ def load_hyper_params(ui_item,para):
 
 def get_hyper_params(Para_dict,ui_item):
     Para_dict["Modelname"]=str(ui_item.lineEdit_modelname.text()),
-    Para_dict["Chosen Model"]=str(ui_item.comboBox_ModelSelection.currentText()),
-    Para_dict["new_model"]=ui_item.radioButton_NewModel.isChecked(),
+    Para_dict["Chosen model"]=str(ui_item.comboBox_ModelSelection.currentText()),
+    Para_dict["New model"]=ui_item.radioButton_NewModel.isChecked(),
     Para_dict["loadrestart_model"]=ui_item.radioButton_LoadRestartModel.isChecked(),
     Para_dict["loadcontinue_model"]=ui_item.radioButton_LoadContinueModel.isChecked(),
     if ui_item.radioButton_LoadRestartModel.isChecked():
@@ -7214,7 +7214,7 @@ def get_hyper_params(Para_dict,ui_item):
         load_modelname = ""
     Para_dict["Continued_Fitting_From"]=load_modelname,                        
     Para_dict["Input image size"]=int(ui_item.spinBox_imagecrop.value()) ,
-    Para_dict["Color Mode"]=str(ui_item.comboBox_GrayOrRGB.currentText()),
+    Para_dict["Color mode"]=str(ui_item.comboBox_GrayOrRGB.currentText()),
     try: Para_dict["Zoom order"]=int(ui_item.comboBox_zoomOrder.currentIndex()), 
     except Exception as e:
         message(e)
