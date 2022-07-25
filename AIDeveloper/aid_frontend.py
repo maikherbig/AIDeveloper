@@ -6962,7 +6962,7 @@ def load_hyper_params(ui_item,para):
         message(e)
     try:
         prop = para["Selected channels"].iloc[-1]
-        ui_item.channels_selected = prop
+        ui_item.channels_selected = list(eval(prop))
     except Exception as e:
         message(e)
     try:
