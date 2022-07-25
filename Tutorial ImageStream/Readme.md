@@ -16,7 +16,7 @@ First, install Java development kit (JDK). Windows installers can be obtained [o
 Next, a Python distribution is required. I like to work with [miniconda](https://docs.conda.io/en/latest/miniconda.html). 
 Using conda, create a Python environment using following commands:
 ```
-conda create -n imagestream1 python==3.9 spyder==5 typing-extensions==3.7.4.3
+conda create -n imagestream1 python==3.9 spyder==5
 conda activate imagestream1
 pip install javabridge==1.0.19
 pip install python-bioformats==4.0.5
