@@ -1,6 +1,6 @@
 This tutorial shows how to convert .cif files from ImageStream to .rtdc files and
 how to use AIDeveloper and YouLabel to create a dataset and train a CNN model.
-There are five steps; the last four steps are explained in a video:
+There are six steps; the five steps are explained in a video:
 
 
 1. Install Java and Python environment for converting cif files (see [below](#install-java-and-python-environment))
