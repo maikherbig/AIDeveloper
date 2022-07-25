@@ -4,7 +4,7 @@ AIDeveloper
 ---------
 @author: maikherbig
 """
-VERSION = "0.4.1" #Python 3.9.9 Version
+VERSION = "0.4.2" #Python 3.9.9 Version
 
 import os,sys,gc
 os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'
@@ -2393,6 +2393,27 @@ class MainWindow(QtWidgets.QMainWindow):
             return
             #raise ValueError("Invalid Normalization method")
 
+
+    def register_channel_selection(self):
+        channels_selected = []
+        for cb in self.popup_channelSelect_ui.checkBox_show_chX:
+            if cb.isChecked():
+                channels_selected.append(cb.text())
+        if len(channels_selected)>3: #more than 3 channels were selected
+            self.reset_channel_selection()#reset to "image"
+            return
+        self.channels_selected = channels_selected
+        print("Registered:" +str(channels_selected))
+        #return channels_selected
+    
+    def reset_channel_selection(self):
+        for cb in self.popup_channelSelect_ui.checkBox_show_chX:
+            if cb.text()=="image":
+                cb.setChecked(True)
+            else:
+                cb.setChecked(False)
+        self.register_channel_selection()
+
     def channelSelection_popup(self):
         # get iformation about clicked items
         SelectedFiles = self.items_clicked()
@@ -2416,32 +2437,12 @@ class MainWindow(QtWidgets.QMainWindow):
         # Which image channels are commonly available (in all clicked files)
         channels_available = set.intersection(*[set(x) for x in channels_available])
         channels_available = list(sorted(channels_available))
-
-        def register_channel_selection(ui):
-            channels_selected = []
-            for cb in self.popup_channelSelect_ui.checkBox_show_chX:
-                if cb.isChecked():
-                    channels_selected.append(cb.text())
-
-            #less than 3 channels are selected
-            if len(channels_selected)>3:
-                reset(ui)#reset to "image"
-            self.channels_selected = channels_selected
-            
-        def reset(ui):
-            for cb in self.popup_channelSelect_ui.checkBox_show_chX:
-                if cb.text()=="image":
-                    cb.setChecked(True)
-                else:
-                    cb.setChecked(False)
-                register_channel_selection(ui)
-
         self.popup_channelSelect = MyPopup()
         self.popup_channelSelect_ui = aid_frontend.Ui_channelSelection()
         self.popup_channelSelect_ui.setupUi(self.popup_channelSelect,channels_available,self.channels_selected) #open a popup to show advances settings for optimizer
         for cb in self.popup_channelSelect_ui.checkBox_show_chX:
-            cb.clicked.connect(register_channel_selection) 
-        self.popup_channelSelect_ui.pushButton_reset.clicked.connect(reset)
+            cb.clicked.connect(self.register_channel_selection) 
+        self.popup_channelSelect_ui.pushButton_reset.clicked.connect(self.reset_channel_selection)
         
         self.popup_channelSelect.show()
 
@@ -4613,7 +4614,8 @@ class MainWindow(QtWidgets.QMainWindow):
                     #Check if there is data already available in RAM
                     if len(self.ram)==0:#if there is already data stored on ram
                         print("No data on RAM. I have to load")
-                        dic = aid_img.crop_imgs_to_ram(list(SelectedFiles),cropsize2,zoom_factors=zoom_factors,zoom_order=zoom_order,color_mode=color_mode)
+                        dic = aid_img.crop_imgs_to_ram(list(SelectedFiles),cropsize2,
+                            zoom_factors=zoom_factors,zoom_order=zoom_order,color_mode=color_mode,channel_list=self.channels_selected)
                         self.ram = dic 
 
                     else: 
@@ -4622,7 +4624,8 @@ class MainWindow(QtWidgets.QMainWindow):
                         identical = aid_bin.ram_compare_data(self.ram,new_fileinfo)
                         if not identical:
                             #Load the data
-                            dic = aid_img.crop_imgs_to_ram(list(SelectedFiles),cropsize2,zoom_factors=zoom_factors,zoom_order=zoom_order,color_mode=color_mode)
+                            dic = aid_img.crop_imgs_to_ram(list(SelectedFiles),cropsize2,zoom_factors=zoom_factors,
+                                zoom_order=zoom_order,color_mode=color_mode,channel_list=self.channels_selected)
                             self.ram = dic 
                         if identical:
                             msg = QtWidgets.QMessageBox()
@@ -4640,7 +4643,8 @@ class MainWindow(QtWidgets.QMainWindow):
                                 #Re-use same data
                             elif retval==1:
                                 print("Re-load data")
-                                dic = aid_img.crop_imgs_to_ram(list(SelectedFiles),cropsize2,zoom_factors=zoom_factors,zoom_order=zoom_order,color_mode=color_mode)
+                                dic = aid_img.crop_imgs_to_ram(list(SelectedFiles),cropsize2,zoom_factors=zoom_factors,
+                                    zoom_order=zoom_order,color_mode=color_mode,channel_list=self.channels_selected)
                                 self.ram = dic 
 
                 #Finally, activate the 'Fit model' button again
@@ -5108,7 +5112,7 @@ class MainWindow(QtWidgets.QMainWindow):
                         #Replace=true: means individual cells could occur several times
                         gen_train = aid_img.gen_crop_img(crop,rtdc_path_train[i],random_images=False,
                             zoom_factor=zoom_factors_train[i],zoom_order=zoom_order,
-                            color_mode=self.get_color_mode(),padding_mode=paddingMode,channel_list=self.channels_selected) 
+                            color_mode=self.get_color_mode(),padding_mode=paddingMode,channel_list=channels_selected) 
     #                    else: #get a similar generator, using the ram-data
     #                        if len(DATA)==0:
                                 # Replace true means that individual cells could occur several times
@@ -5303,14 +5307,14 @@ class MainWindow(QtWidgets.QMainWindow):
                     gen_valid = aid_img.gen_crop_img(crop,rtdc_path_valid[i],nr_events_epoch_valid[i],
                         random_images=shuffle_valid[i],replace=True,zoom_factor=zoom_factors_valid[i],
                         zoom_order=zoom_order,color_mode=self.get_color_mode(),
-                        padding_mode=paddingMode,xtra_in=xtra_in,channel_list=self.channels_selected)
+                        padding_mode=paddingMode,xtra_in=xtra_in,channel_list=channels_selected)
                 else: #get a similar generator, using the ram-data
                     if len(DATA)==0:
                         #Replace=true means individual cells could occur several times
                         gen_valid = aid_img.gen_crop_img(crop,rtdc_path_valid[i],nr_events_epoch_valid[i],
                             random_images=shuffle_valid[i],replace=True,zoom_factor=zoom_factors_valid[i],
                             zoom_order=zoom_order,color_mode=self.get_color_mode(),
-                            padding_mode=paddingMode,xtra_in=xtra_in,channel_list=self.channels_selected)
+                            padding_mode=paddingMode,xtra_in=xtra_in,channel_list=channels_selected)
                     else:
                         gen_valid = aid_img.gen_crop_img_ram(DATA,rtdc_path_valid[i],nr_events_epoch_valid[i],
                             random_images=shuffle_valid[i],replace=True,xtra_in=xtra_in)
@@ -5578,7 +5582,7 @@ class MainWindow(QtWidgets.QMainWindow):
                             #Replace true means that individual cells could occur several times
                             gen_train = aid_img.gen_crop_img(cropsize2,rtdc_path_train[i],nr_events_epoch_train[i],
                                 random_images=shuffle_train[i],replace=True,zoom_factor=zoom_factors_train[i],
-                                zoom_order=zoom_order,color_mode=self.get_color_mode(),padding_mode=paddingMode,xtra_in=xtra_in,channel_list=self.channels_selected) 
+                                zoom_order=zoom_order,color_mode=self.get_color_mode(),padding_mode=paddingMode,xtra_in=xtra_in,channel_list=channels_selected) 
                             gen_train_refresh = False
                         else:
                             gen_train = aid_img.gen_crop_img_ram(DATA,rtdc_path_train[i],nr_events_epoch_train[i],
@@ -9219,7 +9223,8 @@ class MainWindow(QtWidgets.QMainWindow):
         cropsize2 = np.sqrt(crop**2+crop**2)
         cropsize2 = np.ceil(cropsize2 / 2.) * 2 #round to the next even number
         
-        dic = aid_img.crop_imgs_to_ram(list(SelectedFiles),crop,zoom_factors=zoom_factors,zoom_order=zoom_order,color_mode=color_mode)
+        dic = aid_img.crop_imgs_to_ram(list(SelectedFiles),crop,zoom_factors=zoom_factors,
+                                       zoom_order=zoom_order,color_mode=color_mode,channel_list=self.channels_selected)
         self.ram = dic 
         
         msg = QtWidgets.QMessageBox()
@@ -9695,8 +9700,7 @@ class MainWindow(QtWidgets.QMainWindow):
 #            #X_batch = X_batch[:,:,remove:-remove,remove:-remove] #crop to crop x crop pixels #Theano
 #            X_valid = X_valid[:,remove:-remove,remove:-remove] #crop to crop x crop pixels #TensorFlow
 
-        print("X_valid has following dimension:")
-        print(X_valid.shape)
+        print(f"X_valid has dimension: {X_valid.shape}")
         
         y_valid = np.concatenate(y_valid)
 
