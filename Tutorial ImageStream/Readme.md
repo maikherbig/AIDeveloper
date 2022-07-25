@@ -4,7 +4,7 @@ There are six steps; the five steps are explained in a video:
 
 
 1. Install Java and Python environment for converting cif files (see [below](#install-java-and-python-environment))
-2. Modify Python script to optimize conversion to .rtdc (see video)
+2. Use a [Python script](https://github.com/maikherbig/AIDeveloper/blob/master/Tutorial%20ImageStream/cif_to_rtdc_v06.py) to convert .cif to .rtdc (see video)
 3. Annotate data using [YouLabel](https://github.com/maikherbig/YouLabel/releases) (see video)
 4. Use AIDeveloper to train CNN using Multi-Channel information (see video)
 5. Use AIDeveloper to apply model to new data (see video)
