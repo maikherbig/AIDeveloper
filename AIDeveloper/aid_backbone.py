@@ -2446,8 +2446,6 @@ class MainWindow(QtWidgets.QMainWindow):
         self.popup_channelSelect.show()
 
 
-
-
     def update_plottingTab(self):           
         #Get current text of combobox (url to data set)
         url = str(self.comboBox_chooseRtdcFile.currentText())
@@ -3837,8 +3835,8 @@ class MainWindow(QtWidgets.QMainWindow):
                 if os.path.isfile(metaname):
                     #open the metafile
                     meta = pd.read_excel(metaname,sheet_name="Parameters",engine="openpyxl")
-                    if "Chosen Model" in list(meta.keys()):
-                        chosen_model = meta["Chosen Model"].iloc[-1]
+                    if "Chosen model" in list(meta.keys()):
+                        chosen_model = meta["Chosen model"].iloc[-1]
                     else:
                         #Try to get the model architecture and adjust the combobox
                         try:
@@ -3881,8 +3879,8 @@ class MainWindow(QtWidgets.QMainWindow):
                     if os.path.isfile(metaname):
                         #open the metafile
                         meta = pd.read_excel(metaname,sheet_name="Parameters",engine="openpyxl")
-                        if "Chosen Model" in list(meta.keys()):
-                            chosen_model = meta["Chosen Model"].iloc[-1]
+                        if "Chosen model" in list(meta.keys()):
+                            chosen_model = meta["Chosen model"].iloc[-1]
                         else:
                             #Try to get the model architecture and adjust the combobox
                             try:
@@ -4087,8 +4085,8 @@ class MainWindow(QtWidgets.QMainWindow):
                     if os.path.isfile(metaname):
                         #open the metafile
                         meta = pd.read_excel(metaname,sheet_name="Parameters",engine="openpyxl")
-                        if "Chosen Model" in list(meta.keys()):
-                            chosen_model = meta["Chosen Model"].iloc[-1]
+                        if "Chosen model" in list(meta.keys()):
+                            chosen_model = meta["Chosen model"].iloc[-1]
                 except:
                     chosen_model = str(self.comboBox_ModelSelection.currentText())
                     
@@ -4178,8 +4176,8 @@ class MainWindow(QtWidgets.QMainWindow):
                     if os.path.isfile(metaname):
                         #open the metafile
                         meta = pd.read_excel(metaname,sheet_name="Parameters",engine="openpyxl")
-                        if "Chosen Model" in list(meta.keys()):
-                            chosen_model = meta["Chosen Model"].iloc[-1]
+                        if "Chosen model" in list(meta.keys()):
+                            chosen_model = meta["Chosen model"].iloc[-1]
                     else:
                         chosen_model = str(self.comboBox_ModelSelection.currentText())
     
@@ -4774,6 +4772,7 @@ class MainWindow(QtWidgets.QMainWindow):
                 
             crop = int(self.spinBox_imagecrop.value())      
             color_mode = str(self.comboBox_GrayOrRGB.currentText())
+            channels_selected = self.channels_selected
             
             loadrestart_model = self.radioButton_LoadRestartModel.isChecked()
             loadcontinue_model = self.radioButton_LoadContinueModel.isChecked()
@@ -5152,13 +5151,14 @@ class MainWindow(QtWidgets.QMainWindow):
                     Para_dict["CPU"]="Unknown",
     
                 Para_dict["Modelname"]=new_modelname,
-                Para_dict["Chosen Model"]=chosen_model,
-                Para_dict["new_model"]=new_model,
+                Para_dict["Chosen model"]=chosen_model,
+                Para_dict["New model"]=new_model,
                 Para_dict["loadrestart_model"]=loadrestart_model,
                 Para_dict["loadcontinue_model"]=loadcontinue_model,
                 Para_dict["Continued_Fitting_From"]=load_modelname,                        
                 Para_dict["Input image size"]=crop,
-                Para_dict["Color Mode"]=color_mode,
+                Para_dict["Color mode"]=color_mode,
+                Para_dict["Selected channels"]=channels_selected,
                 Para_dict["Zoom order"]=zoom_order,                
                 Para_dict["Device"]=deviceSelected,
                 Para_dict["gpu_used"]=gpu_used,
@@ -5262,7 +5262,7 @@ class MainWindow(QtWidgets.QMainWindow):
     
                 if collection==True:
                     for i in range(len(Writers)):
-                        Para_dict["Chosen Model"]=model_architecture_names[i],
+                        Para_dict["Chosen model"]=model_architecture_names[i],
                         writer = Writers[i]
                         if counter==0:
                             Para_dict.to_excel(Writers[i],sheet_name='Parameters')
