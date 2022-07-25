@@ -483,8 +483,11 @@ class MainWindow(QtWidgets.QMainWindow):
                 if "image" in features and "pos_x" in features and "pos_y" in features:
                     nr_images = rtdc_ds["events"]["image"].len()
                     pix = rtdc_ds.attrs["imaging:pixel size"]
+
                     xtra_in_available = len(rtdc_ds.keys())>2 #Is True, only if there are more than 2 elements. 
-                    fileinfo.append({"rtdc_ds":rtdc_ds,"rtdc_path":rtdc_path,"features":features,"nr_images":nr_images,"pix":pix,"xtra_in":xtra_in_available})
+                    fileinfo.append({"rtdc_ds":rtdc_ds,"rtdc_path":rtdc_path,"features":features,\
+                                     "nr_images":nr_images,"pix":pix,\
+                                     "xtra_in":xtra_in_available})
                 else:
                     missing = []
                     for feat in ["image","pos_x","pos_y"]:
@@ -2390,6 +2393,61 @@ class MainWindow(QtWidgets.QMainWindow):
             return
             #raise ValueError("Invalid Normalization method")
 
+    def channelSelection_popup(self):
+        # get iformation about clicked items
+        SelectedFiles = self.items_clicked()
+        if len(SelectedFiles)==0:
+            text = "Please first select data"
+            aid_frontend.message(text,"Error")
+            return
+        
+        channels_available = []
+        for item in SelectedFiles:
+            rtdc_ds = item["rtdc_ds"]
+            keys = rtdc_ds["events"].keys()
+
+            keys_2d_image_ = []
+            for key in keys:
+                if type(rtdc_ds["events"][key])==h5py._hl.dataset.Dataset:
+                    shape = rtdc_ds["events"][key].shape
+                    if len(shape)==3: #image features have special shape (N,H,W)
+                        keys_2d_image_.append(key)
+            channels_available.append(keys_2d_image_)
+        # Which image channels are commonly available (in all clicked files)
+        channels_available = set.intersection(*[set(x) for x in channels_available])
+        channels_available = list(sorted(channels_available))
+
+        def register_channel_selection(ui):
+            channels_selected = []
+            for cb in self.popup_channelSelect_ui.checkBox_show_chX:
+                if cb.isChecked():
+                    channels_selected.append(cb.text())
+
+            #less than 3 channels are selected
+            if len(channels_selected)>3:
+                reset(ui)#reset to "image"
+            self.channels_selected = channels_selected
+            
+        def reset(ui):
+            for cb in self.popup_channelSelect_ui.checkBox_show_chX:
+                if cb.text()=="image":
+                    cb.setChecked(True)
+                else:
+                    cb.setChecked(False)
+                register_channel_selection(ui)
+
+        self.popup_channelSelect = MyPopup()
+        self.popup_channelSelect_ui = aid_frontend.Ui_channelSelection()
+        self.popup_channelSelect_ui.setupUi(self.popup_channelSelect,channels_available,self.channels_selected) #open a popup to show advances settings for optimizer
+        for cb in self.popup_channelSelect_ui.checkBox_show_chX:
+            cb.clicked.connect(register_channel_selection) 
+        self.popup_channelSelect_ui.pushButton_reset.clicked.connect(reset)
+        
+        self.popup_channelSelect.show()
+
+
+
+
     def update_plottingTab(self):           
         #Get current text of combobox (url to data set)
         url = str(self.comboBox_chooseRtdcFile.currentText())
@@ -2398,12 +2456,8 @@ class MainWindow(QtWidgets.QMainWindow):
 
         failed,rtdc_ds = aid_bin.load_rtdc(url)
         if failed:
-            msg = QtWidgets.QMessageBox()
-            msg.setIcon(QtWidgets.QMessageBox.Critical)       
-            msg.setText(str(rtdc_ds))
-            msg.setWindowTitle("Error occurred during loading file")
-            msg.setStandardButtons(QtWidgets.QMessageBox.Ok)
-            msg.exec_()
+            text = "Error occurred during loading of file: "+str(rtdc_ds)
+            aid_frontend.message(text,"Error")
             return
 
         keys = list(rtdc_ds["events"].keys())
@@ -2455,12 +2509,14 @@ class MainWindow(QtWidgets.QMainWindow):
         self.init_1d_options(keys_1d)
             
     def init_contour_options(self,keys_2d):
-        print("Work in progress")
+        # "Work in progress"
+        return
         # self.popup_layercontrols = MyPopup()
         # self.popup_layercontrols_ui = frontend.Ui_LayerControl()
         # self.popup_layercontrols_ui.setupUi(self.popup_layercontrols,keys_2d) #open a popup
     def init_centroid_options(self,keys_image):
-        print("Work in progress")
+        # "Work in progress"
+        return
         # self.popup_centroid_options = MyPopup()
         # self.popup_centroid_options_ui = aid_frontend.Ui_centroid_options()
         # self.popup_centroid_options_ui.setupUi(self.popup_centroid_options,keys_image) #open a popup
@@ -2646,7 +2702,7 @@ class MainWindow(QtWidgets.QMainWindow):
             else:
                 img = np.expand_dims(img,-1)
         
-        if color_mode=="Select Ch":
+        if color_mode=="MultiChannel":
             keys_2d = [self.popup_2dOptions_ui.label_layername_chX[i].text() for i in range(channels)]
             #make sure each image channel is a grayscale image (single channel)
             shape_len = [len(rtdc_ds["events"][key].shape) for key in keys_2d]
@@ -2734,7 +2790,7 @@ class MainWindow(QtWidgets.QMainWindow):
         elif color_mode=="RGB" and channels==3:
             self.widget_showCell.setImage(np.swapaxes(img,0,1))
             self.widget_showCell.setLevels(0,255)
-        elif color_mode=="Select Ch" and channels==3:
+        elif color_mode=="MultiChannel" and channels==3:
             self.widget_showCell.setImage(np.swapaxes(img,0,1))
             self.widget_showCell.setLevels(0,255)
 
@@ -4212,7 +4268,7 @@ class MainWindow(QtWidgets.QMainWindow):
                 if len(indices_unique)<2:
                     msg = QtWidgets.QMessageBox()
                     msg.setIcon(QtWidgets.QMessageBox.Information)       
-                    msg.setText("Need at least two classes to fit. Please specify .rtdc files and corresponding indeces")
+                    msg.setText("Need at least two classes to fit. Please specify .rtdc files and corresponding indices")
                     msg.setWindowTitle("No valid file was chosen")
                     msg.setStandardButtons(QtWidgets.QMessageBox.Ok)
                     msg.exec_()
@@ -5053,7 +5109,7 @@ class MainWindow(QtWidgets.QMainWindow):
                         #Replace=true: means individual cells could occur several times
                         gen_train = aid_img.gen_crop_img(crop,rtdc_path_train[i],random_images=False,
                             zoom_factor=zoom_factors_train[i],zoom_order=zoom_order,
-                            color_mode=self.get_color_mode(),padding_mode=paddingMode) 
+                            color_mode=self.get_color_mode(),padding_mode=paddingMode,channel_list=self.channels_selected) 
     #                    else: #get a similar generator, using the ram-data
     #                        if len(DATA)==0:
                                 # Replace true means that individual cells could occur several times
@@ -5247,14 +5303,14 @@ class MainWindow(QtWidgets.QMainWindow):
                     gen_valid = aid_img.gen_crop_img(crop,rtdc_path_valid[i],nr_events_epoch_valid[i],
                         random_images=shuffle_valid[i],replace=True,zoom_factor=zoom_factors_valid[i],
                         zoom_order=zoom_order,color_mode=self.get_color_mode(),
-                        padding_mode=paddingMode,xtra_in=xtra_in)
+                        padding_mode=paddingMode,xtra_in=xtra_in,channel_list=self.channels_selected)
                 else: #get a similar generator, using the ram-data
                     if len(DATA)==0:
                         #Replace=true means individual cells could occur several times
                         gen_valid = aid_img.gen_crop_img(crop,rtdc_path_valid[i],nr_events_epoch_valid[i],
                             random_images=shuffle_valid[i],replace=True,zoom_factor=zoom_factors_valid[i],
                             zoom_order=zoom_order,color_mode=self.get_color_mode(),
-                            padding_mode=paddingMode,xtra_in=xtra_in)
+                            padding_mode=paddingMode,xtra_in=xtra_in,channel_list=self.channels_selected)
                     else:
                         gen_valid = aid_img.gen_crop_img_ram(DATA,rtdc_path_valid[i],nr_events_epoch_valid[i],
                             random_images=shuffle_valid[i],replace=True,xtra_in=xtra_in)
@@ -5522,7 +5578,7 @@ class MainWindow(QtWidgets.QMainWindow):
                             #Replace true means that individual cells could occur several times
                             gen_train = aid_img.gen_crop_img(cropsize2,rtdc_path_train[i],nr_events_epoch_train[i],
                                 random_images=shuffle_train[i],replace=True,zoom_factor=zoom_factors_train[i],
-                                zoom_order=zoom_order,color_mode=self.get_color_mode(),padding_mode=paddingMode,xtra_in=xtra_in) 
+                                zoom_order=zoom_order,color_mode=self.get_color_mode(),padding_mode=paddingMode,xtra_in=xtra_in,channel_list=self.channels_selected) 
                             gen_train_refresh = False
                         else:
                             gen_train = aid_img.gen_crop_img_ram(DATA,rtdc_path_train[i],nr_events_epoch_train[i],
@@ -7132,7 +7188,7 @@ class MainWindow(QtWidgets.QMainWindow):
                         #Replace=true: means individual cells could occur several times
                         gen_train = aid_img.gen_crop_img(crop,rtdc_path_train[i],random_images=False,
                             zoom_factor=zoom_factors_train[i],zoom_order=zoom_order,
-                            color_mode=self.get_color_mode(),padding_mode=paddingMode) 
+                            color_mode=self.get_color_mode(),padding_mode=paddingMode,channel_list=self.channels_selected) 
                     else:
                         gen_train = aid_img.gen_crop_img_ram(self.ram,rtdc_path_train[i],random_images=False) 
                         if self.actionVerbose.isChecked():
@@ -7178,7 +7234,7 @@ class MainWindow(QtWidgets.QMainWindow):
                     gen_valid = aid_img.gen_crop_img(crop,rtdc_path_valid[i],
                         int(np.rint(percDataV*nr_events_epoch_valid[i])),random_images=shuffle_valid[i],
                         replace=True,zoom_factor=zoom_factors_valid[i],zoom_order=zoom_order,
-                        color_mode=self.get_color_mode(),padding_mode=paddingMode,xtra_in=xtra_in)
+                        color_mode=self.get_color_mode(),padding_mode=paddingMode,xtra_in=xtra_in,channel_list=self.channels_selected)
                 else:#get a similar generator, using the ram-data
                     gen_valid = aid_img.gen_crop_img_ram(self.ram,rtdc_path_valid[i],
                         int(np.rint(percDataV*nr_events_epoch_valid[i])),random_images=shuffle_valid[i],
@@ -7249,7 +7305,7 @@ class MainWindow(QtWidgets.QMainWindow):
                     gen_train = aid_img.gen_crop_img(cropsize2,rtdc_path_train[i],
                         int(np.rint(percDataT*nr_events_epoch_train[i])),random_images=shuffle_train[i],
                         replace=True,zoom_factor=zoom_factors_train[i],zoom_order=zoom_order,
-                        color_mode=self.get_color_mode(),padding_mode=paddingMode,xtra_in=xtra_in) 
+                        color_mode=self.get_color_mode(),padding_mode=paddingMode,xtra_in=xtra_in,channel_list=self.channels_selected) 
                 else:
                     gen_train = aid_img.gen_crop_img_ram(self.ram,rtdc_path_train[i],
                         int(np.rint(percDataT*nr_events_epoch_train[i])),random_images=shuffle_train[i],
@@ -7638,12 +7694,12 @@ class MainWindow(QtWidgets.QMainWindow):
                 if not self.actionDataToRam.isChecked():
                     #Replace true means that individual cells could occur several times
                     gen = aid_img.gen_crop_img(crop,rtdc_path[i],random_images=False,
-                        zoom_factor=zoom_factors[i],zoom_order=zoom_order,color_mode=self.get_color_mode(),padding_mode=paddingMode) 
+                        zoom_factor=zoom_factors[i],zoom_order=zoom_order,color_mode=self.get_color_mode(),padding_mode=paddingMode,channel_list=self.channels_selected) 
                 else:
                     if len(self.ram)==0:
                         #Replace true means that individual cells could occur several times
                         gen = aid_img.gen_crop_img(crop,rtdc_path[i],random_images=False,
-                            zoom_factor=zoom_factors[i],zoom_order=zoom_order,color_mode=self.get_color_mode(),padding_mode=paddingMode)
+                            zoom_factor=zoom_factors[i],zoom_order=zoom_order,color_mode=self.get_color_mode(),padding_mode=paddingMode,channel_list=self.channels_selected)
                     else:    
                         gen = aid_img.gen_crop_img_ram(self.ram,rtdc_path[i],random_images=False) #Replace true means that individual cells could occur several times
                         if self.actionVerbose.isChecked():
@@ -7674,12 +7730,12 @@ class MainWindow(QtWidgets.QMainWindow):
                 if not self.actionDataToRam.isChecked():
                     #Replace true means that individual cells could occur several times
                     gen = aid_img.gen_crop_img(cropsize2,rtdc_path[i],10,random_images=True,
-                        replace=True,zoom_factor=zoom_factors[i],zoom_order=zoom_order,color_mode=self.get_color_mode(),padding_mode=paddingMode) 
+                        replace=True,zoom_factor=zoom_factors[i],zoom_order=zoom_order,color_mode=self.get_color_mode(),padding_mode=paddingMode,channel_list=self.channels_selected) 
                 else:
                     if len(self.ram)==0:
                         #Replace true means that individual cells could occur several times
                         gen = aid_img.gen_crop_img(cropsize2,rtdc_path[i],10,random_images=True,
-                            replace=True,zoom_factor=zoom_factors[i],zoom_order=zoom_order,color_mode=self.get_color_mode(),padding_mode=paddingMode) 
+                            replace=True,zoom_factor=zoom_factors[i],zoom_order=zoom_order,color_mode=self.get_color_mode(),padding_mode=paddingMode,channel_list=self.channels_selected) 
                     else:   
                         gen = aid_img.gen_crop_img_ram(self.ram,rtdc_path[i],10,random_images=True,replace=True) #Replace true means that individual cells could occur several times
                         if self.actionVerbose.isChecked():
@@ -7746,12 +7802,12 @@ class MainWindow(QtWidgets.QMainWindow):
                 if not self.actionDataToRam.isChecked():
                     #Replace true means that individual cells could occur several times
                     gen = aid_img.gen_crop_img(crop,rtdc_path[i],10,random_images=True,
-                        replace=True,zoom_factor=zoom_factors[i],zoom_order=zoom_order,color_mode=self.get_color_mode(),padding_mode=paddingMode) 
+                        replace=True,zoom_factor=zoom_factors[i],zoom_order=zoom_order,color_mode=self.get_color_mode(),padding_mode=paddingMode,channel_list=self.channels_selected) 
                 else:
                     if len(self.ram)==0:
                         #Replace true means that individual cells could occur several times
                         gen = aid_img.gen_crop_img(crop,rtdc_path[i],10,random_images=True,
-                            replace=True,zoom_factor=zoom_factors[i],zoom_order=zoom_order,color_mode=self.get_color_mode(),padding_mode=paddingMode) 
+                            replace=True,zoom_factor=zoom_factors[i],zoom_order=zoom_order,color_mode=self.get_color_mode(),padding_mode=paddingMode,channel_list=self.channels_selected) 
                     else:                        
                         gen = aid_img.gen_crop_img_ram(self.ram,rtdc_path[i],10,random_images=True,replace=True) 
                         if self.actionVerbose.isChecked():
@@ -7931,12 +7987,12 @@ class MainWindow(QtWidgets.QMainWindow):
                 if not self.actionDataToRam.isChecked():
                     gen = aid_img.gen_crop_img(crop,rtdc_path[i],random_images=False,
                         zoom_factor=zoom_factors[i],zoom_order=zoom_order,color_mode=self.get_color_mode(),
-                        padding_mode=paddingMode,xtra_in=xtra_in) #Replace true means that individual cells could occur several times
+                        padding_mode=paddingMode,xtra_in=xtra_in,channel_list=self.channels_selected) #Replace true means that individual cells could occur several times
                 else:
                     if len(self.ram)==0:
                         gen = aid_img.gen_crop_img(crop,rtdc_path[i],random_images=False,
                             zoom_factor=zoom_factors[i],zoom_order=zoom_order,color_mode=self.get_color_mode(),
-                            padding_mode=paddingMode,xtra_in=xtra_in) #Replace true means that individual cells could occur several times
+                            padding_mode=paddingMode,xtra_in=xtra_in,channel_list=self.channels_selected) #Replace true means that individual cells could occur several times
                     else:    
                         gen = aid_img.gen_crop_img_ram(self.ram,rtdc_path[i],random_images=False,xtra_in=xtra_in) #Replace true means that individual cells could occur several times
                         if self.actionVerbose.isChecked():
@@ -7967,12 +8023,14 @@ class MainWindow(QtWidgets.QMainWindow):
                 if not self.actionDataToRam.isChecked():
                     #Replace true means that individual cells could occur several times
                     gen = aid_img.gen_crop_img(cropsize2,rtdc_path[i],10,random_images=shuffle[i],
-                        replace=True,zoom_factor=zoom_factors[i],zoom_order=zoom_order,color_mode=self.get_color_mode(),padding_mode=paddingMode)
+                        replace=True,zoom_factor=zoom_factors[i],zoom_order=zoom_order,
+                        color_mode=self.get_color_mode(),padding_mode=paddingMode,channel_list=self.channels_selected)
                 else:
                     if len(self.ram)==0:
                         #Replace true means that individual cells could occur several times
                         gen = aid_img.gen_crop_img(cropsize2,rtdc_path[i],10,random_images=shuffle[i],
-                            replace=True,zoom_factor=zoom_factors[i],zoom_order=zoom_order,color_mode=self.get_color_mode(),padding_mode=paddingMode)
+                            replace=True,zoom_factor=zoom_factors[i],zoom_order=zoom_order,
+                            color_mode=self.get_color_mode(),padding_mode=paddingMode,channel_list=self.channels_selected)
                     else:   
                         gen = aid_img.gen_crop_img_ram(self.ram,rtdc_path[i],10,random_images=shuffle[i],replace=True) #Replace true means that individual cells could occur several times
                         if self.actionVerbose.isChecked():
@@ -9094,7 +9152,8 @@ class MainWindow(QtWidgets.QMainWindow):
                 nr_events = None #no number needed as we take all images (replace=False in gen_crop_img)
                 zoom_factor = float(self.table_dragdrop.item(row, 9).text())            
                 gen = aid_img.gen_crop_img(cropsize,rtdc_path,nr_events=nr_events,replace=False,
-                    random_images=False,zoom_factor=zoom_factor,zoom_order=zoom_order,color_mode=color_mode,padding_mode='constant')
+                    random_images=False,zoom_factor=zoom_factor,zoom_order=zoom_order,
+                    color_mode=color_mode,padding_mode='constant',channel_list=self.channels_selected)
                 images = next(gen)[0]
                 #Save the images data to .png/.jpeg...
                 for img in images:
@@ -9608,13 +9667,13 @@ class MainWindow(QtWidgets.QMainWindow):
                 #Replace=True means that individual cells could occur several times
                 gen_valid = aid_img.gen_crop_img(crop,rtdc_path_valid[i],nr_events_epoch_valid[i],
                     random_images=shuffle_valid[i],replace=True,zoom_factor=zoom_factors_valid[i],
-                    zoom_order=zoom_order,color_mode=self.get_color_mode(),padding_mode=paddingMode,xtra_in=xtra_in) 
+                    zoom_order=zoom_order,color_mode=self.get_color_mode(),padding_mode=paddingMode,xtra_in=xtra_in,channel_list=self.channels_selected) 
             else: #get a similar generator, using the ram-data
                 if len(DATA)==0:
                     #Replace=True means that individual cells could occur several times
                     gen_valid = aid_img.gen_crop_img(crop,rtdc_path_valid[i],nr_events_epoch_valid[i],
                         random_images=shuffle_valid[i],replace=True,zoom_factor=zoom_factors_valid[i],
-                        zoom_order=zoom_order,color_mode=self.get_color_mode(),padding_mode=paddingMode,xtra_in=xtra_in) 
+                        zoom_order=zoom_order,color_mode=self.get_color_mode(),padding_mode=paddingMode,xtra_in=xtra_in,channel_list=self.channels_selected) 
                 else:
                     if self.actionVerbose.isChecked():
                         print("Loaded data from RAM")
@@ -9806,7 +9865,7 @@ class MainWindow(QtWidgets.QMainWindow):
 
         gen_valid = aid_img.gen_crop_img(cropsize=model_in,rtdc_path=rtdc_path,random_images=False,
             zoom_factor=zoom_factor,zoom_order=zoom_interpol_method,color_mode=color_mode,
-            padding_mode=padding_mode,xtra_in=False)
+            padding_mode=padding_mode,xtra_in=False,channel_list=self.channels_selected)
         x_valid,index,xtra_valid = next(gen_valid)
         #When object is too far at side of image, the frame is dropped.
         #Consider this for y_valid
@@ -11064,7 +11123,8 @@ class MainWindow(QtWidgets.QMainWindow):
                 
                 #get all images, cropped correcetly
                 gen_train = aid_img.gen_crop_img(crop,rtdc_path,replace=True,random_images=False,
-                    zoom_factor=zoom_factor,zoom_order=zoom_order,color_mode=color_mode,padding_mode=paddingMode,xtra_in=xtra_in)
+                    zoom_factor=zoom_factor,zoom_order=zoom_order,color_mode=color_mode,
+                    padding_mode=paddingMode,xtra_in=xtra_in,channel_list=self.channels_selected)
                 x_train,index,xtra_train = next(gen_train) #x_train-images of all cells, index-original index of all cells           
                 
                 if norm == "StdScaling using mean and std of all training data":
