@@ -345,7 +345,7 @@ def load_model_meta(meta_path):
 
     #Color mode: grayscale or RGB?
     try:
-        target_channels = meta["Color Mode"].iloc[0]
+        target_channels = meta["Color mode"].iloc[0]
     except:
         target_channels = "grayscale"
     if target_channels.lower() =="grayscale":
@@ -398,25 +398,49 @@ def check_squared(images):
         print("Final size after correcting: "+str(images.shape))
     return images
 
-def gen_crop_img(cropsize,rtdc_path,nr_events=100,replace=True,random_images=True,zoom_factor=1,zoom_order="cv2.INTER_LINEAR",color_mode='Grayscale',padding_mode='constant',xtra_in=False):
+def get_images(rtdc_ds,channel_list=["image"]):
+    assert type(channel_list)==list, "Please provide a channel_list, such as ['image']; (type(channel_list) is not list)"
+    assert len(channel_list)>0, "No channels for the image were selected! Please choose at least one image layer (channel)"
+    print(channel_list)
+    if len(channel_list)==1:#single grayscale layer was selecte. No big deal. Just get the corresponding data from rtdc_ds
+        return rtdc_ds["events"][channel_list[0]] #get the images
+    else:
+        # MultiChannel!
+        print("MultiChannel")
+        #shape of the images
+        shapes = [rtdc_ds["events"][key].shape for key in channel_list]
+        # the shapes of all channels should be equal (set has lenght 1)
+        shapes = list(set(shapes))
+        assert len(shapes)<4, "AIDeveloper currently only supports up to 3-channel-images"
+        assert len(shapes)==1, "Channels have multiple shapes. That is not supported (yet). Please modify the original file such that all image channels have the same shape"
+
+        shape = shapes[0]
+        print("shape: "+str(shape))
+        # Create an empty array. Data will be filled in later
+        image = np.zeros(shape = (*list(shapes)[0],3),dtype=np.uint8)
+        for ch_index,key in enumerate(channel_list):
+            image[:,:,:,ch_index] = rtdc_ds["events"][key][:]
+        return image
+        
+def gen_crop_img(cropsize,rtdc_path,nr_events=100,replace=True,random_images=True,
+                 zoom_factor=1,zoom_order="cv2.INTER_LINEAR",color_mode='Grayscale',
+                 padding_mode='constant',xtra_in=False,channel_list=["image"]):
 
     failed,rtdc_ds = aid_bin.load_rtdc(rtdc_path)
     if failed:
         msg = QtWidgets.QMessageBox()
-        msg.setIcon(QtWidgets.QMessageBox.Information)       
+        msg.setIcon(QtWidgets.QMessageBox.Critical)       
         msg.setText(str(rtdc_ds))
         msg.setWindowTitle("Error occurred during loading file")
         msg.setStandardButtons(QtWidgets.QMessageBox.Ok)
         msg.exec_()
         return
     
-    pix = rtdc_ds.attrs["imaging:pixel size"] #get pixelation (um/pix)
-    #images_shape = rtdc_ds["image"].shape #get shape of the images (nr.images,height,width,channels)
-    images = rtdc_ds["events"]["image"] #get the images
+    images = get_images(rtdc_ds,channel_list)
 
     if len(images)<1:
         msg = QtWidgets.QMessageBox()
-        msg.setIcon(QtWidgets.QMessageBox.Information)       
+        msg.setIcon(QtWidgets.QMessageBox.Critical)       
         msg.setText("There are no images")
         msg.setWindowTitle("Empty dataset!")
         msg.setStandardButtons(QtWidgets.QMessageBox.Ok)
@@ -430,6 +454,7 @@ def gen_crop_img(cropsize,rtdc_path,nr_events=100,replace=True,random_images=Tru
     
     #Adjust number of channels
     images = image_adjust_channels(images,target_channels=channels)
+    pix = rtdc_ds.attrs["imaging:pixel size"] #get pixel size (um/pix)
     
     pos_x,pos_y = rtdc_ds["events"]["pos_x"][:]/pix,rtdc_ds["events"]["pos_y"][:]/pix #/pix converts to pixel index 
     #If there is a zooming to be applied, adjust pos_x and pos_y accordingly
