@@ -411,10 +411,6 @@ def get_images(rtdc_ds,channel_list=["image"],indices=None):
         assert len(shapes)<4, "AIDeveloper currently only supports up to 3-channel-images"
         assert len(shapes)==1, "Channels have multiple shapes. That is not supported (yet). Please modify the original file such that all image channels have the same shape"
 
-        shape = shapes[0]
-        print("shape: "+str(shape))
-        print("shapes: "+str(shapes))
-
         # Create an empty array. Data will be filled in later
         if type(indices)==type(None):
             image = np.zeros(shape = (*list(shapes)[0],3),dtype=np.uint8)
