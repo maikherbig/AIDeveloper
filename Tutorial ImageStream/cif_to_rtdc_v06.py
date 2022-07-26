@@ -43,7 +43,7 @@ import pandas as pd
 
 #provide a path to the cif file
 path_cif = r"D:\UTokyo-WORK\07_Own_Projects\08_Amnis_Imagestream\01_Data\20220614_Cells.cif"
-path_rtdc = path_cif.replace(".cif","_new.rtdc")
+path_rtdc = path_cif.replace(".cif","_new2.rtdc")
 print(f"Target file name: {path_rtdc}")
 sample_name = "SSM cells"
 
@@ -61,13 +61,14 @@ channels = [0,2,4]#[0,5,8] #inidcate which channels to use for [R,G,B]
 # Define the upper limit of the fluorence intensities. Needed for conversion to uint8
 # Please see bottom of script how to use "intensity_range_info(cif_sample)", which will help
 channel_fluo_upper_limit = [800,800,3000] # range of the fluorescence intensities of each channel. Does not need to be the maximum fl intensity
+channel_scaling_factors = [255/x for x in channel_fluo_upper_limit] # multiply by 255 since final images should be uint8 (0-255)
 
 # Info about availability of masks. Some ImageStream data stoes the masks in 
 # odd series-numbers. Plot the images of a series by calling 
 #   show_exmple_cell(series_index=0) #plots fluorescence images of all channels
 #   show_exmple_cell(series_index=1) #plots mask images of all channels
 mask_available = True
-mask_channel = 0 #which channel's mask should be used. You can only use one mask!
+mask_channel = 0 #which channel's mask should be used. You can only use one channel!
 
 # in case, multiple objects are found in an image, only one of them will be selected 
 # to compute features. Please indicate if the most "smooth" (minimum area_ratio) 
@@ -655,34 +656,34 @@ def plot_height_width_scatter(cif_sample):
 
 ######################MAKE USE OF THE FUNCTIONS ABOVE##################
 
-print("Show all channel-images for one cell")
-show_cell_from_cif(0)
+# print("Show all channel-images for one cell")
+# show_cell_from_cif(0)
 
-### get a few image to learn about the fluorescence intensities
-cif_sample = read_cif_raw(reader,number_cells=250,channels=channels,mask_available=True)
+# ### get a few image to learn about the fluorescence intensities
+# cif_sample = read_cif_raw(reader,number_cells=250,channels=channels,mask_available=True)
 
-### scatterplot showing image heights and widths
-plot_height_width_scatter(cif_sample)
-### -> it looks like most images are smaller than 80x80 pixels -> use that for cropping -> image_size = 80
+# ### scatterplot showing image heights and widths
+# plot_height_width_scatter(cif_sample)
+# ### -> it looks like most images are smaller than 80x80 pixels -> use that for cropping -> image_size = 80
 
-# ### Get an overview of the intensity values for each channel
-intensity_info = intensity_range_info(cif_sample)
+# # # ### Get an overview of the intensity values for each channel
+# intensity_info = intensity_range_info(cif_sample)
 
-### check the table "intensity_info". You can e.g. use the 99.99th percentile for channel_fluo_upper_limit
-### Make sure channel_fluo_upper_limit are some nice numbers that you can use in 
-### all experiments
-# channel_fluo_upper_limit = [800,800,3000] # estimation of the max value of the fluorescence intensities
-channel_scaling_factors = [255/x for x in channel_fluo_upper_limit] # multiply by 255 since final images should be uint8 (0-255)
-print(f"Will use following channel_scaling_factors: {channel_scaling_factors}")
+# ### check the table "intensity_info". You can e.g. use the 99.99th percentile for channel_fluo_upper_limit
+# ### Make sure channel_fluo_upper_limit are some nice numbers that you can use in 
+# ### all experiments
+# # channel_fluo_upper_limit = [800,800,3000] # estimation of the max value of the fluorescence intensities
+# channel_scaling_factors = [255/x for x in channel_fluo_upper_limit] # multiply by 255 since final images should be uint8 (0-255)
+# print(f"Will use following channel_scaling_factors: {channel_scaling_factors}")
 
-### Estimate the channel fluorescence intensity ranges based on first n cells
-cif_sample_scaled = read_cif_scaled(reader,number_cells=5,channels=channels,
-                    mask_available=True,mask_channel=None,
-                    contour_selection=None,pixel_size=pixel_size,
-                    channel_scaling_factors=channel_scaling_factors)
+# ### Estimate the channel fluorescence intensity ranges based on first n cells
+# cif_sample_scaled = read_cif_scaled(reader,number_cells=5,channels=channels,
+#                     mask_available=True,mask_channel=None,
+#                     contour_selection=None,pixel_size=pixel_size,
+#                     channel_scaling_factors=channel_scaling_factors)
 
-### plot these cells to have a look if they are nice enough
-show_cell_from_array(cif_sample_scaled)
+# ### plot these cells to have a look if they are nice enough
+# show_cell_from_array(cif_sample_scaled)
 
 ### All parameters are defined! Now it's time to read all data
 print("Read all images from cif")
