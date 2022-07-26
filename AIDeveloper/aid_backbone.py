@@ -2412,7 +2412,7 @@ class MainWindow(QtWidgets.QMainWindow):
                 cb.setChecked(True)
             else:
                 cb.setChecked(False)
-        self.register_channel_selection()
+        self.channels_selected = ["image"]
 
     def channelSelection_popup(self):
         # get iformation about clicked items
@@ -2437,6 +2437,8 @@ class MainWindow(QtWidgets.QMainWindow):
         # Which image channels are commonly available (in all clicked files)
         channels_available = set.intersection(*[set(x) for x in channels_available])
         channels_available = list(sorted(channels_available))
+        if len(channels_available)==0:
+            channels_available = ["image"]
         self.popup_channelSelect = MyPopup()
         self.popup_channelSelect_ui = aid_frontend.Ui_channelSelection()
         self.popup_channelSelect_ui.setupUi(self.popup_channelSelect,channels_available,self.channels_selected) #open a popup to show advances settings for optimizer
@@ -5333,13 +5335,15 @@ class MainWindow(QtWidgets.QMainWindow):
                 print("Export original images")
                 save_cropped = False
                 aid_bin.write_rtdc(new_modelname.split(".model")[0]+'_Valid_Data.rtdc',
-                    rtdc_path_valid,X_valid,Indices,cropped=save_cropped,color_mode=self.get_color_mode(),xtra_in=xtra_valid)
+                    rtdc_path_valid,X_valid,Indices,cropped=save_cropped,color_mode=self.get_color_mode(),
+                    xtra_in=xtra_valid,channels_selected=channels_selected)
     
             elif bool(self.actionExport_Cropped.isChecked())==True:
                 print("Export cropped images")
                 save_cropped = True
                 aid_bin.write_rtdc(new_modelname.split(".model")[0]+'_Valid_Data.rtdc',
-                    rtdc_path_valid,X_valid,Indices,cropped=save_cropped,color_mode=self.get_color_mode(),xtra_in=xtra_valid)
+                    rtdc_path_valid,X_valid,Indices,cropped=save_cropped,color_mode=self.get_color_mode(),
+                    xtra_in=xtra_valid,channels_selected=channels_selected)
     
             elif bool(self.actionExport_Off.isChecked())==True:
                 print("Exporting is turned off")
@@ -9784,7 +9788,8 @@ class MainWindow(QtWidgets.QMainWindow):
             msg.exec_()
             return
 
-        aid_bin.write_rtdc(filename_X,rtdc_path_valid,X_valid_orig,Indices,cropped=save_cropped,color_mode=self.get_color_mode(),xtra_in=Xtra_in)
+        aid_bin.write_rtdc(filename_X,rtdc_path_valid,X_valid_orig,Indices,cropped=save_cropped,
+            color_mode=self.get_color_mode(),xtra_in=Xtra_in,channels_selected=self.channels_selected)
         np.savetxt(filename_y,y_valid.astype(int),fmt='%i')
         
         #If all that run without issue, remember the path for next time
@@ -10125,7 +10130,8 @@ class MainWindow(QtWidgets.QMainWindow):
                     return
         
                 np.savetxt(filename_y,y_valid_list.astype(int),fmt='%i')      
-                aid_bin.write_rtdc(filename_X,rtdc_path_valid,ToSave,Indices_,cropped=save_cropped,color_mode=self.get_color_mode())
+                aid_bin.write_rtdc(filename_X,rtdc_path_valid,ToSave,Indices_,cropped=save_cropped,
+                    color_mode=self.get_color_mode(),channels_selected=self.channels_selected)
     
                 #If all that run without issue, remember the path for next time
                 Default_dict["Path of last model"] = os.path.split(filename)[0]
