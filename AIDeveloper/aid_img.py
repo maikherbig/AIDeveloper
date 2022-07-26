@@ -409,7 +409,7 @@ def get_images(rtdc_ds,channel_list=["image"],indices=None):
         # the shapes of all channels should be equal (set has lenght 1)
         shapes = list(set(shapes))
         assert len(shapes)<4, "AIDeveloper currently only supports up to 3-channel-images"
-        assert len(shapes)==1, "Channels have multiple shapes. That is not supported (yet). Please modify the original file such that all image channels have the same shape"
+        assert len(shapes)==1, "Channels have multiple shapes. That is not supported (yet). Please modify the original .rtdc file such that all image channels have the same shape"
 
         # Create an empty array. Data will be filled in later
         if type(indices)==type(None):
@@ -420,7 +420,6 @@ def get_images(rtdc_ds,channel_list=["image"],indices=None):
             image = np.zeros(shape = shape_temp,dtype=np.uint8)
 
         for ch_index,key in enumerate(channel_list):
-            print(indices)
             if type(indices)==type(None):
                 image[:,:,:,ch_index] = rtdc_ds["events"][key][:]
             else:
