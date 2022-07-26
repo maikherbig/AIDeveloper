@@ -474,8 +474,6 @@ def write_rtdc(fname,rtdc_datasets,X_valid,Indices,cropped=True,color_mode='Gray
         pos_y = np.concatenate(pos_y)
         
         hdf = new_hdf(fname) #generate new hdf file (with metadata, required for ShapeOut to work)
-        print("Here for saving!")
-        np.save("images_valid.npy",images)
         maxshape = (None, images.shape[1], images.shape[2], images.shape[3])
         hdf.create_dataset("events/image", data=images, dtype=np.uint8,maxshape=maxshape,fletcher32=True,chunks=True)
         hdf.create_dataset("events/pos_x", data=pos_x, dtype=np.int32)
@@ -549,8 +547,6 @@ def write_rtdc(fname,rtdc_datasets,X_valid,Indices,cropped=True,color_mode='Gray
         if len(img_dim_x)>1 or len(img_dim_y)>1:
             print("Unequal image dimensions -> Force export of cropped images!")
             cropped = True
-
-    np.save("X_valid.npy",X_valid)
     
     for i in range(len(rtdc_datasets)):
         failed,rtdc_ds = load_rtdc(rtdc_datasets[i])
