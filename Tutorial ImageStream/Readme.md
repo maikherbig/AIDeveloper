@@ -1,14 +1,15 @@
 This tutorial shows how to convert .cif files from ImageStream to .rtdc files and
 how to use AIDeveloper and YouLabel to create a dataset and train a CNN model.
-There are six steps; the five steps are explained in a video:
+Here are the steps:
 
-
-1. Install Java and Python environment for converting cif files (see [below](#install-java-and-python-environment))
-2. Use a [Python script](https://github.com/maikherbig/AIDeveloper/blob/master/Tutorial%20ImageStream/cif_to_rtdc_v06.py) to convert .cif to .rtdc (see video)
-3. Annotate data using [YouLabel](https://github.com/maikherbig/YouLabel/releases) (see video)
-4. Use AIDeveloper to train CNN using Multi-Channel information (see video)
-5. Use AIDeveloper to apply model to new data (see video)
-6. Filter the data using probabilities, returned by the model (see video)
+1. Install Java and Python environment for converting cif files (see [below instructions](#install-java-and-python-environment))
+2. Download [YouLabel](https://github.com/maikherbig/YouLabel/releases)
+3. Download [AIDeveloper](https://github.com/maikherbig/AIDeveloper/releases) and install update (see video)
+4. Use a [Python script](https://github.com/maikherbig/AIDeveloper/blob/master/Tutorial%20ImageStream/cif_to_rtdc_v06.py) to convert .cif to .rtdc (see video)
+6. Annotate data using [YouLabel](https://github.com/maikherbig/YouLabel/releases) (see video)
+7. Use AIDeveloper to train CNN using Multi-Channel information (see video)
+8. Use AIDeveloper to apply model to new data (see video)
+9. Filter the data using probabilities, returned by the model (see video)
 
 
 # Install Java and Python environment   
