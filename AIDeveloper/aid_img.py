@@ -398,7 +398,7 @@ def check_squared(images):
         print("Final size after correcting: "+str(images.shape))
     return images
 
-def get_images(rtdc_ds,channel_list=["image"]):
+def get_images(rtdc_ds,channel_list=["image"],indices=None):
     assert type(channel_list)==list, "Please provide a channel_list, such as ['image']; (type(channel_list) is not list)"
     assert len(channel_list)>0, "No channels for the image were selected! Please choose at least one image layer (channel)"
     if len(channel_list)==1:#single grayscale layer was selecte. No big deal. Just get the corresponding data from rtdc_ds
@@ -413,10 +413,23 @@ def get_images(rtdc_ds,channel_list=["image"]):
 
         shape = shapes[0]
         print("shape: "+str(shape))
+        print("shapes: "+str(shapes))
+
         # Create an empty array. Data will be filled in later
-        image = np.zeros(shape = (*list(shapes)[0],3),dtype=np.uint8)
+        if type(indices)==type(None):
+            image = np.zeros(shape = (*list(shapes)[0],3),dtype=np.uint8)
+        else: #there are indices. Prepare array of correspnding size
+            shape_temp = (*list(shapes)[0],3)
+            shape_temp = (len(indices),*shape_temp[1:])
+            image = np.zeros(shape = shape_temp,dtype=np.uint8)
+
         for ch_index,key in enumerate(channel_list):
-            image[:,:,:,ch_index] = rtdc_ds["events"][key][:]
+            print(indices)
+            if type(indices)==type(None):
+                image[:,:,:,ch_index] = rtdc_ds["events"][key][:]
+            else:
+                image[:,:,:,ch_index] = [rtdc_ds["events"][key][ii] for ii in indices]  
+                
         return image
         
 def gen_crop_img(cropsize,rtdc_path,nr_events=100,replace=True,random_images=True,
