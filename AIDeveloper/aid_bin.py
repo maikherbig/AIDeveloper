@@ -403,7 +403,7 @@ def new_hdf(path_rtdc):
     return hdf
     
     
-def write_rtdc(fname,rtdc_datasets,X_valid,Indices,cropped=True,color_mode='Grayscale',xtra_in=[]):
+def write_rtdc(fname,rtdc_datasets,X_valid,Indices,cropped=True,color_mode='Grayscale',xtra_in=[],channels_selected=["image"]):
     """
     fname - path+filename of file to be created
     rtdc_datasets - list paths to rtdc data-data-sets
@@ -417,15 +417,16 @@ def write_rtdc(fname,rtdc_datasets,X_valid,Indices,cropped=True,color_mode='Gray
     
     index_new = np.array(range(1,int(np.sum(np.array([len(I) for I in Indices]))+1))) #New index. Will replace the existing index in order to support viewing imges in shapeout   
 
-    #quickly check the image-format of the validation data:
+    # check the image-format of the validation data:
     images_shape = []
-    for i in range(len(rtdc_datasets)):
-        failed,rtdc_ds = load_rtdc(rtdc_datasets[i])
-        if failed:
-            print("Error occurred during loading file\n"+str(rtdc_datasets[i])+"\n"+str(rtdc_ds))
-        else:
+    for i in range(len(X_valid)):
+        # failed,rtdc_ds = load_rtdc(rtdc_datasets[i])
+        # if failed:
+        #     print("Error occurred during loading file\n"+str(rtdc_datasets[i])+"\n"+str(rtdc_ds))
+        # else:
             #get the shape for all used files
-            images_shape.append(rtdc_ds["events"]["image"].shape) 
+            images_shape.append(X_valid[i].shape) 
+    # print("images_shape: "+str(images_shape))
     #Allow RGB export only, of all files have 3 channels
     if cropped==False: #only if the original images should be exported
         #the length of the images is shape=3 for grayscale images and =4 for RGB images
@@ -441,10 +442,11 @@ def write_rtdc(fname,rtdc_datasets,X_valid,Indices,cropped=True,color_mode='Gray
                 #TODO: Maybe support more channels
         else: #not all files have three channels->ergo there is no way to keep the color-information:
             color_mode = "Grayscale"
-
+    print("new color_mode: "+str(color_mode))
+    
     #########Only for RGB Images!: Collect all data first and write############ 
     if color_mode=='RGB': #or images_shape_max==4:
-    #if len(X_valid)>0 and len(np.array(X_valid).shape)==5: #RGB image
+        print("Saving validtion images in RGB mode")
         #Get all images,pos_x,pos_y:
         images,pos_x,pos_y = [],[],[]
         for i in range(len(rtdc_datasets)):
@@ -454,21 +456,26 @@ def write_rtdc(fname,rtdc_datasets,X_valid,Indices,cropped=True,color_mode='Gray
             else:
                 indices = Indices[i]
                 if len(indices>0):
-                    if cropped==False:
-                        images.append([rtdc_ds["events"]["image"][ii] for ii in indices])
-                    pos_x.append([rtdc_ds["events"]["pos_x"][ii] for ii in indices])
-                    pos_y.append([rtdc_ds["events"]["pos_y"][ii] for ii in indices])
-                    
-        if cropped==True:
-            images = X_valid
-            #If the user want to export cropped images, then they will be
-            #in the color mode of the model
+                    if not cropped:
+                        # retrieve the images
+                        imgs = aid_img.get_images(rtdc_ds,channel_list=channels_selected,indices=indices)
+                        images.append(imgs)
+                        pos_x.append([rtdc_ds["events"]["pos_x"][ii] for ii in indices])
+                        pos_y.append([rtdc_ds["events"]["pos_y"][ii] for ii in indices])
+                    if cropped:
+                        images = X_valid #X_ valud are cropped images
+                        img_dim_x,img_dim_y = images[i].shape[2],images[i].shape[1]
+                        pos_x.append( np.zeros(shape=len(indices))+np.round(img_dim_x/2.0)*rtdc_ds.attrs["imaging:pixel size"] )
+                        pos_y.append( np.zeros(shape=len(indices))+np.round(img_dim_y/2.0)*rtdc_ds.attrs["imaging:pixel size"] )
 
+        #When exporting cropped images, then they will be in the color mode of the model
         images = np.concatenate(images)
         pos_x = np.concatenate(pos_x)
         pos_y = np.concatenate(pos_y)
         
         hdf = new_hdf(fname) #generate new hdf file (with metadata, required for ShapeOut to work)
+        print("Here for saving!")
+        np.save("images_valid.npy",images)
         maxshape = (None, images.shape[1], images.shape[2], images.shape[3])
         hdf.create_dataset("events/image", data=images, dtype=np.uint8,maxshape=maxshape,fletcher32=True,chunks=True)
         hdf.create_dataset("events/pos_x", data=pos_x, dtype=np.int32)
@@ -480,12 +487,13 @@ def write_rtdc(fname,rtdc_datasets,X_valid,Indices,cropped=True,color_mode='Gray
         
         #Adjust metadata:
         #"experiment:event count" = Nr. of images
-        hdf.attrs["experiment:event count"]=images.shape[0]
-        hdf.attrs["experiment:sample"]=fname
-        hdf.attrs["imaging:pixel size"]=rtdc_ds.attrs["imaging:pixel size"]
+        hdf.attrs["experiment:event count"] = images.shape[0]
+        hdf.attrs["experiment:sample"] = fname
+        hdf.attrs["imaging:pixel size"] = rtdc_ds.attrs["imaging:pixel size"]
         hdf.close()
         return
 
+    print("Saving validation images in Grayscale (or multichannel) mode")
     Features,Trace_lengths,Mask_dims_x,Mask_dims_y,Img_dims_x,Img_dims_y = [],[],[],[],[],[]
     for i in range(len(rtdc_datasets)):
         failed,rtdc_ds = load_rtdc(rtdc_datasets[i])
@@ -518,10 +526,6 @@ def write_rtdc(fname,rtdc_datasets,X_valid,Indices,cropped=True,color_mode='Gray
             result.intersection_update(currSet) 
         return list(result)     
     features = commonElements(Features)
-
-    # features = ["index_orig"] + features
-    # if "index" not in features:
-    #     features = ["index"] + features
         
     if "trace" in features:
         Trace_lengths = np.concatenate(Trace_lengths)
@@ -546,6 +550,8 @@ def write_rtdc(fname,rtdc_datasets,X_valid,Indices,cropped=True,color_mode='Gray
             print("Unequal image dimensions -> Force export of cropped images!")
             cropped = True
 
+    np.save("X_valid.npy",X_valid)
+    
     for i in range(len(rtdc_datasets)):
         failed,rtdc_ds = load_rtdc(rtdc_datasets[i])
         if failed:
@@ -553,7 +559,7 @@ def write_rtdc(fname,rtdc_datasets,X_valid,Indices,cropped=True,color_mode='Gray
         else:
             indices = Indices[i]
             Images = X_valid[i]
-            
+            # if channels_selected==['image']
             if len(Images)>0 and len(Images.shape)==3:
                 index_new_ = index_new[0:len(indices)]
                 index_new = np.delete(index_new,range(len(indices)))
@@ -565,15 +571,6 @@ def write_rtdc(fname,rtdc_datasets,X_valid,Indices,cropped=True,color_mode='Gray
                 for feat in features:
                     if feat == "contour":
                         print("Omitting contours")
-                        #cont_list = [rtdc_ds["events"]["contour"][ii] for ii in indices]
-                        #store_contour(h5group=events,name=feat,data=cont_list, compression="gzip")
-
-                    # elif feat == "index_orig":
-                    #     store_scalar(h5group=events,name=feat, data=index_new_, compression="gzip")
-
-                    # elif feat == "index_orig":
-                    #     values = np.array(rtdc_ds["events"]["index"])[indices]
-                    #     store_scalar(h5group=events,name=feat, data=values, compression="gzip")
                     
                     elif feat=="mask":# in ["mask", "image"]:
                         mask = np.array(rtdc_ds["events"]["mask"])[indices]
@@ -599,7 +596,7 @@ def write_rtdc(fname,rtdc_datasets,X_valid,Indices,cropped=True,color_mode='Gray
                     elif "image" in feat:
                         if cropped and feat=="image":
                             image_list = np.array(Images)
-                        elif cropped and feat != "image":#there are images of another channel, they need ot be cropped first
+                        elif cropped and feat != "image":#there are images of another channel, they need to be cropped first
                             pix = rtdc_ds.attrs["imaging:pixel size"]
                             pos_x = np.array(rtdc_ds["events"]["pos_x"])[indices]/pix
                             pos_y = np.array(rtdc_ds["events"]["pos_y"])[indices]/pix
