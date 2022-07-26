@@ -43,7 +43,7 @@ import pandas as pd
 
 #provide a path to the cif file
 path_cif = r"D:\UTokyo-WORK\07_Own_Projects\08_Amnis_Imagestream\01_Data\20220614_Cells.cif"
-path_rtdc = path_cif.replace(".cif","_scaled2.rtdc")
+path_rtdc = path_cif.replace(".cif","_new.rtdc")
 print(f"Target file name: {path_rtdc}")
 sample_name = "SSM cells"
 
@@ -518,7 +518,7 @@ def read_cif_scaled(reader,number_cells=np.inf,channels=[0,1,2],mask_available=T
                 "images":images,"masks":masks, "pos_x":pos_x, "pos_y":pos_y,
                 "area_orig":area_orig,"area_hull":area_hull,"area_ratio":area_ratio,
                 "circularity":circularity,"bright_avg":bright_avg,
-                "bright_sd":bright_sd,"pixel_size":pixel_size}
+                "bright_sd":bright_sd,"pixel_size":pixel_size,"channel_scaling_factors":channel_scaling_factors}
     return cif_data
 
 def write_rtdc(path_rtdc,cif_data):
@@ -553,7 +553,7 @@ def write_rtdc(path_rtdc,cif_data):
         hdf.attrs["setup:medium"] = "CellCarrierB"
         hdf.attrs["setup:module composition"] = "AcCellerator"
         hdf.attrs["setup:software version"] = "dclab 0.9.0.post1 | dclab 0.9.1"
-        hdf.attrs["fluorescence:channel_scaling_factors"] = channel_scaling_factors
+        hdf.attrs["fluorescence:channel_scaling_factors"] = cif_data["channel_scaling_factors"]
         
         # save images
         if len(cif_data["images"].shape) == 3: #plain single channel "grayscale" image
@@ -665,7 +665,7 @@ cif_sample = read_cif_raw(reader,number_cells=250,channels=channels,mask_availab
 plot_height_width_scatter(cif_sample)
 ### -> it looks like most images are smaller than 80x80 pixels -> use that for cropping -> image_size = 80
 
-### Get an overview of the intensity values for each channel
+# ### Get an overview of the intensity values for each channel
 intensity_info = intensity_range_info(cif_sample)
 
 ### check the table "intensity_info". You can e.g. use the 99.99th percentile for channel_fluo_upper_limit
@@ -695,7 +695,7 @@ print("Writing to .rtdc")
 write_rtdc(path_rtdc,cif_data_scaled)
 
 # stopping the java virtual machine
-# javabridge.kill_vm()
+javabridge.kill_vm()
 
 
 
