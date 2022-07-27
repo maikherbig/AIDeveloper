@@ -4,7 +4,7 @@
 AIDeveloper is a software tool that allows you to train, evaluate and apply deep neural nets 
 for image classification within a graphical user-interface (GUI).  
 
-# Overview  
+# Overview (click to play the gif) 
 ![Alt Text](art/Intro-v07.gif)
 # Installation  
 There is a tutorial video (44 seconds short) on YouTube.  
