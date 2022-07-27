@@ -7690,13 +7690,16 @@ class MainWindow(QtWidgets.QMainWindow):
             
         indices = list(np.array(indices)[ind])
         SelectedFiles = list(np.array(SelectedFiles)[ind])
-        nr_events_epoch = len(indices)*[10] #[selectedfile["nr_events_epoch"] for selectedfile in SelectedFiles]
         rtdc_path = [selectedfile["rtdc_path"] for selectedfile in SelectedFiles]
         zoom_factors = [selectedfile["zoom_factor"] for selectedfile in SelectedFiles]
         zoom_order = int(self.comboBox_zoomOrder.currentIndex()) #the combobox-index is already the zoom order
-        shuffle = [selectedfile["shuffle"] for selectedfile in SelectedFiles]
         #If the scaling method is "divide by mean and std of the whole training set":
         if norm == "StdScaling using mean and std of all training data":
+            text = "The normalization method 'StdScaling using mean and std of all training data'"+\
+            " requires loading all training data to find the mean. That will be slow. Consider showing"+\
+            " example images using other normalization methods"
+            aid_frontend.meessage(text,"Warning")
+            
             mean_trainingdata,std_trainingdata = [],[]
             for i in range(len(SelectedFiles)):
                 if not self.actionDataToRam.isChecked():
@@ -7723,7 +7726,7 @@ class MainWindow(QtWidgets.QMainWindow):
                 print("std_trainingdata was zero and is now set to 0.0001 to avoid div. by zero!")
             if self.actionVerbose.isChecked():
                 print("Used all training data to get mean and std for normalization")
-
+        
         if w_or_wo_augm=='With Augmentation':
             ###############Continue with training data:augmentation############
             #Rotating could create edge effects. Avoid this by making crop a bit larger for now
@@ -7767,7 +7770,7 @@ class MainWindow(QtWidgets.QMainWindow):
             else:
                 print("Invalid data dimension:" +str(X.shape))
             
-            X_batch, y_batch = aid_img.affine_augm(X,v_flip,h_flip,rotation,width_shift,height_shift,zoom,shear), y #Affine image augmentation
+            X_batch, _ = aid_img.affine_augm(X,v_flip,h_flip,rotation,width_shift,height_shift,zoom,shear), y #Affine image augmentation
             X_batch = X_batch.astype(np.uint8) #make sure we stay in uint8
 
             #Now do the final cropping to the actual size that was set by user
@@ -7802,7 +7805,7 @@ class MainWindow(QtWidgets.QMainWindow):
             
             X = X_batch
             if verbose: print("Shape of the shown images is:"+str(X.shape))
-            
+
         elif w_or_wo_augm=='Original image':
             ############Cropping#####################
             X,y = [],[]
@@ -7835,12 +7838,12 @@ class MainWindow(QtWidgets.QMainWindow):
                 X = np.expand_dims(X,3) #Add the "channels" dimension
             else:
                 print("Invalid data dimension: " +str(X.shape))
-                
+        
         if norm == "StdScaling using mean and std of all training data":
             X = aid_img.image_normalization(X,norm,mean_trainingdata,std_trainingdata)
         else:
             X = aid_img.image_normalization(X,norm)
-        
+
         if verbose: print("Shape of the shown images is: "+str(X.shape))
                 
         #Is there already anything shown on the widget?
@@ -7852,7 +7855,7 @@ class MainWindow(QtWidgets.QMainWindow):
                 widgetToRemove.deleteLater()
         else: #else, create a Gridlayout to put the images
             self.gridLayout_ViewImages = QtWidgets.QGridLayout(self.widget_ViewImages)
-
+        
         for i in range(5):
             if channels==1:
                 img = X[i,:,:,0] #TensorFlow 
@@ -7864,24 +7867,21 @@ class MainWindow(QtWidgets.QMainWindow):
             fac = np.max(img)
             img = (img/fac)*255.0
             img = img.astype(np.uint8)
+            
             if channels==1:
                 height, width = img.shape
             if channels==3:
                 height, width, _ = img.shape
             
-#            qi=QtGui.QImage(img_zoom.data, width, height,width, QtGui.QImage.Format_Indexed8)
-#            self.label_image_show = QtWidgets.QLabel(self.widget_ViewImages)
-#            self.label_image_show.setPixmap(QtGui.QPixmap.fromImage(qi))
-#            self.gridLayout_ViewImages.addWidget(self.label_image_show, 1,i)
-#            self.label_image_show.show()
-            #Use pygtgraph instead, in order to allow for exporting images
+            #Use pygtgraph, (provides more options, like allow for exporting images)
             self.image_show = pg.ImageView(self.widget_ViewImages)
             self.image_show.show()
             if verbose: print("Shape of zoomed image: "+str(img.shape))
             if channels==1:
                 self.image_show.setImage(img.T,autoRange=False)
             if channels==3:
-                self.image_show.setImage(np.swapaxes(img,0,1),autoRange=False)
+                self.image_show.setImage(np.swapaxes(img,0,1))
+                self.image_show.setLevels(0,255)
                 
             self.image_show.ui.histogram.hide()
             self.image_show.ui.roiBtn.hide()
