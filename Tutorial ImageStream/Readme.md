@@ -4,13 +4,13 @@ Here are the steps:
 
 1. Install Java (see [below instructions](#install-java))
 2. Install Python environment for converting cif files (see [below instructions](#install-python-environment))
-3. Use a [Python script](https://github.com/maikherbig/AIDeveloper/blob/master/Tutorial%20ImageStream/cif_to_rtdc_v06.py) to convert .cif to .rtdc (see video)
+3. Use a [Python script](https://github.com/maikherbig/AIDeveloper/blob/master/Tutorial%20ImageStream/cif_to_rtdc_v06.py) to convert .cif to .rtdc (see video 1)
 4. Download [YouLabel](https://github.com/maikherbig/YouLabel/releases)
-5. Annotate data using [YouLabel](https://github.com/maikherbig/YouLabel/releases) (see video)
-6. Download [AIDeveloper](https://github.com/maikherbig/AIDeveloper/releases) and install update (see video)
-7. Use AIDeveloper to train CNN using Multi-Channel information (see video)
-8. Use AIDeveloper to apply model to new data (see video)
-9. Filter the data using probabilities, returned by the model (see video)
+5. Annotate data using [YouLabel](https://github.com/maikherbig/YouLabel/releases) (see video 2)
+6. Download [AIDeveloper](https://github.com/maikherbig/AIDeveloper/releases) and install update (see video 3)
+7. Use AIDeveloper to train CNN using Multi-Channel information (see video 3)
+8. Use AIDeveloper to apply model to new data (see video 4)
+9. Filter the data using probabilities, returned by the model (see video 4)
 
 
 # Install Java   
