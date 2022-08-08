@@ -3838,9 +3838,13 @@ class MainWindow(QtWidgets.QMainWindow):
                 if os.path.isfile(metaname):
                     #open the metafile
                     meta = pd.read_excel(metaname,sheet_name="Parameters",engine="openpyxl")
-                    meta.columns = meta.columns.str.lower()
-                    if "chosen model" in list(meta.keys()):
-                        chosen_model = meta["chosen model"].iloc[-1]
+                    K = meta.columns.str.lower()
+                    K = [k.replace(" ","_") for k in K]
+                    K = [k.replace(".","") for k in K]    
+                    meta.columns = K
+
+                    if "chosen_model" in list(meta.keys()):
+                        chosen_model = meta["chosen_model"].iloc[-1]
                     else:
                         #Try to get the model architecture and adjust the combobox
                         try:
@@ -3884,8 +3888,8 @@ class MainWindow(QtWidgets.QMainWindow):
                         #open the metafile
                         meta = pd.read_excel(metaname,sheet_name="Parameters",engine="openpyxl")
                         meta.columns = meta.columns.str.lower()
-                        if "chosen model" in list(meta.keys()):
-                            chosen_model = meta["chosen model"].iloc[-1]
+                        if "chosen_model" in list(meta.keys()):
+                            chosen_model = meta["chosen_model"].iloc[-1]
                         else:
                             #Try to get the model architecture and adjust the combobox
                             try:
@@ -4090,9 +4094,13 @@ class MainWindow(QtWidgets.QMainWindow):
                     if os.path.isfile(metaname):
                         #open the metafile
                         meta = pd.read_excel(metaname,sheet_name="Parameters",engine="openpyxl")
-                        meta.columns = meta.columns.str.lower()
-                        if "chosen model" in list(meta.keys()):
-                            chosen_model = meta["chosen model"].iloc[-1]
+                        K = meta.columns.str.lower()
+                        K = [k.replace(" ","_") for k in K]
+                        K = [k.replace(".","") for k in K]    
+                        meta.columns = K
+
+                        if "chosen_model" in list(meta.keys()):
+                            chosen_model = meta["chosen_model"].iloc[-1]
                 except:
                     chosen_model = str(self.comboBox_ModelSelection.currentText())
                     
@@ -4182,9 +4190,12 @@ class MainWindow(QtWidgets.QMainWindow):
                     if os.path.isfile(metaname):
                         #open the metafile
                         meta = pd.read_excel(metaname,sheet_name="Parameters",engine="openpyxl")
-                        meta.columns = meta.columns.str.lower()
-                        if "chosen model" in list(meta.keys()):
-                            chosen_model = meta["chosen model"].iloc[-1]
+                        K = meta.columns.str.lower()
+                        K = [k.replace(" ","_") for k in K]
+                        K = [k.replace(".","") for k in K]    
+                        meta.columns = K
+                        if "chosen_model" in list(meta.keys()):
+                            chosen_model = meta["chosen_model"].iloc[-1]
                     else:
                         chosen_model = str(self.comboBox_ModelSelection.currentText())
     
@@ -5151,85 +5162,85 @@ class MainWindow(QtWidgets.QMainWindow):
             Para_dict = pd.DataFrame()
             def update_para_dict():
                 #Document changes in the meta-file
-                Para_dict["AIDeveloper_Version"]=VERSION,
+                Para_dict["aideveloper_version"]=VERSION,
                 Para_dict["model_zoo_version"]=model_zoo_version,
                 try:
-                    Para_dict["OS"]=platform.platform(),
-                    Para_dict["CPU"]=platform.processor(),
+                    Para_dict["os"]=platform.platform(),
+                    Para_dict["cpu"]=platform.processor(),
                 except:
-                    Para_dict["OS"]="Unknown",
-                    Para_dict["CPU"]="Unknown",
+                    Para_dict["os"]="Unknown",
+                    Para_dict["cpu"]="Unknown",
     
-                Para_dict["Modelname"]=new_modelname,
-                Para_dict["Chosen model"]=chosen_model,
-                Para_dict["New model"]=new_model,
+                Para_dict["modelname"]=new_modelname,
+                Para_dict["chosen_model"]=chosen_model,
+                Para_dict["new_model"]=new_model,
                 Para_dict["loadrestart_model"]=loadrestart_model,
                 Para_dict["loadcontinue_model"]=loadcontinue_model,
-                Para_dict["Continued_Fitting_From"]=load_modelname,                        
-                Para_dict["Input image size"]=crop,
-                Para_dict["Color mode"]=color_mode,
-                Para_dict["Selected channels"]=channels_selected,
-                Para_dict["Zoom order"]=zoom_order,                
-                Para_dict["Device"]=deviceSelected,
+                Para_dict["continued_fitting_from"]=load_modelname,                        
+                Para_dict["input_image_size"]=crop,
+                Para_dict["color_mode"]=color_mode,
+                Para_dict["selected_channels"]=channels_selected,
+                Para_dict["zoom_order"]=zoom_order,                
+                Para_dict["device"]=deviceSelected,
                 Para_dict["gpu_used"]=gpu_used,
                 Para_dict["gpu_memory"]=gpu_memory,
-                Para_dict["Output Nr. classes"]=nr_classes,
-                Para_dict["Normalization"]=norm,
-                Para_dict["Nr. epochs"]=nr_epochs,
-                Para_dict["Keras refresh after nr. epochs"]=keras_refresh_nr_epochs,
-                Para_dict["Horz. flip"]=h_flip,
-                Para_dict["Vert. flip"]=v_flip,
+                Para_dict["output_nr_classes"]=nr_classes,
+                Para_dict["normalization"]=norm,
+                Para_dict["nr_epochs"]=nr_epochs,
+                Para_dict["keras_refresh_after_nr_epochs"]=keras_refresh_nr_epochs,
+                Para_dict["horz_flip"]=h_flip,
+                Para_dict["vert_flip"]=v_flip,
                 Para_dict["rotation"]=rotation,
                 Para_dict["width_shift"]=width_shift,
                 Para_dict["height_shift"]=height_shift,
                 Para_dict["zoom"]=zoom,
                 Para_dict["shear"]=shear,
-                Para_dict["Brightness refresh after nr. epochs"]=brightness_refresh_nr_epochs,
-                Para_dict["Brightness add. lower"]=brightness_add_lower,
-                Para_dict["Brightness add. upper"]=brightness_add_upper,
-                Para_dict["Brightness mult. lower"]=brightness_mult_lower,  
-                Para_dict["Brightness mult. upper"]=brightness_mult_upper,
-                Para_dict["Gaussnoise Mean"]=gaussnoise_mean,
-                Para_dict["Gaussnoise Scale"]=gaussnoise_scale,
+                Para_dict["brightness_refresh_after nr_epochs"]=brightness_refresh_nr_epochs,
+                Para_dict["brightness_add_lower"]=brightness_add_lower,
+                Para_dict["brightness_add_upper"]=brightness_add_upper,
+                Para_dict["brightness_mult_lower"]=brightness_mult_lower,  
+                Para_dict["brightness_mult_upper"]=brightness_mult_upper,
+                Para_dict["gaussnoise_mean"]=gaussnoise_mean,
+                Para_dict["gaussnoise scale"]=gaussnoise_scale,
     
-                Para_dict["Contrast on"]=contrast_on,                
-                Para_dict["Contrast Lower"]=contrast_lower,
-                Para_dict["Contrast Higher"]=contrast_higher,
-                Para_dict["Saturation on"]=saturation_on,
-                Para_dict["Saturation Lower"]=saturation_lower,
-                Para_dict["Saturation Higher"]=saturation_higher,
-                Para_dict["Hue on"]=hue_on,                
-                Para_dict["Hue delta"]=hue_delta,                
+                Para_dict["contrast_on"]=contrast_on,                
+                Para_dict["contrast_lower"]=contrast_lower,
+                Para_dict["contrast_higher"]=contrast_higher,
+                Para_dict["saturation_on"]=saturation_on,
+                Para_dict["saturation_lower"]=saturation_lower,
+                Para_dict["saturation_higher"]=saturation_higher,
+                Para_dict["hue_on"]=hue_on,                
+                Para_dict["hue_delta"]=hue_delta,                
     
-                Para_dict["Average blur on"]=avgBlur_on,                
-                Para_dict["Average blur Lower"]=avgBlur_min,
-                Para_dict["Average blur Higher"]=avgBlur_max,
-                Para_dict["Gauss blur on"]=gaussBlur_on,                
-                Para_dict["Gauss blur Lower"]=gaussBlur_min,
-                Para_dict["Gauss blur Higher"]=gaussBlur_max,
-                Para_dict["Motion blur on"]=motionBlur_on,                
-                Para_dict["Motion blur Kernel"]=motionBlur_kernel,                
-                Para_dict["Motion blur Angle"]=motionBlur_angle,                
+                Para_dict["average_blur_on"]=avgBlur_on,                
+                Para_dict["average_blur_lower"]=avgBlur_min,
+                Para_dict["average_blur_higher"]=avgBlur_max,
+                Para_dict["gauss_blur_on"]=gaussBlur_on,                
+                Para_dict["gauss_blur_lower"]=gaussBlur_min,
+                Para_dict["gauss_blur_higher"]=gaussBlur_max,
+                Para_dict["motion_blur_on"]=motionBlur_on,                
+                Para_dict["motion_blur_kernel"]=motionBlur_kernel,                
+                Para_dict["motion_blur_angle"]=motionBlur_angle,                
            
-                Para_dict["Epoch_Started_Using_These_Settings"]=counter,
+                Para_dict["epoch_started_using_these_settings"]=counter,
     
                 Para_dict["expert_mode"]=expert_mode,
-                Para_dict["batchSize_expert"]=batchSize_expert,
+                Para_dict["batchsize_expert"]=batchSize_expert,
                 Para_dict["epochs_expert"]=epochs_expert,
 
                 Para_dict["learning_rate_expert_on"]=learning_rate_expert_on,
                 Para_dict["learning_rate_const_on"]=learning_rate_const_on,
                 Para_dict["learning_rate_const"]=learning_rate_const,
-                Para_dict["learning_rate_cycLR_on"]=learning_rate_cycLR_on,
-                Para_dict["cycLrMin"]=cycLrMin,
-                Para_dict["cycLrMax"]=cycLrMax,
-                Para_dict["cycLrMethod"] = cycLrMethod,
+                Para_dict["learning_rate_cyclr_on"]=learning_rate_cycLR_on,
+                Para_dict["cyclrmin"]=cycLrMin,
+                Para_dict["cyclrmax"]=cycLrMax,
+                Para_dict["cyclrmethod"] = cycLrMethod,
                 Para_dict["clr_settings"] = self.fittingpopups_ui[listindex].clr_settings,
                 
                 Para_dict["learning_rate_expo_on"]=learning_rate_expo_on,
-                Para_dict["expDecInitLr"]=expDecInitLr,
-                Para_dict["expDecSteps"]=expDecSteps,
-                Para_dict["expDecRate"]=expDecRate,
+                Para_dict["expdecinitlr"]=expDecInitLr,
+                Para_dict["expdecsteps"]=expDecSteps,
+                Para_dict["expdecrate"]=expDecRate,
                 
                 Para_dict["loss_expert_on"]=loss_expert_on,
                 Para_dict["loss_expert"]=loss_expert,
@@ -5237,23 +5248,23 @@ class MainWindow(QtWidgets.QMainWindow):
                 Para_dict["optimizer_expert"]=optimizer_expert,                
                 Para_dict["optimizer_settings"]=optimizer_settings,                
     
-                Para_dict["paddingMode"]=paddingMode,                
+                Para_dict["paddingmode"]=paddingMode,                
                 
                 Para_dict["train_last_layers"]=train_last_layers,
                 Para_dict["train_last_layers_n"]=train_last_layers_n,
                 Para_dict["train_dense_layers"]=train_dense_layers,
                 Para_dict["dropout_expert_on"]=dropout_expert_on,
                 Para_dict["dropout_expert"]=dropout_expert,
-                Para_dict["lossW_expert_on"]=lossW_expert_on,
-                Para_dict["lossW_expert"]=lossW_expert,
+                Para_dict["lossw_expert_on"]=lossW_expert_on,
+                Para_dict["lossw_expert"]=lossW_expert,
                 Para_dict["class_weight"]=class_weight,
                 Para_dict["metrics"]=model_metrics,
                 
                 #training data cannot be changed during training
-                if norm == "StdScaling using mean and std of all training data":                                
+                if norm == "stdscaling_using_mean_and_std_of_all_training_data":                                
                     #This needs to be saved into Para_dict since it will be required for inference
-                    Para_dict["Mean of training data used for scaling"]=mean_trainingdata,
-                    Para_dict["Std of training data used for scaling"]=std_trainingdata,
+                    Para_dict["mean_of_training_data_used_for_scaling"]=mean_trainingdata,
+                    Para_dict["std_of_training_data_used_for_scaling"]=std_trainingdata,
     
                 if collection==False:
                     if counter == 0:
@@ -5272,7 +5283,7 @@ class MainWindow(QtWidgets.QMainWindow):
     
                 if collection==True:
                     for i in range(len(Writers)):
-                        Para_dict["Chosen model"]=model_architecture_names[i],
+                        Para_dict["chosen_model"]=model_architecture_names[i],
                         writer = Writers[i]
                         if counter==0:
                             Para_dict.to_excel(Writers[i],sheet_name='Parameters')
@@ -8384,7 +8395,7 @@ class MainWindow(QtWidgets.QMainWindow):
             self.plt1.plot([clicked_x], [clicked_y],pen=None,symbol='o',symbolPen='w',clear=False)
 
             #Get more information about this model
-            Modelname = str(self.loaded_para["Modelname"].iloc[0])
+            Modelname = str(self.loaded_para["modelname"].iloc[0])
             
             path, filename = os.path.split(Modelname)
             filename = filename.split(".model")[0]+"_"+str(clicked_x)+".model" 
