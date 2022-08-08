@@ -8827,7 +8827,7 @@ class MainWindow(QtWidgets.QMainWindow):
         msg = QtWidgets.QMessageBox()
         msg.setIconPixmap(icon)
         text = "AIDeveloper is written and maintained by Maik Herbig. "+\
-            "Use maik.herbig@tu-dresden.de to contact the main developer if you "+\
+            "Use maik-herbig@gmx.de to contact the main developer if you "+\
             "find bugs or if you wish a particular feature. "+\
             "Icon theme 2 was mainly designed and created by Konrad Wauer."
         text = "<html><head/><body><p>"+text+"</p></body></html>"
