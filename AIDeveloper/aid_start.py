@@ -171,7 +171,7 @@ def keras_json_check(keras_json_path):
     else:#there exists NO keras.json! Very likely the user opened AID for the first time :)
         #Welcome the user
         print("A warm welcome to your first session in AID :)\
-             \nIn case of any issues just write me a mail: maik.herbig@tu-dresden.de\
+             \nIn case of any issues just write me a mail: maik-herbig@gmx.de\
              \nor use the Issues section on the github page of AID:\
              \nhttps://GitHub.com/maikherbig/AIDeveloper\
              ")
