@@ -271,7 +271,7 @@ def store_image(h5group, name, data, compression, background=False):
     """
     if len(data.shape) == 2:
         # single event
-        data = data.reshape(1, data.shape[0], data.shape[1])
+        data = data.reshape(1, *data.shape[1:])
     if name not in h5group:
         maxshape = (None, *data.shape[1:])
         chunks = (CHUNK_SIZE, *data.shape[1:])
@@ -474,8 +474,11 @@ def write_rtdc(fname,rtdc_datasets,X_valid,Indices,cropped=True,color_mode='Gray
         pos_y = np.concatenate(pos_y)
         
         hdf = new_hdf(fname) #generate new hdf file (with metadata, required for ShapeOut to work)
-        maxshape = (None, images.shape[1], images.shape[2], images.shape[3])
-        hdf.create_dataset("events/image", data=images, dtype=np.uint8,maxshape=maxshape,fletcher32=True,chunks=True)
+        events = hdf.require_group("events")
+        # maxshape = (None, images.shape[1], images.shape[2], images.shape[3])
+
+        store_image(h5group=events,name="image", data=images, compression="gzip")
+        # hdf.create_dataset("events/image", data=images, dtype=np.uint8,maxshape=maxshape,fletcher32=True,chunks=True)
         hdf.create_dataset("events/pos_x", data=pos_x, dtype=np.int32)
         hdf.create_dataset("events/pos_y", data=pos_y, dtype=np.int32)
         hdf.create_dataset("events/index", data=index_new, dtype=np.int32)
@@ -581,7 +584,7 @@ def write_rtdc(fname,rtdc_datasets,X_valid,Indices,cropped=True,color_mode='Gray
                         mask = np.asarray(mask, dtype=np.uint8)
                         if mask.max() != 255 and mask.max() != 0 and mask.min() == 0:
                             mask = mask / mask.max() * 255
-                        maxshape = (None, mask.shape[1], mask.shape[2])
+                        # maxshape = (None, mask.shape[1], mask.shape[2])
                         store_image(h5group=events,name=feat, data=mask, compression="gzip")
                         # dset = h5obj.create_dataset("events/"+feat, data=mask, dtype=np.uint8,maxshape=maxshape,fletcher32=True,chunks=True)
                         # dset.attrs.create('CLASS', np.string_('IMAGE'))
