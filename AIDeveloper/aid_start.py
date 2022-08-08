@@ -198,6 +198,7 @@ def get_tooltips():
     tooltips["pushButton_modelname"] = "Define path and filename for the model you want to fit."
 
     tooltips["label_zoomIcon"] = "Define which zoom order should be used. A zoom order of 0 would mean nearest neighbor interploation. Zooming is applied when data is loaded into AID. Zooming is only applied of the Zoom factor given in the table above is not =1."
+    tooltips["pushButton_selectChannels"] = "Define which image channels should be used. By default, only the property ['image'] is used, but you can select up to 3 arbitrary image layers (e.g. ['image_ch1','image_ch2','image_ch3']). Those image layers are then used to form an 'RGB'-like imge."
 
     tooltips["radioButton_cpu"] = "Train model on CPU."
     tooltips["radioButton_gpu"] = "Train model on GPU."
