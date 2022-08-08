@@ -4,7 +4,7 @@ AIDeveloper
 ---------
 @author: maikherbig
 """
-VERSION = "0.4.3" #Python 3.9.9 Version
+VERSION = "0.4.3_dev1" #Python 3.9.9 Version
 
 import os,sys,gc
 os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'
@@ -3838,8 +3838,9 @@ class MainWindow(QtWidgets.QMainWindow):
                 if os.path.isfile(metaname):
                     #open the metafile
                     meta = pd.read_excel(metaname,sheet_name="Parameters",engine="openpyxl")
-                    if "Chosen model" in list(meta.keys()):
-                        chosen_model = meta["Chosen model"].iloc[-1]
+                    meta.columns = meta.columns.str.lower()
+                    if "chosen model" in list(meta.keys()):
+                        chosen_model = meta["chosen model"].iloc[-1]
                     else:
                         #Try to get the model architecture and adjust the combobox
                         try:
@@ -3882,8 +3883,9 @@ class MainWindow(QtWidgets.QMainWindow):
                     if os.path.isfile(metaname):
                         #open the metafile
                         meta = pd.read_excel(metaname,sheet_name="Parameters",engine="openpyxl")
-                        if "Chosen model" in list(meta.keys()):
-                            chosen_model = meta["Chosen model"].iloc[-1]
+                        meta.columns = meta.columns.str.lower()
+                        if "chosen model" in list(meta.keys()):
+                            chosen_model = meta["chosen model"].iloc[-1]
                         else:
                             #Try to get the model architecture and adjust the combobox
                             try:
@@ -4088,8 +4090,9 @@ class MainWindow(QtWidgets.QMainWindow):
                     if os.path.isfile(metaname):
                         #open the metafile
                         meta = pd.read_excel(metaname,sheet_name="Parameters",engine="openpyxl")
-                        if "Chosen model" in list(meta.keys()):
-                            chosen_model = meta["Chosen model"].iloc[-1]
+                        meta.columns = meta.columns.str.lower()
+                        if "chosen model" in list(meta.keys()):
+                            chosen_model = meta["chosen model"].iloc[-1]
                 except:
                     chosen_model = str(self.comboBox_ModelSelection.currentText())
                     
@@ -4179,8 +4182,9 @@ class MainWindow(QtWidgets.QMainWindow):
                     if os.path.isfile(metaname):
                         #open the metafile
                         meta = pd.read_excel(metaname,sheet_name="Parameters",engine="openpyxl")
-                        if "Chosen model" in list(meta.keys()):
-                            chosen_model = meta["Chosen model"].iloc[-1]
+                        meta.columns = meta.columns.str.lower()
+                        if "chosen model" in list(meta.keys()):
+                            chosen_model = meta["chosen model"].iloc[-1]
                     else:
                         chosen_model = str(self.comboBox_ModelSelection.currentText())
     
