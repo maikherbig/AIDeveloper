@@ -273,8 +273,8 @@ def store_image(h5group, name, data, compression, background=False):
         # single event
         data = data.reshape(1, data.shape[0], data.shape[1])
     if name not in h5group:
-        maxshape = (None, data.shape[1], data.shape[2])
-        chunks = (CHUNK_SIZE, data.shape[1], data.shape[2])
+        maxshape = (None, *data.shape[1:])
+        chunks = (CHUNK_SIZE, *data.shape[1:])
         dset = h5group.create_dataset(name,
                                       data=data,
                                       dtype=np.uint8,
