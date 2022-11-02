@@ -212,7 +212,7 @@ def setup_main_ui(self,gpu_nr):
     self.fittingpopups = []  #This app will be designed to allow training of several models ...
     self.fittingpopups_ui = [] #...simultaneously (threading). The info of each model is appended to a list
     self.popupcounter = 0
-    self.colorsQt = 10*['red','yellow','blue','cyan','magenta','green','gray','darkRed','darkYellow','darkBlue','darkCyan','darkMagenta','darkGreen','darkGray']    #Some colors which are later used for different subpopulations
+    self.colorsQt = 1000*['red','yellow','blue','cyan','magenta','green','gray','darkRed','darkYellow','darkBlue','darkCyan','darkMagenta','darkGreen','darkGray']    #Some colors which are later used for different subpopulations
     self.model_keras = None #Variable for storing Keras model   
     self.model_keras_path = None
     self.load_model_path = None
