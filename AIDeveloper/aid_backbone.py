@@ -534,8 +534,11 @@ class MainWindow(QtWidgets.QMainWindow):
 #            #item.setTextAlignment(QtCore.Qt.AlignLeading | QtCore.Qt.AnchorRight) # change the alignment
 #            self.table_dragdrop.setItem(rowPosition , columnPosition, item ) #
 
+            # spinbox for class label
             columnPosition = 1
             spinb = QtWidgets.QSpinBox(self.table_dragdrop)
+            spinb.setMinimum(0)
+            spinb.setMaximum(9999)
             spinb.valueChanged.connect(self.dataOverviewOn)
             self.table_dragdrop.setCellWidget(rowPosition, columnPosition, spinb)            
 
@@ -8826,10 +8829,13 @@ class MainWindow(QtWidgets.QMainWindow):
         icon = QtGui.QPixmap(icon).scaledToHeight(32, QtCore.Qt.SmoothTransformation)
         msg = QtWidgets.QMessageBox()
         msg.setIconPixmap(icon)
-        text = "AIDeveloper is written and maintained by Maik Herbig. "+\
-            "Use maik-herbig@gmx.de to contact the main developer if you "+\
-            "find bugs or if you wish a particular feature. "+\
-            "Icon theme 2 was mainly designed and created by Konrad Wauer."
+        url_git_issue = "<a href=https://github.com/maikherbig/AIDeveloper/issues>GitHub</a>"
+        url_maik = "<a href=https://scholar.google.com/citations?user=wIFvhcIAAAAJ&hl>Maik Herbig</a>"
+        text = "AIDeveloper is written and maintained by "+url_maik+". "+\
+            "If you find bugs, or wish implementation of a particular feature, "+\
+            "contact the main developer via email: maik-herbig@gmx.de, or "+\
+            "write an issue on "+url_git_issue+\
+            ".<br>Icon theme 2 was mainly designed and created by Konrad Wauer."
         text = "<html><head/><body><p>"+text+"</p></body></html>"
         msg.setText(text)
         msg.setWindowTitle("About")
