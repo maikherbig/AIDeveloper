@@ -4,7 +4,7 @@ AIDeveloper
 ---------
 @author: maikherbig
 """
-VERSION = "0.4.4" #Python 3.9.9 Version
+VERSION = "0.4.5" #Python 3.9.9 Version
 
 import os,sys,gc
 os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'
