@@ -457,17 +457,8 @@ def setup_main_ui(self,gpu_nr):
     self.pushButton_selectChannels.setObjectName("pushButton_selectChannels")
     self.pushButton_selectChannels.clicked.connect(self.channelSelection_popup)
     self.gridLayout_49.addWidget(self.pushButton_selectChannels, 2, 4, 1, 1)
-
-    
-    
-    
-    
     
     self.gridLayout_44.addWidget(self.groupBox_imgProc, 1, 0, 1, 1)
-
-
-
-
 
     self.horizontalLayout_4 = QtWidgets.QHBoxLayout()
     self.horizontalLayout_4.setObjectName("horizontalLayout_4")
@@ -507,6 +498,20 @@ def setup_main_ui(self,gpu_nr):
     self.radioButton_gpu = QtWidgets.QRadioButton(self.groupBox_system)
     self.radioButton_gpu.setObjectName("radioButton_gpu")
     self.gridLayout_48.addWidget(self.radioButton_gpu, 1, 2, 1, 1)
+
+    self.horizontalLayout_validSplit = QtWidgets.QHBoxLayout()
+    self.horizontalLayout_validSplit.setObjectName("horizontalLayout_validSplit")
+    self.checkBox_validationSplit = QtWidgets.QCheckBox(self.groupBox_system)
+    self.checkBox_validationSplit.setObjectName("checkBox_validationSplit")
+    self.horizontalLayout_validSplit.addWidget(self.checkBox_validationSplit)
+    self.doubleSpinBox_validationSplit = QtWidgets.QDoubleSpinBox(self.groupBox_system)
+    self.doubleSpinBox_validationSplit.setMaximum(100.0)
+    self.doubleSpinBox_validationSplit.setEnabled(False)
+    self.doubleSpinBox_validationSplit.setObjectName("doubleSpinBox_validationSplit")
+    self.horizontalLayout_validSplit.addWidget(self.doubleSpinBox_validationSplit)
+    self.gridLayout_48.addLayout(self.horizontalLayout_validSplit, 1, 0, 1, 1)
+   
+    
     self.comboBox_gpu = QtWidgets.QComboBox(self.groupBox_system)
     self.comboBox_gpu.setObjectName("comboBox_gpu")
     self.gridLayout_48.addWidget(self.comboBox_gpu, 1, 3, 1, 2)
@@ -2811,10 +2816,11 @@ def setup_main_ui(self,gpu_nr):
     self.actionGroup_Export = QtWidgets.QActionGroup(self,exclusive=True)
     self.actionExport_Off = QtWidgets.QAction(self)
     self.actionExport_Off.setCheckable(True)
+    self.actionExport_Off.setChecked(True)
     self.actionExport_Off.setObjectName("actionExport_Off")
     self.actionExport_Original = QtWidgets.QAction(self)
     self.actionExport_Original.setCheckable(True)
-    self.actionExport_Original.setChecked(True)
+    self.actionExport_Original.setChecked(False)
     self.actionExport_Original.setObjectName("actionExport_Original")
     self.actionExport_Cropped = QtWidgets.QAction(self)
     self.actionExport_Cropped.setCheckable(True)
@@ -3011,6 +3017,7 @@ def setup_main_ui(self,gpu_nr):
     self.checkBox_optimizer.toggled['bool'].connect(self.comboBox_optimizer.setEnabled)
     self.checkBox_optimizer.toggled['bool'].connect(self.pushButton_optimizer.setEnabled)
     self.checkBox_expt_loss.toggled['bool'].connect(self.comboBox_expt_loss.setEnabled)
+    self.checkBox_validationSplit.toggled['bool'].connect(self.doubleSpinBox_validationSplit.setEnabled)
 
     #Start running show_cpu_ram function and run it all the time
     worker_cpu_ram = Worker(self.cpu_ram_worker)
@@ -3166,6 +3173,7 @@ def retranslate_main_ui(self,gpu_nr,VERSION):
     self.comboBox_cpu.setToolTip(_translate("MainWindow",tooltips["radioButton_cpu"] , None))
     self.radioButton_gpu.setToolTip(_translate("MainWindow",tooltips["radioButton_gpu"] , None))
     self.comboBox_gpu.setToolTip(_translate("MainWindow",tooltips["comboBox_gpu"] , None))
+    self.checkBox_validationSplit.setText(_translate("MainWindow", "Validation split (%)", None))
 
     self.pushButton_modelname.setToolTip(_translate("MainWindow", tooltips["pushButton_modelname"], None))
     self.pushButton_modelname.setText(_translate("MainWindow", "Model path:", None))
@@ -3971,7 +3979,20 @@ class Fitting_Ui(QtWidgets.QWidget):
         self.spinBox_NrEpochs.setObjectName("spinBox_NrEpochs")
         self.horizontalLayout_4_pop.addWidget(self.spinBox_NrEpochs)
         self.gridLayout_48.addLayout(self.horizontalLayout_4_pop, 0, 1, 1, 1)
-        
+
+        self.horizontalLayout_validSplit = QtWidgets.QHBoxLayout()
+        self.horizontalLayout_validSplit.setObjectName("horizontalLayout_validSplit")
+        self.checkBox_validationSplit = QtWidgets.QCheckBox(self.groupBox_system_pop)
+        self.checkBox_validationSplit.setObjectName("checkBox_validationSplit")
+        self.horizontalLayout_validSplit.addWidget(self.checkBox_validationSplit)
+        self.doubleSpinBox_validationSplit = QtWidgets.QDoubleSpinBox(self.groupBox_system_pop)
+        self.doubleSpinBox_validationSplit.setEnabled(False)
+        self.doubleSpinBox_validationSplit.setMaximum(100.0)
+        self.doubleSpinBox_validationSplit.setObjectName("doubleSpinBox_validationSplit")
+        self.horizontalLayout_validSplit.addWidget(self.doubleSpinBox_validationSplit)
+        self.gridLayout_48.addLayout(self.horizontalLayout_validSplit, 1, 1, 1, 1)
+
+
         self.horizontalLayout_4 = QtWidgets.QHBoxLayout()
         self.horizontalLayout_4.setObjectName("horizontalLayout_4")
         self.label_saveMetaEvery = QtWidgets.QLabel(self.groupBox_system_pop)
@@ -3984,7 +4005,7 @@ class Fitting_Ui(QtWidgets.QWidget):
         self.spinBox_saveMetaEvery.setProperty("value", 30)
         self.spinBox_saveMetaEvery.setObjectName("spinBox_saveMetaEvery")
         self.horizontalLayout_4.addWidget(self.spinBox_saveMetaEvery)
-        self.gridLayout_48.addLayout(self.horizontalLayout_4, 1, 1, 1, 1)
+        self.gridLayout_48.addLayout(self.horizontalLayout_4, 2, 1, 1, 1)
 
         self.verticalLayout_defineModel_pop.addWidget(self.groupBox_system_pop)
         self.horizontalLayout_modelname_2_pop = QtWidgets.QHBoxLayout()
@@ -4838,7 +4859,7 @@ class Fitting_Ui(QtWidgets.QWidget):
         self.pushButton_LR_finder.setEnabled(False)
         #self.pushButton_LR_plot.setEnabled(False)
 
-
+        self.checkBox_validationSplit.toggled['bool'].connect(self.doubleSpinBox_validationSplit.setEnabled)
         self.radioButton_LrConst.toggled['bool'].connect(self.doubleSpinBox_learningRate.setEnabled)
         self.radioButton_LrCycl.toggled['bool'].connect(self.lineEdit_cycLrMin.setEnabled)
         self.radioButton_LrCycl.toggled['bool'].connect(self.lineEdit_cycLrMax.setEnabled)
@@ -4933,6 +4954,8 @@ class Fitting_Ui(QtWidgets.QWidget):
         self.spinBox_NrEpochs.setToolTip(_translate("Form", "Total number of training iterations", None))
         self.label_Crop_NrEpochsIcon_pop.setToolTip(_translate("Form", "Total number of training iterations", None))
         self.label_saveMetaEvery.setText(_translate("Form", "Save meta every (sec)", None))
+        self.checkBox_validationSplit.setText(_translate("Form", "Validation split (%)", None))
+
         self.label_saveMetaEvery.setToolTip(_translate("Form", tooltips["label_saveMetaEvery"], None))
         self.spinBox_saveMetaEvery.setToolTip(_translate("Form", tooltips["label_saveMetaEvery"], None))
 
