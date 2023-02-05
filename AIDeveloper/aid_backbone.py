@@ -4,7 +4,7 @@ AIDeveloper
 ---------
 @author: maikherbig
 """
-VERSION = "0.4.7" #Python 3.9.9 Version
+VERSION = "0.4.8" #Python 3.9.9 Version
 
 import os,sys,gc
 os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'
@@ -2974,7 +2974,7 @@ class MainWindow(QtWidgets.QMainWindow):
         #Manually clear y hist first. Only clear=True did not do the job
         self.hist_y.clear()
         #Fill histogram for y-axis; widget_histy
-        y,x = np.histogram(self.feature_y, bins='auto')
+        y,x = np.histogram(self.feature_y[~np.isnan(self.feature_y)] , bins='auto')
         curve = pg.PlotCurveItem(-1.*x, y, stepMode=True, fillLevel=0, brush=(0, 0, 255, 150),clear=True)
         curve.rotate(-90)
         self.hist_y.addItem(curve)
