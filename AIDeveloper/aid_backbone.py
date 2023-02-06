@@ -2636,11 +2636,11 @@ class MainWindow(QtWidgets.QMainWindow):
             points = points[0]
             p = points.pos()
             clicked_x, clicked_y = p.x(), p.y()
-            a1 = (clicked_x)/float(np.max(self.feature_x))            
-            a2 = (clicked_y)/float(np.max(self.feature_y))
+            a1 = (clicked_x)/float(np.nanmax(self.feature_x))            
+            a2 = (clicked_y)/float(np.nanmax(self.feature_y))
             #Which is the closest scatter point?
             dist = np.sqrt(( a1-self.scatter_x_norm )**2 + ( a2-self.scatter_y_norm )**2)
-            index =  np.argmin(dist)
+            index =  np.nanargmin(dist)
 
         elif pointermethod=="index":
             index = points
@@ -2962,32 +2962,37 @@ class MainWindow(QtWidgets.QMainWindow):
             print("Not cleared")
 
         self.scatter = pg.ScatterPlotItem()
-        self.scatter.setData(np.array(self.feature_x), np.array(self.feature_y),brush=brush,symbolPen=None,pen=None,symbol='o',size=10)
+        xdata = np.array(self.feature_x).astype(np.float32)
+        ydata = np.array(self.feature_y).astype(np.float32)
+        ind = np.where( (~np.isnan(xdata)) & (~np.isnan(ydata)) )[0]
+        xdata, ydata = xdata[ind], ydata[ind]
+        # np.array(self.feature_x[~np.isnan(self.feature_x)]).astype(np.float32)
+        self.scatter.setData(xdata, ydata,brush=brush,symbolPen=None,pen=None,symbol='o',size=10)
         self.scatter_xy.addItem(self.scatter)
         #pen=None,symbol='o',symbolPen=None,symbolBrush=density,clear=True)   
         
         self.scatter.sigClicked.connect(self.onScatterClick) #When scatterplot is clicked, show the desired cell
 
         #Fill histogram for x-axis; widget_histx
-        y,x = np.histogram(self.feature_x, bins='auto')
+        y,x = np.histogram(xdata, bins='auto')
         self.hist_x.plot(x, y, stepMode=True, fillLevel=0, brush=(0,0,255,150),clear=True)
         #Manually clear y hist first. Only clear=True did not do the job
         self.hist_y.clear()
         #Fill histogram for y-axis; widget_histy
-        y,x = np.histogram(self.feature_y[~np.isnan(self.feature_y)] , bins='auto')
+        y,x = np.histogram(ydata , bins='auto')
         curve = pg.PlotCurveItem(-1.*x, y, stepMode=True, fillLevel=0, brush=(0, 0, 255, 150),clear=True)
         curve.rotate(-90)
         self.hist_y.addItem(curve)
         
-        self.scatter_x_norm = (np.array(self.feature_x).astype(np.float32))/float(np.max(self.feature_x))
-        self.scatter_y_norm = (np.array(self.feature_y).astype(np.float32))/float(np.max(self.feature_y))
+        self.scatter_x_norm = self.feature_x/np.nanmax(self.feature_x)
+        self.scatter_y_norm = self.feature_y/np.nanmax(self.feature_y)
 
         #Adjust the horizontalSlider_cellInd and spinBox_cellInd
         self.horizontalSlider_cellInd.setSingleStep(1)
         self.horizontalSlider_cellInd.setMinimum(0)
-        self.horizontalSlider_cellInd.setMaximum(len(self.feature_x)-1)
+        self.horizontalSlider_cellInd.setMaximum(len(xdata)-1)
         self.spinBox_cellInd.setMinimum(0)
-        self.spinBox_cellInd.setMaximum(len(self.feature_x)-1)                  
+        self.spinBox_cellInd.setMaximum(len(xdata)-1)                  
 
         
     def selectPeakPos(self):
