@@ -418,8 +418,8 @@ class MainWindow(QtWidgets.QMainWindow):
                 
                 #Now, all images are of identical shape and can be converted to a numpy array
                 images = np.array((images), dtype="uint8")
-                pos_x = np.array((pos_x), dtype="uint8")
-                pos_y = np.array((pos_y), dtype="uint8")
+                pos_x = np.array((pos_x), dtype="uint32") # for larger images, pos_x can be larger than 255! Use uint; not uint8!!!
+                pos_y = np.array((pos_y), dtype="uint32") # for larger images, pos_y can be larger than 255! Use uint32; not uint8!!!
                 
                 #Save as foldername.rtdc
                 fname = url+".rtdc"
